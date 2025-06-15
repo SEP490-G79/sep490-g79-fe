@@ -2,16 +2,17 @@ import React from "react";
 import { Route, Routes } from "react-router-dom";
 import PublicRoutes from "./PublicRoutes";
 import PrivateRoutes from "./PrivateRoutes";
+import LandingPage from "@/pages/Common/LandingPage";
 
 
-const AppRoutes: React.FC = () => {
+function AppRoutes() {
   return (
     <Routes>
-      {PublicRoutes()}
+        {PublicRoutes()}
 
-      <Route element={<PrivateRoutes />}>
+      {/* <Route element={<PrivateRoutes />}>
    
-      </Route>
+      </Route> */}
 
       {/* 404 fallback */}
       <Route path="*" element={<div>404 Not Found</div>} />
