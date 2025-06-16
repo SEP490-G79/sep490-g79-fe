@@ -6,7 +6,7 @@ import { Route, Routes } from 'react-router-dom'
 function PublicRoutes() {
   return (
     <>
-        <Route path='/landing-page' element={<LandingPage/>}/>
+        <Route path='/' element={<LandingPage/>}/>
     </>
   )
 }
