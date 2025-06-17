@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 
 function AppHeader() {
   return (
-    <header className="md:px-12 sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="md:px-12 sticky top-0 z-50 w-full border-b border-border/40 bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 justify-between items-center px-4 ">
         <div className="basis-1/2 just">
           <a href="/">Logo</a>
