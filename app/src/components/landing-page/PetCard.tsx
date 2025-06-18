@@ -1,41 +1,54 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { ArrowRight, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import Image_1 from "@/assets/card_1jpg.jpg";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Link } from "react-router-dom";
 
-function PetCard() {
+export default function PetCard() {
   return (
-    <Link
-      to="/"
-      className="relative group overflow-hidden rounded-xl w-full max-w-xs shadow-lg transition-transform"
-    >
-      {/* Image */}
-      <img src={Image_1} className="w-full h-80 object-cover" />
-
-      {/* Overlay on hover */}
-      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-      {/* Text */}
-      <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
-        <div className="flex flex-wrap  text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <span className="text-gray-300 basis-1 sm:basis-3/4">Tuổi:</span>
-          <span className=" basis-1 sm:basis-1/4">4 tháng</span>
-
-          <span className="text-gray-300 basis-1 sm:basis-3/4">Cân nặng:</span>
-          <span className=" basis-1 sm:basis-1/4">4 kg</span>
-
-          <span className="text-gray-300 basis-1 sm:basis-3/4">Giới tính:</span>
-          <span className=" basis-1 sm:basis-1/4">Đực</span>
-
-          <span className="text-gray-300 basis-1 sm:basis-3/4">Trạng thái:</span>
-          <span className=" basis-1 sm:basis-1/4">Chưa sẵn sàng</span>
-
-          <span className="text-gray-300 basis-1 sm:basis-3/4">Thời gian tiếp nhận:</span>
-          <span className=" basis-1 sm:basis-1/4">2023</span>
-        </div>
-        <h3 className="text-lg font-bold mt-2">Hảo Trần </h3>
+    <div className="max-w-sm rounded-xl bg-(--card) shadow-sm border border-border overflow-hidden transition hover:shadow-md cursor-pointer">
+      {/* Image section */}
+      <div className="relative h-64">
+        <img
+          src={Image_1}
+          alt="Kevin the cat"
+          className="w-full h-full object-cover"  
+        />
       </div>
-    </Link>
-  );
-}
 
-export default PetCard;
+      {/* Content section */}
+      <div className="p-3">
+        <Tooltip >
+          <TooltipTrigger asChild>
+            <div>
+              <Badge className="cursor-pointer ">
+                <MapPin className="w-4 h-4" />
+                <span>
+                  6 tháng
+                </span>
+              </Badge>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className=" bg-(--background) text-(--foreground) border border-(--border)">
+            <p>
+              6 tháng tuổi
+            </p>
+          </TooltipContent>
+        </Tooltip>
+        <h3 className="text-xl font-bold text-foreground mb-2">Kevin</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-2">
+          He loves people and loves the attention. Likes to go out for long
+          walks and is good on the lead. Rex is great!
+        </p>
+        <Button variant="ghost" className="gap-2" asChild>
+          <Link to="/">Xem thêm <ArrowRight className="w-4 h-4" /></Link>
+        </Button>
+      </div>
+    </div>
+  );
+};

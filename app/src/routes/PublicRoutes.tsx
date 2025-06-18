@@ -1,3 +1,4 @@
+import HomePage from '@/pages/Common/HomePage'
 import LandingPage from '@/pages/Common/LandingPage'
 
 import React from 'react'
@@ -7,6 +8,7 @@ function PublicRoutes() {
   return (
     <>
         <Route path='/' element={<LandingPage/>}/>
+        <Route path='/home' element={<HomePage/>}/>
     </>
   )
 }
