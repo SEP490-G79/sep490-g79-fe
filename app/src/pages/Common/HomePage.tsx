@@ -8,11 +8,11 @@ function HomePage() {
   return (
     <>
       <HeroSection />
-      <div className="bg-(--muted) py-5">
-        <Shelters />
-      </div>
       <Posts />
-      <Pets />
+      <Shelters />
+      <div className="bg-(--muted) py-5 mt-10">
+        <Pets />
+      </div>
     </>
   );
 }
