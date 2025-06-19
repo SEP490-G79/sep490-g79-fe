@@ -10,7 +10,7 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="min-h-screen flex flex-col w-full">
         <AppHeader />
-        <div>
+        <div className="min-h-screen w-full">
           <AppRoutes />
         </div>
         <div>

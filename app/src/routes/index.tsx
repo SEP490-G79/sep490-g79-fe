@@ -5,6 +5,7 @@ import PrivateRoutes from "./PrivateRoutes";
 import LandingPage from "@/pages/Common/LandingPage";
 
 
+
 function AppRoutes() {
   return (
     <Routes>
