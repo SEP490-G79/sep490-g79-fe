@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState , useContext} from "react";
 import {
   Card,
   CardAction,
@@ -33,6 +33,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import EmojiPicker from "emoji-picker-react";
 import { useRef, useEffect } from "react";
+import  AppContext  from "@/context/AppContext";
 
 
 
@@ -48,6 +49,10 @@ function Posts() {
   const [selectedEmoji, setSelectedEmoji] = useState("");
   const [postContent, setPostContent] = useState("");
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+
+  
+  const { userProfile } = useContext(AppContext);
 
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -139,7 +144,7 @@ Hình ảnh trên mạng xã hội cho thấy hàng chục thi thể không nguy
     return target.format('DD/MM/YYYY');
   };
   const [postsData, setPostsData] = useState(posts);
-  const currentUserId = "hao"; // mock ID người dùng hiện tại
+  const currentUserId = "hao"; 
 
   const toggleExpand = (postId: string | number) => {
     setExpandedPosts(prev => ({
@@ -194,12 +199,12 @@ Hình ảnh trên mạng xã hội cho thấy hàng chục thi thể không nguy
           <Card className="border-secondary dark:bg-gray-800  shadow-xl">
             <CardHeader className="flex flex-row items-center gap-x-3p-0">
               <img
-                src={user.avatar || "/placeholder.svg"}
+                src={userProfile?.avatar || "/placeholder.svg"}
                 alt="Avatar"
                 className="w-14 h-14 rounded-full border border-secondary dark:bg-gray-800  shadow-md"
               />
               <div className="flex flex-col">
-                <span className="font-medium">{user.fullName}</span>
+                <span className="font-medium">{userProfile?.fullName}</span>
                 <Select defaultValue="public">
                   <SelectTrigger className="w-[140px] h-7 text-xs mt-1">
                     <SelectValue />

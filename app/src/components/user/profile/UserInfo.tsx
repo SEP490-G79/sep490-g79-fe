@@ -1,20 +1,14 @@
-import React from "react";
+import React, { useState, useEffect, useContext } from 'react';
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import { Plus, Mail, Cake, MapPinHouse } from 'lucide-react';
+import AppContext from "@/context/AppContext";
+import dayjs from "dayjs";
 
 
 function UserInfo() {
+    const { userProfile } = useContext(AppContext);
 
-    const user = {
-        fullName: "Hảo trần",
-        bio: "Game thủ vô tri!",
-        location: "Hanoi, Vietnam",
-        background: "https://i.pinimg.com/736x/c8/3b/c9/c83bc998e196e566b46a2bc60f169d42.jpg",
-        avatar: "https://i.pinimg.com/736x/b8/c4/b9/b8c4b99567ca22c481880d7983d60b1e.jpg",
-        email: "FV2rD@example.com",
-        dob: "01/01/2000",
-    };
 
     return (
 
@@ -29,7 +23,7 @@ function UserInfo() {
                             {/* Avatar */}
                             <div className="mb-4">
                                 <img
-                                    src={user.avatar || "/placeholder.svg"}
+                                    src={userProfile?.avatar || "/placeholder.svg"}
                                     alt="Avatar"
                                     className="w-35 h-35 rounded-full border-1 border-gray-100 shadow-md"
                                 />
@@ -37,23 +31,27 @@ function UserInfo() {
                             <div className="text-center mb-2">
                                 <div className="flex items-center justify-center gap-1">
                                     <h2 className="text-xl font-bold text-black dark:text-white">
-                                        {user.fullName}
+                                        {userProfile?.fullName}
                                     </h2>
                                 </div>
                             </div>
-                            <p className="text-gray-700 dark:text-gray-300 text-sm mb-3 ">{user.bio}</p>
+                            <p className="text-gray-700 dark:text-gray-300 text-sm mb-3 ">{userProfile?.bio}</p>
                             <div className="w-full space-y-2 mt-4">
                                 <div className="flex items-center gap-2 text-black dark:text-gray-400 text-sm">
                                     <Mail className="w-4 h-4" />
-                                    <span>{user.email}</span>
+                                    <span>{userProfile?.email}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-black dark:text-gray-400 text-sm">
                                     <Cake className="w-4 h-4" />
-                                    <span>{user.dob}</span>
+                                    <span>
+                                        {userProfile?.dob
+                                            ? dayjs(userProfile?.dob).format("DD/MM/YYYY")
+                                            : "Chưa có thông tin"}
+                                    </span>
                                 </div>
                                 <div className="flex items-center gap-2 text-black dark:text-gray-400 text-sm">
                                     <MapPinHouse className="w-4 h-4" />
-                                    <span>{user.location}</span>
+                                    <span>{userProfile?.address}</span>
                                 </div>
                             </div>
 
@@ -72,7 +70,7 @@ function UserInfo() {
                                 }}
                                 className="text-blue-600 hover:underline cursor-pointer text-sm "
                             >
-                            Nhấn vào đây để gửi yêu cầu!
+                                Nhấn vào đây để gửi yêu cầu!
                             </p>
 
                         </div>

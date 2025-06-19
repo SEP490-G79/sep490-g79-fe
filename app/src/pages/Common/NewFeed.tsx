@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import PostCard from "@/components/post/PostCard";
 import {
   Card,
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SmileIcon, ImageIcon, MapPinIcon, Globe, GlobeLock } from "lucide-react";
 import { useRef, useEffect } from "react";
 import EmojiPicker from "emoji-picker-react";
+import AppContext from "@/context/AppContext";
 
 
 function Newfeed() {
@@ -70,6 +71,7 @@ const [showPicker, setShowPicker] = useState(false);
     const [selectedEmoji, setSelectedEmoji] = useState("");
     const emojiPickerRef = useRef<HTMLDivElement>(null);
 
+     const { userProfile } = useContext(AppContext);
 
 useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -103,12 +105,12 @@ useEffect(() => {
       <Card className="border-secondary dark:bg-gray-800 shadow-xl">
         <CardHeader className="flex flex-row items-center gap-x-3">
           <img
-            src={currentUser.avatar || "/placeholder.svg"}
+            src={userProfile?.avatar || "/placeholder.svg"}
             alt="Avatar"
             className="w-14 h-14 rounded-full border border-secondary shadow-md"
           />
           <div className="flex flex-col">
-            <span className="font-medium">{currentUser.fullName}</span>
+            <span className="font-medium">{userProfile?.fullName}</span>
             <Select defaultValue={privacy} onValueChange={setPrivacy}>
               <SelectTrigger className="w-[140px] h-7 text-xs mt-1">
                 <SelectValue />

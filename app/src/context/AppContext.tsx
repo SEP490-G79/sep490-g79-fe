@@ -1,5 +1,7 @@
 import type { User } from "@/types/User";
-import React, { createContext, useState, useContext, type ReactNode } from "react";
+import React, { createContext, useState, useContext, useEffect, type ReactNode } from "react";
+import axios from "axios";
+
 
 
 interface AppContextType {
@@ -7,6 +9,8 @@ interface AppContextType {
   accessToken: string | null;
   login: (token: string, userData: User) => void;
   logout: () => void;
+  getProfile: () => void;
+  userProfile: User | null
 }
 
 const AppContext = createContext<AppContextType>({
@@ -14,11 +18,15 @@ const AppContext = createContext<AppContextType>({
   accessToken: null,
   login: () => {},
   logout: () => {},
+  userProfile: null,
+  getProfile: () => {},
 });
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+   const [userProfile, setUserProfile] = useState<User | null>(null);
+ 
 
   const login = (token: string, userData: User) => {
     setAccessToken(token);
@@ -27,6 +35,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
+
+  // Api
+   const userApi = "http://localhost:9999/users";
+
   const logout = () => {
     setAccessToken(null);
     setUser(null);
@@ -34,8 +46,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.removeItem("user");
   };
 
+ const getProfile = async () => {
+  const id = "684ef3df0d4fe7b7340fa873";
+  try {
+    const res = await axios.get(`http://localhost:9999/users/${id}`);
+    setUserProfile(res.data);
+    console.log("userProfile", res.data);
+  } catch (error: any) {
+    console.error(error.response?.data?.message || "Lỗi khi lấy userProfile");
+  }
+};
+useEffect(() => {
+  getProfile();
+}, []);
+
+
+  // User profile
+
+
+console.log("userProfile", userProfile);
+
+
   return (
-    <AppContext.Provider value={{ user, accessToken, login, logout }}>
+    <AppContext.Provider value={{ user, accessToken, login, logout, getProfile, userProfile }}>
       {children}
     </AppContext.Provider>
   );

@@ -50,13 +50,21 @@ function AdoptionActivities() {
   ];
 
   return (
-    <Tabs defaultValue="activities" className="space-y-4 h-full mb-10  ">
+    <Tabs defaultValue="adopted" className="space-y-4 h-full mb-10  ">
       {/* Tabs header */}
       <TabsList className="w-fit ml-auto border-b border-gray-200  mb-4 flex">
+         <TabsTrigger value="adopted">Thú đã nhận nuôi</TabsTrigger>
         <TabsTrigger value="activities">Hoạt động nhận nuôi</TabsTrigger>
-        <TabsTrigger value="adopted">Thú đã nhận nuôi</TabsTrigger>
+       
       </TabsList>
 
+ <TabsContent value="adopted">
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3  gap-4">
+          {adoptedPets.map((pet) => (
+            <PetCard key={pet.id} />
+          ))}
+        </div>
+      </TabsContent>
 
 
       {/* Nội dung tabs */}
@@ -75,14 +83,7 @@ function AdoptionActivities() {
         </div>
       </TabsContent>
 
-      <TabsContent value="adopted">
-        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3  gap-4">
-          {adoptedPets.map((pet) => (
-            <PetCard key={pet.id} />
-          ))}
-        </div>
-      </TabsContent>
-
+     
     </Tabs>
   );
 }

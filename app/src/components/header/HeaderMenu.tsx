@@ -59,7 +59,7 @@ const supports: { title: string; href: string; description: string }[] = [
   },
   {
     title: "Cộng đồng",
-    href: "#",
+    href: "/newfeed",
     description:
       "Kết nối với những người cùng chung tình yêu thú cưng, chia sẻ và lan tỏa yêu thương.",
   },
