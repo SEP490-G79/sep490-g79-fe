@@ -1,4 +1,4 @@
-import React, { useState , useContext} from "react";
+import React, { useState, useContext } from "react";
 import {
   Card,
   CardAction,
@@ -33,7 +33,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import EmojiPicker from "emoji-picker-react";
 import { useRef, useEffect } from "react";
-import  AppContext  from "@/context/AppContext";
+import AppContext from "@/context/AppContext";
 
 
 
@@ -50,8 +50,10 @@ function Posts() {
   const [postContent, setPostContent] = useState("");
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
+  const [openCreatePostDialog, setOpenCreatePostDialog] = useState(false);
 
-  
+
+
   const { userProfile } = useContext(AppContext);
 
 
@@ -144,7 +146,7 @@ Hình ảnh trên mạng xã hội cho thấy hàng chục thi thể không nguy
     return target.format('DD/MM/YYYY');
   };
   const [postsData, setPostsData] = useState(posts);
-  const currentUserId = "hao"; 
+  const currentUserId = "hao";
 
   const toggleExpand = (postId: string | number) => {
     setExpandedPosts(prev => ({
@@ -194,67 +196,112 @@ Hình ảnh trên mạng xã hội cho thấy hàng chục thi thể không nguy
   }, [showPicker]);
   return (
     <>
-      <div className="flex flex-col lg:flex-row gap-0 mt-[10px] relative z-10">
+      <div className="flex flex-col lg:flex-row gap-0 mt-[10px] relative z-10 min-h-screen mb-10">
         <div className="space-y-6 lg:w-2/3 mr-10">
-          <Card className="border-secondary dark:bg-gray-800  shadow-xl">
-            <CardHeader className="flex flex-row items-center gap-x-3p-0">
-              <img
-                src={userProfile?.avatar || "/placeholder.svg"}
-                alt="Avatar"
-                className="w-14 h-14 rounded-full border border-secondary dark:bg-gray-800  shadow-md"
-              />
-              <div className="flex flex-col">
-                <span className="font-medium">{userProfile?.fullName}</span>
-                <Select defaultValue="public">
-                  <SelectTrigger className="w-[140px] h-7 text-xs mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent >
-                    <SelectItem value="public"><Globe />Công khai</SelectItem>
-                    <SelectItem value="private"><GlobeLock />Riêng tư</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
+          <div
+  className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
+  onClick={() => setOpenCreatePostDialog(true)}
+>
+  <img
+    src={userProfile?.avatar || "/placeholder.svg"}
+    alt="Avatar"
+    className="w-10 h-10 rounded-full border"
+  />
 
-            <CardContent className="mt-4 p-0 ">
-              <Textarea
-                value={postContent}
-                onChange={(e) => setPostContent(e.target.value)}
-                placeholder="Bạn đang nghĩ gì?"
-                className="resize-none min-h-[100px] border-0 border-b  focus:ring-0 focus-visible:ring-0 dark:bg-gray-800  text-lg placeholder:text-sidebar-ring"
-              />
+  <div
+    className="flex-1 bg-gray-100 dark:bg-gray-700 text-muted-foreground px-4 py-2 rounded-full text-sm"
+  >
+    Bạn đang nghĩ gì?
+  </div>
+</div>
 
 
-              <div className="flex gap-4 mt-4 pl-6 text-muted-foreground relative">
-                <div className="relative">
-                  <SmileIcon
-                    className="w-6 h-6 cursor-pointer"
-                    onClick={() => setShowPicker(!showPicker)}
+          <Dialog open={openCreatePostDialog} onOpenChange={setOpenCreatePostDialog}>
+            <DialogContent className="sm:max-w-[600px] p-0  ">
+              {/* Header của dialog */}
+              <DialogHeader className="border-b px-6 pt-4 pb-2 bg-background">
+                <DialogTitle className="text-lg font-semibold">Tạo bài viết</DialogTitle>
+              </DialogHeader>
+
+              {/* Nội dung */}
+              <div className="px-6 pb-6 pt-4 space-y-4 bg-background">
+                {/* Avatar + chọn quyền riêng tư */}
+                <div className="flex items-start gap-3">
+                  <img
+                    src={userProfile?.avatar || "/placeholder.svg"}
+                    alt="Avatar"
+                    className="w-12 h-12 rounded-full border border-border"
                   />
-                  {showPicker && (
-                    <div ref={emojiPickerRef} className="absolute z-50 top-8">
-                      <EmojiPicker
-                        onEmojiClick={(emojiData) => {
-                          setPostContent((prev) => prev + emojiData.emoji);
-                          setShowPicker(false);
-                        }}
-                        autoFocusSearch={false}
-                      />
-                    </div>
-                  )}
+                  <div className="flex flex-col">
+                    <span className="font-medium text-sm">{userProfile?.fullName}</span>
+                    <Select defaultValue="public">
+                      <SelectTrigger className="w-[140px] h-7 text-xs mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="public">
+                          <Globe className="mr-2 h-4 w-4" /> Công khai
+                        </SelectItem>
+                        <SelectItem value="private">
+                          <GlobeLock className="mr-2 h-4 w-4" /> Riêng tư
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <ImageIcon className="w-6 h-6 cursor-pointer" />
-                <MapPinIcon className="w-6 h-6 cursor-pointer" />
+                {/* Nội dung bài viết */}
+                <Textarea
+                  value={postContent}
+                  onChange={(e) => setPostContent(e.target.value)}
+                  placeholder="Bạn đang nghĩ gì?"
+                  className="resize-none min-h-[100px] border-0 border-b focus:ring-0 focus-visible:ring-0 text-base placeholder:text-muted-foreground"
+                />
+
+                {/* Hành động bổ sung */}
+                <div className="flex gap-4 text-muted-foreground relative pl-1">
+                  <div className="relative">
+                    <SmileIcon
+                      className="w-5 h-5 cursor-pointer"
+                      onClick={() => setShowPicker(!showPicker)}
+                    />
+                    {showPicker && (
+                      <div
+                        ref={emojiPickerRef}
+                        className="absolute z-[9999] -top-50 -left-95"
+                      >
+                        <EmojiPicker
+                          onEmojiClick={(emojiData) => {
+                            setPostContent((prev) => prev + emojiData.emoji);
+                            setShowPicker(false);
+                          }}
+                          autoFocusSearch={false}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <ImageIcon className="w-5 h-5 cursor-pointer" />
+                  <MapPinIcon className="w-5 h-5 cursor-pointer" />
+                </div>
+
+                {/* Nút đăng bài */}
+                <div className="flex justify-end pt-2">
+                  <Button
+                    onClick={() => {
+                      // Gửi bài viết ở đây
+                      setOpenCreatePostDialog(false);
+                    }}
+                  >
+                    Đăng bài
+                  </Button>
+                </div>
               </div>
+            </DialogContent>
+          </Dialog>
 
 
-              <div className="flex justify-end mt-6 pr-6">
-                <Button variant="default">Đăng bài</Button>
-              </div>
-            </CardContent>
-          </Card>
+
           {postsData?.map((post) => (
 
             <Card key={post?.id} className="border-secondary dark:bg-gray-800  shadow-xl">
@@ -484,8 +531,8 @@ Hình ảnh trên mạng xã hội cho thấy hàng chục thi thể không nguy
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="public"><Globe/>Công khai</SelectItem>
-                        <SelectItem value="private"><GlobeLock/>Riêng tư</SelectItem>
+                        <SelectItem value="public"><Globe />Công khai</SelectItem>
+                        <SelectItem value="private"><GlobeLock />Riêng tư</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

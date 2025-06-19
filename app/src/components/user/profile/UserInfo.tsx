@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Plus, Mail, Cake, MapPinHouse } from 'lucide-react';
 import AppContext from "@/context/AppContext";
 import dayjs from "dayjs";
+import { PhotoProvider, PhotoView } from 'react-photo-view';
+import 'react-photo-view/dist/react-photo-view.css';
 
 
 function UserInfo() {
@@ -22,12 +24,17 @@ function UserInfo() {
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center w-[300px] ">
                             {/* Avatar */}
                             <div className="mb-4">
+                                <PhotoProvider>
+                                 <PhotoView src={userProfile?.avatar}>
                                 <img
                                     src={userProfile?.avatar || "/placeholder.svg"}
                                     alt="Avatar"
                                     className="w-35 h-35 rounded-full border-1 border-gray-100 shadow-md"
                                 />
+                                </PhotoView>
+                                </PhotoProvider>
                             </div>
+
                             <div className="text-center mb-2">
                                 <div className="flex items-center justify-center gap-1">
                                     <h2 className="text-xl font-bold text-black dark:text-white">
