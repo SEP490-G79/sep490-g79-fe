@@ -1,16 +1,26 @@
-import HomePage from '@/pages/Common/HomePage'
-import LandingPage from '@/pages/Common/LandingPage'
 
-import React from 'react'
-import { Route, Routes } from 'react-router-dom'
+import LandingPage from "@/pages/Common/LandingPage";
+import { Login } from "@/pages/Common/Login";
+import { Register } from "@/pages/Common/Register";
+import HomePage from '@/pages/Common/HomePage'
+
+
+import React from "react";
+import { Route } from "react-router-dom";
 
 function PublicRoutes() {
   return (
     <>
+
+      <Route path="/landing-page" element={<LandingPage />} />
+      <Route path="/login" element={<Login />} />
+      {/* <Route path="/register" element={<Register />} /> */}
+
         <Route path='/' element={<LandingPage/>}/>
         <Route path='/home' element={<HomePage/>}/>
+
     </>
-  )
+  );
 }
 
-export default PublicRoutes
+export default PublicRoutes;
