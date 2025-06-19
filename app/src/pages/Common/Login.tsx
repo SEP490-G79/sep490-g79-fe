@@ -1,190 +1,266 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { FcGoogle } from "react-icons/fc";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import authorizedAxiosInstance from "@/utils/authorizedAxios";
-import { toast } from "react-toastify";
-import bgImage from "@/assets/dc3.jpg"; // đúng đường dẫn assets của bạn
+import { toast } from "sonner"
+import Image from "@/assets/Home_1.jpg"; // đúng đường dẫn assets của bạn
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Loader2Icon } from "lucide-react";
+import { useForm } from "react-hook-form";
+import AppContext from "@/context/AppContext";
+import axios from "axios";
 
 export const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showResend, setShowResend] = useState(false);
-  const [resendMsg, setResendMsg] = useState("");
+  const [loginLoading, setLoginLoading] = useState<Boolean>(false);
+  const [googleloginLoading, setGoogleLoginLoading] = useState<Boolean>(false);
+  const { login, authAPI } = useContext(AppContext);
   const navigate = useNavigate();
-  const location = useLocation();
+  const hasRun = useRef(false);
 
-  useEffect(() => {
-    const query = new URLSearchParams(location.search);
-    const googleToken = query.get("googleToken");
-    const userInfo = query.get("userInfo");
-    const error = query.get("error");
+  const loginSchema = z.object({
+    email: z.string().trim().min(1, {
+      message: "Tên tài khoản hoặc email không được để trống",
+    }),
+    password: z.string().trim().min(1, {
+      message: "Mật khẩu không được để trống",
+    }),
+  });
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-    if (googleToken && userInfo) {
-      localStorage.setItem("accessToken", googleToken);
-      localStorage.setItem("userInfo", userInfo);
-      navigate("/");
+   useEffect(() => {
+    // cho toast hien thi 1 lan duy nhat
+    if (hasRun.current) return;
+    hasRun.current = true;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const isLoginByGoogle = urlParams.get("isLoginByGoogle");
+    const message = urlParams.get("message");
+
+    if(isLoginByGoogle === 'false'){
+      setGoogleLoginLoading(false);
+      setTimeout(() => {
+                setGoogleLoginLoading(false);
+                toast.error(message);
+              }, 1000);
     }
 
-    if (error === "unverified") {
-      toast.error("Tài khoản chưa xác thực. Vui lòng kiểm tra email.");
-      setShowResend(true);
-      const savedEmail = localStorage.getItem("unverifiedEmail");
-      if (savedEmail) setEmail(savedEmail);
-    }
-
-    if (error === "google_failed") {
-      toast.error("Đăng nhập bằng Google thất bại.");
-    }
-  }, [location, navigate]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await authorizedAxiosInstance.post("/auth/login", {
-        email,
-        password,
-      });
-      localStorage.setItem("accessToken", res.data.accessToken);
-      localStorage.setItem("userInfo", JSON.stringify(res.data.users));
-      navigate("/");
-    } catch (error) {
-      const msg = error?.response?.data?.message || "Login failed";
-      toast.error(msg);
-      if (error?.response?.status === 403 && msg.includes("xác thực")) {
-        setShowResend(true);
-        localStorage.setItem("unverifiedEmail", email);
+    if(isLoginByGoogle === 'true'){
+        setGoogleLoginLoading(true);
+        axios.get(`${authAPI}/getUserByAccessToken`,{withCredentials: true})
+          .then(res => {
+            const {user, accessToken, accessTokenExp} = res.data;
+            switch(user.status){
+              case 'verifying':
+                setGoogleLoginLoading(false);
+                toast.error("Tài khoản của bạn chưa kích hoạt! Hãy kích hoạt thông qua email")
+                    break;
+              case 'banned':
+                setGoogleLoginLoading(false);
+                toast.error("Tài khoản của bạn đã bị khóa!")
+                    break;
+             default:
+              toast.success("Đăng nhập bằng tài khoản google thành công!")
+              setTimeout(() => {
+                setGoogleLoginLoading(false);
+                login(accessToken, user);
+                navigate("/home")
+              }, 2000);
+              break;
+          }
+          })
+          .catch(error => {
+            console.log(error?.response.data.message);
+          });
       }
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [])
 
-  const resendVerification = async () => {
-    const emailToSend = email || localStorage.getItem("unverifiedEmail");
-    if (!emailToSend) {
-      toast.error("Không tìm thấy email để gửi lại xác thực.");
-      return;
-    }
+  const onLogin = async ({ email, password }: z.infer<typeof loginSchema>) => {
+  setLoginLoading(true);
+  try {
+    // console.log(`${authAPI}/login`, {
+    //   email: email,
+    //   password: password,
+    // })
+    // return;
+    const response = await axios.post(`${authAPI}/login`, {
+      email: email,
+      password: password,
+    });
 
-    try {
-      const res = await authorizedAxiosInstance.post(
-        "/auth/resend-verification",
-        { email: emailToSend }
-      );
-      setResendMsg(res.data.message);
-      toast.success(res.data.message);
-      localStorage.removeItem("unverifiedEmail");
-    } catch (err) {
-      const msg = err?.response?.data?.message || "Gửi lại email thất bại.";
-      setResendMsg(msg);
-      toast.error(msg);
+    if (response.status === 200) {
+      toast.success("Đăng nhập thành công!");
+      login(response.data.accessToken, response.data.user)
+      setTimeout(() => {
+        setLoginLoading(false);
+        navigate("/home");
+      }, 2000);
     }
-  };
+  } catch (error: any) {
+    if(error.response?.status === 400){
+      toast.error(error?.response.data.message);
+    }else {
+      toast.error(error?.response.data.message, {
+          description: "Gửi lại mã xác nhận ?",
+          action: {
+            label: "Gửi lại",
+            onClick: () => console.log("Gửi lại"),
+          },
+        })
+    }
+    setLoginLoading(false);
+  }
+};
 
-  const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:9999/api/auth/google";
-  };
+function handleGoogleLogin(){
+    window.open(`${authAPI}/loginByGoogle`, "_self");
+  }
 
   return (
-    <div className="flex w-full h-[600px] ms-40 overflow-hidden">
-      {/* Left side: Image */}
-      <div className="w-1/2 h-full">
+    <div className="w-full h-full flex">
+      <div className="basis-1/2 flex items-center justify-center p-4">
         <img
-          src={bgImage}
-          alt="Cute pets"
+          src={Image}
+          alt="Login illustration"
           className="w-full h-full object-cover"
         />
       </div>
 
-      {/* Right side: Login form */}
-      <div className="w-1/2 flex items-stretch bg-white dark:bg-zinc-900">
-        <Card
-          className="w-full h-[600px] max-w-md p-8 shadow-xl rounded-none
-"
-        >
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold tracking-tight text-primary">
-              🐾 Đăng nhập
-            </CardTitle>
-            <p className="text-muted-foreground text-sm mt-2">
-              Chào mừng bạn quay lại!
-            </p>
-          </CardHeader>
+      <div className="basis-1/2 h-full">
+        <div className="flex flex-col flex-grow items-center">
+          {/* Title + SubTitle - Giới hạn width như Card */}
+          <div className="w-full  max-w-md text-center mt-5 flex flex-col justify-center items-center px-5 mt-35">
+            <h1 className="scroll-m-20 text-4xl font-bold tracking-tight text-balance">
+              Đăng nhập
+            </h1>
 
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Mật khẩu</Label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
+            <div className="w-full flex items-center my-4">
+              <Separator className="flex-1" />
+              <span className="mx-2 text-muted-foreground">Hoặc</span>
+              <Separator className="flex-1" />
+            </div>
 
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-              </Button>
+            <Button
+              variant="outline"
+              className="w-full flex items-center gap-2 cursor-pointer"
+              onClick={handleGoogleLogin}
+              disabled={loginLoading ? true : undefined}
+            >
+              Đăng nhập bằng tài khoản Google
+            </Button>
+          </div>
 
-              <div className="relative flex items-center">
-                <Separator className="flex-1" />
-                <span className="px-3 text-xs text-muted-foreground">Hoặc</span>
-                <Separator className="flex-1" />
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center gap-2"
-              >
-                <FcGoogle size={20} /> Đăng nhập bằng Google
-              </Button>
-
-              {showResend && (
-                <div className="mt-4 text-center text-sm">
-                  <p className="text-red-500">
-                    Tài khoản chưa được xác thực. Hãy kiểm tra email của bạn.
-                  </p>
-                  <Button
-                    variant="outline"
-                    onClick={resendVerification}
-                    className="mt-2"
+          {/* Card form */}
+          <div className="flex  justify-center w-full">
+            <Card className="w-full max-w-md bg-transparent border-0 shadow-none">
+              <CardContent className="">
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(onLogin)}
+                    className="flex flex-col gap-2"
                   >
-                    Gửi lại email xác thực
-                  </Button>
-                  {resendMsg && (
-                    <p className="text-muted-foreground mt-2">{resendMsg}</p>
-                  )}
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Nhập email..."
+                              className="my-2"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Mật khẩu</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              {...field}
+                              placeholder="Nhập mật khẩu..."
+                              className="my-2"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {loginLoading ? (
+                      <Button type="submit" className="w-full" disabled>
+                        <Loader2Icon className="animate-spin" />
+                        Vui lòng chờ
+                      </Button>
+                    ) : (
+                      <Button
+                        type="submit"
+                        className="w-full cursor-pointer"
+                        disabled={googleloginLoading ? true : undefined}
+                      >
+                        Đăng nhập
+                      </Button>
+                    )}
+                  </form>
+                </Form>
+              </CardContent>
+              <CardFooter className="flex-col gap-2">
+                <div className="w-full flex items-center">
+                  <Separator className="flex-1" />
+                  <span className="text-(--muted-foreground)">
+                    Bản chưa có tài khoản?
+                  </span>
+                  <Separator className="flex-1" />
                 </div>
-              )}
 
-              <p className="text-center text-sm text-muted-foreground mt-6">
-                Bạn chưa có tài khoản?{" "}
-                <a href="/register" className="text-primary hover:underline">
-                  Đăng ký ngay
-                </a>
-              </p>
-            </form>
-          </CardContent>
-        </Card>
+                {googleloginLoading ? (
+                  <Button type="submit" className="w-full" disabled>
+                    <Loader2Icon className="animate-spin" />
+                    Vui lòng chờ
+                  </Button>
+                ) : (
+                  <Button variant="outline" asChild>
+                    <Link to="/register" className="w-full my-5">
+                      Đăng ký
+                    </Link>
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

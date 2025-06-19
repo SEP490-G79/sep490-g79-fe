@@ -5,6 +5,9 @@ import React, { createContext, useState, useContext, type ReactNode } from "reac
 interface AppContextType {
   user: User | null;
   accessToken: string | null;
+  coreAPI: string;
+  authAPI: string;
+  adminAPI: string;
   login: (token: string, userData: User) => void;
   logout: () => void;
 }
@@ -12,6 +15,9 @@ interface AppContextType {
 const AppContext = createContext<AppContextType>({
   user: null,
   accessToken: null,
+  coreAPI: "",
+  authAPI: "",
+  adminAPI: "",
   login: () => {},
   logout: () => {},
 });
@@ -20,10 +26,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  const login = (token: string, userData: User) => {
-    setAccessToken(token);
+  // APIs
+  const coreAPI = 'http://localhost:9999';
+  const authAPI = 'http://localhost:9999/auth';
+  const adminAPI = 'http://localhost:9999/admin';
+
+  const login = (accessToken: string, userData: User) => {
+    setAccessToken(accessToken);
     setUser(userData);
-    localStorage.setItem("accessToken", token);
+    localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
@@ -35,7 +46,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   return (
-    <AppContext.Provider value={{ user, accessToken, login, logout }}>
+    <AppContext.Provider value={{ user, accessToken, coreAPI, authAPI, adminAPI, login, logout }}>
       {children}
     </AppContext.Provider>
   );
