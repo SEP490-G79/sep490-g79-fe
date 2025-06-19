@@ -5,6 +5,8 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
+import PetCard from "@/components/landing-page/PetCard";
+
 
 function AdoptionActivities() {
   const activities = [
@@ -21,15 +23,39 @@ function AdoptionActivities() {
       petImage: "https://example.com/bella.jpg",
       petDescription: "A cute dog with a fluffy tail.",
     },
+    {
+      id: 2,
+      petName: "Bella",
+      status: "Adopted",
+      date: "2025-06-01",
+      petImage: "https://example.com/bella.jpg",
+      petDescription: "A cute dog with a fluffy tail.",
+    },
+    {
+      id: 3,
+      petName: "Bella",
+      status: "Adopted",
+      date: "2025-06-01",
+      petImage: "https://example.com/bella.jpg",
+      petDescription: "A cute dog with a fluffy tail.",
+    },
+    {
+      id: 4,
+      petName: "Bella",
+      status: "Adopted",
+      date: "2025-06-01",
+      petImage: "https://example.com/bella.jpg",
+      petDescription: "A cute dog with a fluffy tail.",
+    },
   ];
 
   return (
-    <Tabs defaultValue="activities" className="space-y-4">
+    <Tabs defaultValue="activities" className="space-y-4 h-full mb-10  ">
       {/* Tabs header */}
- <TabsList className="w-fit ml-auto border-b border-gray-200  mb-4 flex">
-  <TabsTrigger value="activities">Hoạt động nhận nuôi</TabsTrigger>
-  <TabsTrigger value="adopted">Thú đã nhận nuôi</TabsTrigger>
-</TabsList>
+      <TabsList className="w-fit ml-auto border-b border-gray-200  mb-4 flex">
+        <TabsTrigger value="activities">Hoạt động nhận nuôi</TabsTrigger>
+        <TabsTrigger value="adopted">Thú đã nhận nuôi</TabsTrigger>
+      </TabsList>
 
 
 
@@ -50,24 +76,13 @@ function AdoptionActivities() {
       </TabsContent>
 
       <TabsContent value="adopted">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 ">
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3  gap-4">
           {adoptedPets.map((pet) => (
-            <div
-              key={pet.id}
-              className="p-4 bg-white rounded-lg shadow-md space-y-2"
-            >
-              <img
-                src={pet.petImage}
-                alt={pet.petName}
-                className="w-full h-40 object-cover rounded-md"
-              />
-              <p className="font-semibold">{pet.petName}</p>
-              <p>{pet.petDescription}</p>
-              <p className="text-sm text-gray-500">Adopted on: {pet.date}</p>
-            </div>
+            <PetCard key={pet.id} />
           ))}
         </div>
       </TabsContent>
+
     </Tabs>
   );
 }

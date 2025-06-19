@@ -13,7 +13,7 @@ function ProfilePage() {
   };
 
   return (
-    <div>
+    <div className="h-full w-full">
       {/* Background cover */}
 
       <div className="w-full mx-auto h-[300px] sm:h-[350px] md:h-[400px] px-4 sm:px-6">
@@ -26,7 +26,7 @@ function ProfilePage() {
 
 
       {/* Main layout: 2 cột */}
-      <div className="flex flex-col lg:flex-row gap-0 px-4 sm:px-6 mt-[10px] relative z-10">
+      <div className="flex flex-col lg:flex-row gap-0 px-4 sm:px-6 mt-[10px] min-h-screen relative z-10">
         {/* Cột trái: Card */}
          <div className="hidden lg:block lg:w-1/3">
     <UserInfo />
