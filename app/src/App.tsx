@@ -4,19 +4,21 @@ import { ModeToggle } from "./components/ui/mode-toggle";
 import AppRoutes from "./routes";
 import AppHeader from "./components/layouts/AppHeader";
 import AppFooter from "./components/layouts/AppFooter";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="min-h-screen flex flex-col w-full">
         <AppHeader />
-        <div>
+        <div className="flex-1">
           <AppRoutes />
         </div>
-        <div>
-          <AppFooter />
-        </div>
+        <AppFooter />
       </div>
+
+      <ToastContainer position="top-right" autoClose={3000} />
     </ThemeProvider>
   );
 }
