@@ -123,6 +123,7 @@ export const Login = () => {
     const response = await axios.post(`${authAPI}/login`, {
       email: email,
       password: password,
+      type: 'user'
     });
 
     if (response.status === 200) {
