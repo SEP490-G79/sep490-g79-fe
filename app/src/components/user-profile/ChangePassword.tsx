@@ -4,10 +4,47 @@ import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 export default function ChangePassword() {
-    const [showOldPassword, setShowOldPassword] = React.useState(false);
-    const [showNewPassword, setShowNewPassword] = React.useState(false);
+    const [showOldPassword, setShowOldPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [oldPassword, setOldPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const handleChangePassword = async () => {
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            return alert("Vui lòng điền đầy đủ thông tin.");
+        }
+        if (newPassword !== confirmPassword) {
+            return alert("Mật khẩu mới không khớp.");
+        }
+
+        try {
+           // TODO: Thay bằng dữ liệu thực tế (từ context, localStorage,...)
+            const accessToken = localStorage.getItem("accessToken");
+
+            const response = await axios.put(
+                `http://localhost:9999/users/change-password`,
+                {
+                    oldPassword,
+                    newPassword,
+                    confirmPassword,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                }
+            );
+
+            alert("Đổi mật khẩu thành công!");
+        } catch (error: any) {
+            const message = error.response?.data?.message || "Có lỗi xảy ra.";
+            alert(`Đổi mật khẩu thất bại: ${message}`);
+        }
+    };
     return (
         <Card className="shadow-none border shadow-sm">
             <CardHeader>
@@ -20,12 +57,14 @@ export default function ChangePassword() {
             <CardContent className="space-y-6 border-t pt-6">
                 {/* Mật khẩu cũ */}
                 <div>
-                    <Label htmlFor="currentPassword" className="text-sm mb-1 block">Mật khẩu cũ</Label>
+                    <Label htmlFor="oldPassword" className="text-sm mb-1 block">Mật khẩu cũ</Label>
                     <div className="relative">
                         <Input
-                            id="currentPassword"
+                            id="oldPassword"
                             type={showOldPassword ? "text" : "password"}
                             className="pr-10"
+                            value={oldPassword}
+                            onChange={(e) => setOldPassword(e.target.value)}
                         />
                         <span
                             className="absolute right-3 top-2.5 text-muted-foreground cursor-pointer"
@@ -44,6 +83,8 @@ export default function ChangePassword() {
                             id="newPassword"
                             type={showNewPassword ? "text" : "password"}
                             className="pr-10"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
                         />
                         <span
                             className="absolute right-3 top-2.5 text-muted-foreground cursor-pointer"
@@ -56,12 +97,14 @@ export default function ChangePassword() {
 
                 {/* Xác nhận mật khẩu mới */}
                 <div>
-                    <Label htmlFor="confirmNewPassword" className="text-sm mb-1 block">Xác nhận mật khẩu mới</Label>
+                    <Label htmlFor="confirmPassword" className="text-sm mb-1 block">Xác nhận mật khẩu mới</Label>
                     <div className="relative">
                         <Input
-                            id="confirmNewPassword"
+                            id="confirmPassword"
                             type={showNewPassword ? "text" : "password"}
                             className="pr-10"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
                         />
                         <span
                             className="absolute right-3 top-2.5 text-muted-foreground cursor-pointer"
@@ -89,7 +132,7 @@ export default function ChangePassword() {
                 </div> */}
 
                 {/* Nút đổi mật khẩu */}
-                <Button className="w-full mt-4">Đổi mật khẩu</Button>
+                <Button className="w-full mt-4" onClick={handleChangePassword} >Đổi mật khẩu</Button>
             </CardContent>
         </Card>
     )

@@ -12,7 +12,6 @@ interface AppContextType {
   adminAPI: string;
   login: (token: string, userData: User) => void;
   logout: () => void;
-  getProfile: () => void;
   userProfile: User | null
 }
 
@@ -24,8 +23,7 @@ const AppContext = createContext<AppContextType>({
   adminAPI: "",
   login: () => {},
   logout: () => {},
-  userProfile: null,
-  getProfile: () => {},
+  userProfile: null,  
 });
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -57,19 +55,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.removeItem("user");
   };
 
- const getProfile = async () => {
-  const id = "684ef3df0d4fe7b7340fa873";
-  try {
-    const res = await axios.get(`http://localhost:9999/users/${id}`);
-    setUserProfile(res.data);
-    console.log("userProfile", res.data);
-  } catch (error: any) {
-    console.error(error.response?.data?.message || "Lỗi khi lấy userProfile");
-  }
-};
-useEffect(() => {
-  getProfile();
-}, []);
+  // User profile
+   useEffect(() => {
+ 
+     axios.get(`${userApi}/user-profile`, {
+       headers: {
+         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+       }
+     })
+       .then(res => {
+         setUserProfile(res.data);
+       })
+       .catch(error => {
+         console.log(error.response?.data?.message);
+       });
+   }, []);
 
 
   // User profile
@@ -80,7 +80,7 @@ console.log("userProfile", userProfile);
 
   return (
 
-    <AppContext.Provider value={{ user, accessToken, coreAPI, authAPI, adminAPI, login, logout, getProfile, userProfile }}>
+    <AppContext.Provider value={{ user, accessToken, coreAPI, authAPI, adminAPI, login, logout, userProfile }}>
       {children}
     </AppContext.Provider>
   );

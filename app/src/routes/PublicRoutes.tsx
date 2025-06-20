@@ -3,7 +3,6 @@ import LandingPage from "@/pages/Common/LandingPage";
 import { Login } from "@/pages/Common/Login";
 import { Register } from "@/pages/Common/Register";
 import HomePage from '@/pages/Common/HomePage'
-import LandingPage from '@/pages/Common/LandingPage'
 import Newfeed from '@/pages/Common/NewFeed'
 import ProfilePage from '@/pages/user/profile/ProfilePage'
 import ProfileSettings from '@/components/user-profile/ProfileSetting'
