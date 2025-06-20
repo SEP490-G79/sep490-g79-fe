@@ -21,7 +21,7 @@ const intros: { title: string; href: string; description: string }[] = [
   },
   {
     title: "FAQ",
-    href: "#",
+    href: "/faq",
     description:
       "Giải đáp các câu hỏi thường gặp về nhận nuôi, quy trình, quy định và cách hỗ trợ.",
   }
