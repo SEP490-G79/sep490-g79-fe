@@ -4,8 +4,7 @@ import { ModeToggle } from "./components/ui/mode-toggle";
 import AppRoutes from "./routes";
 import AppHeader from "./components/layouts/AppHeader";
 import AppFooter from "./components/layouts/AppFooter";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from "sonner";
 
 function App() {
   return (
@@ -20,9 +19,9 @@ function App() {
         <AppFooter />
       </div>
 
-      <ToastContainer position="top-right" autoClose={3000} />
+      <Toaster richColors position="top-center"/>
     </ThemeProvider>
   );
 }
 
-export default App;
+export default App

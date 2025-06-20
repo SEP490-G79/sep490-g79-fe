@@ -1,137 +1,231 @@
-"use client";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import authorizedAxiosInstance from "@/utils/authorizedAxios";
-import { useNavigate } from "react-router-dom";
-import bgImage from "@/assets/dc3.jpg";
-import { toast } from "react-toastify";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { FcGoogle } from "react-icons/fc";
+import { useNavigate, Link } from "react-router-dom";
+import Image from "@/assets/Home_1.jpg";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Loader2Icon } from "lucide-react";
+import { useForm } from "react-hook-form";
+import axios from "axios";
+import AppContext from "@/context/AppContext";
+import { toast } from "sonner";
+
+const registerSchema = z
+  .object({
+    fullName: z.string().min(1, "Tên tài khoản không được để trống"),
+    email: z.string().email("Email không hợp lệ"),
+    password: z.string().min(6, "Mật khẩu phải từ 6 ký tự"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Mật khẩu xác nhận không khớp",
+    path: ["confirmPassword"],
+  });
 
 export const Register = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
-
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [googleRegisterLoading, setGoogleRegisterLoading] = useState(false);
+  const { authAPI } = useContext(AppContext);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match!");
-      return;
-    }
+  const form = useForm<z.infer<typeof registerSchema>>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-    setLoading(true);
+  const sendActiveToken = async (activeToken : string) => {
     try {
-      const res = await authorizedAxiosInstance.post("/auth/register", {
-        username,
-        email,
-        password,
+      const res = await axios.post(`${authAPI}/send-activation-email`, {
+        activeToken: activeToken
       });
-      toast.success("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
+      toast.success(res?.data.message)
     } catch (error: any) {
-      console.error("Registration failed", error);
-      const errMsg =
-        error.response?.data?.message || "Đăng ký thất bại. Vui lòng thử lại.";
-      toast.error(errMsg);
-    } finally {
-      setLoading(false);
+      console.log(error?.response.data.message)
+    }
+    
+  }
+
+  const onRegister = async ({ fullName, email,password, confirmPassword }: z.infer<typeof registerSchema>) => {
+    console.log(fullName, email,password, confirmPassword);
+    try {
+      setRegisterLoading(true);
+      const res = await axios.post(`${authAPI}/register`, {
+        fullName: fullName,
+        email: email,
+        password: password
+      });
+      if(res.status === 200){
+        toast.success(res.data.message);
+        setRegisterLoading(false);
+        sendActiveToken(res.data.activeToken);
+        // navigate("/login");
+      }
+    } catch (error : any) {
+      toast.error(error?.response.data.message);
+      setRegisterLoading(false);
     }
   };
 
+  function handleGoogleRegister(){
+    window.open(`${authAPI}/loginByGoogle`, "_self");
+  }
+
   return (
-    <div className="w-screen h-screen flex items-center justify-center bg-background text-foreground relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-white/30 to-white/10 dark:from-white/10 dark:to-white/5 z-0" />
+    <div className="w-full min-h-screen flex flex-col md:flex-row">
+      {/* Hình minh hoạ */}
+      <div className="hidden md:flex basis-1/2 items-center justify-center p-4">
+        <img
+          src={Image}
+          alt="Register illustration"
+          className="w-full h-full object-cover rounded-xl"
+        />
+      </div>
 
-      <div className="z-10 w-full max-w-6xl h-4/5 flex shadow-2xl rounded-3xl overflow-hidden backdrop-blur-md bg-card text-card-foreground flex-col md:flex-row">
-        {/* Ảnh chó mèo */}
-        <div className="w-full md:w-1/2 hidden md:block relative">
-          <img
-            src={bgImage}
-            alt="Dog and Cat"
-            className="w-full h-full object-cover"
-          />
-        </div>
+      {/* Form */}
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-md flex flex-col gap-6">
+          {/* Tiêu đề + Google */}
+          <div className="text-center space-y-4">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+              Đăng ký
+            </h1>
 
-        {/* Form Register */}
-        <div className="w-full md:w-1/2 flex flex-col items-center justify-center px-10 py-8">
-          <h2 className="text-4xl font-extrabold text-primary mb-2 flex items-center gap-2">
-            🐾 Join PawShelter!
-          </h2>
-          <p className="text-muted-foreground mb-6 text-center">
-            Create your account and start your paw-some journey.
-          </p>
+            <Button
+              variant="outline"
+              className="w-full flex items-center gap-2 justify-center"
+              disabled={googleRegisterLoading}
+              onClick={handleGoogleRegister}
+            >
+              <FcGoogle className="text-xl" />
+              Đăng nhập bằng Google
+            </Button>
 
-          <form onSubmit={handleSubmit} className="w-full max-w-md space-y-5">
-            <div>
-              <div>
-                <Label>Username</Label>
-                <Input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="rounded-xl focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="yourname123"
-                  required
-                />
+            <div className="w-full flex items-center">
+              <Separator className="flex-1" />
+              <span className="mx-2 text-muted-foreground">Hoặc</span>
+              <Separator className="flex-1" />
+            </div>
+          </div>
+
+          {/* Card */}
+          <Card className="bg-transparent border-0 shadow-none w-full">
+            <CardContent>
+              <Form {...form}>
+                <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(onRegister)}>
+                  <FormField
+                    control={form.control}
+                    name="fullName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tên tài khoản<span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Nhập tên đầy đủ của bạn..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email<span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Nhập email..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mật khẩu<span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="password"
+                            placeholder="Nhập mật khẩu..."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Xác nhận mật khẩu<span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="password"
+                            placeholder="Nhập lại mật khẩu..."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={registerLoading}
+                  >
+                    {registerLoading ? (
+                      <>
+                        <Loader2Icon className="animate-spin mr-2" />
+                        Đang đăng ký...
+                      </>
+                    ) : (
+                      "Đăng ký"
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+
+            <CardFooter className="flex-col gap-2 mt-2">
+              <div className="w-full flex items-center">
+                <Separator className="flex-1" />
+                <span className="mx-2 text-muted-foreground">
+                  Đã có tài khoản?
+                </span>
+                <Separator className="flex-1" />
               </div>
 
-              <Label>Email</Label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="rounded-xl focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-            <div>
-              <Label>Password</Label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="rounded-xl focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-            <div>
-              <Label>Confirm Password</Label>
-              <Input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="rounded-xl focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              {loading ? "Registering..." : "Register"}
-            </Button>
-          </form>
-
-          <p className="text-sm mt-4">
-            Already have an account?{" "}
-            <a href="/login" className="text-primary hover:underline">
-              Log in
-            </a>
-          </p>
-          <p className="text-xs text-muted-foreground mt-6">
-            © 2025 PawShelter
-          </p>
+              <Button variant="outline" asChild className="w-full">
+                <Link to="/login">Đăng nhập</Link>
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
       </div>
     </div>
