@@ -12,6 +12,7 @@ import ProfileSettings from "@/components/user-profile/ProfileSetting";
 import HomePage from "@/pages/Common/HomePage";
 import HandleVerify from "@/pages/Common/HandleVerify";
 import { Register } from "@/pages/Common/Register";
+import { FAQ } from "@/pages/Common/FAQ";
 
 function AppRoutes() {
   return (
@@ -22,7 +23,8 @@ function AppRoutes() {
         <Route path="/register" element={<Register />} />
         <Route path="/active-account" element={<HandleVerify />} />
       </Route>
-
+      <Route path="/faq" element={<FAQ />} />
+      
       <Route element={<PrivateRoutes />}>
         <Route index element={<Navigate to="/home" replace={true} />} />
         <Route path="/home" element={<HomePage />} />
