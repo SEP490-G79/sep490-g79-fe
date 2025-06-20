@@ -100,6 +100,19 @@ export const Login = () => {
       }
   }, [])
 
+
+  const sendActiveToken = async (activeToken : string) => {
+    try {
+      const res = await axios.post(`${authAPI}/send-activation-email`, {
+        activeToken: activeToken
+      });
+      toast.success(res?.data.message)
+    } catch (error: any) {
+      console.log(error?.response.data.message)
+    }
+    
+  }
+
   const onLogin = async ({ email, password }: z.infer<typeof loginSchema>) => {
   setLoginLoading(true);
   try {
@@ -129,7 +142,7 @@ export const Login = () => {
           description: "Gửi lại mã xác nhận ?",
           action: {
             label: "Gửi lại",
-            onClick: () => console.log("Gửi lại"),
+            onClick: () => sendActiveToken(error?.response.data.activeToken),
           },
         })
     }

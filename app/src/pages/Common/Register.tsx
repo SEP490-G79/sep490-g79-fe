@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -23,10 +23,13 @@ import {
 } from "@/components/ui/form";
 import { Loader2Icon } from "lucide-react";
 import { useForm } from "react-hook-form";
+import axios from "axios";
+import AppContext from "@/context/AppContext";
+import { toast } from "sonner";
 
 const registerSchema = z
   .object({
-    username: z.string().min(1, "Tên tài khoản không được để trống"),
+    fullName: z.string().min(1, "Tên tài khoản không được để trống"),
     email: z.string().email("Email không hợp lệ"),
     password: z.string().min(6, "Mật khẩu phải từ 6 ký tự"),
     confirmPassword: z.string(),
@@ -39,16 +42,55 @@ const registerSchema = z
 export const Register = () => {
   const [registerLoading, setRegisterLoading] = useState(false);
   const [googleRegisterLoading, setGoogleRegisterLoading] = useState(false);
+  const { authAPI } = useContext(AppContext);
+  const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
+      fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
     },
   });
+
+  const sendActiveToken = async (activeToken : string) => {
+    try {
+      const res = await axios.post(`${authAPI}/send-activation-email`, {
+        activeToken: activeToken
+      });
+      toast.success(res?.data.message)
+    } catch (error: any) {
+      console.log(error?.response.data.message)
+    }
+    
+  }
+
+  const onRegister = async ({ fullName, email,password, confirmPassword }: z.infer<typeof registerSchema>) => {
+    console.log(fullName, email,password, confirmPassword);
+    try {
+      setRegisterLoading(true);
+      const res = await axios.post(`${authAPI}/register`, {
+        fullName: fullName,
+        email: email,
+        password: password
+      });
+      if(res.status === 200){
+        toast.success(res.data.message);
+        setRegisterLoading(false);
+        sendActiveToken(res.data.activeToken);
+        // navigate("/login");
+      }
+    } catch (error : any) {
+      toast.error(error?.response.data.message);
+      setRegisterLoading(false);
+    }
+  };
+
+  function handleGoogleRegister(){
+    window.open(`${authAPI}/loginByGoogle`, "_self");
+  }
 
   return (
     <div className="w-full min-h-screen flex flex-col md:flex-row">
@@ -74,9 +116,10 @@ export const Register = () => {
               variant="outline"
               className="w-full flex items-center gap-2 justify-center"
               disabled={googleRegisterLoading}
+              onClick={handleGoogleRegister}
             >
               <FcGoogle className="text-xl" />
-              Đăng ký bằng Google
+              Đăng nhập bằng Google
             </Button>
 
             <div className="w-full flex items-center">
@@ -90,15 +133,15 @@ export const Register = () => {
           <Card className="bg-transparent border-0 shadow-none w-full">
             <CardContent>
               <Form {...form}>
-                <form className="flex flex-col gap-4">
+                <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(onRegister)}>
                   <FormField
                     control={form.control}
-                    name="username"
+                    name="fullName"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Tên tài khoản<span className="text-destructive">*</span></FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Nhập username..." />
+                          <Input {...field} placeholder="Nhập tên đầy đủ của bạn..." />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
