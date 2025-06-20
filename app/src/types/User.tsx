@@ -1,12 +1,17 @@
 export interface User {
-    id: string;
-    username: string;
-    fullName: string;
-    email: string;
-    role: string;
-    avatar: string;
-    isActive?: boolean;
-    phoneNumber?: string;
-    createdAt?: string;
-    //.........
-  }
+
+  _id: string;
+  username: string;
+  fullName: string;
+  role: string;
+  email: string;
+  isActive?: boolean;
+  avatar: string;
+  bio: string;
+  dob: string; 
+  phoneNumber: string;
+  address: string;
+  background: string;
+  createdAt?: string;
+}
+
