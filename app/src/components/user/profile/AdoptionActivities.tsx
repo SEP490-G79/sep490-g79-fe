@@ -52,185 +52,149 @@ function AdoptionActivities() {
   const [adoptedPage, setAdoptedPage] = useState(1);
   const [activityPage, setActivityPage] = useState(1);
 
-  const activities: MissionForm[] = [
-    {
-      _id: "subm1",
-      adoptionForm: {
-        pet: {
-          name: "Milo",
-          photos: ["https://i.pinimg.com/736x/ad/69/6d/ad696deac38edaac546dba68e0c62a6e.jpg"],
-          tokenMoney: 500000,
-        },
-        shelter: {
-          name: "Happy Paws Shelter",
-        },
+ const activities: MissionForm[] = [
+  {
+    _id: "subm1",
+    adoptionForm: {
+      pet: {
+        name: "Milo",
+        photos: ["https://i.pinimg.com/736x/ad/69/6d/ad696deac38edaac546dba68e0c62a6e.jpg"],
+        tokenMoney: 500000,
       },
-      createdAt: "2025-06-15T10:30:00.000Z",
-      status: "reviewed",
-      transportMethod: "Tự đến đón",
+      shelter: { name: "Happy Paws Shelter" },
     },
-    {
-      _id: "subm2",
-      adoptionForm: {
-        pet: {
-          name: "Luna",
-          photos: ["https://i.pinimg.com/736x/71/27/c0/7127c026c4b4e8d24056555e2a026a26.jpg"],
-          tokenMoney: 0,
-        },
-        shelter: {
-          name: "Green Forest Shelter",
-        },
+    createdAt: "2025-06-15T10:30:00.000Z",
+    status: "reviewed",
+    transportMethod: "Tự đến đón",
+  },
+  {
+    _id: "subm2",
+    adoptionForm: {
+      pet: {
+        name: "Luna",
+        photos: ["https://i.pinimg.com/736x/71/27/c0/7127c026c4b4e8d24056555e2a026a26.jpg"],
+        tokenMoney: 0,
       },
-      createdAt: "2025-06-10T09:00:00.000Z",
-      status: "approved",
-      transportMethod: "Giao tận nơi",
+      shelter: { name: "Green Forest Shelter" },
     },
-    {
-      _id: "subm3",
-      adoptionForm: {
-        pet: {
-          name: "Luna",
-          photos: ["https://i.pinimg.com/736x/71/27/c0/7127c026c4b4e8d24056555e2a026a26.jpg"],
-          tokenMoney: 0,
-        },
-        shelter: {
-          name: "Green Forest Shelter",
-        },
+    createdAt: "2025-06-14T09:00:00.000Z",
+    status: "approved",
+    transportMethod: "Giao tận nơi",
+  },
+  {
+    _id: "subm3",
+    adoptionForm: {
+      pet: {
+        name: "Charlie",
+        photos: ["https://i.pinimg.com/736x/90/ba/fb/90bafbb4368eb094cf2d33ead399d83b.jpg"],
+        tokenMoney: 200000,
       },
-      createdAt: "2025-06-10T09:00:00.000Z",
-      status: "approved",
-      transportMethod: "Giao tận nơi",
+      shelter: { name: "Blue Sky Rescue" },
     },
-    {
-      _id: "subm4",
-      adoptionForm: {
-        pet: {
-          name: "Luna",
-          photos: ["https://i.pinimg.com/736x/71/27/c0/7127c026c4b4e8d24056555e2a026a26.jpg"],
-          tokenMoney: 0,
-        },
-        shelter: {
-          name: "Green Forest Shelter",
-        },
+    createdAt: "2025-06-13T14:20:00.000Z",
+    status: "pending",
+    transportMethod: "Tự đến đón",
+  },
+  {
+    _id: "subm4",
+    adoptionForm: {
+      pet: {
+        name: "Bella",
+        photos: ["https://i.pinimg.com/736x/e3/3f/de/e33fde4cb19284c0388f763bd3b80302.jpg"],
+        tokenMoney: 100000,
       },
-      createdAt: "2025-06-10T09:00:00.000Z",
-      status: "approved",
-      transportMethod: "Giao tận nơi",
+      shelter: { name: "Animal Love Home" },
     },
-    {
-      _id: "subm5",
-      adoptionForm: {
-        pet: {
-          name: "Luna",
-          photos: ["https://i.pinimg.com/736x/71/27/c0/7127c026c4b4e8d24056555e2a026a26.jpg"],
-          tokenMoney: 0,
-        },
-        shelter: {
-          name: "Green Forest Shelter",
-        },
+    createdAt: "2025-06-12T08:15:00.000Z",
+    status: "rejected",
+    transportMethod: "Giao tận nơi",
+  },
+  {
+    _id: "subm5",
+    adoptionForm: {
+      pet: {
+        name: "Coco",
+        photos: ["https://i.pinimg.com/736x/aa/26/24/aa2624dbf350878057be7a17d7e2eb48.jpg"],
+        tokenMoney: 300000,
       },
-      createdAt: "2025-06-10T09:00:00.000Z",
-      status: "approved",
-      transportMethod: "Giao tận nơi",
+      shelter: { name: "Safe Haven Shelter" },
     },
-    {
-      _id: "subm6",
-      adoptionForm: {
-        pet: {
-          name: "Luna",
-          photos: ["https://i.pinimg.com/736x/71/27/c0/7127c026c4b4e8d24056555e2a026a26.jpg"],
-          tokenMoney: 0,
-        },
-        shelter: {
-          name: "Green Forest Shelter",
-        },
+    createdAt: "2025-06-11T11:45:00.000Z",
+    status: "approved",
+    transportMethod: "Tự đến đón",
+  },
+  {
+    _id: "subm6",
+    adoptionForm: {
+      pet: {
+        name: "Max",
+        photos: ["https://i.pinimg.com/736x/6f/f9/4f/6ff94f9aa5f2b75c5bfe7dff8c90ccda.jpg"],
+        tokenMoney: 0,
       },
-      createdAt: "2025-06-10T09:00:00.000Z",
-      status: "approved",
-      transportMethod: "Giao tận nơi",
+      shelter: { name: "Little Paw Shelter" },
     },
-    {
-      _id: "subm7",
-      adoptionForm: {
-        pet: {
-          name: "Luna",
-          photos: ["https://i.pinimg.com/736x/71/27/c0/7127c026c4b4e8d24056555e2a026a26.jpg"],
-          tokenMoney: 0,
-        },
-        shelter: {
-          name: "Green Forest Shelter",
-        },
+    createdAt: "2025-06-10T16:00:00.000Z",
+    status: "reviewed",
+    transportMethod: "Giao tận nơi",
+  },
+  {
+    _id: "subm7",
+    adoptionForm: {
+      pet: {
+        name: "Lucy",
+        photos: ["https://i.pinimg.com/736x/51/d2/72/51d272a966b5c9ef2c418f03c9550ea4.jpg"],
+        tokenMoney: 150000,
       },
-      createdAt: "2025-06-10T09:00:00.000Z",
-      status: "approved",
-      transportMethod: "Giao tận nơi",
+      shelter: { name: "Green Hope Shelter" },
     },
-    {
-      _id: "subm8",
-      adoptionForm: {
-        pet: {
-          name: "Luna",
-          photos: ["https://i.pinimg.com/736x/71/27/c0/7127c026c4b4e8d24056555e2a026a26.jpg"],
-          tokenMoney: 0,
-        },
-        shelter: {
-          name: "Green Forest Shelter",
-        },
+    createdAt: "2025-06-09T07:30:00.000Z",
+    status: "approved",
+    transportMethod: "Tự đến đón",
+  },
+  {
+    _id: "subm8",
+    adoptionForm: {
+      pet: {
+        name: "Rocky",
+        photos: ["https://i.pinimg.com/736x/ce/ea/de/ceeade01914a3cfafc8a43f63ee835e7.jpg"],
+        tokenMoney: 0,
       },
-      createdAt: "2025-06-10T09:00:00.000Z",
-      status: "approved",
-      transportMethod: "Giao tận nơi",
+      shelter: { name: "Urban Pet Rescue" },
     },
-    {
-      _id: "subm9",
-      adoptionForm: {
-        pet: {
-          name: "Luna",
-          photos: ["https://i.pinimg.com/736x/71/27/c0/7127c026c4b4e8d24056555e2a026a26.jpg"],
-          tokenMoney: 0,
-        },
-        shelter: {
-          name: "Green Forest Shelter",
-        },
+    createdAt: "2025-06-08T13:50:00.000Z",
+    status: "pending",
+    transportMethod: "Giao tận nơi",
+  },
+  {
+    _id: "subm9",
+    adoptionForm: {
+      pet: {
+        name: "Daisy",
+        photos: ["https://i.pinimg.com/736x/65/0a/79/650a79051dfbf3a2b39423b301b19abb.jpg"],
+        tokenMoney: 400000,
       },
-      createdAt: "2025-06-10T09:00:00.000Z",
-      status: "approved",
-      transportMethod: "Giao tận nơi",
+      shelter: { name: "Nature Friends Shelter" },
     },
-    {
-      _id: "subm10",
-      adoptionForm: {
-        pet: {
-          name: "Luna",
-          photos: ["https://i.pinimg.com/736x/71/27/c0/7127c026c4b4e8d24056555e2a026a26.jpg"],
-          tokenMoney: 0,
-        },
-        shelter: {
-          name: "Green Forest Shelter",
-        },
+    createdAt: "2025-06-07T12:10:00.000Z",
+    status: "rejected",
+    transportMethod: "Tự đến đón",
+  },
+  {
+    _id: "subm10",
+    adoptionForm: {
+      pet: {
+        name: "Toby",
+        photos: ["https://i.pinimg.com/736x/d5/31/2e/d5312ef6ce346cdcda08704088329a39.jpg"],
+        tokenMoney: 250000,
       },
-      createdAt: "2025-06-10T09:00:00.000Z",
-      status: "approved",
-      transportMethod: "Giao tận nơi",
+      shelter: { name: "Sunshine Shelter" },
     },
-    {
-      _id: "subm11",
-      adoptionForm: {
-        pet: {
-          name: "Luna",
-          photos: ["https://i.pinimg.com/736x/71/27/c0/7127c026c4b4e8d24056555e2a026a26.jpg"],
-          tokenMoney: 0,
-        },
-        shelter: {
-          name: "Green Forest Shelter",
-        },
-      },
-      createdAt: "2025-06-10T09:00:00.000Z",
-      status: "approved",
-      transportMethod: "Giao tận nơi",
-    },
+    createdAt: "2025-06-06T10:25:00.000Z",
+    status: "interviewing",
+    transportMethod: "Giao tận nơi",
+  },
+];
 
-  ];
 
   const adoptedPets = Array.from({ length: 10 }, (_, i) => ({
     id: i + 1,

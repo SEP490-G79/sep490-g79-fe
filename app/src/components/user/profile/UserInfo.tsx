@@ -58,7 +58,8 @@ function UserInfo() {
                                 </div>
                                 <div className="flex items-center gap-2 text-black dark:text-gray-400 text-sm">
                                     <MapPinHouse className="w-4 h-4" />
-                                    <span>{userProfile?.address}</span>
+                                    <span>{userProfile?.address || "Chưa có thông tin"}</span>
+
                                 </div>
                             </div>
 

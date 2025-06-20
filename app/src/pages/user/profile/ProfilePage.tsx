@@ -24,9 +24,9 @@ function ProfilePage() {
 
       <div className="w-full mx-auto h-[300px] sm:h-[350px] md:h-[400px] px-4 sm:px-6">
         <PhotoProvider>
-          <PhotoView src={userProfile?.background}>
+          <PhotoView src={userProfile?.background || "https://i.pinimg.com/736x/39/8c/28/398c2833aad3c95c80ced32b23e17eb8.jpg"}>
             <img
-              src={userProfile?.background}
+              src={userProfile?.background || "https://i.pinimg.com/736x/39/8c/28/398c2833aad3c95c80ced32b23e17eb8.jpg"}
               alt="Background"
               className="w-full h-full object-cover object-center rounded-lg shadow-md"
             />

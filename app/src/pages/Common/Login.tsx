@@ -31,9 +31,8 @@ import AppContext from "@/context/AppContext";
 import axios from "axios";
 
 export const Login = () => {
-  const [loginLoading, setLoginLoading] = useState<Boolean>(false);
-  const [googleloginLoading, setGoogleLoginLoading] = useState<Boolean>(false);
-  const { login, authAPI } = useContext(AppContext);
+  // const [loginLoading, setLoginLoading] = useState<Boolean>(false);
+  const { login, authAPI,loginLoading, setLoginLoading } = useContext(AppContext);
   const navigate = useNavigate();
   const hasRun = useRef(false);
 
@@ -63,31 +62,31 @@ export const Login = () => {
     const message = urlParams.get("message");
 
     if(isLoginByGoogle === 'false'){
-      setGoogleLoginLoading(false);
+      setLoginLoading(false);
       setTimeout(() => {
-                setGoogleLoginLoading(false);
+                setLoginLoading(false);
                 toast.error(message);
               }, 1000);
     }
 
     if(isLoginByGoogle === 'true'){
-        setGoogleLoginLoading(true);
+        setLoginLoading(true);
         axios.get(`${authAPI}/getUserByAccessToken`,{withCredentials: true})
           .then(res => {
             const {user, accessToken, accessTokenExp} = res.data;
             switch(user.status){
               case 'verifying':
-                setGoogleLoginLoading(false);
+                setLoginLoading(false);
                 toast.error("Tài khoản của bạn chưa kích hoạt! Hãy kích hoạt thông qua email")
                     break;
               case 'banned':
-                setGoogleLoginLoading(false);
+                setLoginLoading(false);
                 toast.error("Tài khoản của bạn đã bị khóa!")
                     break;
              default:
               toast.success("Đăng nhập bằng tài khoản google thành công!")
               setTimeout(() => {
-                setGoogleLoginLoading(false);
+                setLoginLoading(false);
                 login(accessToken, user);
                 navigate("/home")
               }, 2000);
@@ -241,7 +240,7 @@ function handleGoogleLogin(){
                       <Button
                         type="submit"
                         className="w-full cursor-pointer"
-                        disabled={googleloginLoading ? true : undefined}
+                        disabled={loginLoading ? true : undefined}
                       >
                         Đăng nhập
                       </Button>
@@ -258,7 +257,7 @@ function handleGoogleLogin(){
                   <Separator className="flex-1" />
                 </div>
 
-                {googleloginLoading ? (
+                {loginLoading ? (
                   <Button type="submit" className="w-full" disabled>
                     <Loader2Icon className="animate-spin" />
                     Vui lòng chờ

@@ -3,7 +3,7 @@ export interface User {
   _id: string;
   username: string;
   fullName: string;
-  role: string;
+  roles: string[];
   email: string;
   isActive?: boolean;
   avatar: string;
@@ -13,5 +13,7 @@ export interface User {
   address: string;
   background: string;
   createdAt?: string;
+  status:string;
+  [key: string]: any; 
 }
 
