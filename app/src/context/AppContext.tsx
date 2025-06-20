@@ -7,6 +7,9 @@ import axios from "axios";
 interface AppContextType {
   user: User | null;
   accessToken: string | null;
+  coreAPI: string;
+  authAPI: string;
+  adminAPI: string;
   login: (token: string, userData: User) => void;
   logout: () => void;
   getProfile: () => void;
@@ -16,6 +19,9 @@ interface AppContextType {
 const AppContext = createContext<AppContextType>({
   user: null,
   accessToken: null,
+  coreAPI: "",
+  authAPI: "",
+  adminAPI: "",
   login: () => {},
   logout: () => {},
   userProfile: null,
@@ -28,10 +34,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
    const [userProfile, setUserProfile] = useState<User | null>(null);
  
 
-  const login = (token: string, userData: User) => {
-    setAccessToken(token);
+  // APIs
+  const coreAPI = 'http://localhost:9999';
+  const authAPI = 'http://localhost:9999/auth';
+  const adminAPI = 'http://localhost:9999/admin';
+
+  const login = (accessToken: string, userData: User) => {
+    setAccessToken(accessToken);
     setUser(userData);
-    localStorage.setItem("accessToken", token);
+    localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
@@ -68,7 +79,8 @@ console.log("userProfile", userProfile);
 
 
   return (
-    <AppContext.Provider value={{ user, accessToken, login, logout, getProfile, userProfile }}>
+
+    <AppContext.Provider value={{ user, accessToken, coreAPI, authAPI, adminAPI, login, logout, getProfile, userProfile }}>
       {children}
     </AppContext.Provider>
   );
