@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import Image from "@/assets/card.jpg";
 import {
@@ -18,7 +18,7 @@ import AppContext from "@/context/AppContext";
 function UserNav() {
   const { user ,logout} = useContext(AppContext);
 
-  
+  const navigate = useNavigate();
   return (
     <>
       <DropdownMenu>
@@ -67,7 +67,10 @@ function UserNav() {
 
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild className="cursor-pointer">
-            <a onClick={logout}>Đăng xuất</a>
+            <a onClick={()=>{
+              logout();
+              navigate("/login")
+            }}>Đăng xuất</a>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

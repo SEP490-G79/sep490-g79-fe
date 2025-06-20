@@ -68,6 +68,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       })
       .catch((err) => toast.error("Lỗi đăng xuất!"));
   };
+
   // User profile
   useEffect(() => {
     if(accessToken){
