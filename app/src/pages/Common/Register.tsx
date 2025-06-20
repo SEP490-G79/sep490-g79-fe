@@ -4,11 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { FcGoogle } from "react-icons/fc";
 import { useNavigate, Link } from "react-router-dom";
@@ -29,7 +25,17 @@ import { toast } from "sonner";
 
 const registerSchema = z
   .object({
-    fullName: z.string().min(1, "Tên tài khoản không được để trống"),
+    fullName: z
+    .string()
+    .trim()
+    .min(6, "Họ và tên quá ngắn")
+    .regex(/^[\p{L}\s-]+$/u,"Tên chỉ được chứa chữ cái, khoảng trắng và dấu gạch nối"
+    )
+    .refine(
+      (val) => (val.match(/\p{L}/gu) || []).length >= 3,
+      "Tên phải có ít nhất 3 chữ cái"
+    ),
+
     email: z.string().email("Email không hợp lệ"),
     password: z.string().min(6, "Mật khẩu phải từ 6 ký tự"),
     confirmPassword: z.string(),
@@ -55,40 +61,44 @@ export const Register = () => {
     },
   });
 
-  const sendActiveToken = async (activeToken : string) => {
+  const sendActiveToken = async (activeToken: string) => {
     try {
       const res = await axios.post(`${authAPI}/send-activation-email`, {
-        activeToken: activeToken
+        activeToken: activeToken,
       });
-      toast.success(res?.data.message)
+      toast.success(res?.data.message);
     } catch (error: any) {
-      console.log(error?.response.data.message)
+      console.log(error?.response.data.message);
     }
-    
-  }
+  };
 
-  const onRegister = async ({ fullName, email,password, confirmPassword }: z.infer<typeof registerSchema>) => {
-    console.log(fullName, email,password, confirmPassword);
+  const onRegister = async ({
+    fullName,
+    email,
+    password,
+    confirmPassword,
+  }: z.infer<typeof registerSchema>) => {
+    console.log(fullName, email, password, confirmPassword);
     try {
       setRegisterLoading(true);
       const res = await axios.post(`${authAPI}/register`, {
         fullName: fullName,
         email: email,
-        password: password
+        password: password,
       });
-      if(res.status === 200){
+      if (res.status === 200) {
         toast.success(res.data.message);
         setRegisterLoading(false);
         sendActiveToken(res.data.activeToken);
         // navigate("/login");
       }
-    } catch (error : any) {
+    } catch (error: any) {
       toast.error(error?.response.data.message);
       setRegisterLoading(false);
     }
   };
 
-  function handleGoogleRegister(){
+  function handleGoogleRegister() {
     window.open(`${authAPI}/loginByGoogle`, "_self");
   }
 
@@ -133,15 +143,23 @@ export const Register = () => {
           <Card className="bg-transparent border-0 shadow-none w-full">
             <CardContent>
               <Form {...form}>
-                <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(onRegister)}>
+                <form
+                  className="flex flex-col gap-4"
+                  onSubmit={form.handleSubmit(onRegister)}
+                >
                   <FormField
                     control={form.control}
                     name="fullName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Tên tài khoản<span className="text-destructive">*</span></FormLabel>
+                        <FormLabel>
+                          Họ và tên<span className="text-destructive">*</span>
+                        </FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Nhập tên đầy đủ của bạn..." />
+                          <Input
+                            {...field}
+                            placeholder="Nhập tên đầy đủ của bạn..."
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -152,7 +170,9 @@ export const Register = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email<span className="text-destructive">*</span></FormLabel>
+                        <FormLabel>
+                          Email<span className="text-destructive">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Nhập email..." />
                         </FormControl>
@@ -165,7 +185,9 @@ export const Register = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Mật khẩu<span className="text-destructive">*</span></FormLabel>
+                        <FormLabel>
+                          Mật khẩu<span className="text-destructive">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -182,7 +204,10 @@ export const Register = () => {
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Xác nhận mật khẩu<span className="text-destructive">*</span></FormLabel>
+                        <FormLabel>
+                          Xác nhận mật khẩu
+                          <span className="text-destructive">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
