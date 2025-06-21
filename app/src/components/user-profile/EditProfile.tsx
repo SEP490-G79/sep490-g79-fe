@@ -5,6 +5,7 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { ImageIcon } from "lucide-react";
+import { toast } from "sonner"
 import axios from "axios"
 
 export default function EditProfile() {
@@ -20,26 +21,31 @@ export default function EditProfile() {
   const [address, setAddress] = useState("");
 
   // Fetch user info
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await axios.get(`http://localhost:9999/users/${userId}`);
-        const user = res.data;
+useEffect(() => {
+  const fetchUser = async () => {
+    try {
+      const res = await axios.get(`http://localhost:9999/users/user-profile`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+      const user = res.data;
 
-        setFullName(user.fullName || "");
-        setBio(user.bio || "");
-        setDob(user.dob?.slice(0, 10) || ""); // format yyyy-mm-dd
-        setPhoneNumber(user.phoneNumber || "");
-        setAddress(user.address || "");
-        if (user.avatar) setAvatarPreview(user.avatar);
-        if (user.background) setBackgroundPreview(user.background);
-      } catch (err) {
-        alert("Không thể tải thông tin người dùng.");
-      }
-    };
+      setFullName(user.fullName || "");
+      setBio(user.bio || "");
+      setDob(user.dob?.slice(0, 10) || ""); 
+      setPhoneNumber(user.phoneNumber || "");
+      setAddress(user.address || "");
+      if (user.avatar) setAvatarPreview(user.avatar);
+      if (user.background) setBackgroundPreview(user.background);
+    } catch (err) {
+       toast.error("Không thể tải thông tin người dùng.")
+    }
+  };
 
-    fetchUser();
-  }, []);
+  fetchUser();
+}, []);
+
 
   const handleProfileSubmit = async () => {
     try {
@@ -52,7 +58,12 @@ export default function EditProfile() {
       if (avatar) formData.append("avatar", avatar);
       if (background) formData.append("background", background);
 
-      await axios.put(`http://localhost:9999/users/${userId}/edit-profile`, formData);
+      await axios.put(`http://localhost:9999/users/edit-profile`, formData, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    });
 
       alert("Cập nhật thành công");
     } catch (err: any) {

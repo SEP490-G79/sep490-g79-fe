@@ -22,21 +22,21 @@ export default function ChangePassword() {
         }
 
         try {
-            const userId = "684ef3df0d4fe7b7340fa873"; // TODO: Thay bằng dữ liệu thực tế (từ context, localStorage,...)
-            // const accessToken = localStorage.getItem("accessToken");
+           // TODO: Thay bằng dữ liệu thực tế (từ context, localStorage,...)
+            const accessToken = localStorage.getItem("accessToken");
 
             const response = await axios.put(
-                `http://localhost:9999/users/${userId}/change-password`,
+                `http://localhost:9999/users/change-password`,
                 {
                     oldPassword,
                     newPassword,
                     confirmPassword,
                 },
-                // {
-                //     headers: {
-                //         Authorization: `Bearer ${accessToken}`,
-                //     },
-                // }
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                }
             );
 
             alert("Đổi mật khẩu thành công!");
