@@ -23,6 +23,8 @@ interface AppContextType {
   userProfile: User | null;
   loginLoading: Boolean;
   setLoginLoading: (loading: boolean) => void;
+  setUserProfile: (user: User | null) => void;
+  setUser: (user: User | null) => void;
 }
 
 const AppContext = createContext<AppContextType>({
@@ -31,11 +33,13 @@ const AppContext = createContext<AppContextType>({
   coreAPI: "",
   authAPI: "",
   adminAPI: "",
-  login: () => {},
-  logout: () => {},
+  login: () => { },
+  logout: () => { },
   userProfile: null,
   loginLoading: false,
-  setLoginLoading: (loginLoading: boolean) => {},
+  setLoginLoading: (loginLoading: boolean) => { },
+  setUserProfile: () => { },       
+  setUser: () => { },
 });
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
@@ -85,6 +89,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
      }
   }, [location.pathname]);
 
+
   return (
     <AppContext.Provider
       value={{
@@ -98,6 +103,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         userProfile,
         loginLoading,
         setLoginLoading,
+        setUserProfile,  
+        setUser
       }}
     >
       {children}

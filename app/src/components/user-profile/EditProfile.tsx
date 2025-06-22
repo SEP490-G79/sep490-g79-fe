@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { ImageIcon } from "lucide-react";
 import { toast } from "sonner"
+import { Loader2 } from "lucide-react";
+import ImageUploadModal from "./ImageUploadModal";
+import AppContext from "@/context/AppContext";
 import axios from "axios"
 import useAuthAxios from "@/utils/authAxios";
 
 export default function EditProfile() {
-  const userId = "684ef3df0d4fe7b7340fa873";
   const [background, setBackground] = useState<File | null>(null);
   const [avatar, setAvatar] = useState<File | null>(null);
   const [backgroundPreview, setBackgroundPreview] = useState("");
@@ -20,33 +22,28 @@ export default function EditProfile() {
   const [dob, setDob] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
-  const authAxios = useAuthAxios();
+  const [loading, setLoading] = useState(false);
+  const { userProfile } = useContext(AppContext);
+  const { setUserProfile, setUser } = useContext(AppContext);
+  const [openAvatarModal, setOpenAvatarModal] = useState(false);
+  const [openBackgroundModal, setOpenBackgroundModal] = useState(false);
 
-  // Fetch user info
-useEffect(() => {
-  const fetchUser = async () => {
-    try {
-      const res = await authAxios.get(`http://localhost:9999/users/user-profile`);
-      const user = res.data;
+  useEffect(() => {
+    if (userProfile) {
+      setFullName(userProfile.fullName || "");
+      setBio(userProfile.bio || "");
+      setDob(userProfile.dob ? userProfile.dob.split("T")[0] : "");
+      setPhoneNumber(userProfile.phoneNumber || "");
+      setAddress(userProfile.address || "");
+      setAvatarPreview(userProfile.avatar || "");
+      setBackgroundPreview(userProfile.background || "");
 
-      setFullName(user.fullName || "");
-      setBio(user.bio || "");
-      setDob(user.dob?.slice(0, 10) || ""); 
-      setPhoneNumber(user.phoneNumber || "");
-      setAddress(user.address || "");
-      if (user.avatar) setAvatarPreview(user.avatar);
-      if (user.background) setBackgroundPreview(user.background);
-    } catch (err) {
-       toast.error("Không thể tải thông tin người dùng.")
-    }
-  };
-
-  fetchUser();
-}, []);
+  }, [userProfile]);
 
 
   const handleProfileSubmit = async () => {
     try {
+      setLoading(true);
       const formData = new FormData();
       formData.append("fullName", fullName);
       formData.append("bio", bio);
@@ -57,15 +54,31 @@ useEffect(() => {
       if (background) formData.append("background", background);
 
       await axios.put(`http://localhost:9999/users/edit-profile`, formData, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        'Content-Type': 'multipart/form-data'
-      }
-    });
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      const updated = await axios.get(`http://localhost:9999/users/user-profile`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+      setUserProfile(updated.data);
+      setUser(updated.data);
+      toast.success("Cập nhật thông tin thành công!");
 
-      alert("Cập nhật thành công");
+      setAvatar(null);
+      setAvatarPreview("");
+      setOpenAvatarModal(false); // ✅ đóng modal avatar
+
+      setBackground(null);
+      setBackgroundPreview("");
+      setOpenBackgroundModal(false); // ✅ đóng modal background
     } catch (err: any) {
-      alert("Lỗi cập nhật: " + (err?.response?.data?.message || err.message));
+      toast.error("Lỗi cập nhật: " + (err?.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
     }
   };
   return (
@@ -75,7 +88,7 @@ useEffect(() => {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Cover photo */}
-        <div className="relative w-full h-36 rounded-md overflow-hidden">
+        <div className="relative w-full h-36 rounded-md overflow-hidden" onClick={() => setOpenBackgroundModal(true)}>
           <img
             src={backgroundPreview || "https://images.hdqwalls.com/wallpapers/geometry-blue-abstract-4k-3y.jpg"}
             alt="Ảnh nền"
@@ -93,24 +106,11 @@ useEffect(() => {
                 Chỉnh sửa
               </label>
             </Button>
-            <input
-              id="background"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  setBackground(file);
-                  setBackgroundPreview(URL.createObjectURL(file));
-                }
-              }}
-            />
           </div>
         </div>
 
         {/* Avatar + file upload */}
-        <div className="flex items-center gap-6 justify-center">
+        <div className="flex items-center gap-6 justify-center" onClick={() => setOpenAvatarModal(true)}>
           <Avatar className="w-20 h-20 border-2 border-ring rounded-full">
             <AvatarImage src={avatarPreview || "https://cdn.pixabay.com/photo/2021/07/02/04/48/user-6380868_960_720.png"}
               alt="avatar"
@@ -124,19 +124,6 @@ useEffect(() => {
                 Chọn ảnh
               </label>
             </Button>
-            <input
-              id="avatar"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  setAvatar(file);
-                  setAvatarPreview(URL.createObjectURL(file));
-                }
-              }}
-            />
           </div>
         </div>
 
@@ -146,25 +133,28 @@ useEffect(() => {
           </Label>
           <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1" />
         </div>
+
         <div>
           <Label htmlFor="bio" className="text-sm mb-1 block">
             Tiểu sử
           </Label>
           <Input id="bio" value={bio} onChange={(e) => setBio(e.target.value)} className="mt-1" />
         </div>
-        {/* dob */}
+
         <div>
           <Label htmlFor="dob" className="text-sm mb-1 block">
             Ngày sinh
           </Label>
           <Input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="mt-1" />
         </div>
+
         <div>
           <Label htmlFor="phoneNumber" className="text-sm mb-1 block">
             Số điện thoại
           </Label>
           <Input id="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="mt-1" />
         </div>
+
         <div>
           <Label htmlFor="address" className="text-sm mb-1 block">
             Địa chỉ
@@ -174,8 +164,32 @@ useEffect(() => {
       </CardContent>
 
       <CardContent className="border-t pt-6">
-        <Button className="w-full" onClick={handleProfileSubmit}>Lưu thay đổi</Button>
+        <Button className="w-full cursor-pointer" onClick={handleProfileSubmit} disabled={loading}>
+          {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          {loading ? "Đang lưu..." : "Lưu thay đổi"}
+        </Button>
       </CardContent>
+
+
+      <ImageUploadModal
+        open={openAvatarModal}
+        onClose={() => setOpenAvatarModal(false)}
+        currentPreview={avatar ? avatarPreview : ""}
+        onImageSelect={(file, preview) => {
+          setAvatar(file);
+          setAvatarPreview(preview);
+        }}
+      />
+
+      <ImageUploadModal
+        open={openBackgroundModal}
+        onClose={() => setOpenBackgroundModal(false)}
+        currentPreview={background ? backgroundPreview : ""}
+        onImageSelect={(file, preview) => {
+          setBackground(file);
+          setBackgroundPreview(preview);
+        }}
+      />
     </Card>
   )
 }

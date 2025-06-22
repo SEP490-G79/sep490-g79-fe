@@ -17,7 +17,7 @@ export default function ProfileSettings() {
           <TabsList className="flex flex-col w-64 gap-1 items-start border shadow-sm p-2 rounded-md">
             <TabsTrigger
               value="profile"
-              className="w-full justify-start px-4 py-2 text-left rounded transition-colors
+              className="w-full justify-start px-4 py-2 text-left rounded transition-colors cursor-pointer
                hover:bg-accent hover:text-blue-600
                data-[state=active]:bg-zinc-500 data-[state=active]:text-white"
             >
@@ -26,7 +26,7 @@ export default function ProfileSettings() {
 
             <TabsTrigger
               value="change-password"
-              className="w-full justify-start px-4 py-2 text-left rounded transition-colors
+              className="w-full justify-start px-4 py-2 text-left rounded transition-colors cursor-pointer
                hover:bg-accent hover:text-blue-600
                data-[state=active]:bg-zinc-500 data-[state=active]:text-white"
             >
@@ -35,7 +35,7 @@ export default function ProfileSettings() {
 
             <TabsTrigger
               value="donate-history"
-              className="w-full justify-start px-4 py-2 text-left rounded transition-colors
+              className="w-full justify-start px-4 py-2 text-left rounded transition-colors cursor-pointer
                hover:bg-accent hover:text-blue-600
                data-[state=active]:bg-zinc-500 data-[state=active]:text-white"
             >
