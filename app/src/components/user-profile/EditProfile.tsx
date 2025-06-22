@@ -7,6 +7,7 @@ import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { ImageIcon } from "lucide-react";
 import { toast } from "sonner"
 import axios from "axios"
+import useAuthAxios from "@/utils/authAxios";
 
 export default function EditProfile() {
   const userId = "684ef3df0d4fe7b7340fa873";
@@ -19,16 +20,13 @@ export default function EditProfile() {
   const [dob, setDob] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
+  const authAxios = useAuthAxios();
 
   // Fetch user info
 useEffect(() => {
   const fetchUser = async () => {
     try {
-      const res = await axios.get(`http://localhost:9999/users/user-profile`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+      const res = await authAxios.get(`http://localhost:9999/users/user-profile`);
       const user = res.data;
 
       setFullName(user.fullName || "");

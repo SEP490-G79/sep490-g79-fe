@@ -14,7 +14,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { FcGoogle } from "react-icons/fc";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import authorizedAxiosInstance from "@/utils/authorizedAxios";
 import { toast } from "sonner"
 import Image from "@/assets/Home_1.jpg"; // đúng đường dẫn assets của bạn
 import {
@@ -73,7 +72,7 @@ export const Login = () => {
         setLoginLoading(true);
         axios.get(`${authAPI}/getUserByAccessToken`,{withCredentials: true})
           .then(res => {
-            const {user, accessToken, accessTokenExp} = res.data;
+            const {user, accessToken} = res.data;
             switch(user.status){
               case 'verifying':
                 setLoginLoading(false);
@@ -115,11 +114,6 @@ export const Login = () => {
   const onLogin = async ({ email, password }: z.infer<typeof loginSchema>) => {
   setLoginLoading(true);
   try {
-    // console.log(`${authAPI}/login`, {
-    //   email: email,
-    //   password: password,
-    // })
-    // return;
     const response = await axios.post(`${authAPI}/login`, {
       email: email,
       password: password,
