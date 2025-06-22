@@ -83,7 +83,7 @@
 }
 
 .dark {
-  --primary: ooklch(75% 0.183 55.934);
+  --primary: oklch(75% 0.183 55.934);
   --primary-foreground: oklch(14.5% 0 0);
   --secondary: oklch(37.3% 0.034 259.733);
   --secondary-foreground: oklch(21% 0.006 285.885);
