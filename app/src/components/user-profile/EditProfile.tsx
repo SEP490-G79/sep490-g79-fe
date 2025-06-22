@@ -37,7 +37,7 @@ export default function EditProfile() {
       setAddress(userProfile.address || "");
       setAvatarPreview(userProfile.avatar || "");
       setBackgroundPreview(userProfile.background || "");
-
+    }
   }, [userProfile]);
 
 
