@@ -13,23 +13,11 @@ import EmailVerification from "@/components/EmailVerification";
 import type { User } from "@/types/User";
 
 function PublicRoutes() {
-  const userJson = localStorage.getItem("user");
-
-  let user: User | null = null;
-  try {
-    if (userJson) {
-      user = JSON.parse(userJson) as User;
-    }
-  } catch (e) {
-    console.error("Lỗi khi parse user từ localStorage", e);
-    user = null;
-  }
-
-  if (user) {
+  const accessToken = localStorage.getItem("accessToken");
+  if (accessToken) {
     return <Navigate to="/home" replace={true} />;
   }
   return <Outlet />;
-  
 }
 
 export default PublicRoutes;
