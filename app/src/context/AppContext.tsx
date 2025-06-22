@@ -20,6 +20,8 @@ interface AppContextType {
   userProfile: User | null;
   loginLoading: Boolean;
   setLoginLoading: (loading: boolean) => void;
+  setUserProfile: (user: User | null) => void;
+  setUser: (user: User | null) => void;
 }
 
 const AppContext = createContext<AppContextType>({
@@ -28,11 +30,13 @@ const AppContext = createContext<AppContextType>({
   coreAPI: "",
   authAPI: "",
   adminAPI: "",
-  login: () => {},
-  logout: () => {},
+  login: () => { },
+  logout: () => { },
   userProfile: null,
   loginLoading: false,
-  setLoginLoading: (loginLoading: boolean) => {},
+  setLoginLoading: (loginLoading: boolean) => { },
+  setUserProfile: () => { },       
+  setUser: () => { },
 });
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
@@ -71,20 +75,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 
   // User profile
   useEffect(() => {
-    if(accessToken){
+    if (accessToken) {
       axios
-      .get(`${userApi}/user-profile`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      })
-      .then((res) => {
-        setUserProfile(res?.data);
-        setUser(res?.data);
-      })
-      .catch((error) => {
-        console.log(error.response?.data?.message);
-      });
+        .get(`${userApi}/user-profile`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        })
+        .then((res) => {
+          setUserProfile(res?.data);
+          setUser(res?.data);
+        })
+        .catch((error) => {
+          console.log(error.response?.data?.message);
+        });
     }
   }, [accessToken]);
 
@@ -105,6 +109,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         userProfile,
         loginLoading,
         setLoginLoading,
+        setUserProfile,  
+        setUser
       }}
     >
       {children}

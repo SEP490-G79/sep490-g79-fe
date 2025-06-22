@@ -5,6 +5,8 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner"
+import { Loader2 } from "lucide-react";
 import axios from "axios";
 
 export default function ChangePassword() {
@@ -13,16 +15,18 @@ export default function ChangePassword() {
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [loading, setLoading] = useState(false);
     const handleChangePassword = async () => {
         if (!oldPassword || !newPassword || !confirmPassword) {
-            return alert("Vui lòng điền đầy đủ thông tin.");
+            return toast.error("Vui lòng điền đầy đủ thông tin.");
         }
         if (newPassword !== confirmPassword) {
-            return alert("Mật khẩu mới không khớp.");
+            return toast.error("Mật khẩu mới và xác nhận mật khẩu không khớp.");
         }
 
         try {
-           // TODO: Thay bằng dữ liệu thực tế (từ context, localStorage,...)
+            setLoading(true);
+            await new Promise(resolve => setTimeout(resolve, 1000));
             const accessToken = localStorage.getItem("accessToken");
 
             const response = await axios.put(
@@ -39,10 +43,17 @@ export default function ChangePassword() {
                 }
             );
 
-            alert("Đổi mật khẩu thành công!");
+            toast.success("Đổi mật khẩu thành công!");
+            setOldPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+            setShowOldPassword(false);
+            setShowNewPassword(false);
         } catch (error: any) {
             const message = error.response?.data?.message || "Có lỗi xảy ra.";
-            alert(`Đổi mật khẩu thất bại: ${message}`);
+            toast.error(message);
+        } finally {
+            setLoading(false);
         }
     };
     return (
@@ -132,7 +143,13 @@ export default function ChangePassword() {
                 </div> */}
 
                 {/* Nút đổi mật khẩu */}
-                <Button className="w-full mt-4" onClick={handleChangePassword} >Đổi mật khẩu</Button>
+                <Button className="w-full mt-4 cursor-pointer" onClick={handleChangePassword} >
+                    {loading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                        "Đổi mật khẩu"
+                    )}
+                </Button>
             </CardContent>
         </Card>
     )
