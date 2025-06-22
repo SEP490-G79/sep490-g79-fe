@@ -7,10 +7,10 @@ import { AppProvider } from "./context/AppContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <AppProvider>
       <BrowserRouter>
-      <App />
+          <AppProvider>
+              <App />
+          </AppProvider>
     </BrowserRouter>
-    </AppProvider>
   </StrictMode>
 );

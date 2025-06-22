@@ -8,6 +8,9 @@ import React, {
 } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import useAuthAxios from "@/utils/authAxios";
+
+const excludedURLs = ['/','/login', '/register', '/active-account', '/faq']
 
 interface AppContextType {
   user: User | null;
@@ -15,7 +18,7 @@ interface AppContextType {
   coreAPI: string;
   authAPI: string;
   adminAPI: string;
-  login: (token: string, userData: User) => void;
+  login: (accessToken: string, userData: User) => void;
   logout: () => void;
   userProfile: User | null;
   loginLoading: Boolean;
@@ -46,6 +49,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const accessToken = localStorage.getItem("accessToken");
   const [loginLoading, setLoginLoading] = useState<Boolean>(false);
   const [userProfile, setUserProfile] = useState<User | null>(null);
+  const authAxios = useAuthAxios();
 
   // APIs
   const coreAPI = "http://localhost:9999";
@@ -53,48 +57,38 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const adminAPI = "http://localhost:9999/admin";
   const userApi = "http://localhost:9999/users";
 
+
+
   const login = (accessToken: string, userData: User) => {
     setUser(userData);
     localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("user", JSON.stringify(userData));
   };
-
-  // Api
 
   const logout = () => {
-    axios
-      .post(`${authAPI}/logout`, { id: user?._id })
-      .then((res) => {
-        toast.success("Đăng xuất thành công");
-        setUser(null);
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("user");
-      })
-      .catch((err) => toast.error("Lỗi đăng xuất!"));
+    axios.post(`${authAPI}/logout`,{id: user?.id})
+    .then(res => {
+      toast.success("Thoát đăng nhập thành công");
+      setUser(null);
+      localStorage.clear();
+    })
+    .catch(err => toast.error("Lỗi thoát đăng nhập!"))
   };
 
-  // User profile
+  // Check trạng thái login và access token mỗi khi chuyển trang trừ các trang public
   useEffect(() => {
-    if (accessToken) {
-      axios
-        .get(`${userApi}/user-profile`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        })
-        .then((res) => {
-          setUserProfile(res?.data);
-          setUser(res?.data);
-        })
-        .catch((error) => {
-          console.log(error.response?.data?.message);
+     if (!excludedURLs.includes(location.pathname)) {
+      authAxios
+        .get("http://localhost:9999/users/user-profile")
+          .then((res) => {
+            setUserProfile(res?.data);
+            setUser(res?.data);
+                })
+          .catch((error) => {
+            // console.log(error.response?.data?.message);
         });
-    }
-  }, [accessToken]);
+     }
+  }, [location.pathname]);
 
-  // User profile
-
-  // console.log("userProfile", userProfile);
 
   return (
     <AppContext.Provider

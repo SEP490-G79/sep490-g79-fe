@@ -69,7 +69,7 @@ function UserNav() {
           <DropdownMenuItem asChild className="cursor-pointer">
             <a onClick={()=>{
               logout();
-              navigate("/login")
+              setTimeout(() => navigate("/login"), 1000)
             }}>Đăng xuất</a>
           </DropdownMenuItem>
         </DropdownMenuContent>
