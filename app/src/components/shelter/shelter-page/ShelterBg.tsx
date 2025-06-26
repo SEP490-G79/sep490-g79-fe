@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Settings } from "lucide-react";
 import React from "react";
 import { Link } from "react-router-dom";
-import type { Shelter } from '@/types/Shelter';
+import type { Shelter } from "@/types/Shelter";
 
 interface ShelterBgProps {
   shelter: Shelter;
@@ -26,13 +26,19 @@ export const ShelterBg: React.FC<ShelterBgProps> = ({ shelter }) => {
       <Breadcrumb className="basis-full mb-1">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink className="hover:text-primary text-muted-foreground" href="/">
+            <BreadcrumbLink
+              className="hover:text-primary text-muted-foreground"
+              href="/"
+            >
               Trang chủ
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink className="hover:text-primary text-muted-foreground" href="/shelters">
+            <BreadcrumbLink
+              className="hover:text-primary text-muted-foreground"
+              href="/shelters"
+            >
               Trung tâm cứu hộ
             </BreadcrumbLink>
           </BreadcrumbItem>
@@ -63,10 +69,7 @@ export const ShelterBg: React.FC<ShelterBgProps> = ({ shelter }) => {
 
             <div className="flex -space-x-2 mt-2">
               {shelter.members.map((member) => (
-                <Avatar
-                  key={member.id}
-                  className="ring-2 ring-primary"
-                >
+                <Avatar key={member.id} className="ring-2 ring-primary">
                   {/* Fallback with last 2 chars of ID */}
                   <AvatarFallback>{member.id.slice(-2)}</AvatarFallback>
                 </Avatar>
@@ -80,7 +83,12 @@ export const ShelterBg: React.FC<ShelterBgProps> = ({ shelter }) => {
         </div>
 
         <Button variant="ghost" asChild>
-          <Link to={`/shelters/${shelter._id}/settings`}>  
+          <Link
+            to={`/shelters/${shelter._id}/management`}
+            onClick={() =>
+              window.scrollTo({ top: 0, left: 0, behavior: "instant" })
+            }
+          >
             <Settings />
           </Link>
         </Button>
