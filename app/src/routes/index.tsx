@@ -13,6 +13,7 @@ import HomePage from "@/pages/Common/HomePage";
 import HandleVerify from "@/pages/Common/HandleVerify";
 import { Register } from "@/pages/Common/Register";
 import { FAQ } from "@/pages/Common/FAQ";
+import ShelterEstablishmentPage from "@/pages/shelter/ShelterEstablishmentPage";
 
 function AppRoutes() {
   return (
@@ -31,6 +32,7 @@ function AppRoutes() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/newfeed" element={<Newfeed />} />
         <Route path="/profile-setting" element={<ProfileSettings />} />
+        <Route path="/shelter-establishment" element={<ShelterEstablishmentPage />} />
       </Route>
 
       <Route path="*" element={<div>404 Not Found</div>} />

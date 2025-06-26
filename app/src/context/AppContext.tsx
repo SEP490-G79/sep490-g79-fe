@@ -17,7 +17,8 @@ interface AppContextType {
   accessToken: string | null;
   coreAPI: string;
   authAPI: string;
-  adminAPI: string;
+  userAPI: string;
+  shelterAPI: string
   login: (accessToken: string, userData: User) => void;
   logout: () => void;
   userProfile: User | null;
@@ -32,7 +33,8 @@ const AppContext = createContext<AppContextType>({
   accessToken: null,
   coreAPI: "",
   authAPI: "",
-  adminAPI: "",
+  userAPI: "",
+  shelterAPI: "",
   login: () => { },
   logout: () => { },
   userProfile: null,
@@ -54,8 +56,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   // APIs
   const coreAPI = "http://localhost:9999";
   const authAPI = "http://localhost:9999/auth";
-  const adminAPI = "http://localhost:9999/admin";
-  const userApi = "http://localhost:9999/users";
+  const userAPI = "http://localhost:9999/users";
+  const shelterAPI = "http://localhost:9999/shelters";
 
 
 
@@ -97,7 +99,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         accessToken,
         coreAPI,
         authAPI,
-        adminAPI,
+        userAPI,
+        shelterAPI,
         login,
         logout,
         userProfile,
