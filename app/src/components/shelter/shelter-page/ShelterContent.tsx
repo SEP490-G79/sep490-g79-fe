@@ -10,19 +10,19 @@ function ShelterContent() {
           <TabsList className="flex justify-start text-muted-foreground w-full rounded-none border-b bg-transparent p-0">
             <TabsTrigger
               value="pets"
-              className="w-auto data-[state=active]:shadow-none data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-b-primary text-secondary rounded-none"
+              className="w-auto data-[state=active]:shadow-none data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-b-(--primary) text-secondary rounded-none"
             >
               Pet
             </TabsTrigger>
             <TabsTrigger
               value="posts"
-              className="w-auto data-[state=active]:shadow-none data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-b-primary text-secondary rounded-none"
+              className="w-auto data-[state=active]:shadow-none data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-b-(--primary) text-secondary rounded-none"
             >
               Bài đăng
             </TabsTrigger>
             <TabsTrigger
               value="blogs"
-              className="w-auto data-[state=active]:shadow-none data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-b-primary text-secondary rounded-none"
+              className="w-auto data-[state=active]:shadow-none data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-b-(--primary) text-secondary rounded-none"
             >
               Blog
             </TabsTrigger>

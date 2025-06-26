@@ -27,7 +27,7 @@ export const ShelterBg: React.FC<ShelterBgProps> = ({ shelter }) => {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink className="hover:text-primary text-muted-foreground" href="/">
-              Home
+              Trang chủ
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />

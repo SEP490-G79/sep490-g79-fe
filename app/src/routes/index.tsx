@@ -14,6 +14,8 @@ import HandleVerify from "@/pages/Common/HandleVerify";
 import { Register } from "@/pages/Common/Register";
 import { FAQ } from "@/pages/Common/FAQ";
 import ShelterPage from "@/pages/Shelter/ShelterPage";
+import Shelters from "@/pages/Shelter/Shelters";
+import NotFound from "@/pages/Common/NotFound";
 
 function AppRoutes() {
   return (
@@ -25,6 +27,7 @@ function AppRoutes() {
         <Route path="/active-account" element={<HandleVerify />} />
       </Route>
       <Route path="/faq" element={<FAQ />} />
+      <Route path="/shelters" element={<Shelters />} />
       <Route path="/shelters/:shelterId" element={<ShelterPage />} />
       
       <Route element={<PrivateRoutes />}>
@@ -35,7 +38,7 @@ function AppRoutes() {
         <Route path="/profile-setting" element={<ProfileSettings />} />
       </Route>
 
-      <Route path="*" element={<div>404 Not Found</div>} />
+      <Route path="*" element={<NotFound/>} />
     </Routes>
   );
 }

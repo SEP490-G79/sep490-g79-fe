@@ -63,7 +63,7 @@ const FAQ = () => {
         <Breadcrumb  className="basis-full mb-10">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink className="hover:text-(--primary) text-(--muted)" href="/">Home</BreadcrumbLink>
+              <BreadcrumbLink className="hover:text-(--primary) text-(--muted)" href="/">Trang chủ</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
