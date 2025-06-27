@@ -16,6 +16,7 @@ import { FAQ } from "@/pages/Common/FAQ";
 import ShelterEstablishmentPage from "@/pages/shelter/ShelterEstablishmentPage";
 import ShelterStaffManagement from "@/components/shelter/manager/ShelterStaffManagement";
 import ShelterProfile from "@/components/shelter/manager/ShelterProfile";
+import ShelterManagerLayout from "@/components/layouts/shelter/ShelterManagerLayout";
 
 function AppRoutes() {
   return (
@@ -27,16 +28,25 @@ function AppRoutes() {
         <Route path="/active-account" element={<HandleVerify />} />
       </Route>
       <Route path="/faq" element={<FAQ />} />
-      
+
       <Route element={<PrivateRoutes />}>
         <Route index element={<Navigate to="/home" replace={true} />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/newfeed" element={<Newfeed />} />
         <Route path="/profile-setting" element={<ProfileSettings />} />
-        <Route path="/shelter-establishment" element={<ShelterEstablishmentPage />} />
-        <Route path="/shelter-staff-management" element={<ShelterStaffManagement />} />
-        <Route path="/shelter-profile" element={<ShelterProfile />} />
+        <Route
+          path="/shelter-establishment"
+          element={<ShelterEstablishmentPage />}
+        />
+
+        <Route path="/shelter/ABC/manager" element={<ShelterManagerLayout />}>
+          <Route path="profile" element={<ShelterProfile />} />
+          <Route
+            path="members"
+            element={<ShelterStaffManagement />}
+          />
+        </Route>
       </Route>
 
       <Route path="*" element={<div>404 Not Found</div>} />

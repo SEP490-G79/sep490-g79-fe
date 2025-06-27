@@ -57,6 +57,7 @@ interface eligibleToRequest{
 const ShelterEstablishmentPage: React.FC = () => {
     const [eligibleToRequest, setEligibleToRequest] = useState<eligibleToRequest>(); // du dieu kien de gui request
     const [requestList, setRequestList] = useState<ShelterEstablishmentRequest[]>([]);
+    const [filteredRequestList, setFilteredRequestList] = useState<ShelterEstablishmentRequest[]>([]);
     const [submitLoading, setSubmitLoading] = useState<Boolean>(false);
     const [submittedData, setSubmittedData] = useState<any>(null);
     const authAxios = useAuthAxios();
@@ -78,6 +79,7 @@ const ShelterEstablishmentPage: React.FC = () => {
       .get(`${shelterAPI}/get-shelter-request`)
       .then(({data}) => {
             setRequestList(data?.shelterRequest);
+            setFilteredRequestList(data?.shelterRequest);
             setEligibleToRequest({
               isEligible: data?.isEligible,
               reason: data?.reason
@@ -89,310 +91,270 @@ const ShelterEstablishmentPage: React.FC = () => {
   }, []);
 
   const columns: ColumnDef<ShelterEstablishmentRequest>[] = [
-      {
-        header: "STT",
-        cell: ({ row }) => <p className='text-center'>{row.index + 1}</p>
+    {
+      header: "STT",
+      cell: ({ row }) => <p className="text-center">{row.index + 1}</p>,
+    },
+    {
+      accessorKey: "name",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="cursor-pointer"
+          >
+            Tên trạm cứu hộ
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
       },
-      {
-        accessorKey: "name",
-        header: ({ column }) => {
+      cell: ({ row }) => {
+        return <span className="px-2">{row.original.name}</span>;
+      },
+    },
+    {
+      accessorKey: "email",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="cursor-pointer"
+          >
+            Email
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        return <span className="px-2">{row.original.email}</span>;
+      },
+    },
+    {
+      accessorKey: "hotline",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="cursor-pointer"
+          >
+            Hotline
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        return <span className="px-2">{row.original.hotline}</span>;
+      },
+    },
+    {
+      accessorKey: "address",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="cursor-pointer"
+          >
+            Địa chỉ
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        return <span className="px-2">{row.original.address}</span>;
+      },
+    },
+    {
+      accessorKey: "status",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="cursor-pointer"
+          >
+            Trạng thái
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const status = row.original.status;
+        let statusTiengViet = "";
+        if (status === "active") {
+          statusTiengViet = "Chấp thuận";
           return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-              className="cursor-pointer"
-            >
-              Tên trạm cứu hộ
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
+            <Badge variant="default" className="mx-2">
+              {statusTiengViet}
+            </Badge>
           );
-        },
-        cell: ({row}) => {
-          return <span className='px-2'>{row.original.name}</span>
+        } else if (status === "verifying") {
+          statusTiengViet = "Chờ duyệt";
+          return (
+            <Badge variant="secondary" className="mx-2">
+              {statusTiengViet}
+            </Badge>
+          );
+        } else if (status === "banned") {
+          statusTiengViet = "Bị cấm";
+          return (
+            <Badge variant="destructive" className="mx-2">
+              {statusTiengViet}
+            </Badge>
+          );
+        } else {
+          statusTiengViet = "Từ chối";
+          return (
+            <Badge variant="destructive" className="mx-2">
+              {statusTiengViet}
+            </Badge>
+          );
         }
       },
-      {
-        accessorKey: "email",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-              className="cursor-pointer"
-            >
-              Email
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          );
-        },
-        cell: ({row}) => {
-          return <span className='px-2'>{row.original.email}</span>
+    },
+    {
+      accessorKey: "createdAt",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="cursor-pointer"
+          >
+            Ngày tạo
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <span className="px-2">
+          {new Date(row.original.createdAt).toLocaleDateString("vi-VN")}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "updateAt",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="cursor-pointer"
+          >
+            Ngày duyệt
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <span className="px-2">
+          {row.original.status !== "verifying" &&
+            new Date(row.original.updatedAt).toLocaleDateString("vi-VN")}
+        </span>
+      ),
+    },
+    {
+      header: "Hành động",
+      cell: ({ row }) => (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="cursor-pointer">Chi tiết</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-center">
+                Đơn yêu cầu thành lập trạm cứu hộ
+              </DialogTitle>
+              <DialogDescription className="text-center">
+                Dưới đây là các thông tin chi tiết được cung cấp trong đơn yêu
+                cầu.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 px-5 py-3 text-sm">
+              <div>
+                <span className="font-medium">Tên trạm cứu hộ:</span>{" "}
+                {row.original.name || (
+                  <span className="italic text-muted">Chưa có</span>
+                )}
+              </div>
+
+              <div>
+                <span className="font-medium">Hotline:</span>{" "}
+                {row.original.hotline || (
+                  <span className="italic text-muted">Chưa có</span>
+                )}
+              </div>
+
+              <div>
+                <span className="font-medium">Email:</span>{" "}
+                {row.original.email || (
+                  <span className="italic text-muted">Chưa có</span>
+                )}
+              </div>
+
+              <div>
+                <span className="font-medium">Địa chỉ:</span>{" "}
+                {row.original.address || (
+                  <span className="italic text-muted">Chưa có</span>
+                )}
+              </div>
+
+              <div>
+                <span className="font-medium">Giấy phép hoạt động:</span>{" "}
+                {row.original.shelterLicenseURL ? (
+                  <a
+                    href={row.original.shelterLicenseURL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    Xem chi tiết
+                  </a>
+                ) : (
+                  <span className="italic text-muted">Chưa có</span>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="secondary" className="cursor-pointer">
+                  Đóng
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ),
+    },
+  ];
+
+  function searchShelter(
+        shelterData: ShelterEstablishmentRequest[],
+        keyword: string
+      ) {
+        const trimmedKeyword = keyword.trim().toLowerCase();
+    
+        // Nếu keyword rỗng thì trả về toàn bộ danh sách ban đầu
+        if (trimmedKeyword === "") {
+          setFilteredRequestList(shelterData);
+          return;
         }
-      },
-      {
-        accessorKey: "hotline",
-        header: ({ column }) => {
+    
+        const result: ShelterEstablishmentRequest[] = shelterData.filter((shelter) => {
           return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-              className="cursor-pointer"
-            >
-              Hotline
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
+            shelter.name.toLowerCase().includes(trimmedKeyword) ||
+            shelter.email.toLowerCase().includes(trimmedKeyword) ||
+            shelter.address.toLowerCase().includes(trimmedKeyword) ||
+            shelter.hotline.toString().includes(trimmedKeyword)
           );
-        },
-        cell: ({row}) => {
-          return <span className='px-2'>{row.original.hotline}</span>
-        }
-      },
-      {
-        accessorKey: "address",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-              className="cursor-pointer"
-            >
-              Địa chỉ
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          );
-        },
-        cell: ({row}) => {
-          return <span className='px-2'>{row.original.address}</span>
-        }
-      },
-      {
-        accessorKey: "status",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-              className="cursor-pointer"
-            >
-              Trạng thái
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          );
-        },
-        cell: ({ row }) => {
-          const status = row.original.status;
-          let statusTiengViet = "";
-          if (status === "active") {
-            statusTiengViet = "Chấp thuận";
-            return <Badge variant="default" className="mx-2">{statusTiengViet}</Badge>;
-          } else if(status === "verifying"){
-            statusTiengViet = "Chờ duyệt";
-            return <Badge variant="secondary" className="mx-2">{statusTiengViet}</Badge>;
-          }else if(status === "banned"){
-            statusTiengViet = "Bị cấm";
-            return <Badge variant="destructive" className="mx-2">{statusTiengViet}</Badge>;
-          }else{
-            statusTiengViet = "Từ chối";
-            return <Badge variant="destructive" className="mx-2">{statusTiengViet}</Badge>;
-          }
-        },
-      },
-      {
-        accessorKey: "createdAt",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-              className="cursor-pointer"
-            >
-              Ngày tạo
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          );
-        },
-        cell: ({ row }) =>
-          <span className='px-2'>{new Date(row.original.createdAt).toLocaleDateString("vi-VN")}</span>
-      },
-      {
-        accessorKey: "updateAt",
-        header: ({ column }) => {
-          return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-              className="cursor-pointer"
-            >
-              Ngày duyệt
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          );
-        },
-        cell: ({ row }) =>
-          <span className='px-2'>{row.original.status !== "verifying" && new Date(row.original.updatedAt).toLocaleDateString("vi-VN")}</span>
-      },
-      {
-        header: "Hành động",
-        cell: ({ row }) => 
-        <Dialog
-                onOpenChange={(open) => {
-                  if (!open) {
-                    form.reset();
-                  }
-                }}
-              >
-                <DialogTrigger asChild>
-                          <Button className="cursor-pointer">Chi tiết</Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle className="text-center">
-                      Đơn yêu cầu thành lập trạm cứu hộ
-                    </DialogTitle>
-                    <DialogDescription>
-                      Vui lòng nhập thông tin chính xác và kiểm tra kĩ trước khi
-                      gửi đơn. Sau khi gửi sẽ không chỉnh sửa đơn được.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="px-5 py-3">
-                    <Form {...form}>
-                      <form
-                        onSubmit={form.handleSubmit(onSubmit)}
-                        className="space-y-4"
-                        encType="multipart/form-data"
-                      >
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Tên trạm cứu hộ</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Nhập tên trạm" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="hotline"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Hotline</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Nhập số hotline"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="example@email.com"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="address"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Địa chỉ trạm cứu hộ</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Địa chỉ cụ thể"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="shelterLicense"
-                          render={({ field: { onChange, ...rest } }) => (
-                            <FormItem>
-                              <FormLabel>Giấy phép hoạt động</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="file"
-                                  accept="image/*,.pdf"
-                                  onChange={(e) => {
-                                    if (
-                                      e.target.files &&
-                                      e.target.files.length > 0
-                                    ) {
-                                      onChange(e.target.files[0]);
-                                    }
-                                  }}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <DialogFooter>
-                          <DialogClose asChild>
-                            <Button
-                              variant="secondary"
-                              className="cursor-pointer"
-                            >
-                              Đóng
-                            </Button>
-                          </DialogClose>
-                          {submitLoading ? (
-                            <Button disabled>
-                              <>
-                                <Loader2Icon className="animate-spin mr-2" />
-                                Vui lòng chờ
-                              </>
-                            </Button>
-                          ) : (
-                            <Button type="submit" className="cursor-pointer">
-                              Gửi yêu cầu
-                            </Button>
-                          )}
-                        </DialogFooter>
-                      </form>
-                    </Form>
-                  </div>
-                </DialogContent>
-              </Dialog>
-      },
-    ];
+        });
+        setFilteredRequestList(result);
+      }
 
   const onSubmit = async (values: z.infer<typeof shelterEstablishmentSchema>) => {
     const formData = new FormData();
@@ -418,7 +380,19 @@ const ShelterEstablishmentPage: React.FC = () => {
             setTimeout(() => {
                 setSubmitLoading(false)
                 toast.success(response?.data.message || "Gửi yêu cầu thành công")
-            }, 2000)
+                authAxios
+                  .get(`${shelterAPI}/get-shelter-request`)
+                  .then(({ data }) => {
+                    setRequestList(data?.shelterRequest);
+                    setEligibleToRequest({
+                      isEligible: data?.isEligible,
+                      reason: data?.reason,
+                    });
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                  });
+            }, 700)
         }
     } catch (err : any) {
       toast.error(err?.response.data.message || err);
@@ -481,8 +455,8 @@ const ShelterEstablishmentPage: React.FC = () => {
             <Input
               className="max-w-1/3"
               type="string"
-              placeholder="Tìm kiếm theo tên hoặc email"
-              onChange={(e) => console.log("ok")}
+              placeholder="Tìm kiếm theo tên, email, hotline, địa chỉ"
+              onChange={(e) => searchShelter(requestList,e.target.value)}
             />
             {eligibleToRequest?.isEligible ? (
               <Dialog
@@ -638,7 +612,7 @@ const ShelterEstablishmentPage: React.FC = () => {
           </div>
         </div>
         <div className="col-span-12 px-5">
-          <DataTable columns={columns} data={requestList ?? []} />
+          <DataTable columns={columns} data={filteredRequestList ?? []} />
         </div>
       </div>
     </div>

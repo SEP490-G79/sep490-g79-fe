@@ -33,9 +33,6 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbS
 import type { ShelterMember } from "@/types/ShelterMember";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../ui/dropdown-menu";
 import { Badge } from "../../ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ShelterStaffsList from "./ShelterStaffsList";
-import ShelterStaffRequestManagement from "./ShelterStaffRequestManagement";
 
 
 const tempUser: ShelterMember[] = [
@@ -61,7 +58,7 @@ const tempUser: ShelterMember[] = [
   },
 ];
 
-const ShelterStaffManagement = () => {
+const ShelterStaffsList = () => {
     const [shelterMembersList, setShelterMembersList] = useState<ShelterMember[]>([]);
     const [loadingButton, setLoadingButton] = useState<Boolean>(false);
     const authAxios = useAuthAxios();
@@ -239,23 +236,26 @@ const ShelterStaffManagement = () => {
   return (
     <div className="flex flex-1 flex-col py-6 px-10">
       <div className="@container/main flex flex-1 flex-col gap-2">
-          <Tabs defaultValue="staffs-list">
-            <TabsList>
-              <TabsTrigger value="staffs-list" className='cursor-pointer'>Tất cả thành viên</TabsTrigger>
-              <TabsTrigger value="staff-requests-list" className='cursor-pointer'>
-                Các yêu cầu gia nhập và lời mời vào trạm cứu hộ
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="staffs-list">
-              <ShelterStaffsList/>
-            </TabsContent>
-            <TabsContent value="staff-requests-list">
-              <ShelterStaffRequestManagement />
-            </TabsContent>
-          </Tabs>
+        <div className="col-span-12 px-5 flex flex-col gap-5">
+          <h4 className="scroll-m-20 min-w-40 text-xl font-semibold tracking-tight text-center">
+            Quản lý thành viên của trạm cứu hộ
+          </h4>
+          <div className="flex flex-row gap-7">
+            <Input
+              className="max-w-1/3"
+              type="string"
+              placeholder="Tìm kiếm theo tên hoặc email"
+              onChange={(e) => console.log("ok")}
+            />
+            <Button>Mời thêm thành viên</Button>
+          </div>
         </div>
+        <div className="col-span-12 px-5">
+          <DataTable columns={columns} data={tempUser ?? []} />
+        </div>
+      </div>
     </div>
   )
 }
 
-export default ShelterStaffManagement
+export default ShelterStaffsList

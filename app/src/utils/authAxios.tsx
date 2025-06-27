@@ -78,20 +78,20 @@ const useAuthAxios = () => {
 
             } catch (error) {
                 console.log("Refresh token không tồn tại hoặc đã hết hạn! Vui lòng đăng nhập lại")
-                localStorage.clear();
+                localStorage.removeItem("accessToken");
                 navigate("/login");
                 return Promise.reject();
             }
           }
         }else{
             console.log("Access token không hợp lệ! Đăng xuất...")
-            localStorage.clear();
+            localStorage.removeItem("accessToken");
             navigate("/login")
             return Promise.reject();
         }
       }else{
         console.log("Không tìm thấy access token! Đăng xuất...")
-        localStorage.clear();
+        localStorage.removeItem("accessToken");
         navigate("/login")
         return Promise.reject();
       }

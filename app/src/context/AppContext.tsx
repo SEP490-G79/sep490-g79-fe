@@ -71,7 +71,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     .then(res => {
       toast.success("Thoát đăng nhập thành công");
       setUser(null);
-      localStorage.clear();
+      localStorage.removeItem("accessToken");
     })
     .catch(err => toast.error("Lỗi thoát đăng nhập!"))
   };
