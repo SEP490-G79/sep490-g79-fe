@@ -14,6 +14,8 @@ import HandleVerify from "@/pages/Common/HandleVerify";
 import { Register } from "@/pages/Common/Register";
 import { FAQ } from "@/pages/Common/FAQ";
 import ShelterEstablishmentPage from "@/pages/shelter/ShelterEstablishmentPage";
+import ShelterStaffManagement from "@/components/shelter/manager/ShelterStaffManagement";
+import ShelterProfile from "@/components/shelter/manager/ShelterProfile";
 
 function AppRoutes() {
   return (
@@ -33,6 +35,8 @@ function AppRoutes() {
         <Route path="/newfeed" element={<Newfeed />} />
         <Route path="/profile-setting" element={<ProfileSettings />} />
         <Route path="/shelter-establishment" element={<ShelterEstablishmentPage />} />
+        <Route path="/shelter-staff-management" element={<ShelterStaffManagement />} />
+        <Route path="/shelter-profile" element={<ShelterProfile />} />
       </Route>
 
       <Route path="*" element={<div>404 Not Found</div>} />

@@ -30,6 +30,7 @@ import { DataTable } from "@/components/data-table";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { ShelterEstablishmentRequest } from "@/types/ShelterEstablishmentRequest";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Badge } from "@/components/ui/badge";
 
 
 const shelterEstablishmentSchema = z.object({
@@ -190,22 +191,20 @@ const ShelterEstablishmentPage: React.FC = () => {
         },
         cell: ({ row }) => {
           const status = row.original.status;
-          let color = "";
           let statusTiengViet = "";
           if (status === "active") {
             statusTiengViet = "Chấp thuận";
-            color = "text-green-500 font-semibold uppercase";
+            return <Badge variant="default" className="mx-2">{statusTiengViet}</Badge>;
           } else if(status === "verifying"){
             statusTiengViet = "Chờ duyệt";
-            color = "text-yellow-500 font-semibold uppercase";
+            return <Badge variant="secondary" className="mx-2">{statusTiengViet}</Badge>;
           }else if(status === "banned"){
             statusTiengViet = "Bị cấm";
-            color = "text-destructive font-semibold uppercase";
+            return <Badge variant="destructive" className="mx-2">{statusTiengViet}</Badge>;
           }else{
             statusTiengViet = "Từ chối";
-            color = "text-destructive font-semibold uppercase";
+            return <Badge variant="destructive" className="mx-2">{statusTiengViet}</Badge>;
           }
-          return <span className={color + " px-2"}>{statusTiengViet}</span>;
         },
       },
       {
@@ -227,7 +226,7 @@ const ShelterEstablishmentPage: React.FC = () => {
         cell: ({ row }) =>
           <span className='px-2'>{new Date(row.original.createdAt).toLocaleDateString("vi-VN")}</span>
       },
-            {
+      {
         accessorKey: "updateAt",
         header: ({ column }) => {
           return (
@@ -245,7 +244,154 @@ const ShelterEstablishmentPage: React.FC = () => {
         },
         cell: ({ row }) =>
           <span className='px-2'>{row.original.status !== "verifying" && new Date(row.original.updatedAt).toLocaleDateString("vi-VN")}</span>
-      }
+      },
+      {
+        header: "Hành động",
+        cell: ({ row }) => 
+        <Dialog
+                onOpenChange={(open) => {
+                  if (!open) {
+                    form.reset();
+                  }
+                }}
+              >
+                <DialogTrigger asChild>
+                          <Button className="cursor-pointer">Chi tiết</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="text-center">
+                      Đơn yêu cầu thành lập trạm cứu hộ
+                    </DialogTitle>
+                    <DialogDescription>
+                      Vui lòng nhập thông tin chính xác và kiểm tra kĩ trước khi
+                      gửi đơn. Sau khi gửi sẽ không chỉnh sửa đơn được.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="px-5 py-3">
+                    <Form {...form}>
+                      <form
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-4"
+                        encType="multipart/form-data"
+                      >
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Tên trạm cứu hộ</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Nhập tên trạm" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="hotline"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Hotline</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Nhập số hotline"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="example@email.com"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="address"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Địa chỉ trạm cứu hộ</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Địa chỉ cụ thể"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="shelterLicense"
+                          render={({ field: { onChange, ...rest } }) => (
+                            <FormItem>
+                              <FormLabel>Giấy phép hoạt động</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="file"
+                                  accept="image/*,.pdf"
+                                  onChange={(e) => {
+                                    if (
+                                      e.target.files &&
+                                      e.target.files.length > 0
+                                    ) {
+                                      onChange(e.target.files[0]);
+                                    }
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <DialogFooter>
+                          <DialogClose asChild>
+                            <Button
+                              variant="secondary"
+                              className="cursor-pointer"
+                            >
+                              Đóng
+                            </Button>
+                          </DialogClose>
+                          {submitLoading ? (
+                            <Button disabled>
+                              <>
+                                <Loader2Icon className="animate-spin mr-2" />
+                                Vui lòng chờ
+                              </>
+                            </Button>
+                          ) : (
+                            <Button type="submit" className="cursor-pointer">
+                              Gửi yêu cầu
+                            </Button>
+                          )}
+                        </DialogFooter>
+                      </form>
+                    </Form>
+                  </div>
+                </DialogContent>
+              </Dialog>
+      },
     ];
 
   const onSubmit = async (values: z.infer<typeof shelterEstablishmentSchema>) => {
