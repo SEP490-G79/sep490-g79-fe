@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect , useContext} from "react";
 import {
   Tabs,
   TabsList,
@@ -15,6 +15,10 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import type { MissionForm } from "@/types/MissionForm";
+import type { Pet } from '@/types/Pet';
+import { useAppContext } from "@/context/AppContext";
+import PetsList from "@/components/pet/PetsList";
+import type { User } from '@/types/User';
 
 const itemsPerPage = 6;
 
@@ -51,7 +55,9 @@ function AdoptionActivities() {
   const [activeTab, setActiveTab] = useState("adopted");
   const [adoptedPage, setAdoptedPage] = useState(1);
   const [activityPage, setActivityPage] = useState(1);
-
+  const [selectedShelter, setSelectedShelter] = useState("Tất cả");
+  const [selectedStatus, setSelectedStatus] = useState("Tất cả");
+  const { petsList, userProfile } = useAppContext();
  const activities: MissionForm[] = [
   {
     _id: "subm1",
@@ -196,18 +202,278 @@ function AdoptionActivities() {
 ];
 
 
-  const adoptedPets = Array.from({ length: 10 }, (_, i) => ({
-    id: i + 1,
-    petName: "Bella",
-    status: "Adopted",
-    date: "2025-06-01",
-    petImage: "https://example.com/bella.jpg",
-    petDescription: "A cute dog with a fluffy tail.",
-  }));
+ 
+//   {
+//     _id: "1",
+//     name: "Milo",
+//     isMale: true,
+//     age: 12,
+//     weight: 5.4,
+//     identificationFeature: "Vết trắng trên ngực",
+//     sterilizationStatus: true,
+//     species: {
+//       _id: "cat-id-1",
+//       name: "Chó",
+//       description: "Động vật có vú được thuần hóa, thường được nuôi làm thú cưng hoặc trông nhà."
+//     },
+//     breeds: [
+//       {
+//         _id: "breed-id-1",
+//         name: "British Shorthair",
+//         species: "cat-id-1",
+//         description: "Lông ngắn, tính cách điềm tĩnh"
+//       },
+//       {
+//         _id: "breed-id-2",
+//         name: "Poodle",
+//         species: "cat-id-1",
+//         description: "Lông xoăn, thân thiện"
+//       }
+//     ],
+//     color: "Nâu",
+//     bio: "Nghịch ngợm và thích được ôm ấp.",
+//     intakeTime: "2024-12-10T10:00:00Z",
+//     photos: ["https://i.pinimg.com/736x/3e/ba/70/3eba70b7600c637b789ba2f4917de26c.jpg"],
+//     foundLocation: "Quận 1, TP. Hồ Chí Minh",
+//     tokenMoney: 0,
+//     shelter: {
+//       _id: "shelter-id-1",
+//       name: "Trung tâm Green Paw",
+//       address: "Việt Yên - Bắc Giang"
+//     },
+//     status: "available"
+//   },
+//   {
+//     _id: "2",
+//     name: "Luna",
+//     isMale: false,
+//     age: 8,
+//     weight: 3.2,
+//     identificationFeature: "Mắt xanh lá",
+//     sterilizationStatus: true,
+//     species: {
+//       _id: "cat-id-1",
+//       name: "Mèo"
+//     },
+//     breeds: [
+//       {
+//         _id: "breed-id-2",
+//         name: "Siamese",
+//         species: "cat-id-1"
+//       }
+//     ],
+//     color: "Đen",
+//     bio: "Ban đầu hơi nhút nhát nhưng rất ngoan.",
+//     intakeTime: "2025-01-20T14:30:00Z",
+//     photos: ["https://i.pinimg.com/736x/8a/63/1d/8a631d62d5e7f7fc6be029f896777552.jpg"],
+//     foundLocation: "Quận 3, TP. Hồ Chí Minh",
+//     tokenMoney: 30000,
+//     shelter: {
+//       _id: "shelter-id-1",
+//       name: "Trung tâm Green Paw",
+//       address: "Quận 1"
+//     },
+//     status: "booking"
+//   },
+//   {
+//     _id: "3",
+//     name: "Charlie",
+//     isMale: true,
+//     age: 18,
+//     weight: 6.0,
+//     identificationFeature: "Đuôi ngắn",
+//     sterilizationStatus: false,
+//     species: {
+//       _id: "dog-id-1",
+//       name: "Chó"
+//     },
+//     breeds: [
+//       {
+//         _id: "breed-id-3",
+//         name: "Corgi",
+//         species: "dog-id-1"
+//       }
+//     ],
+//     color: "Trắng",
+//     bio: "Năng động và thích chạy nhảy.",
+//     intakeTime: "2024-11-05T09:00:00Z",
+//     photos: ["https://i.pinimg.com/736x/01/32/6d/01326db27da19a9478069e72fb0c6c17.jpg"],
+//     foundLocation: "Quận 5, TP. Hồ Chí Minh",
+//     tokenMoney: 40000,
+//     shelter: {
+//       _id: "shelter-id-2",
+//       name: "Mái ấm An Toàn",
+//       address: "Quận 5"
+//     },
+//     status: "available"
+//   },
+//   {
+//     _id: "4",
+//     name: "Daisy",
+//     isMale: false,
+//     age: 20,
+//     weight: 4.5,
+//     identificationFeature: "Mắt xanh dương",
+//     sterilizationStatus: true,
+//     species: {
+//       _id: "cat-id-2",
+//       name: "Mèo"
+//     },
+//     breeds: [
+//       {
+//         _id: "breed-id-4",
+//         name: "Persian",
+//         species: "cat-id-2"
+//       }
+//     ],
+//     color: "Xám",
+//     bio: "Rất điềm tĩnh và thích ngủ.",
+//     intakeTime: "2025-02-10T10:30:00Z",
+//     photos: ["https://i.pinimg.com/736x/bd/d0/4f/bdd04f3eb635679c9025d9a30a51e449.jpg"],
+//     foundLocation: "Quận Bình Thạnh",
+//     tokenMoney: 35000,
+//     shelter: {
+//       _id: "shelter-id-2",
+//       name: "Mái ấm An Toàn",
+//       address: "Quận 5"
+//     },
+//     status: "adopted"
+//   },
+//   {
+//     _id: "5",
+//     name: "Max",
+//     isMale: true,
+//     age: 15,
+//     weight: 7.8,
+//     identificationFeature: "Tai trái gập",
+//     sterilizationStatus: true,
+//     species: {
+//       _id: "dog-id-2",
+//       name: "Chó"
+//     },
+//     breeds: [
+//       {
+//         _id: "breed-id-5",
+//         name: "Border Collie",
+//         species: "dog-id-2"
+//       }
+//     ],
+//     color: "Đen trắng",
+//     bio: "Thân thiện và hiếu động.",
+//     intakeTime: "2024-10-22T11:45:00Z",
+//     photos: ["https://i.pinimg.com/736x/01/02/3f/01023f888fccdca88b1ff7047ca9dd94.jpg"],
+//     foundLocation: "Quận 7",
+//     tokenMoney: 45000,
+//     shelter: {
+//       _id: "shelter-id-3",
+//       name: "Nhà Của Paws",
+//       address: "Quận 7"
+//     },
+//     status: "available"
+//   },
+//   {
+//     _id: "6",
+//     name: "Bella",
+//     isMale: false,
+//     age: 10,
+//     weight: 4.0,
+//     identificationFeature: "Vết sẹo nhỏ trên mũi",
+//     sterilizationStatus: false,
+//     species: {
+//       _id: "cat-id-3",
+//       name: "Mèo"
+//     },
+//     breeds: [
+//       {
+//         _id: "breed-id-1",
+//         name: "British Shorthair",
+//         species: "cat-id-3"
+//       }
+//     ],
+//     color: "Kem",
+//     bio: "Dịu dàng và thích được yêu thương.",
+//     intakeTime: "2025-03-18T13:15:00Z",
+//     photos: ["https://i.pinimg.com/736x/fc/a3/f2/fca3f23718eb4a50cbe140c3d02409f1.jpg"],
+//     foundLocation: "Quận Gò Vấp",
+//     tokenMoney: 30000,
+//     shelter: {
+//       _id: "shelter-id-1",
+//       name: "Trung tâm Green Paw",
+//       address: "Quận 1"
+//     },
+//     status: "available"
+//   },
+//   {
+//     _id: "7",
+//     name: "Oscar",
+//     isMale: true,
+//     age: 22,
+//     weight: 8.1,
+//     identificationFeature: "Chân to",
+//     sterilizationStatus: true,
+//     species: {
+//       _id: "dog-id-3",
+//       name: "Chó"
+//     },
+//     breeds: [
+//       {
+//         _id: "breed-id-6",
+//         name: "Golden Retriever",
+//         species: "dog-id-3"
+//       }
+//     ],
+//     color: "Vàng",
+//     bio: "Thích được quan tâm và ăn uống.",
+//     intakeTime: "2025-01-30T10:00:00Z",
+//     photos: ["https://i.pinimg.com/736x/b9/66/59/b96659c83e3429b11d8fa482750491c3.jpg"],
+//     foundLocation: "Quận 10",
+//     tokenMoney: 60000,
+//     shelter: {
+//       _id: "shelter-id-2",
+//       name: "Mái ấm An Toàn",
+//       address: "Quận 5"
+//     },
+//     status: "unavailable"
+//   },
+//   {
+//     _id: "8",
+//     name: "Nala",
+//     isMale: false,
+//     age: 9,
+//     weight: 3.7,
+//     identificationFeature: "Đốm trắng trên lưng",
+//     sterilizationStatus: true,
+//     species: {
+//       _id: "cat-id-2",
+//       name: "Mèo"
+//     },
+//     breeds: [
+//       {
+//         _id: "breed-id-2",
+//         name: "Siamese",
+//         species: "cat-id-2"
+//       }
+//     ],
+//     color: "Cam",
+//     bio: "Hơi nhút nhát nhưng rất dễ thương.",
+//     intakeTime: "2025-02-25T15:00:00Z",
+//     photos: ["https://i.pinimg.com/736x/f4/3a/0c/f43a0c7ee4d353a02eebe0c1b6c3f885.jpg"],
+//     foundLocation: "Quận 4",
+//     tokenMoney: 20000,
+//     shelter: {
+//       _id: "shelter-id-1",
+//       name: "Trung tâm Green Paw",
+//       address: "Quận 1"
+//     },
+//     status: "disabled"
+//   }
+// ];
+
+const adoptedPets = petsList.filter((pet: any) => {
+  return pet.adopter?._id === userProfile?._id;
+});
 
 
-  const [selectedShelter, setSelectedShelter] = useState("Tất cả");
-  const [selectedStatus, setSelectedStatus] = useState("Tất cả");
 
   const filteredActivities = activities.filter((item) => {
     const matchShelter =
@@ -249,23 +515,28 @@ function AdoptionActivities() {
         <TabsTrigger value="activities">Hoạt động nhận nuôi</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="adopted">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {currentAdoptedPets.map((pet) => (
-            <PetCard key={pet.id} />
-          ))}
-        </div>
-        {currentAdoptedPets.length > 0 && (
-          <PaginationSection
-            currentPage={adoptedPage}
-            totalPages={adoptedTotalPages}
-            onPageChange={setAdoptedPage}
-          />
-        )}
+    <TabsContent value="adopted">
+  {currentAdoptedPets.length === 0 ? (
+    <div className="text-center text-muted-foreground py-10">
+      Bạn chưa nhận nuôi thú cưng nào.
+    </div>
+  ) : (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {currentAdoptedPets.map((pet: Pet) => (
+          <PetsList key={pet?._id} pet={pet} user={userProfile}/>
+        ))}
+      </div>
 
+      <PaginationSection
+        currentPage={adoptedPage}
+        totalPages={adoptedTotalPages}
+        onPageChange={setAdoptedPage}
+      />
+    </>
+  )}
+</TabsContent>
 
-
-      </TabsContent>
 
       <TabsContent value="activities" className="min-h-screen">
         <div className="flex flex-wrap gap-4 mb-4 ">

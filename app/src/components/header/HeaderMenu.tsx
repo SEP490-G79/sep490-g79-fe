@@ -31,7 +31,7 @@ const intros: { title: string; href: string; description: string }[] = [
 const adoptions: { title: string; href: string; description: string }[] = [
   {
     title: "Danh sách thú cưng",
-    href: "#",
+    href: "/pets-list",
     description:
       "Khám phá những người bạn đang chờ được yêu thương và tìm mái ấm mới.",
   },
@@ -117,7 +117,7 @@ export function HeaderMenu() {
             Hỗ trợ
           </NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid w-[300px] gap-2  grid-cols-1 ">
+            <ul className="grid w-[300px] gap-2  grid-cols-1  ">
               {supports.map((support) => (
                 <ListItem
                   key={support.title}
