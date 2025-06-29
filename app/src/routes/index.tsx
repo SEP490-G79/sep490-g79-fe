@@ -48,9 +48,11 @@ function AppRoutes() {
       <Route path="/pet/:petId" element={<ViewPetDetails />} />
         <Route path="/shelter/pets" element={<PetManagement />} />
         <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
+
       <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
-        <Route index element={<div>settings</div>} />
-        <Route path="staffs-management" element={<div>Quản lý thành viên</div>} />
+        <Route index element={<ShelterProfile />} />
+        <Route path="profile" element={<ShelterProfile />} />
+        <Route path="staffs-management" element={<ShelterStaffManagement />} />
         <Route path="pet-profiles" element={<div>Quản lý pets</div>} />
         <Route path="adoption-templates" element={<AdoptionTemplates/>} />
         <Route path="adoption-forms" element={<AdoptionForms/>} />
@@ -66,14 +68,6 @@ function AppRoutes() {
           path="/shelter-establishment"
           element={<ShelterEstablishmentPage />}
         />
-
-        <Route path="/shelter/ABC/manager" element={<ShelterManagerLayout />}>
-          <Route path="profile" element={<ShelterProfile />} />
-          <Route
-            path="members"
-            element={<ShelterStaffManagement />}
-          />
-        </Route>
       </Route>
 
       <Route path="*" element={<NotFound />} />
