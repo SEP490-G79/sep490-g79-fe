@@ -16,10 +16,19 @@ import { FAQ } from "@/pages/Common/FAQ";
 import ViewPetDetails from "@/pages/pets/ViewPetDetails";
 import PetManagement from "@/components/pet/PetManagement";
 import ShelterDashboard from "@/pages/shelter/ShelterDashboard";
+import PetsListPage from "@/pages/Pets/PetsListPage";
+import  PetProfilePage  from "@/components/pet/PetProfilePage";
+import ShelterPage from "@/pages/Shelter/ShelterPage";
+import Shelters from "@/pages/Shelter/Shelters";
+import NotFound from "@/pages/Common/NotFound";
+import ManageShelter from "@/pages/Shelter/ManageShelter";
+import { AdoptionForms } from "@/components/shelter/shelter-management/adoption-form/AdoptionForms";
+import { AdoptionTemplates } from "@/components/shelter/shelter-management/adoption-form/AdoptionTemplates";
 
 function AppRoutes() {
   return (
     <Routes>
+      
       <Route element={<PublicRoutes />}>
         <Route index element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
@@ -28,18 +37,31 @@ function AppRoutes() {
       </Route>
       <Route path="/faq" element={<FAQ />} />
 
+      <Route path="/pets-list" element={<PetsListPage />} />
+      <Route path="/pets/:id" element={<PetProfilePage />} />
+      <Route path="/shelters" element={<Shelters />} />
+      <Route path="/shelters/:shelterId" element={<ShelterPage />} />
+      <Route path="/pet/:petId" element={<ViewPetDetails />} />
+        <Route path="/shelter/pets" element={<PetManagement />} />
+        <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
+      <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
+        <Route index element={<div>settings</div>} />
+        <Route path="staffs-management" element={<div>Quản lý thành viên</div>} />
+        <Route path="pet-profiles" element={<div>Quản lý pets</div>} />
+        <Route path="adoption-templates" element={<AdoptionTemplates/>} />
+        <Route path="adoption-forms" element={<AdoptionForms/>} />
+      </Route>
+
       <Route element={<PrivateRoutes />}>
         <Route index element={<Navigate to="/home" replace={true} />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/newfeed" element={<Newfeed />} />
         <Route path="/profile-setting" element={<ProfileSettings />} />
-        <Route path="/pet/:petId" element={<ViewPetDetails />} />
-        <Route path="/shelter/pets" element={<PetManagement />} />
-        <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
+
       </Route>
 
-      <Route path="*" element={<div>404 Not Found</div>} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

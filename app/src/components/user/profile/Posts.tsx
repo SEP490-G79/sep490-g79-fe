@@ -230,7 +230,7 @@ Hình ảnh trên mạng xã hội cho thấy hàng chục thi thể không nguy
                   <img
                     src={userProfile?.avatar || "/placeholder.svg"}
                     alt="Avatar"
-                    className="w-12 h-12 rounded-full border border-border"
+                    className="w-12 h-12 rounded-full border border-border object-cover object-center"
                   />
                   <div className="flex flex-col">
                     <span className="font-medium text-sm">{userProfile?.fullName}</span>
