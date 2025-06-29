@@ -69,9 +69,15 @@ export const ShelterBg: React.FC<ShelterBgProps> = ({ shelter }) => {
 
             <div className="flex -space-x-2 mt-2">
               {shelter.members.map((member) => (
-                <Avatar key={member.id} className="ring-2 ring-primary">
-                  {/* Fallback with last 2 chars of ID */}
-                  <AvatarFallback>{member.id.slice(-2)}</AvatarFallback>
+                <Avatar
+            
+                  key={member._id}
+                  className="ring-2 ring-primary"
+                >
+                  <AvatarImage src={member.avatar}/>
+                  <AvatarFallback>
+                    {member.fullName.trim().split(" ").pop()?.charAt(0) ?? ""}
+                  </AvatarFallback>
                 </Avatar>
               ))}
             </div>

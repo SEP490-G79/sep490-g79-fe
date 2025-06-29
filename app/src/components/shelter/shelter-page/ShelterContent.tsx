@@ -1,4 +1,6 @@
+import PetCard from "@/components/landing-page/PetCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Posts from "@/components/user/profile/Posts";
 import React from "react";
 
 function ShelterContent() {
@@ -30,10 +32,16 @@ function ShelterContent() {
 
           {/* Tab contents */}
           <TabsContent value="pets" className="pt-4">
-            Pets
+            <div className="grid grid-cols-3 gap-3">
+              <PetCard />
+              <PetCard />
+              <PetCard />
+              <PetCard />
+              <PetCard />
+            </div>
           </TabsContent>
           <TabsContent value="posts" className="pt-4">
-            Posts
+            <Posts />
           </TabsContent>
           <TabsContent value="blogs" className="pt-4">
             Blogs

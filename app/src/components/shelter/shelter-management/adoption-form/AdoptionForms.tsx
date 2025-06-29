@@ -36,8 +36,14 @@ import {
 } from "@/components/ui/table";
 import { mockAdoptionForms, type AdoptionForm } from "@/types/AdoptionForm";
 import { Badge } from "@/components/ui/badge";
+
 const removeDiacritics = (str: string) =>
-  str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d") 
+    .replace(/Đ/g, "D");
+
 export const columns: ColumnDef<AdoptionForm>[] = [
   {
     accessorKey: "stt",
@@ -56,10 +62,9 @@ export const columns: ColumnDef<AdoptionForm>[] = [
     accessorKey: "title",
     header: ({ column }) => <Button variant="ghost">Tiêu đề</Button>,
     filterFn: (row, columnId, filterValue) => {
-      const cell = row.getValue<string>(columnId);
-      return removeDiacritics(cell)
-        .toLowerCase()
-        .includes(removeDiacritics(filterValue).toLowerCase());
+      const cell = String(row.getValue<string>(columnId) ?? "");
+      const keyword = removeDiacritics(filterValue ?? "").toLowerCase();
+      return removeDiacritics(cell).toLowerCase().includes(keyword);
     },
     cell: ({ row }) => <span>{row.getValue("title")}</span>,
   },

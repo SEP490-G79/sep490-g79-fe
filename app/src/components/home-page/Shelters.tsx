@@ -1,15 +1,17 @@
-import React, { useMemo } from "react";
+import React, { useContext, useMemo } from "react";
 import PetCard from "../landing-page/PetCard";
 import { Button } from "../ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRightIcon } from "lucide-react";
 import ShelterCard from "./ShelterCard";
-import { mockShelters, type Shelter } from "@/types/Shelter";
+import { type Shelter } from "@/types/Shelter";
+import AppContext from "@/context/AppContext";
 
 function Shelters() {
-  const filteredShelters = useMemo<Shelter[]>(() => {
-    return mockShelters.slice(0, 5);
-  }, [mockShelters]);
+  const {shelters} = useContext(AppContext);
+  const filteredShelters = useMemo<Shelter[] | undefined>(() => {
+    return (shelters ?? []).slice(0, 5);
+  }, [shelters]);
   return (
     <div className="w-full flex flex-wrap justify-center mt-10">
       <h2 className="basis-3xl text-center text-3xl font-bold mb-5">

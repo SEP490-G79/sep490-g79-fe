@@ -1,5 +1,5 @@
 // src/pages/Shelters.tsx
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useContext } from "react";
 import ShelterCard from "@/components/home-page/ShelterCard";
 import {
   Breadcrumb,
@@ -10,7 +10,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
-import { mockShelters, type Shelter } from "@/types/Shelter";
+import {type Shelter } from "@/types/Shelter";
 import {
   Pagination,
   PaginationContent,
@@ -20,17 +20,18 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import AppContext from "@/context/AppContext";
 
 export default function Shelters() {
   // Từ khoá tìm kiếm
+  const {shelters} = useContext(AppContext);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Lọc mockShelters theo searchTerm
   const filteredShelters = useMemo<Shelter[]>(() => {
-    return mockShelters.filter((s) =>
+    return (shelters ?? []).filter(s =>
       s.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
+    )
+  }, [searchTerm, shelters])
 
   // Placeholder cho input
   const placeholders = [
@@ -43,7 +44,7 @@ export default function Shelters() {
     setSearchTerm(e.target.value);
   };
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    setSearchTerm("");
   };
 
   return (

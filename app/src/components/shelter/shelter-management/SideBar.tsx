@@ -11,7 +11,7 @@ interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
 function SideBar({ items }: SidebarNavProps) {
   const { shelterId } = useParams();
   const pathname = useLocation().pathname;
-  console.log(pathname);
+  // console.log(pathname);
   const currentTab = pathname.split("/").pop() || "";
   return (
     <nav

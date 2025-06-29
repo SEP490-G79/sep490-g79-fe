@@ -18,6 +18,7 @@ import Shelters from "@/pages/Shelter/Shelters";
 import NotFound from "@/pages/Common/NotFound";
 import ManageShelter from "@/pages/Shelter/ManageShelter";
 import { AdoptionForms } from "@/components/shelter/shelter-management/adoption-form/AdoptionForms";
+import { AdoptionTemplates } from "@/components/shelter/shelter-management/adoption-form/AdoptionTemplates";
 
 function AppRoutes() {
   return (
@@ -36,7 +37,7 @@ function AppRoutes() {
         <Route index element={<div>settings</div>} />
         <Route path="staffs-management" element={<div>Quản lý thành viên</div>} />
         <Route path="pet-profiles" element={<div>Quản lý pets</div>} />
-        <Route path="adoption-templates" element={<div>Quản lý adoption templates</div>} />
+        <Route path="adoption-templates" element={<AdoptionTemplates/>} />
         <Route path="adoption-forms" element={<AdoptionForms/>} />
       </Route>
 
