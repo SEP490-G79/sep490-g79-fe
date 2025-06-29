@@ -13,15 +13,14 @@ function App() {
         <AppHeader />
 
         <div className="min-h-screen w-full">
-
           <AppRoutes />
         </div>
         <AppFooter />
       </div>
 
-      <Toaster richColors position="top-center"/>
+      <Toaster richColors position="top-center" />
     </ThemeProvider>
   );
 }
 
-export default App
+export default App;
