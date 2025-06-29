@@ -29,7 +29,7 @@ function UserInfo() {
                                 <img
                                     src={userProfile?.avatar || "/placeholder.svg"}
                                     alt="Avatar"
-                                    className="w-35 h-35 rounded-full border-1 border-gray-100 shadow-md"
+                                    className="w-35 h-35 rounded-full border-1 border-gray-100 shadow-md object-cover object-center"
                                 />
                                 </PhotoView>
                                 </PhotoProvider>

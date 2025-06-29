@@ -31,7 +31,7 @@ const intros: { title: string; href: string; description: string }[] = [
 const adoptions: { title: string; href: string; description: string }[] = [
   {
     title: "Danh sách thú cưng",
-    href: "#",
+    href: "/pets-list",
     description:
       "Khám phá những người bạn đang chờ được yêu thương và tìm mái ấm mới.",
   },

@@ -14,6 +14,7 @@ export interface User {
   background: string;
   createdAt?: string;
   status:string;
+  wishList: string[];
   [key: string]: any; 
 }
 

@@ -10,7 +10,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import useAuthAxios from "@/utils/authAxios";
 
-const excludedURLs = ['/','/login', '/register', '/active-account', '/faq']
+const excludedURLs = ['/','/login', '/register', '/active-account', '/faq' ];
 
 interface AppContextType {
   user: User | null;
@@ -25,6 +25,9 @@ interface AppContextType {
   setLoginLoading: (loading: boolean) => void;
   setUserProfile: (user: User | null) => void;
   setUser: (user: User | null) => void;
+  petsList: any;
+  petAPI: string;
+  medicalRecordAPI: string;
 }
 
 const AppContext = createContext<AppContextType>({
@@ -40,6 +43,9 @@ const AppContext = createContext<AppContextType>({
   setLoginLoading: (loginLoading: boolean) => { },
   setUserProfile: () => { },       
   setUser: () => { },
+  petsList: [],
+  petAPI: "",
+  medicalRecordAPI: "",
 });
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
@@ -49,6 +55,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const accessToken = localStorage.getItem("accessToken");
   const [loginLoading, setLoginLoading] = useState<Boolean>(false);
   const [userProfile, setUserProfile] = useState<User | null>(null);
+  const [petsList, setPetsList] = useState([]);
   const authAxios = useAuthAxios();
 
   // APIs
@@ -56,6 +63,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const authAPI = "http://localhost:9999/auth";
   const adminAPI = "http://localhost:9999/admin";
   const userApi = "http://localhost:9999/users";
+  const petAPI = "http://localhost:9999/pets";
+  const medicalRecordAPI = "http://localhost:9999/medical-records";
 
 
 
@@ -89,6 +98,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
      }
   }, [location.pathname]);
 
+  // get pets list
+  useEffect(() => {   
+     axios.get(`${petAPI}/get-pet-list`)
+  .then((res) => {
+    setPetsList(res.data);
+  })
+  .catch((error) => {
+    toast.error("Không thể lấy danh sách thú cưng");
+  });
+  }, []);
+
+  // get pet profile by petId
+   useEffect(() => {   
+     axios.get(`${petAPI}/get-pet-list`)
+  .then((res) => {
+    setPetsList(res.data);
+  })
+  .catch((error) => {
+    toast.error("Không thể lấy danh sách thú cưng");
+  });
+  }, []);
+
 
   return (
     <AppContext.Provider
@@ -104,7 +135,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         loginLoading,
         setLoginLoading,
         setUserProfile,  
-        setUser
+        setUser,
+        petsList,
+        petAPI,
+        medicalRecordAPI
       }}
     >
       {children}

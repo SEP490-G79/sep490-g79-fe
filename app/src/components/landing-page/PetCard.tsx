@@ -8,16 +8,23 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Link } from "react-router-dom";
+import type { Pet } from '@/types/Pet'
 
-export default function PetCard() {
+interface PetCardProps {
+  pet: Pet;
+}
+
+
+
+export default function PetCard({ pet }: PetCardProps) {
   return (
     <div className="max-w-sm rounded-xl bg-(--card) shadow-sm border border-border overflow-hidden transition hover:shadow-md cursor-pointer">
       {/* Image section */}
       <div className="relative h-64">
         <img
-          src={Image_1}
-          alt="Kevin the cat"
-          className="w-full h-full object-cover"  
+          src={pet?.photos?.[0] || "https://i.pinimg.com/736x/ad/11/3a/ad113a545bc1278f9c5bc4ea770bc839.jpg"}
+          alt={pet?.name}
+          className="w-full h-full object-cover object-top"
         />
       </div>
 
@@ -29,21 +36,26 @@ export default function PetCard() {
               <Badge className="cursor-pointer ">
                 <MapPin className="w-4 h-4" />
                 <span>
-                  6 tháng
+                  {pet?.age >= 12
+                    ? `${Math.floor(pet?.age / 12)} tuổi`
+                    : `${pet?.age} tháng tuổi`}
+
                 </span>
               </Badge>
             </div>
           </TooltipTrigger>
           <TooltipContent className=" bg-(--background) text-(--foreground) border border-(--border)">
             <p>
-              6 tháng tuổi
+              {pet?.age >= 12
+                ? `${Math.floor(pet?.age / 12)} tuổi`
+                : `${pet?.age} tháng tuổi`}
+
             </p>
           </TooltipContent>
         </Tooltip>
-        <h3 className="text-xl font-bold text-foreground mb-2">Kevin</h3>
+        <h3 className="text-xl font-bold text-foreground mb-2">{pet?.name}</h3>
         <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-2">
-          He loves people and loves the attention. Likes to go out for long
-          walks and is good on the lead. Rex is great!
+          {pet?.bio}
         </p>
         <Button variant="ghost" className="gap-2" asChild>
           <Link to="/">Xem thêm <ArrowRight className="w-4 h-4" /></Link>

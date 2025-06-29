@@ -13,10 +13,13 @@ import HomePage from "@/pages/Common/HomePage";
 import HandleVerify from "@/pages/Common/HandleVerify";
 import { Register } from "@/pages/Common/Register";
 import { FAQ } from "@/pages/Common/FAQ";
+import PetsListPage from "@/pages/Pets/PetsListPage";
+import  PetProfilePage  from "@/components/pet/PetProfilePage";
 
 function AppRoutes() {
   return (
     <Routes>
+      
       <Route element={<PublicRoutes />}>
         <Route index element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
@@ -24,6 +27,8 @@ function AppRoutes() {
         <Route path="/active-account" element={<HandleVerify />} />
       </Route>
       <Route path="/faq" element={<FAQ />} />
+      <Route path="/pets-list" element={<PetsListPage />} />
+      <Route path="/pets/:id" element={<PetProfilePage />} />
       
       <Route element={<PrivateRoutes />}>
         <Route index element={<Navigate to="/home" replace={true} />} />
@@ -31,6 +36,7 @@ function AppRoutes() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/newfeed" element={<Newfeed />} />
         <Route path="/profile-setting" element={<ProfileSettings />} />
+
       </Route>
 
       <Route path="*" element={<div>404 Not Found</div>} />
