@@ -129,7 +129,13 @@ function UserNav() {
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
-              <Link to={"/"}>Trung tâm cứu hộ</Link>
+              <Link to={"#"}>Trung tâm cứu hộ</Link>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <Link to={"/shelter-establishment"}>Thành lập trạm cứu hộ</Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />

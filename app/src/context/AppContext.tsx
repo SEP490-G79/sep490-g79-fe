@@ -20,7 +20,8 @@ interface AppContextType {
   accessToken: string | null;
   coreAPI: string;
   authAPI: string;
-  adminAPI: string;
+  userAPI: string;
+  shelterAPI: string
   login: (accessToken: string, userData: User) => void;
   logout: () => void;
   userProfile: User | null;
@@ -40,9 +41,10 @@ const AppContext = createContext<AppContextType>({
   accessToken: null,
   coreAPI: "",
   authAPI: "",
-  adminAPI: "",
-  login: () => {},
-  logout: () => {},
+  userAPI: "",
+  shelterAPI: "",
+  login: () => { },
+  logout: () => { },
   userProfile: null,
   loginLoading: false,
   setLoginLoading: (loginLoading: boolean) => { },
@@ -68,8 +70,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   // APIs
   const coreAPI = "http://localhost:9999";
   const authAPI = "http://localhost:9999/auth";
-  const adminAPI = "http://localhost:9999/admin";
-  const userApi = "http://localhost:9999/users";
+  const userAPI = "http://localhost:9999/users";
+  const shelterAPI = "http://localhost:9999/shelters";
   const petAPI = "http://localhost:9999/pets";
   const medicalRecordAPI = "http://localhost:9999/medical-records";
 
@@ -79,14 +81,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const logout = () => {
-    axios
-      .post(`${authAPI}/logout`, { id: user?.id })
-      .then((res) => {
-        toast.success("Thoát đăng nhập thành công");
-        setUser(null);
-        localStorage.removeItem("accessToken");
-      })
-      .catch((err) => toast.error("Lỗi thoát đăng nhập!"));
+    axios.post(`${authAPI}/logout`,{id: user?.id})
+    .then(res => {
+      toast.success("Thoát đăng nhập thành công");
+      setUser(null);
+      localStorage.removeItem("accessToken");
+    })
+    .catch(err => toast.error("Lỗi thoát đăng nhập!"))
   };
 
   // Check trạng thái login và access token mỗi khi chuyển trang trừ các trang public
@@ -137,7 +138,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         accessToken,
         coreAPI,
         authAPI,
-        adminAPI,
+        userAPI,
+        shelterAPI,
         login,
         logout,
         userProfile,

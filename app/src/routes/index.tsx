@@ -13,6 +13,10 @@ import HomePage from "@/pages/Common/HomePage";
 import HandleVerify from "@/pages/Common/HandleVerify";
 import { Register } from "@/pages/Common/Register";
 import { FAQ } from "@/pages/Common/FAQ";
+import ShelterEstablishmentPage from "@/pages/shelter/ShelterEstablishmentPage";
+import ShelterStaffManagement from "@/components/shelter/manager/ShelterStaffManagement";
+import ShelterProfile from "@/components/shelter/manager/ShelterProfile";
+import ShelterManagerLayout from "@/components/layouts/shelter/ShelterManagerLayout";
 import ViewPetDetails from "@/pages/pets/ViewPetDetails";
 import PetManagement from "@/components/pet/PetManagement";
 import ShelterDashboard from "@/pages/shelter/ShelterDashboard";
@@ -44,9 +48,11 @@ function AppRoutes() {
       <Route path="/pet/:petId" element={<ViewPetDetails />} />
         <Route path="/shelter/pets" element={<PetManagement />} />
         <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
+
       <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
-        <Route index element={<div>settings</div>} />
-        <Route path="staffs-management" element={<div>Quản lý thành viên</div>} />
+        <Route index element={<ShelterProfile />} />
+        <Route path="profile" element={<ShelterProfile />} />
+        <Route path="staffs-management" element={<ShelterStaffManagement />} />
         <Route path="pet-profiles" element={<div>Quản lý pets</div>} />
         <Route path="adoption-templates" element={<AdoptionTemplates/>} />
         <Route path="adoption-forms" element={<AdoptionForms/>} />
@@ -58,7 +64,10 @@ function AppRoutes() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/newfeed" element={<Newfeed />} />
         <Route path="/profile-setting" element={<ProfileSettings />} />
-
+        <Route
+          path="/shelter-establishment"
+          element={<ShelterEstablishmentPage />}
+        />
       </Route>
 
       <Route path="*" element={<NotFound />} />
