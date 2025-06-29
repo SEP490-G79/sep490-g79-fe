@@ -1,4 +1,3 @@
-// src/types/Shelter.ts
 
 export interface FileData {
   fileName: string;
@@ -32,4 +31,5 @@ export interface Shelter {
   createdAt: string;
   updatedAt: string;
 }
+
 

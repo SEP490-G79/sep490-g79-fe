@@ -13,6 +13,8 @@ import HomePage from "@/pages/Common/HomePage";
 import HandleVerify from "@/pages/Common/HandleVerify";
 import { Register } from "@/pages/Common/Register";
 import { FAQ } from "@/pages/Common/FAQ";
+import PetsListPage from "@/pages/Pets/PetsListPage";
+import  PetProfilePage  from "@/components/pet/PetProfilePage";
 import ShelterPage from "@/pages/Shelter/ShelterPage";
 import Shelters from "@/pages/Shelter/Shelters";
 import NotFound from "@/pages/Common/NotFound";
@@ -23,6 +25,7 @@ import { AdoptionTemplates } from "@/components/shelter/shelter-management/adopt
 function AppRoutes() {
   return (
     <Routes>
+      
       <Route element={<PublicRoutes />}>
         <Route index element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
@@ -30,6 +33,9 @@ function AppRoutes() {
         <Route path="/active-account" element={<HandleVerify />} />
       </Route>
       <Route path="/faq" element={<FAQ />} />
+
+      <Route path="/pets-list" element={<PetsListPage />} />
+      <Route path="/pets/:id" element={<PetProfilePage />} />
       <Route path="/shelters" element={<Shelters />} />
       <Route path="/shelters/:shelterId" element={<ShelterPage />} />
 
@@ -47,6 +53,7 @@ function AppRoutes() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/newfeed" element={<Newfeed />} />
         <Route path="/profile-setting" element={<ProfileSettings />} />
+
       </Route>
 
       <Route path="*" element={<NotFound />} />
