@@ -117,7 +117,7 @@ export function HeaderMenu() {
             Hỗ trợ
           </NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid w-[300px] gap-2  grid-cols-1 ">
+            <ul className="grid w-[300px] gap-2  grid-cols-1  ">
               {supports.map((support) => (
                 <ListItem
                   key={support.title}
