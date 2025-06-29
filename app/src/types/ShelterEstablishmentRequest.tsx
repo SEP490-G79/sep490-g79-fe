@@ -1,5 +1,6 @@
 export interface ShelterEstablishmentRequest {
   name: string;
+  shelterCode: string;
   email: string;
   hotline: number;
   address: string;

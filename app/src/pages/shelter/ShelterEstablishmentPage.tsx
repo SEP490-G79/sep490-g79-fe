@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
@@ -20,7 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowUpDown, Loader2Icon } from "lucide-react";
+import { ArrowUpDown, Loader2Icon, MoreHorizontal } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
@@ -33,10 +33,17 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbS
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import generateCodename from "@/utils/shelterCodeGenerator";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 
 const shelterEstablishmentSchema = z.object({
-  name: z.string().trim().min(3, "Tên trạm không được để trống"),
+  name: z
+    .string()
+    .trim()
+    .min(3, "Tên trạm không được để trống")
+    .regex(/^[^\d]*$/, "Tên trạm không được chứa số"),
+  shelterCode: z.string().min(1),
   hotline: z
     .string()
     .trim()
@@ -60,6 +67,23 @@ interface eligibleToRequest{
   reason: string;
 }
 
+type detailDialogData = {
+  isOpen: boolean;
+  detail: {
+    name: string;
+    shelterCode: string;
+    hotline: number;
+    email: string;
+    address: string;
+    aspiration: string;
+    shelterLicenseURL: string;
+    status: string;
+    rejectReason: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+};
+
 const ShelterEstablishmentPage: React.FC = () => {
     const [eligibleToRequest, setEligibleToRequest] = useState<eligibleToRequest>(); // du dieu kien de gui request
     const [requestList, setRequestList] = useState<ShelterEstablishmentRequest[]>([]);
@@ -68,11 +92,28 @@ const ShelterEstablishmentPage: React.FC = () => {
     const [submittedData, setSubmittedData] = useState<any>(null);
     const authAxios = useAuthAxios();
     const {shelterAPI} = useContext(AppContext)
+    const [detailDialog, setDetailDialog] = useState<detailDialogData>({
+      isOpen: false,
+      detail: {
+        name: "",
+        shelterCode: "",
+        hotline: 123,
+        email: "",
+        address: "",
+        aspiration: "",
+        shelterLicenseURL: "",
+        status: "verifying",
+        rejectReason: "No reason",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
 
   const form = useForm<z.infer<typeof shelterEstablishmentSchema>>({
     resolver: zodResolver(shelterEstablishmentSchema),
     defaultValues: {
       name: "",
+      shelterCode: "",
       hotline: "",
       email: "",
       address: "",
@@ -98,6 +139,15 @@ const ShelterEstablishmentPage: React.FC = () => {
         console.log(err)
       });
   }, []);
+
+  // tu dong gen shelter code
+const nameValue = useWatch({ control: form.control, name: "name" });
+useEffect(() => {
+  if (nameValue) {
+    form.setValue("shelterCode", generateCodename(nameValue));
+  }
+}, [nameValue]);
+
 
   const columns: ColumnDef<ShelterEstablishmentRequest>[] = [
     {
@@ -268,111 +318,44 @@ const ShelterEstablishmentPage: React.FC = () => {
     {
       header: "Hành động",
       cell: ({ row }) => (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="cursor-pointer">Chi tiết</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="text-center">
-                Đơn yêu cầu thành lập trạm cứu hộ
-              </DialogTitle>
-              <DialogDescription className="text-center">
-                Dưới đây là các thông tin chi tiết được cung cấp trong đơn yêu
-                cầu.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 px-5 py-3 text-sm">
-              <div>
-                <span className="font-medium">Tên trạm cứu hộ:</span>{" "}
-                {row.original.name || (
-                  <span className="italic text-muted">Chưa có</span>
-                )}
-              </div>
-
-              <div>
-                <span className="font-medium">Hotline:</span>{" "}
-                {row.original.hotline || (
-                  <span className="italic text-muted">Chưa có</span>
-                )}
-              </div>
-
-              <div>
-                <span className="font-medium">Email:</span>{" "}
-                {row.original.email || (
-                  <span className="italic text-muted">Chưa có</span>
-                )}
-              </div>
-
-              <div>
-                <span className="font-medium">Địa chỉ:</span>{" "}
-                {row.original.address || (
-                  <span className="italic text-muted">Chưa có</span>
-                )}
-              </div>
-
-              <div>
-                <span className="font-medium">Nguyện vọng:</span>{" "}
-                {row.original.aspiration || (
-                  <span className="italic text-muted">Chưa có</span>
-                )}
-              </div>
-
-              <div>
-                <span className="font-medium">Giấy phép hoạt động:</span>{" "}
-                {row.original.shelterLicenseURL ? (
-                  <a
-                    href={row.original.shelterLicenseURL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 underline"
-                  >
-                    Xem chi tiết
-                  </a>
-                ) : (
-                  <span className="italic text-muted">Chưa có</span>
-                )}
-              </div>
-
-              <div>
-                <span className="font-medium">Trạng thái:</span>{" "}
-                {(row.original.status && (
-                  <Badge
-                    variant={
-                      ["pending", "active"].includes(row.original.status)
-                        ? "default"
-                        : "destructive"
-                    }
-                  >
-                    {row.original.status === "pending"
-                      ? "Đang chờ duyệt"
-                      : row.original.status === "active"
-                      ? "Chấp thuận"
-                      : "Từ chối"}
-                  </Badge>
-                )) || <span className="italic text-muted">Chưa có</span>}
-              </div>
-
-              {row.original.rejectReason && (
-                <div>
-                  <span className="font-medium">Lý do từ chối:</span>{" "}
-                  {row.original.rejectReason || (
-                    <span className="italic text-muted">Không có lý do</span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="secondary" className="cursor-pointer">
-                  Đóng
-                </Button>
-              </DialogClose>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer">
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="w-40 rounded-md border bg-background shadow-lg p-1"
+          >
+            <DropdownMenuLabel>Hành động</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuItem 
+              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
+              onClick={() => {
+                setDetailDialog({
+                  isOpen: true,
+                  detail: {
+                    name: row.original.name,
+                    shelterCode: row.original.shelterCode,
+                    hotline: row.original.hotline,
+                    email: row.original.email,
+                    address: row.original.address,
+                    aspiration: row.original.aspiration,
+                    shelterLicenseURL: row.original.shelterLicenseURL,
+                    status: row.original.status,
+                    rejectReason: row.original.rejectReason,
+                    createdAt: row.original.createdAt,
+                    updatedAt: row.original.updatedAt,
+                  },
+                });
+              }}
+              >
+                Xem thông tin chi tiết
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ),
     },
   ];
@@ -403,6 +386,7 @@ const ShelterEstablishmentPage: React.FC = () => {
   const onSubmit = async (values: z.infer<typeof shelterEstablishmentSchema>) => {
     const formData = new FormData();
     formData.append("name", values.name);
+    formData.append("shelterCode", values.shelterCode);
     formData.append("hotline", values.hotline);
     formData.append("email", values.email);
     formData.append("address", values.address);
@@ -498,7 +482,7 @@ const ShelterEstablishmentPage: React.FC = () => {
           <h4 className="scroll-m-20 min-w-40 text-xl font-semibold tracking-tight text-center">
             Yêu cầu thành lập trạm cứu hộ của bạn
           </h4>
-          <div className="flex flex-row gap-7">
+          <div className="flex justify-between">
             <Input
               className="max-w-1/3"
               type="string"
@@ -549,6 +533,23 @@ const ShelterEstablishmentPage: React.FC = () => {
                                     <Input
                                       placeholder="Nhập tên trạm"
                                       {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="shelterCode"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Mã trạm cứu hộ</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      // disabled
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -762,11 +763,10 @@ const ShelterEstablishmentPage: React.FC = () => {
                                           </ul>
 
                                           <p>
-                                            Nếu vi phạm
-                                            bất kỳ điều khoản nào trong cam kết
-                                            này, sẽ phải chịu mọi hình thức xử lý
-                                            theo quy định của hệ thống và pháp
-                                            luật.
+                                            Nếu vi phạm bất kỳ điều khoản nào
+                                            trong cam kết này, sẽ phải chịu mọi
+                                            hình thức xử lý theo quy định của hệ
+                                            thống và pháp luật.
                                           </p>
                                         </DialogDescription>
                                       </DialogHeader>
@@ -818,6 +818,119 @@ const ShelterEstablishmentPage: React.FC = () => {
           <DataTable columns={columns} data={filteredRequestList ?? []} />
         </div>
       </div>
+
+      {/* Dialog chi tiet */}
+      <Dialog open={detailDialog.isOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              Đơn yêu cầu thành lập trạm cứu hộ
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Dưới đây là các thông tin chi tiết được cung cấp trong đơn yêu
+              cầu.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 px-5 py-3 text-sm">
+            <div>
+              <span className="font-medium">Tên trạm cứu hộ:</span>{" "}
+              {detailDialog?.detail.name || (
+                <span className="italic text-muted">Chưa có</span>
+              )}
+            </div>
+
+            <div>
+              <span className="font-medium">Mã trạm cứu hộ:</span>{" "}
+              {detailDialog?.detail.shelterCode || (
+                <span className="italic text-muted">Chưa có</span>
+              )}
+            </div>
+
+            <div>
+              <span className="font-medium">Hotline:</span>{" "}
+              {detailDialog?.detail.hotline || (
+                <span className="italic text-muted">Chưa có</span>
+              )}
+            </div>
+
+            <div>
+              <span className="font-medium">Email:</span>{" "}
+              {detailDialog?.detail.email || (
+                <span className="italic text-muted">Chưa có</span>
+              )}
+            </div>
+
+            <div>
+              <span className="font-medium">Địa chỉ:</span>{" "}
+              {detailDialog?.detail.address || (
+                <span className="italic text-muted">Chưa có</span>
+              )}
+            </div>
+
+            <div>
+              <span className="font-medium">Nguyện vọng:</span>{" "}
+              {detailDialog?.detail.aspiration || (
+                <span className="italic text-muted">Chưa có</span>
+              )}
+            </div>
+
+            <div>
+              <span className="font-medium">Giấy phép hoạt động:</span>{" "}
+              {detailDialog?.detail.shelterLicenseURL ? (
+                <a
+                  href={detailDialog?.detail.shelterLicenseURL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  Xem chi tiết
+                </a>
+              ) : (
+                <span className="italic text-muted">Chưa có</span>
+              )}
+            </div>
+
+            <div>
+              <span className="font-medium">Trạng thái:</span>{" "}
+              {(detailDialog?.detail.status && (
+                <Badge
+                  variant={
+                    ["verifying", "active"].includes(detailDialog?.detail.status)
+                      ? "default"
+                      : "destructive"
+                  }
+                >
+                  {detailDialog?.detail.status === "verifying"
+                    ? "Đang chờ duyệt"
+                    : detailDialog?.detail.status === "active"
+                    ? "Chấp thuận"
+                    : "Từ chối"}
+                </Badge>
+              )) || <span className="italic text-muted">Chưa có</span>}
+            </div>
+
+            {detailDialog?.detail.rejectReason && (
+              <div>
+                <span className="font-medium">Lý do từ chối:</span>{" "}
+                {detailDialog?.detail.rejectReason || (
+                  <span className="italic text-muted">Không có lý do</span>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="secondary" className="cursor-pointer" 
+               onClick={() => setDetailDialog({...detailDialog, isOpen: false})}
+               >
+                Đóng
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
