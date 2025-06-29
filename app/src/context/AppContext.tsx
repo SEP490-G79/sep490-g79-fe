@@ -51,9 +51,6 @@ const AppContext = createContext<AppContextType>({
   petsList: [],
   petAPI: "",
   medicalRecordAPI: "",
-  setLoginLoading: (loginLoading: boolean) => {},
-  setUserProfile: () => {},
-  setUser: () => {},
   setShelters: () => [],
 });
 
@@ -110,17 +107,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 
   // get pets list
   useEffect(() => {   
-     axios.get(`${petAPI}/get-pet-list`)
-  .then((res) => {
-    setPetsList(res.data);
-  })
-  .catch((error) => {
-    toast.error("Không thể lấy danh sách thú cưng");
-  });
-  }, []);
-
-  // get pet profile by petId
-   useEffect(() => {   
      axios.get(`${petAPI}/get-pet-list`)
   .then((res) => {
     setPetsList(res.data);
