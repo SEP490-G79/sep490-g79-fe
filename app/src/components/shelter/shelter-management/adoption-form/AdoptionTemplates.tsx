@@ -48,6 +48,7 @@ import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { Skeleton } from "@/components/ui/skeleton";
+import CreateDialog from "../adoption-form/CreateDialog";
 
 const removeDiacritics = (str: string) =>
   str
@@ -235,9 +236,7 @@ export function AdoptionTemplates() {
           }}
           className="max-w-sm"
         />
-        <Button variant='default' className="cursor-pointer ">
-          <Plus/>Add a template
-        </Button>
+        <CreateDialog/>
       </div>
       <div className="rounded-md border">
         {adoptionTemplates ? (
