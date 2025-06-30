@@ -55,6 +55,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { uploadToCloudinary } from "@/utils/cloudinaryUpload";
 
 interface Pet {
   _id?: string;
@@ -68,9 +69,14 @@ interface Pet {
   sterilizationStatus: boolean;
   bio: string;
   status: string;
-  species: string;
+  species: string | { name: string };
   photo?: string;
   petCode?: string;
+  breeds?: (string | { name: string })[];
+  intakeTime?: string;
+  foundLocation?: string;
+  shelter?: { name: string } | string;
+  tokenMoney?: number;
 }
 
 export default function PetManagement() {
@@ -108,11 +114,22 @@ export default function PetManagement() {
 
   const columns: ColumnDef<Pet>[] = [
     {
+      accessorKey: "petCode",
+      header: "#Mã thú nuôi",
+      cell: ({ row }) => <span>#{row.original.petCode}</span>,
+    },
+    {
       accessorKey: "photos",
       header: "Ảnh",
       cell: ({ row }) => (
         <img
-          src={`http://localhost:9999${row.original.photos?.[0]}`}
+          src={
+            row.original.photos?.[0]
+              ? row.original.photos[0].startsWith("http")
+                ? row.original.photos[0]
+                : `http://localhost:9999${row.original.photos[0]}`
+              : "/placeholder.png"
+          }
           alt="pet"
           className="w-10 h-10 object-cover rounded"
         />
@@ -123,7 +140,21 @@ export default function PetManagement() {
       accessorKey: "status",
       header: "Trạng thái",
       cell: ({ row }) =>
-        row.original.status === "available" ? "Available" : "Unavailable",
+        row.original.status === "available" ? "có sẵn" : "chưa có sẵn",
+    },
+
+    {
+      accessorKey: "breeds",
+      header: "Giống loài",
+      cell: ({ row }) => (
+        <span>
+          {(row.original.breeds || [])
+            .map((b: string | { name: string }) =>
+              typeof b === "string" ? b : b.name
+            )
+            .join(", ")}
+        </span>
+      ),
     },
     {
       id: "actions",
@@ -152,6 +183,11 @@ export default function PetManagement() {
                 setForm({
                   ...row.original,
                   photo: row.original.photos?.[0] || "",
+                  breeds: Array.isArray(row.original.breeds)
+                    ? row.original.breeds.map((b) =>
+                        typeof b === "string" ? b : b.name
+                      )
+                    : [],
                 });
                 setShowForm(true);
               }}
@@ -172,24 +208,6 @@ export default function PetManagement() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      ),
-    },
-    {
-      accessorKey: "petCode",
-      header: "Mã thú nuôi",
-      cell: ({ row }) => <span>{row.original.petCode}</span>,
-    },
-    {
-      accessorKey: "breeds",
-      header: "Giống loài",
-      cell: ({ row }) => (
-        <span>
-          {(row.original.breeds || [])
-            .map((b: string | { name: string }) =>
-              typeof b === "string" ? b : b.name
-            )
-            .join(", ")}
-        </span>
       ),
     },
   ];
@@ -283,14 +301,8 @@ export default function PetManagement() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("http://localhost:9999/pets/upload-image", {
-      method: "POST",
-      body: formData,
-    });
-    const data = await res.json();
-    setForm((prev) => ({ ...prev, photo: data.url }));
+    const url = await uploadToCloudinary(file);
+    setForm((prev) => ({ ...prev, photo: url }));
   };
 
   return (
@@ -500,7 +512,7 @@ export default function PetManagement() {
               <Input type="file" accept="image/*" onChange={handleFileChange} />
               {form.photo && (
                 <img
-                  src={`http://localhost:9999${String(form.photo ?? "")}`}
+                  src={form.photo}
                   alt="Preview"
                   className="w-24 h-24 object-cover rounded mt-2"
                 />
@@ -524,48 +536,136 @@ export default function PetManagement() {
 
       {/* Detail View in Center */}
       <Dialog open={showDetail} onOpenChange={setShowDetail}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-5xl min-w-[900px] w-full">
           <DialogHeader>
             <DialogTitle>Chi tiết thú nuôi</DialogTitle>
           </DialogHeader>
           {detailPet && (
             <div className="flex flex-col gap-6">
-              <div className="flex gap-6">
-                <img
-                  src={`http://localhost:9999${detailPet.photos?.[0]}`}
-                  alt={detailPet.name}
-                  className="w-40 h-40 object-cover rounded border"
-                />
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <b>Tên:</b> {detailPet.name}
-                  </div>
-                  <div>
-                    <b>Tuổi:</b> {detailPet.age}
-                  </div>
-                  <div>
-                    <b>Giới tính:</b> {detailPet.isMale ? "Đực" : "Cái"}
-                  </div>
-                  <div>
-                    <b>Cân nặng:</b> {detailPet.weight}
-                  </div>
-                  <div>
-                    <b>Màu lông:</b> {detailPet.color}
-                  </div>
-                  <div>
-                    <b>Đặc điểm:</b> {detailPet.identificationFeature}
-                  </div>
-                  <div>
-                    <b>Triệt sản:</b>{" "}
-                    {detailPet.sterilizationStatus
+              <div className="flex flex-col md:flex-row gap-8 items-start">
+                {/* Hiển thị tất cả ảnh */}
+                <div className="flex flex-col gap-2 items-center">
+                  {detailPet.photos && detailPet.photos.length > 0 ? (
+                    <>
+                      <img
+                        src={
+                          detailPet.photos[0].startsWith("http")
+                            ? detailPet.photos[0]
+                            : `http://localhost:9999${detailPet.photos[0]}`
+                        }
+                        alt={detailPet.name}
+                        className="w-full md:w-40 h-40 object-cover rounded border"
+                      />
+                      {detailPet.photos.length > 1 && (
+                        <div className="flex gap-2 mt-2 flex-wrap justify-center">
+                          {detailPet.photos.slice(1).map((photo, idx) => (
+                            <img
+                              key={idx}
+                              src={
+                                photo.startsWith("http")
+                                  ? photo
+                                  : `http://localhost:9999${photo}`
+                              }
+                              alt={`pet-${idx}`}
+                              className="w-14 h-14 object-cover rounded border"
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <img
+                      src="/placeholder.png"
+                      alt="No pet"
+                      className="w-full md:w-40 h-40 object-cover rounded border"
+                    />
+                  )}
+                </div>
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-16 gap-y-3 text-sm md:text-base text-gray-800">
+                  <p>
+                    <strong>Pet ID:</strong> {detailPet._id}
+                  </p>
+                  <p>
+                    <strong>Trạng thái:</strong> {detailPet.status || "Unknown"}
+                  </p>
+                  <p>
+                    <strong>Giới tính:</strong>{" "}
+                    {detailPet.isMale === true
+                      ? "Đực"
+                      : detailPet.isMale === false
+                      ? "Cái"
+                      : "Unknown"}
+                  </p>
+                  <p>
+                    <strong>Tuổi:</strong>{" "}
+                    {detailPet.age !== undefined
+                      ? detailPet.age + " tháng"
+                      : "Unknown"}
+                  </p>
+                  <p>
+                    <strong>Cân nặng:</strong>{" "}
+                    {detailPet.weight !== undefined
+                      ? detailPet.weight + " kg"
+                      : "Unknown"}
+                  </p>
+                  <p>
+                    <strong>Màu lông:</strong> {detailPet.color || "Unknown"}
+                  </p>
+                  <p>
+                    <strong>Giống loài:</strong>{" "}
+                    {detailPet.breeds && detailPet.breeds.length > 0
+                      ? detailPet.breeds
+                          .map((b: string | { name: string }) =>
+                            typeof b === "string" ? b : b.name
+                          )
+                          .join(", ")
+                      : "Unknown"}
+                  </p>
+                  <p>
+                    <strong>Loài:</strong>{" "}
+                    {typeof detailPet.species === "string"
+                      ? detailPet.species
+                      : (detailPet.species as { name: string })?.name ||
+                        "Unknown"}
+                  </p>
+                  <p>
+                    <strong>Triệt sản:</strong>{" "}
+                    {detailPet.sterilizationStatus === true
                       ? "Đã triệt sản"
-                      : "Chưa triệt sản"}
-                  </div>
-                  <div>
-                    <b>Trạng thái:</b> {detailPet.status}
-                  </div>
-                  <div className="col-span-2">
-                    <b>Mô tả:</b> {detailPet.bio}
+                      : detailPet.sterilizationStatus === false
+                      ? "Chưa triệt sản"
+                      : "Unknown"}
+                  </p>
+                  <p>
+                    <strong>Đặc điểm:</strong>{" "}
+                    {detailPet.identificationFeature || "Không có"}
+                  </p>
+                  <p>
+                    <strong>Ngày vào:</strong>{" "}
+                    {detailPet.intakeTime
+                      ? new Date(detailPet.intakeTime).toLocaleDateString()
+                      : "Unknown"}
+                  </p>
+                  <p>
+                    <strong>Vị trí tìm thấy:</strong>{" "}
+                    {detailPet.foundLocation || "Unknown"}
+                  </p>
+                  <p>
+                    <strong>Nhà bảo trợ:</strong>{" "}
+                    {typeof detailPet.shelter === "string"
+                      ? detailPet.shelter
+                      : (detailPet.shelter as { name: string })?.name ||
+                        "Unknown"}
+                  </p>
+                  <p>
+                    <strong>Tiền đặt cọc:</strong>{" "}
+                    {detailPet.tokenMoney !== undefined
+                      ? Number(detailPet.tokenMoney).toLocaleString() + " VND"
+                      : "Unknown"}
+                  </p>
+                  <div className="col-span-full mt-2">
+                    <span className="font-semibold text-gray-600">Mô tả:</span>{" "}
+                    {detailPet.bio || "Không có mô tả"}
                   </div>
                 </div>
               </div>

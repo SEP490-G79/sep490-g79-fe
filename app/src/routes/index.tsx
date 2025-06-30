@@ -18,10 +18,10 @@ import ShelterStaffManagement from "@/components/shelter/manager/ShelterStaffMan
 import ShelterProfile from "@/components/shelter/manager/ShelterProfile";
 import ShelterManagerLayout from "@/components/layouts/shelter/ShelterManagerLayout";
 import ViewPetDetails from "@/pages/pets/ViewPetDetails";
-import PetManagement from "@/components/pet/PetManagement";
+import PetManagement from "@/components/shelter/shelterPet/PetManagement";
 import ShelterDashboard from "@/pages/shelter/ShelterDashboard";
 import PetsListPage from "@/pages/Pets/PetsListPage";
-import  PetProfilePage  from "@/components/pet/PetProfilePage";
+import PetProfilePage from "@/components/pet/PetProfilePage";
 import ShelterPage from "@/pages/Shelter/ShelterPage";
 import Shelters from "@/pages/Shelter/Shelters";
 import NotFound from "@/pages/Common/NotFound";
@@ -32,7 +32,6 @@ import { AdoptionTemplates } from "@/components/shelter/shelter-management/adopt
 function AppRoutes() {
   return (
     <Routes>
-      
       <Route element={<PublicRoutes />}>
         <Route index element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
@@ -46,16 +45,16 @@ function AppRoutes() {
       <Route path="/shelters" element={<Shelters />} />
       <Route path="/shelters/:shelterId" element={<ShelterPage />} />
       <Route path="/pet/:petId" element={<ViewPetDetails />} />
-        <Route path="/shelter/pets" element={<PetManagement />} />
-        <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
+      <Route path="/shelter/pets" element={<PetManagement />} />
+      <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
 
       <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
         <Route index element={<ShelterProfile />} />
         <Route path="profile" element={<ShelterProfile />} />
         <Route path="staffs-management" element={<ShelterStaffManagement />} />
         <Route path="pet-profiles" element={<div>Quản lý pets</div>} />
-        <Route path="adoption-templates" element={<AdoptionTemplates/>} />
-        <Route path="adoption-forms" element={<AdoptionForms/>} />
+        <Route path="adoption-templates" element={<AdoptionTemplates />} />
+        <Route path="adoption-forms" element={<AdoptionForms />} />
       </Route>
 
       <Route element={<PrivateRoutes />}>
