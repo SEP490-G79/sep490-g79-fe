@@ -9,31 +9,39 @@ import {
   CardContent,
 } from "@/components/ui/card"
 import {
-  MapPinIcon,
-  MailIcon,
-  PhoneIcon,
-  AlertTriangleIcon,
-  CalendarIcon,
-  HashIcon,
+  FilePlus,
+  Loader2Icon,
 } from "lucide-react"
-import { format } from "date-fns"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { type ShelterProfile } from "@/types/ShelterProfile"
 import useAuthAxios from "@/utils/authAxios"
 import AppContext from "@/context/AppContext"
 import { useParams } from "react-router-dom"
 import { toast } from "sonner"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form"
+
 
 const shelterProfileSchema = z.object({
   name: z.string().min(3, "Tên trạm phải có ít nhất 3 ký tự"),
+  shelterCode: z.string().optional(),
   bio: z.string().max(300, "Mô tả không quá 300 ký tự"),
   address: z.string().min(5, "Địa chỉ không hợp lệ"),
   email: z.string().email("Email không hợp lệ"),
-  hotline: z.string().min(8, "Số hotline không hợp lệ"),
+  hotline: z
+    .string()
+    .trim()
+    .min(3, "Vui lòng nhập số hotline đầy đủ")
+    .regex(/^\d+$/, "Hotline chỉ được chứa số"),
   avatar: z.any().optional(),
   background: z.any().optional(),
 })
@@ -41,7 +49,7 @@ const shelterProfileSchema = z.object({
 type ShelterFormValues = z.infer<typeof shelterProfileSchema>
 
 const ShelterProfile = () => {
-  const [initialProfile, setInitialProfile] = useState<ShelterFormValues | null>(null);
+  const [initialProfile, setInitialProfile] = useState<ShelterFormValues | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const avatarInputRef = useRef<HTMLInputElement>(null)
@@ -49,11 +57,13 @@ const ShelterProfile = () => {
   const authAxios = useAuthAxios()
   const { shelterAPI } = useContext(AppContext)
   const { shelterId } = useParams()
+  const [loading, setLoading] = useState<boolean>(false);
 
   const form = useForm<ShelterFormValues>({
     resolver: zodResolver(shelterProfileSchema),
     defaultValues: {
       name: "",
+      shelterCode: "",
       email: "",
       bio: "",
       address: "",
@@ -63,188 +73,323 @@ const ShelterProfile = () => {
     },
   })
 
-  const { register, handleSubmit, reset, setValue, watch } = form
+  const { handleSubmit, reset, setValue, watch } = form
 
-useEffect(() => {
-  if (!shelterId) return;
+  useEffect(() => {
+    if (!shelterId) return
 
-  authAxios
-    .get(`${shelterAPI}/get-profile/${shelterId}`)
-    .then(({ data }) => {
-      reset(data);
-      setInitialProfile(data); // 👈 Lưu dữ liệu ban đầu
-      setAvatarPreview(data.avatar || null);
-      setCoverPreview(data.background || null);
-    })
-    .catch((err) => console.log(err?.response?.data?.message));
-}, [shelterId]);
-
-
+    authAxios
+      .get(`${shelterAPI}/get-profile/${shelterId}`)
+      .then(({ data }) => {
+        const theData = {...data, hotline: String(data.hotline ?? "")};
+        reset(theData)
+        setInitialProfile(theData)
+        setAvatarPreview(data.avatar || null)
+        setCoverPreview(data.background || null)
+      })
+      .catch((err) => console.log(err?.response?.data?.message))
+  }, [shelterId])
 
   const onSubmit = async (data: ShelterFormValues) => {
-  try {
-    const formData = new FormData();
-    formData.append("name", data.name);
-    formData.append("bio", data.bio);
-    formData.append("hotline", data.hotline);
-    formData.append("email", data.email);
-    formData.append("address", data.address);
-    if (data.avatar instanceof File) {
-      formData.append("avatar", data.avatar);
+    try {
+      setLoading(true);
+      const formData = new FormData()
+      // formData.append("name", data.name)
+      formData.append("bio", data.bio)
+      formData.append("hotline", data.hotline.toString())
+      formData.append("email", data.email)
+      formData.append("address", data.address)
+      if (data.avatar instanceof File) {
+        formData.append("avatar", data.avatar)
+      }
+      if (data.background instanceof File) {
+        formData.append("background", data.background)
+      }
+
+      await authAxios.put(`${shelterAPI}/edit-profile/${shelterId}`, formData)
+
+      const res = await authAxios.get(`${shelterAPI}/get-profile/${shelterId}`)
+      reset(res.data)
+      setAvatarPreview(res.data.avatar || null)
+      setCoverPreview(res.data.background || null)
+
+      setTimeout(() => {
+        setLoading(false);
+        toast.success("Cập nhập hồ sơ trạm cứu hộ thành công!")
+      }, 1500)
+    } catch (error: any) {
+      console.log(error?.response?.data?.message || error)
+      toast.error(error?.response?.data?.message || "Có lỗi xảy ra!")
+      setLoading(false);
     }
-    if (data.background instanceof File) {
-      formData.append("background", data.background);
+  }
+
+  const handleCancel = () => {
+    if (initialProfile) {
+      reset(initialProfile)
+      setAvatarPreview(initialProfile.avatar || null)
+      setCoverPreview(initialProfile.background || null)
     }
-
-    await authAxios.put(`${shelterAPI}/edit-profile/${shelterId}`, formData);
-    toast.success("Cập nhật hồ sơ trạm cứu hộ thành công!");
-
-    const res = await authAxios.get(`${shelterAPI}/get-profile/${shelterId}`);
-    reset(res.data);
-    setAvatarPreview(res.data.avatar || null);
-    setCoverPreview(res.data.background || null);
-  } catch (error: any) {
-    console.log(error?.response?.data?.message || error);
-    toast.error(error?.response?.data?.message || "Có lỗi xảy ra!");
   }
-};
-
-
-const handleCancel = () => {
-  if (initialProfile) {
-    reset(initialProfile);
-    setAvatarPreview(initialProfile.avatar || null);
-    setCoverPreview(initialProfile.background || null);
-  }
-};
-
 
   const handleImageChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     type: "avatar" | "background"
   ) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const url = URL.createObjectURL(file)
-      setValue(type, file)
-      type === "avatar"
-        ? setAvatarPreview(url)
-        : setCoverPreview(url)
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Kiểm tra định dạng ảnh
+    if (!file.type.startsWith("image/")) {
+      toast.error("Chỉ cho phép tải lên tệp ảnh (JPG, PNG, WEBP...)");
+      return;
     }
-  }
+
+    const url = URL.createObjectURL(file);
+    setValue(type, file);
+    if (type === "avatar") {
+      setAvatarPreview(url);
+    } else {
+      setCoverPreview(url);
+    }
+  };
+
 
   const currentValues = watch()
 
-  const foundedDate = "2020-03-15"
-  const warningCount = 2
-  const shelterCode = "SH00123"
-  const members = [{}, {}, {}]
-
   return (
-    <div className="min-h-screen px-10 py-5">
-      <Card className="max-w-4xl mx-auto overflow-hidden shadow-lg">
-        <h4 className="text-xl font-bold text-center text-gray-800">
-          Hồ sơ trạm cứu hộ
-        </h4>
+    <Form {...form}>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="min-h-screen px-10 py-5"
+      >
+        <Card className="max-w-4xl mx-auto overflow-hidden shadow-lg">
+          <h4 className="text-xl font-bold text-center text-gray-800">
+            Hồ sơ trạm cứu hộ
+          </h4>
 
-        {/* Cover Image */}
-        <div
-          className="relative h-48 w-full cursor-pointer"
-          onClick={() => coverInputRef.current?.click()}
-        >
-          <img
-            src={
-              coverPreview ||
-              "https://www.mppl.com.vn/uploads/no-image.png"
-            }
-            alt="Cover"
-            className="object-cover w-full h-full"
-          />
-          <input
-            type="file"
-            hidden
-            accept="image/*"
-            ref={coverInputRef}
-            onChange={(e) => handleImageChange(e, "background")}
-          />
-        </div>
-
-        {/* Avatar + Tên */}
-        <div className="flex flex-col items-center justify-center mt-[-3rem]">
-          <div
-            onClick={() => avatarInputRef.current?.click()}
-            className="cursor-pointer"
-          >
-            <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
-              <AvatarImage src={avatarPreview || "https://www.mppl.com.vn/uploads/no-image.png"} />
-              <AvatarFallback>{currentValues.name?.[0] ?? "S"}</AvatarFallback>
-            </Avatar>
-          </div>
-          <input
-            type="file"
-            hidden
-            accept="image/*"
-            ref={avatarInputRef}
-            onChange={(e) => handleImageChange(e, "avatar")}
-          />
-          <Input
-            {...register("name")}
-            className="w-72 text-xl font-semibold text-center mt-2"
-            placeholder="Tên trạm"
-          />
-        </div>
-
-        {/* Bio + Badge */}
-        <div className="flex flex-col items-center text-center px-6 pt-4 gap-2">
-          <Textarea
-            {...register("bio")}
-            placeholder="Mô tả..."
-            className="w-full max-w-2xl"
+          {/* Background */}
+          <FormField
+            control={form.control}
+            name="background"
+            render={({ field }) => (
+              <FormItem>
+                <div className="relative h-48 w-full px-2">
+                  <div
+                    className="h-full w-full cursor-pointer"
+                    onClick={() => coverInputRef.current?.click()}
+                  >
+                    <img
+                      src={
+                        coverPreview ||
+                        "https://www.mppl.com.vn/uploads/no-image.png"
+                      }
+                      alt="Cover"
+                      className="object-cover w-full h-full rounded-md"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="absolute bottom-2 right-3 z-10 cursor-pointer"
+                    onClick={() => coverInputRef.current?.click()}
+                  >
+                    <FilePlus className="mr-2 h-4 w-4" />
+                    Chọn ảnh nền
+                  </Button>
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    ref={coverInputRef}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleImageChange(e, "background");
+                        field.onChange(file);
+                      }
+                    }}
+                  />
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
-          {/* <div className="flex flex-wrap justify-center gap-2 mt-2">
-            <Badge>Hoạt động</Badge>
-            <Badge variant="outline">{members.length} thành viên</Badge>
-            <Badge>
-              <HashIcon className="w-4 h-4 mr-1" /> {shelterCode}
-            </Badge>
-            <Badge variant="destructive">
-              <AlertTriangleIcon className="w-4 h-4 mr-1" /> {warningCount} cảnh báo
-            </Badge>
-            <Badge variant="secondary">
-              <CalendarIcon className="w-4 h-4 mr-1" />
-              {format(new Date(foundedDate), "dd/MM/yyyy")}
-            </Badge>
-          </div> */}
-        </div>
+          {/* Avatar */}
+          <FormField
+            control={form.control}
+            name="avatar"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex flex-col items-center justify-center mt-[-3rem]">
+                  <div className="flex items-center gap-4 mb-2">
+                    <h4 className="scroll-m-20 text-m font-semibold tracking-tight">
+                      Ảnh đại diện
+                    </h4>
+                    <div className="flex flex-row gap-2">
+                      <div
+                        onClick={() => avatarInputRef.current?.click()}
+                        className="cursor-pointer"
+                      >
+                        <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
+                          <AvatarImage
+                            src={
+                              avatarPreview ||
+                              "https://www.mppl.com.vn/uploads/no-image.png"
+                            }
+                          />
+                          <AvatarFallback>
+                            {currentValues.name?.[0] ?? "S"}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => avatarInputRef.current?.click()}
+                        className="mt-1 my-auto cursor-pointer"
+                      >
+                        <FilePlus className="mr-2 h-4 w-4" />
+                        Chọn ảnh
+                      </Button>
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        ref={avatarInputRef}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleImageChange(e, "avatar");
+                            field.onChange(file);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Thông tin chi tiết */}
-        <CardContent className="px-6 pt-6 space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <MapPinIcon className="w-5 h-5" />
-              <Input {...register("address")} placeholder="Địa chỉ" />
+          {/* Thông tin */}
+          <CardContent className="px-6 pt-6 space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tên trạm</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Tên trạm" {...field} disabled/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="shelterCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mã trạm</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Mã trạm" {...field} disabled/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="bio"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mô tả</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Mô tả..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Địa chỉ</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Địa chỉ" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email của trạm</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="hotline"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Số hotline</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Hotline" {...field}/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="pt-4 flex gap-2">
+              {loading ? (
+                <Button disabled>
+                  <>
+                    <Loader2Icon className="animate-spin mr-2" />
+                    Vui lòng chờ
+                  </>
+                </Button>
+              ) : (
+                <Button type="submit" className="cursor-pointer">
+                  Lưu
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                type="button"
+                onClick={handleCancel}
+                className="cursor-pointer"
+                disabled={loading}
+              >
+                Hủy
+              </Button>
             </div>
-
-            <div className="flex items-center gap-2">
-              <MailIcon className="w-5 h-5" />
-              <Input {...register("email")} placeholder="Email" />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <PhoneIcon className="w-5 h-5" />
-              <Input {...register("hotline")} placeholder="Hotline" />
-            </div>
-          </div>
-
-          <div className="pt-4 flex gap-2">
-            <Button onClick={handleSubmit(onSubmit)}>Lưu</Button>
-            <Button variant="outline" onClick={handleCancel}>Hủy</Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
+          </CardContent>
+        </Card>
+      </form>
+    </Form>
+  );
 }
 
 export default ShelterProfile

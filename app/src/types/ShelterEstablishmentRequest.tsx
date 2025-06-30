@@ -1,4 +1,5 @@
 export interface ShelterEstablishmentRequest {
+  id: string;
   name: string;
   shelterCode: string;
   email: string;
