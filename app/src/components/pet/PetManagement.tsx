@@ -29,28 +29,14 @@ import {
 } from "@/components/ui/table";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, MoreHorizontal, ArrowUp, ArrowDown } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 import {
   Dialog,
   DialogContent,
@@ -58,6 +44,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import MedicalRecordList from "./MedicalRecordList";
+import CreatableSelect from "react-select/creatable";
+import { toast } from "sonner";
+import type { Breed } from "@/types/Breed";
+import ReactSelect from "react-select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 interface Pet {
   _id?: string;
@@ -71,6 +68,9 @@ interface Pet {
   sterilizationStatus: boolean;
   bio: string;
   status: string;
+  species: string;
+  photo?: string;
+  petCode?: string;
 }
 
 export default function PetManagement() {
@@ -86,8 +86,11 @@ export default function PetManagement() {
   const [editPet, setEditPet] = React.useState<Pet | null>(null);
   const [showDetail, setShowDetail] = React.useState(false);
   const [detailPet, setDetailPet] = React.useState<Pet | null>(null);
-
-  const [form, setForm] = React.useState<Pet & { photo?: string }>({
+  const [speciesList, setSpeciesList] = React.useState<
+    { _id: string; name: string }[]
+  >([]);
+  const [breedList, setBreedList] = React.useState<Breed[]>([]);
+  const [form, setForm] = React.useState<Pet & { breeds?: string[] }>({
     name: "",
     photos: [],
     age: "",
@@ -99,180 +102,95 @@ export default function PetManagement() {
     bio: "",
     status: "unavailable",
     photo: undefined,
+    species: "",
+    breeds: [],
   });
-
-  const fetchPets = async () => {
-    const res = await getAllPets();
-    setData((res.data as Pet[]) || []);
-  };
-
-  React.useEffect(() => {
-    fetchPets();
-  }, []);
 
   const columns: ColumnDef<Pet>[] = [
     {
       accessorKey: "photos",
       header: "Ảnh",
-      cell: ({ row }: { row: { original: Pet } }) => (
+      cell: ({ row }) => (
         <img
-          src={`http://localhost:9999${String(row.original.photos?.[0] ?? "")}`}
-          alt={row.original.name}
-          className="w-16 h-16 object-cover rounded"
+          src={`http://localhost:9999${row.original.photos?.[0]}`}
+          alt="pet"
+          className="w-10 h-10 object-cover rounded"
         />
       ),
     },
-    {
-      accessorKey: "name",
-      header: ({
-        column,
-      }: {
-        column: {
-          getIsSorted: () => "asc" | "desc" | false;
-          toggleSorting: (desc: boolean) => void;
-        };
-      }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(isSorted === "asc")}
-            className="flex items-center gap-1"
-          >
-            Tên
-            {isSorted === "asc" && <ArrowUp className="w-4 h-4" />}
-            {isSorted === "desc" && <ArrowDown className="w-4 h-4" />}
-          </Button>
-        );
-      },
-      enableSorting: true,
-    },
+    { accessorKey: "name", header: "Tên" },
     {
       accessorKey: "status",
-      header: ({
-        column,
-      }: {
-        column: {
-          getIsSorted: () => "asc" | "desc" | false;
-          toggleSorting: (desc: boolean) => void;
-        };
-      }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(isSorted === "asc")}
-            className="flex items-center gap-1"
-          >
-            Trạng thái
-            {isSorted === "asc" && <ArrowUp className="w-4 h-4" />}
-            {isSorted === "desc" && <ArrowDown className="w-4 h-4" />}
-          </Button>
-        );
-      },
-      cell: ({ row }: { row: { getValue: (key: string) => any } }) => (
-        <div className="capitalize">{row.getValue("status")}</div>
-      ),
-      enableSorting: true,
-    },
-    {
-      accessorKey: "identificationFeature",
-      header: ({
-        column,
-      }: {
-        column: {
-          getIsSorted: () => "asc" | "desc" | false;
-          toggleSorting: (desc: boolean) => void;
-        };
-      }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(isSorted === "asc")}
-            className="flex items-center gap-1"
-          >
-            Đặc điểm
-            {isSorted === "asc" && <ArrowUp className="w-4 h-4" />}
-            {isSorted === "desc" && <ArrowDown className="w-4 h-4" />}
-          </Button>
-        );
-      },
-      enableSorting: true,
-    },
-    {
-      accessorKey: "sterilizationStatus",
-      header: ({
-        column,
-      }: {
-        column: {
-          getIsSorted: () => "asc" | "desc" | false;
-          toggleSorting: (desc: boolean) => void;
-        };
-      }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(isSorted === "asc")}
-            className="flex items-center gap-1"
-          >
-            Triệt sản
-            {isSorted === "asc" && <ArrowUp className="w-4 h-4" />}
-            {isSorted === "desc" && <ArrowDown className="w-4 h-4" />}
-          </Button>
-        );
-      },
-      cell: ({ row }: { row: { getValue: (key: string) => any } }) =>
-        row.getValue("sterilizationStatus") ? "Đã triệt sản" : "Chưa",
-      enableSorting: true,
+      header: "Trạng thái",
+      cell: ({ row }) =>
+        row.original.status === "available" ? "Available" : "Unavailable",
     },
     {
       id: "actions",
-      enableHiding: false,
-      cell: ({ row }: { row: { original: Pet } }) => {
-        const pet = row.original;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreHorizontal />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => {
-                  setShowDetail(true);
-                  setDetailPet(pet);
-                }}
-              >
-                Xem chi tiết
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setShowForm(true);
-                  setEditPet(pet);
-                  setForm({ ...pet, photo: pet.photos?.[0] });
-                }}
-              >
-                Chỉnh sửa
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={async () => {
-                  if (pet._id) {
-                    await deletePet(pet._id);
-                    fetchPets();
-                  }
-                }}
-              >
-                Xóa
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
+      header: "Hành động",
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-4 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => {
+                setDetailPet(row.original);
+                setShowDetail(true);
+              }}
+            >
+              Xem chi tiết
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditPet(row.original);
+                setForm({
+                  ...row.original,
+                  photo: row.original.photos?.[0] || "",
+                });
+                setShowForm(true);
+              }}
+            >
+              Chỉnh sửa
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={async () => {
+                if (row.original._id) {
+                  await deletePet(row.original._id);
+                  toast.success("Xóa thành công");
+                  fetchPets();
+                }
+              }}
+            >
+              Xóa
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+    {
+      accessorKey: "petCode",
+      header: "Mã thú nuôi",
+      cell: ({ row }) => <span>{row.original.petCode}</span>,
+    },
+    {
+      accessorKey: "breeds",
+      header: "Giống loài",
+      cell: ({ row }) => (
+        <span>
+          {(row.original.breeds || [])
+            .map((b: string | { name: string }) =>
+              typeof b === "string" ? b : b.name
+            )
+            .join(", ")}
+        </span>
+      ),
     },
   ];
 
@@ -293,19 +211,55 @@ export default function PetManagement() {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
+  const fetchPets = async () => {
+    const res = await getAllPets();
+    setData((res.data as Pet[]) || []);
+  };
+
+  React.useEffect(() => {
+    fetchPets();
+  }, []);
+  React.useEffect(() => {
+    fetch("http://localhost:9999/species/getAll")
+      .then((res) => res.json())
+      .then((data) => setSpeciesList(data));
+  }, []);
+  React.useEffect(() => {
+    fetch("http://localhost:9999/breeds/getAll")
+      .then((res) => res.json())
+      .then((data) => setBreedList(data));
+  }, []);
+
+  const validateForm = () => {
+    if (!form.name) return toast.error("Tên thú nuôi không được để trống");
+    if (!form.photo) return toast.error("Vui lòng chọn ảnh cho thú nuôi");
+    if (!form.species) return toast.error("Vui lòng chọn hoặc thêm loài");
+    if (!form.color) return toast.error("Màu lông không được để trống");
+    if (!form.age || Number(form.age) < 0)
+      return toast.error("Tuổi không hợp lệ");
+    if (!form.weight || Number(form.weight) <= 0)
+      return toast.error("Cân nặng không hợp lệ");
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) return;
+    if (validateForm() !== true) return;
     const payload = {
       ...form,
+      status: "unavailable",
       age: Number(form.age),
       weight: Number(form.weight),
       photos: form.photo ? [form.photo] : [],
       shelter: user._id,
+      species: form.species,
+      breeds: form.breeds,
     };
-    delete (payload as any).photo;
+    delete (payload as { photo?: string }).photo;
     if (editPet && editPet._id) await updatePet(editPet._id, payload);
     else await createPet(payload);
+    toast.success(editPet ? "Cập nhật thành công" : "Tạo mới thành công");
     setShowForm(false);
     setEditPet(null);
     setForm({
@@ -320,6 +274,8 @@ export default function PetManagement() {
       bio: "",
       status: "unavailable",
       photo: undefined,
+      species: "",
+      breeds: [],
     });
     fetchPets();
   };
@@ -363,6 +319,8 @@ export default function PetManagement() {
               sterilizationStatus: false,
               bio: "",
               status: "unavailable",
+              species: "",
+              breeds: [],
             });
           }}
         >
@@ -403,55 +361,55 @@ export default function PetManagement() {
       </div>
 
       {/* Form Add/Edit */}
-      <Drawer open={showForm} onOpenChange={setShowForm} direction="right">
-        <DrawerContent className="max-w-md ml-auto">
-          <DrawerHeader>
-            <DrawerTitle>
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="max-w-2xl w-full">
+          <DialogHeader>
+            <DialogTitle>
               {editPet ? "Cập nhật thú nuôi" : "Thêm thú nuôi"}
-            </DrawerTitle>
-          </DrawerHeader>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4">
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 p-4">
             <Input
               placeholder="Tên thú nuôi"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className=""
             />
-            <Input type="file" accept="image/*" onChange={handleFileChange} />
-            {form.photo && (
-              <img
-                src={`http://localhost:9999${String(form.photo ?? "")}`}
-                alt="Preview"
-                className="w-16 h-16 object-cover rounded mt-2"
-              />
-            )}
             <Input
               type="number"
               placeholder="Tuổi"
               value={form.age}
               onChange={(e) => setForm({ ...form, age: e.target.value })}
+              className=""
             />
-            <Select
-              value={String(form.isMale)}
-              onValueChange={(v) => setForm({ ...form, isMale: v === "true" })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Giới tính" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="true">Đực</SelectItem>
-                <SelectItem value="false">Cái</SelectItem>
-              </SelectContent>
-            </Select>
+            <div>
+              <Select
+                value={String(form.isMale)}
+                onValueChange={(v: string) =>
+                  setForm({ ...form, isMale: v === "true" })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Giới tính" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Đực</SelectItem>
+                  <SelectItem value="false">Cái</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Input
               type="number"
               placeholder="Cân nặng"
               value={form.weight}
               onChange={(e) => setForm({ ...form, weight: e.target.value })}
+              className=""
             />
             <Input
               placeholder="Màu lông"
               value={form.color}
               onChange={(e) => setForm({ ...form, color: e.target.value })}
+              className=""
             />
             <Input
               placeholder="Đặc điểm"
@@ -459,46 +417,110 @@ export default function PetManagement() {
               onChange={(e) =>
                 setForm({ ...form, identificationFeature: e.target.value })
               }
+              className=""
             />
-            <Select
-              value={String(form.sterilizationStatus)}
-              onValueChange={(v) =>
-                setForm({ ...form, sterilizationStatus: v === "true" })
+            <div>
+              <Select
+                value={String(form.sterilizationStatus)}
+                onValueChange={(v: string) =>
+                  setForm({ ...form, sterilizationStatus: v === "true" })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Triệt sản?" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Đã triệt sản</SelectItem>
+                  <SelectItem value="false">Chưa triệt sản</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <CreatableSelect
+              isClearable
+              placeholder="Chọn hoặc thêm loài mới..."
+              value={
+                speciesList.find((s) => s._id === form.species)
+                  ? {
+                      value: form.species,
+                      label: speciesList.find((s) => s._id === form.species)
+                        ?.name,
+                    }
+                  : null
               }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Triệt sản?" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="true">Đã triệt sản</SelectItem>
-                <SelectItem value="false">Chưa triệt sản</SelectItem>
-              </SelectContent>
-            </Select>
-            <Textarea
-              placeholder="Mô tả"
-              value={form.bio}
-              onChange={(e) => setForm({ ...form, bio: e.target.value })}
+              options={speciesList.map((s) => ({
+                value: s._id,
+                label: s.name,
+              }))}
+              onChange={(option) =>
+                setForm({ ...form, species: option ? option.value : "" })
+              }
+              onCreateOption={async (inputValue) => {
+                const res = await fetch(
+                  "http://localhost:9999/species/create",
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: inputValue }),
+                  }
+                );
+                if (res.ok) {
+                  const newSpecies = await res.json();
+                  setSpeciesList((prev) => [...prev, newSpecies]);
+                  setForm((prev) => ({ ...prev, species: newSpecies._id }));
+                } else {
+                  alert("Không thể thêm loài mới. Có thể tên đã tồn tại.");
+                }
+              }}
+              className="col-span-2"
             />
-            <Select
-              value={form.status}
-              onValueChange={(v) => setForm({ ...form, status: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unavailable">Unavailable</SelectItem>
-                <SelectItem value="available">Available</SelectItem>
-                <SelectItem value="adopted">Adopted</SelectItem>
-                <SelectItem value="disabled">Disabled</SelectItem>
-                <SelectItem value="booking">Booking</SelectItem>
-                <SelectItem value="delivered">Delivered</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button type="submit">{editPet ? "Cập nhật" : "Tạo mới"}</Button>
+            <ReactSelect
+              isMulti
+              placeholder="Chọn tối đa 2 giống loài..."
+              value={breedList
+                .filter((b) => form.breeds?.includes(b._id))
+                .map((b) => ({ value: b._id, label: b.name }))}
+              options={breedList.map((b) => ({ value: b._id, label: b.name }))}
+              onChange={(options) => {
+                const values = options
+                  ? (options as { value: string; label: string }[])
+                      .map((o) => o.value)
+                      .slice(0, 2)
+                  : [];
+                setForm({ ...form, breeds: values });
+              }}
+              isOptionDisabled={(option) => {
+                if (!form.breeds) return false;
+                return (
+                  form.breeds.length >= 2 && !form.breeds.includes(option.value)
+                );
+              }}
+              className="col-span-2"
+            />
+            <div className="col-span-2">
+              <Input type="file" accept="image/*" onChange={handleFileChange} />
+              {form.photo && (
+                <img
+                  src={`http://localhost:9999${String(form.photo ?? "")}`}
+                  alt="Preview"
+                  className="w-24 h-24 object-cover rounded mt-2"
+                />
+              )}
+            </div>
+            <div className="col-span-2">
+              <Textarea
+                placeholder="Mô tả"
+                value={form.bio}
+                onChange={(e) => setForm({ ...form, bio: e.target.value })}
+              />
+            </div>
+            <div className="col-span-2 flex justify-end">
+              <Button type="submit" className="w-32">
+                {editPet ? "Cập nhật" : "Tạo mới"}
+              </Button>
+            </div>
           </form>
-        </DrawerContent>
-      </Drawer>
+        </DialogContent>
+      </Dialog>
 
       {/* Detail View in Center */}
       <Dialog open={showDetail} onOpenChange={setShowDetail}>
@@ -547,7 +569,7 @@ export default function PetManagement() {
                   </div>
                 </div>
               </div>
-              <MedicalRecordList petId={detailPet._id} />
+              <MedicalRecordList petId={detailPet._id ?? ""} />
             </div>
           )}
         </DialogContent>
