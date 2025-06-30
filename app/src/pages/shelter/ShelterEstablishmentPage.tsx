@@ -35,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import generateCodename from "@/utils/shelterCodeGenerator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DataTableReverse } from "@/components/data-table-reverse";
 
 
 const shelterEstablishmentSchema = z.object({
@@ -242,6 +243,7 @@ useEffect(() => {
       },
       cell: ({ row }) => {
         const status = row.original.status;
+        console.log(status)
         let statusTiengViet = "";
         if (status === "active") {
           statusTiengViet = "Chấp thuận";
@@ -264,13 +266,20 @@ useEffect(() => {
               {statusTiengViet}
             </Badge>
           );
-        } else {
-          statusTiengViet = "Từ chối";
+        } else if (status === "cancelled") {
+          statusTiengViet = "Hủy bỏ";
           return (
             <Badge variant="destructive" className="mx-2">
               {statusTiengViet}
             </Badge>
           );
+        } else{
+          statusTiengViet = "Từ chối";
+          return (
+            <Badge variant="destructive" className="mx-2">
+              {statusTiengViet}
+            </Badge>
+          )
         }
       },
     },
@@ -353,6 +362,14 @@ useEffect(() => {
               >
                 Xem thông tin chi tiết
               </DropdownMenuItem>
+              {row.original.status === "verifying" &&
+              <DropdownMenuItem 
+              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"            
+              onClick={() => handleCancelRequest(row.original.id)}
+              >
+                Hủy yêu cầu
+              </DropdownMenuItem>
+              }
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -429,37 +446,29 @@ useEffect(() => {
     }
   };
 
-  // if (existingRequest) {
-  //   let trangThaiYeuCau = '';
-  //   let styleYeuCau = "";
-  //   if(existingRequest.status === "verifying"){
-  //       trangThaiYeuCau = "Đang chờ duyệt"
-  //       styleYeuCau = "font-semibold uppercase text-primary"
-  //   }else if(existingRequest.status === "cancelled"){
-  //       trangThaiYeuCau = "Từ chối"
-  //       styleYeuCau = "font-semibold uppercase text-destructive"
-  //   }else if(existingRequest.status === "banned"){
-  //       trangThaiYeuCau = "Bị cấm"
-  //       styleYeuCau = "font-semibold uppercase text-destructive"
-  //   }else{
-  //       trangThaiYeuCau = "Đã được phê duyệt"
-  //       styleYeuCau = "font-semibold uppercase text-green-500"
-  //   }
-  //   return (
-  //     <Card className="max-w-xl mx-auto mt-8">
-  //       <CardHeader>
-  //         <CardTitle className="font-bold text-lg text-center">Theo dõi trạng thái yêu cầu thành lập trạm cứu hộ</CardTitle>
-  //       </CardHeader>
-  //       <CardContent className="space-y-2 flex flex-col gap-2">
-  //         <p><strong className="border border-2 rounded-sm px-2 py-1">Tên trạm:</strong> {existingRequest.name}</p>
-  //         <p><strong className="border border-2 rounded-sm px-2 py-1">Hotline:</strong> {existingRequest.hotline}</p>
-  //         <p><strong className="border border-2 rounded-sm px-2 py-1">Email:</strong> {existingRequest.email}</p>
-  //         <p><strong className="border border-2 rounded-sm px-2 py-1">Địa chỉ:</strong> {existingRequest.address}</p>
-  //         <p><strong className="border border-2 rounded-sm px-2 py-1">Trạng thái:</strong> <span className={styleYeuCau}>{trangThaiYeuCau}</span></p>
-  //       </CardContent>
-  //     </Card>
-  //   );
-  // }
+  const handleCancelRequest = async (shelterId : string) => {
+    try {
+        await authAxios.put(`${shelterAPI}/cancel-shelter-request/${shelterId}`);
+        setTimeout(() => {
+          toast.success("Hủy yêu cầu thành công")
+          authAxios
+                  .get(`${shelterAPI}/get-shelter-request`)
+                  .then(({ data }) => {
+                    setRequestList(data?.shelterRequest);
+                    setEligibleToRequest({
+                      isEligible: data?.isEligible,
+                      reason: data?.reason,
+                    });
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                  });
+        }, 2000)
+        
+    } catch (error: any) {
+      console.log(error?.response.data.message)
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col py-6 px-40">
@@ -815,7 +824,7 @@ useEffect(() => {
           </div>
         </div>
         <div className="col-span-12 px-5">
-          <DataTable columns={columns} data={filteredRequestList ?? []} />
+          <DataTableReverse columns={columns} data={filteredRequestList ?? []} />
         </div>
       </div>
 
