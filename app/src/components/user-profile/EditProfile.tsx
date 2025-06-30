@@ -11,6 +11,8 @@ import ImageUploadModal from "./ImageUploadModal";
 import AppContext from "@/context/AppContext";
 import axios from "axios"
 import useAuthAxios from "@/utils/authAxios";
+
+
 type GoongSuggestion = {
   place_id: string;
   description: string;
