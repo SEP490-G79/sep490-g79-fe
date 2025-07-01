@@ -145,7 +145,7 @@ export default function PetManagement() {
 
     {
       accessorKey: "breeds",
-      header: "Giống loài",
+      header: "Giống ",
       cell: ({ row }) => (
         <span>
           {(row.original.breeds || [])
@@ -541,11 +541,11 @@ export default function PetManagement() {
             </div>
             <div className="col-span-4 flex flex-col gap-2">
               <label className="text-sm font-medium text-gray-700">
-                Giống loài (tối đa 2)
+                Giống (tối đa 2)
               </label>
               <ReactSelect
                 isMulti
-                placeholder="Chọn tối đa 2 giống loài..."
+                placeholder="Chọn tối đa 2 giống ..."
                 value={breedList
                   .filter((b) => form.breeds?.includes(b._id))
                   .map((b) => ({ value: b._id, label: b.name }))}

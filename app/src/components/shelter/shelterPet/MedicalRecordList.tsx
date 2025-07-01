@@ -16,6 +16,15 @@ import {
 } from "@/components/ui/dialog";
 import { useAppContext } from "@/context/AppContext";
 import { uploadToCloudinary } from "@/utils/cloudinaryUpload";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { createPortal } from "react-dom";
 
 interface MedicalRecord {
   _id: string;
@@ -44,6 +53,7 @@ const MedicalRecordList: React.FC<Props> = ({ petId }) => {
   const [page, setPage] = useState(1);
   const limit = 2;
   const [total, setTotal] = useState(0);
+  const [previewImg, setPreviewImg] = useState<string | null>(null);
 
   const fetchMedicalRecords = async () => {
     if (!accessToken) return;
@@ -87,7 +97,7 @@ const MedicalRecordList: React.FC<Props> = ({ petId }) => {
         <p>Loading...</p>
       ) : (
         <ul className="space-y-3">
-          {records.map((rec) => (
+          {[...records].map((rec) => (
             <li
               key={rec._id}
               className="border rounded p-4 flex justify-between items-start gap-4"
@@ -95,36 +105,42 @@ const MedicalRecordList: React.FC<Props> = ({ petId }) => {
               <div className="flex-1">
                 <div className="font-bold text-lg mb-1">{rec.title}</div>
                 <div className="text-sm text-gray-700 mb-1">
-                  <b>Giá:</b> {rec.cost ? rec.cost + " VND" : "Không có"}
+                  <b>Giá:</b>{" "}
+                  {rec.cost
+                    ? rec.cost.toLocaleString("vi-VN") + " VND"
+                    : "Không có"}
                 </div>
                 <div className="text-sm text-gray-700 mb-1">
                   <b>Phòng khám/Nơi thực hiện:</b> {String(rec.performedBy)}
                 </div>
               </div>
               <div className="flex gap-2 flex-shrink-0">
-                <Button
-                  size="sm"
-                  className="bg-blue-500 text-white"
-                  onClick={() => setViewRecord(rec)}
-                >
-                  Xem chi tiết
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setEditRecord(rec);
-                    setShowForm(true);
-                  }}
-                >
-                  Chỉnh sửa
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => handleDelete(rec._id)}
-                >
-                  Xoá
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <MoreHorizontal className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="flex flex-col gap-2 p-2 min-w-[160px]"
+                  >
+                    <DropdownMenuItem onClick={() => setViewRecord(rec)}>
+                      Xem chi tiết
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setEditRecord(rec);
+                        setShowForm(true);
+                      }}
+                    >
+                      Chỉnh sửa
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDelete(rec._id)}>
+                      Xoá
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </li>
           ))}
@@ -168,6 +184,7 @@ const MedicalRecordList: React.FC<Props> = ({ petId }) => {
             onClose={() => {
               setShowForm(false);
               setEditRecord(null);
+              setPage(1);
               fetchMedicalRecords();
             }}
             accessToken={accessToken}
@@ -209,7 +226,8 @@ const MedicalRecordList: React.FC<Props> = ({ petId }) => {
                 <strong>Mô tả:</strong> {viewRecord.description}
               </div>
               <div>
-                <strong>Chi phí:</strong> {viewRecord.cost || 0} VND
+                <strong>Chi phí:</strong>{" "}
+                {(viewRecord.cost || 0).toLocaleString("vi-VN")} VND
               </div>
               <div>
                 <strong>Ngày thực hiện:</strong>{" "}
@@ -232,7 +250,8 @@ const MedicalRecordList: React.FC<Props> = ({ petId }) => {
                       key={url}
                       src={url}
                       alt="record"
-                      style={{ width: 80, borderRadius: 8 }}
+                      style={{ width: 80, borderRadius: 8, cursor: "pointer" }}
+                      onClick={() => setPreviewImg(url)}
                     />
                   ))}
                 </div>
@@ -244,6 +263,22 @@ const MedicalRecordList: React.FC<Props> = ({ petId }) => {
           )}
         </DialogContent>
       </Dialog>
+
+      {previewImg &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[99999]"
+            onClick={() => setPreviewImg(null)}
+          >
+            <img
+              src={previewImg}
+              alt="preview"
+              className="max-w-[90vw] max-h-[90vh] rounded shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>,
+          document.body
+        )}
     </div>
   );
 };
@@ -275,8 +310,12 @@ const MedicalRecordForm: React.FC<{
     if (!form.type) newErrors.type = "Vui lòng chọn loại hồ sơ";
     if (!form.title.trim()) newErrors.title = "Vui lòng nhập tiêu đề";
     if (!form.description.trim()) newErrors.description = "Vui lòng nhập mô tả";
-    if (form.cost === "" || isNaN(Number(form.cost)) || Number(form.cost) < 0)
-      newErrors.cost = "Chi phí phải là số không âm";
+    if (
+      form.cost === "" ||
+      isNaN(Number(form.cost)) ||
+      Number(form.cost) <= 1000
+    )
+      newErrors.cost = "Chi phí phải lớn hơn 1.000 VND";
     if (!form.procedureDate)
       newErrors.procedureDate = "Vui lòng chọn ngày thực hiện";
     else if (new Date(form.procedureDate) > new Date())
@@ -303,7 +342,7 @@ const MedicalRecordForm: React.FC<{
       const url = await uploadToCloudinary(files[i]);
       urls.push(url);
     }
-    setPhotos(urls);
+    setPhotos((prev) => [...urls, ...prev]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -335,90 +374,127 @@ const MedicalRecordForm: React.FC<{
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
       <DialogHeader>
         <DialogTitle>
           {record ? "Chỉnh sửa hồ sơ y tế" : "Thêm hồ sơ y tế"}
         </DialogTitle>
       </DialogHeader>
-      <select
-        name="type"
-        value={form.type}
-        onChange={handleChange}
-        required
-        className="w-full border rounded p-2"
-      >
-        <option value="">Chọn loại</option>
-        <option value="vaccination">Tiêm phòng</option>
-        <option value="surgery">Phẫu thuật</option>
-        <option value="checkup">Khám bệnh</option>
-        <option value="treatment">Điều trị</option>
-        <option value="other">Khác</option>
-      </select>
-      {errors.type && <div className="text-red-500 text-xs">{errors.type}</div>}
-      <input
-        name="title"
-        value={form.title}
-        onChange={handleChange}
-        placeholder="Tiêu đề"
-        required
-        className="w-full border rounded p-2"
-      />
-      {errors.title && (
-        <div className="text-red-500 text-xs">{errors.title}</div>
+      <div className="flex flex-col gap-1 mt-3">
+        <label className="font-medium text-sm mb-1">
+          Loại hồ sơ <span className="text-red-500">*</span>
+        </label>
+        <select
+          name="type"
+          value={form.type}
+          onChange={handleChange}
+          required
+          className="w-full border rounded p-2"
+        >
+          <option value="">Chọn loại</option>
+          <option value="vaccination">Tiêm phòng</option>
+          <option value="surgery">Phẫu thuật</option>
+          <option value="checkup">Khám bệnh</option>
+          <option value="treatment">Điều trị</option>
+          <option value="other">Khác</option>
+        </select>
+        {errors.type && (
+          <div className="text-red-500 text-xs">{errors.type}</div>
+        )}
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="font-medium text-sm mb-1">
+          Tiêu đề <span className="text-red-500">*</span>
+        </label>
+        <input
+          name="title"
+          value={form.title}
+          onChange={handleChange}
+          placeholder="Tiêu đề"
+          required
+          className="w-full border rounded p-2"
+        />
+        {errors.title && (
+          <div className="text-red-500 text-xs">{errors.title}</div>
+        )}
+      </div>
+      <div className="flex flex-col gap-1 col-span-2">
+        <label className="font-medium text-sm mb-1">
+          Mô tả <span className="text-red-500">*</span>
+        </label>
+        <textarea
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          placeholder="Mô tả"
+          className="w-full border rounded p-2"
+        />
+        {errors.description && (
+          <div className="text-red-500 text-xs">{errors.description}</div>
+        )}
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="font-medium text-sm mb-1">Chi phí</label>
+        <input
+          name="cost"
+          type="number"
+          value={form.cost}
+          onChange={handleChange}
+          placeholder="Chi phí"
+          className="w-full border rounded p-2"
+        />
+        {errors.cost && (
+          <div className="text-red-500 text-xs">{errors.cost}</div>
+        )}
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="font-medium text-sm mb-1">
+          Ngày thực hiện <span className="text-red-500">*</span>
+        </label>
+        <input
+          name="procedureDate"
+          type="date"
+          value={form.procedureDate}
+          onChange={handleChange}
+          required
+          className="w-full border rounded p-2"
+        />
+        {errors.procedureDate && (
+          <div className="text-red-500 text-xs">{errors.procedureDate}</div>
+        )}
+      </div>
+      {record && (
+        <div className="flex flex-col gap-1">
+          <label className="font-medium text-sm mb-1">Trạng thái *</label>
+          <select
+            name="status"
+            value={form.status}
+            onChange={handleChange}
+            required
+            className="w-full border rounded p-2"
+          >
+            <option value="availabled">Hiệu lực</option>
+            <option value="disabled">Vô hiệu hóa</option>
+          </select>
+        </div>
       )}
-      <textarea
-        name="description"
-        value={form.description}
-        onChange={handleChange}
-        placeholder="Mô tả"
-        className="w-full border rounded p-2"
-      />
-      {errors.description && (
-        <div className="text-red-500 text-xs">{errors.description}</div>
-      )}
-      <input
-        name="cost"
-        type="number"
-        value={form.cost}
-        onChange={handleChange}
-        placeholder="Chi phí"
-        className="w-full border rounded p-2"
-      />
-      {errors.cost && <div className="text-red-500 text-xs">{errors.cost}</div>}
-      <input
-        name="procedureDate"
-        type="date"
-        value={form.procedureDate}
-        onChange={handleChange}
-        required
-        className="w-full border rounded p-2"
-      />
-      {errors.procedureDate && (
-        <div className="text-red-500 text-xs">{errors.procedureDate}</div>
-      )}
-      <select
-        name="status"
-        value={form.status}
-        onChange={handleChange}
-        required
-        className="w-full border rounded p-2"
-      >
-        <option value="availabled">Hiệu lực</option>
-        <option value="disabled">Vô hiệu hóa</option>
-      </select>
-      <input
-        name="performedBy"
-        value={form.performedBy}
-        onChange={handleChange}
-        placeholder="Phòng khám/Nơi thực hiện"
-        required
-        className="w-full border rounded p-2"
-      />
-      {errors.performedBy && (
-        <div className="text-red-500 text-xs">{errors.performedBy}</div>
-      )}
-      <div>
+      <div className="flex flex-col gap-1">
+        <label className="font-medium text-sm mb-1">
+          Phòng khám/Nơi thực hiện <span className="text-red-500">*</span>
+        </label>
+        <input
+          name="performedBy"
+          value={form.performedBy}
+          onChange={handleChange}
+          placeholder="Phòng khám/Nơi thực hiện"
+          required
+          className="w-full border rounded p-2"
+        />
+        {errors.performedBy && (
+          <div className="text-red-500 text-xs">{errors.performedBy}</div>
+        )}
+      </div>
+      <div className="col-span-2">
         <label className="block mb-1 font-medium">
           Ảnh (có thể chọn nhiều)
         </label>
@@ -448,14 +524,16 @@ const MedicalRecordForm: React.FC<{
           ))}
         </div>
       </div>
-      <DialogFooter>
-        <Button type="submit" disabled={loading}>
-          {record ? "Cập nhật" : "Tạo"}
-        </Button>
-        <Button type="button" variant="outline" onClick={onClose}>
-          Hủy
-        </Button>
-      </DialogFooter>
+      <div className="col-span-2">
+        <DialogFooter>
+          <Button type="submit" disabled={loading}>
+            {record ? "Cập nhật" : "Tạo"}
+          </Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Hủy
+          </Button>
+        </DialogFooter>
+      </div>
     </form>
   );
 };
