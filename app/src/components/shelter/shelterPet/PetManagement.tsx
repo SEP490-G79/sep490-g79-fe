@@ -183,9 +183,13 @@ export default function PetManagement() {
                 setForm({
                   ...row.original,
                   photo: row.original.photos?.[0] || "",
+                  species:
+                    typeof row.original.species === "string"
+                      ? row.original.species
+                      : row.original.species?._id,
                   breeds: Array.isArray(row.original.breeds)
                     ? row.original.breeds.map((b) =>
-                        typeof b === "string" ? b : b.name
+                        typeof b === "string" ? b : b._id
                       )
                     : [],
                 });
@@ -374,27 +378,40 @@ export default function PetManagement() {
 
       {/* Form Add/Edit */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-2xl w-full">
+        <DialogContent className="max-w-4xl min-w-[700px] w-full">
           <DialogHeader>
             <DialogTitle>
               {editPet ? "Cập nhật thú nuôi" : "Thêm thú nuôi"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 p-4">
-            <Input
-              placeholder="Tên thú nuôi"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className=""
-            />
-            <Input
-              type="number"
-              placeholder="Tuổi"
-              value={form.age}
-              onChange={(e) => setForm({ ...form, age: e.target.value })}
-              className=""
-            />
-            <div>
+          <form onSubmit={handleSubmit} className="grid grid-cols-4 gap-4 p-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                Tên thú nuôi *
+              </label>
+              <Input
+                placeholder="Nhập tên thú nuôi"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className=""
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                Tuổi (tháng) *
+              </label>
+              <Input
+                type="number"
+                placeholder="Nhập tuổi"
+                value={form.age}
+                onChange={(e) => setForm({ ...form, age: e.target.value })}
+                className=""
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                Giới tính
+              </label>
               <Select
                 value={String(form.isMale)}
                 onValueChange={(v: string) =>
@@ -402,7 +419,7 @@ export default function PetManagement() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Giới tính" />
+                  <SelectValue placeholder="Chọn giới tính" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="true">Đực</SelectItem>
@@ -410,28 +427,46 @@ export default function PetManagement() {
                 </SelectContent>
               </Select>
             </div>
-            <Input
-              type="number"
-              placeholder="Cân nặng"
-              value={form.weight}
-              onChange={(e) => setForm({ ...form, weight: e.target.value })}
-              className=""
-            />
-            <Input
-              placeholder="Màu lông"
-              value={form.color}
-              onChange={(e) => setForm({ ...form, color: e.target.value })}
-              className=""
-            />
-            <Input
-              placeholder="Đặc điểm"
-              value={form.identificationFeature}
-              onChange={(e) =>
-                setForm({ ...form, identificationFeature: e.target.value })
-              }
-              className=""
-            />
-            <div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                Cân nặng (kg) *
+              </label>
+              <Input
+                type="number"
+                placeholder="Nhập cân nặng"
+                value={form.weight}
+                onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                className=""
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                Màu lông *
+              </label>
+              <Input
+                placeholder="Nhập màu lông"
+                value={form.color}
+                onChange={(e) => setForm({ ...form, color: e.target.value })}
+                className=""
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                Đặc điểm nhận dạng
+              </label>
+              <Input
+                placeholder="Nhập đặc điểm nhận dạng"
+                value={form.identificationFeature}
+                onChange={(e) =>
+                  setForm({ ...form, identificationFeature: e.target.value })
+                }
+                className=""
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                Tình trạng triệt sản
+              </label>
               <Select
                 value={String(form.sterilizationStatus)}
                 onValueChange={(v: string) =>
@@ -439,7 +474,7 @@ export default function PetManagement() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Triệt sản?" />
+                  <SelectValue placeholder="Chọn tình trạng" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="true">Đã triệt sản</SelectItem>
@@ -447,68 +482,83 @@ export default function PetManagement() {
                 </SelectContent>
               </Select>
             </div>
-            <CreatableSelect
-              isClearable
-              placeholder="Chọn hoặc thêm loài mới..."
-              value={
-                speciesList.find((s) => s._id === form.species)
-                  ? {
-                      value: form.species,
-                      label: speciesList.find((s) => s._id === form.species)
-                        ?.name,
-                    }
-                  : null
-              }
-              options={speciesList.map((s) => ({
-                value: s._id,
-                label: s.name,
-              }))}
-              onChange={(option) =>
-                setForm({ ...form, species: option ? option.value : "" })
-              }
-              onCreateOption={async (inputValue) => {
-                const res = await fetch(
-                  "http://localhost:9999/species/create",
-                  {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name: inputValue }),
-                  }
-                );
-                if (res.ok) {
-                  const newSpecies = await res.json();
-                  setSpeciesList((prev) => [...prev, newSpecies]);
-                  setForm((prev) => ({ ...prev, species: newSpecies._id }));
-                } else {
-                  alert("Không thể thêm loài mới. Có thể tên đã tồn tại.");
+            <div className="col-span-4 flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                Loài *
+              </label>
+              <CreatableSelect
+                isClearable
+                placeholder="Chọn hoặc thêm loài mới..."
+                value={
+                  speciesList.find((s) => s._id === form.species)
+                    ? {
+                        value: form.species,
+                        label: speciesList.find((s) => s._id === form.species)
+                          ?.name,
+                      }
+                    : null
                 }
-              }}
-              className="col-span-2"
-            />
-            <ReactSelect
-              isMulti
-              placeholder="Chọn tối đa 2 giống loài..."
-              value={breedList
-                .filter((b) => form.breeds?.includes(b._id))
-                .map((b) => ({ value: b._id, label: b.name }))}
-              options={breedList.map((b) => ({ value: b._id, label: b.name }))}
-              onChange={(options) => {
-                const values = options
-                  ? (options as { value: string; label: string }[])
-                      .map((o) => o.value)
-                      .slice(0, 2)
-                  : [];
-                setForm({ ...form, breeds: values });
-              }}
-              isOptionDisabled={(option) => {
-                if (!form.breeds) return false;
-                return (
-                  form.breeds.length >= 2 && !form.breeds.includes(option.value)
-                );
-              }}
-              className="col-span-2"
-            />
-            <div className="col-span-2">
+                options={speciesList.map((s) => ({
+                  value: s._id,
+                  label: s.name,
+                }))}
+                onChange={(option) =>
+                  setForm({ ...form, species: option ? option.value : "" })
+                }
+                onCreateOption={async (inputValue) => {
+                  const res = await fetch(
+                    "http://localhost:9999/species/create",
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ name: inputValue }),
+                    }
+                  );
+                  if (res.ok) {
+                    const newSpecies = await res.json();
+                    setSpeciesList((prev) => [...prev, newSpecies]);
+                    setForm((prev) => ({ ...prev, species: newSpecies._id }));
+                  } else {
+                    alert("Không thể thêm loài mới. Có thể tên đã tồn tại.");
+                  }
+                }}
+              />
+            </div>
+            <div className="col-span-4 flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                Giống loài (tối đa 2)
+              </label>
+              <ReactSelect
+                isMulti
+                placeholder="Chọn tối đa 2 giống loài..."
+                value={breedList
+                  .filter((b) => form.breeds?.includes(b._id))
+                  .map((b) => ({ value: b._id, label: b.name }))}
+                options={breedList.map((b) => ({
+                  value: b._id,
+                  label: b.name,
+                }))}
+                onChange={(options) => {
+                  const values = options
+                    ? (options as { value: string; label: string }[])
+                        .map((o) => o.value)
+                        .slice(0, 2)
+                    : [];
+                  setForm({ ...form, breeds: values });
+                }}
+                isOptionDisabled={(option) => {
+                  if (!form.breeds) return false;
+                  return (
+                    form.breeds.length >= 2 &&
+                    !form.breeds.includes(option.value)
+                  );
+                }}
+              />
+            </div>
+            <div className="col-span-4 flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">
+                Ảnh thú nuôi *
+              </label>
               <Input type="file" accept="image/*" onChange={handleFileChange} />
               {form.photo && (
                 <img
@@ -518,14 +568,15 @@ export default function PetManagement() {
                 />
               )}
             </div>
-            <div className="col-span-2">
+            <div className="col-span-4 flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">Mô tả</label>
               <Textarea
-                placeholder="Mô tả"
+                placeholder="Nhập mô tả về thú nuôi"
                 value={form.bio}
                 onChange={(e) => setForm({ ...form, bio: e.target.value })}
               />
             </div>
-            <div className="col-span-2 flex justify-end">
+            <div className="col-span-4 flex justify-end">
               <Button type="submit" className="w-32">
                 {editPet ? "Cập nhật" : "Tạo mới"}
               </Button>

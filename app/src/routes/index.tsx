@@ -45,14 +45,14 @@ function AppRoutes() {
       <Route path="/shelters" element={<Shelters />} />
       <Route path="/shelters/:shelterId" element={<ShelterPage />} />
       <Route path="/pet/:petId" element={<ViewPetDetails />} />
-      <Route path="/shelter/pets" element={<PetManagement />} />
       <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
 
       <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
         <Route index element={<ShelterProfile />} />
         <Route path="profile" element={<ShelterProfile />} />
         <Route path="staffs-management" element={<ShelterStaffManagement />} />
-        <Route path="pet-profiles" element={<div>Quản lý pets</div>} />
+        <Route path="pet-profiles" element={<PetManagement />} />
+
         <Route path="adoption-templates" element={<AdoptionTemplates />} />
         <Route path="adoption-forms" element={<AdoptionForms />} />
       </Route>
