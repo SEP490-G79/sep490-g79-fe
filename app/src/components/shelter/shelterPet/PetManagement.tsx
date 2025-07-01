@@ -180,16 +180,27 @@ export default function PetManagement() {
             <DropdownMenuItem
               onClick={() => {
                 setEditPet(row.original);
+                // Helper type guard
+                function hasId(obj: unknown): obj is { _id: string } {
+                  return (
+                    typeof obj === "object" &&
+                    obj !== null &&
+                    "_id" in obj &&
+                    typeof (obj as { _id?: unknown })._id === "string"
+                  );
+                }
                 setForm({
                   ...row.original,
                   photo: row.original.photos?.[0] || "",
                   species:
                     typeof row.original.species === "string"
                       ? row.original.species
-                      : row.original.species?._id,
+                      : hasId(row.original.species)
+                      ? row.original.species._id
+                      : "",
                   breeds: Array.isArray(row.original.breeds)
                     ? row.original.breeds.map((b) =>
-                        typeof b === "string" ? b : b._id
+                        typeof b === "string" ? b : hasId(b) ? b._id : ""
                       )
                     : [],
                 });
@@ -254,9 +265,13 @@ export default function PetManagement() {
 
   const validateForm = () => {
     if (!form.name) return toast.error("Tên thú nuôi không được để trống");
+    if (/^\d+$/.test(form.name.trim()))
+      return toast.error("Tên thú nuôi không được chỉ là số");
     if (!form.photo) return toast.error("Vui lòng chọn ảnh cho thú nuôi");
     if (!form.species) return toast.error("Vui lòng chọn hoặc thêm loài");
     if (!form.color) return toast.error("Màu lông không được để trống");
+    if (/^\d+$/.test(form.color.trim()))
+      return toast.error("Màu lông không được chỉ là số");
     if (!form.age || Number(form.age) < 0)
       return toast.error("Tuổi không hợp lệ");
     if (!form.weight || Number(form.weight) <= 0)
