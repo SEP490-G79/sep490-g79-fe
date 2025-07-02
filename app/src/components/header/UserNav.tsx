@@ -141,7 +141,7 @@ function UserNav() {
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
-              <Link to={`/profile`}>Hồ sơ cá nhân</Link>
+           <Link to={`/profile/${user?._id}`}>Hồ sơ cá nhân</Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />

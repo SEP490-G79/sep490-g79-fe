@@ -94,10 +94,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     if (!excludedURLs.includes(location.pathname)) {
       authAxios
-        .get("http://localhost:9999/users/user-profile")
+        .get(`${coreAPI}/users/get-user`)
         .then((res) => {
-          setUserProfile(res?.data);
           setUser(res?.data);
+          setUserProfile(res?.data);
         })
         .catch((error) => {
           // console.log(error.response?.data?.message);
