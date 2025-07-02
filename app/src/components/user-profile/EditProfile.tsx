@@ -39,6 +39,9 @@ export default function EditProfile() {
   const [openBackgroundModal, setOpenBackgroundModal] = useState(false);
   const [addressSuggestions, setAddressSuggestions] = useState<GoongSuggestion[]>([]);
   const [placeId, setPlaceId] = useState("");
+  const { userAPI } = useContext(AppContext);
+  const authAxios = useAuthAxios();
+
 
 
   useEffect(() => {
@@ -68,17 +71,15 @@ export default function EditProfile() {
       if (avatar) formData.append("avatar", avatar);
       if (background) formData.append("background", background);
 
-      await axios.put(`http://localhost:9999/users/edit-profile`, formData, {
+      await authAxios.put(`${userAPI}/edit-profile`, formData, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      const updated = await axios.get(`http://localhost:9999/users/user-profile`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          "Content-Type": "multipart/form-data",
         },
       });
+
+      const updated = await authAxios.get(`${userAPI}/get-user`);
+
+      
       setUserProfile(updated.data);
       setUser(updated.data);
       toast.success("Cập nhật thông tin thành công!");
