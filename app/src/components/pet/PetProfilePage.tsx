@@ -11,25 +11,7 @@ import "react-photo-view/dist/react-photo-view.css";
 import { Timeline } from "@/components/ui/timeline";
 import AppContext from "@/context/AppContext";
 import type { MedicalRecord } from "@/types/MedicalRecord";
-import {
-
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer"
-import { Drawer } from 'vaul';
 import { Button } from "@/components/ui/button";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
 interface Pet {
   _id: string;
   name: string;
@@ -71,13 +53,15 @@ const [selectedIndex, setSelectedIndex] = useState(0);
         toast.error("Không thể lấy thông tin thú cưng");
         setLoading(false);
       });
-    axios
-      .get(`${medicalRecordAPI}/get-medical-record/${id}`)
-      .then((res) => {
-        setMedicalRecords(res.data);
-      }).catch((err) => {
-        toast.error("Không thể lấy thông tin hồ sơ bệnh án của thú cưng");
-      })
+   axios
+  .get(`${petAPI}/${id}/medicalRecords`)
+  .then((res) => {
+    setMedicalRecords(res.data.records || []); 
+  })
+  .catch((err) => {
+    toast.error("Không thể lấy thông tin hồ sơ bệnh án của thú cưng");
+  });
+
   }, [id]);
 
 
