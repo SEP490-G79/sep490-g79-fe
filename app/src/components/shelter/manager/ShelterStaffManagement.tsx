@@ -40,7 +40,6 @@ import ShelterStaffRequestManagement from "./ShelterStaffRequestManagement";
 
 const tempUser: ShelterMember[] = [
   {
-    index: 1,
     email: "tuan1213@example.com",
     avatar:
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTgD14vQ6I-UBiHTcwxZYnpSfLFJ2fclwS2A&s",
@@ -50,7 +49,6 @@ const tempUser: ShelterMember[] = [
     createdAt: new Date("2025-06-19T05:19:55.742Z"),
   },
   {
-    index: 2,
     email: "tuan1213@example.com",
     avatar:
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTgD14vQ6I-UBiHTcwxZYnpSfLFJ2fclwS2A&s",

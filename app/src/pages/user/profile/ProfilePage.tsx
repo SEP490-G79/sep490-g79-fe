@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import UserInfo from "@/components/user/profile/UserInfo";
 import Posts from "@/components/user/profile/Posts";
 import AdoptionActivities from "@/components/user/profile/AdoptionActivities";
@@ -8,14 +8,28 @@ import { Pencil } from "lucide-react";
 import AppContext from "@/context/AppContext";
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import 'react-photo-view/dist/react-photo-view.css';
-
-
+import { useParams } from "react-router-dom";
+import type { User } from "@/types/User";
+import { toast } from "sonner";
+import axios from "axios";
 
 function ProfilePage() {
   const [showActivities, setShowActivities] = useState(false);
+  const { userId } = useParams();
+  const [profile, setProfile] = useState<User | null>(null);
+  const { userProfile, userAPI,  } = useContext(AppContext);
+  const isOwnProfile = !userId || userId === userProfile?._id;
 
-  const { userProfile } = useContext(AppContext);
+  useEffect(() => {
+     const idToFetch = userId || userProfile?._id;   
+    if (!idToFetch) return;
+    axios.get(`${userAPI}/user-profile/${idToFetch}`)
+      .then((res) => setProfile(res.data))
+      .catch(() =>toast.error("Không thể tải thông tin người dùng", { id: "user-load-error" }));
 
+  }, [userId,userProfile]);
+
+  if (!profile) return <div className="p-40  text-center">Người dùng không tồn tại</div>;
 
 
   return (
@@ -24,15 +38,15 @@ function ProfilePage() {
 
       <div className="w-full mx-auto h-[300px] sm:h-[350px] md:h-[400px] px-4 sm:px-6">
         <PhotoProvider>
-          <PhotoView src={userProfile?.background || "https://i.pinimg.com/736x/39/8c/28/398c2833aad3c95c80ced32b23e17eb8.jpg"}>
+          <PhotoView src={profile?.background || "https://i.pinimg.com/736x/39/8c/28/398c2833aad3c95c80ced32b23e17eb8.jpg"}>
             <img
-              src={userProfile?.background || "https://i.pinimg.com/736x/39/8c/28/398c2833aad3c95c80ced32b23e17eb8.jpg"}
+              src={profile?.background || "https://i.pinimg.com/736x/39/8c/28/398c2833aad3c95c80ced32b23e17eb8.jpg"}
               alt="Background"
               className="w-full h-full object-cover object-center rounded-lg shadow-md"
             />
           </PhotoView>
         </PhotoProvider>
-        
+
       </div>
 
 
@@ -40,7 +54,7 @@ function ProfilePage() {
       <div className="flex flex-col lg:flex-row gap-0 px-4 sm:px-6 mt-[10px] min-h-screen relative z-10">
         {/* Cột trái: Card */}
         <div className="hidden lg:block lg:w-1/3">
-          <UserInfo />
+          <UserInfo profile={profile} />
         </div>
 
         {/* Cột phải: Nút + nội dung */}
@@ -69,11 +83,13 @@ function ProfilePage() {
               </button>
             </div>
             {/* Post button */}
-            <Link to="/profile-setting">
-              <Button variant="default" className="-mt-10">
-                <Pencil /> Chỉnh sửa thông tin
-              </Button>
-            </Link>
+            {isOwnProfile && (
+              <Link to="/profile-setting">
+                <Button variant="default" className="-mt-10">
+                  <Pencil /> Chỉnh sửa thông tin
+                </Button>
+              </Link>
+            )}
           </div>
 
 

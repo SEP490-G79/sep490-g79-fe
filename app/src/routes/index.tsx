@@ -62,6 +62,8 @@ function AppRoutes() {
         <Route index element={<Navigate to="/home" replace={true} />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/profile/:userId" element={<ProfilePage />} />
+
         <Route path="/newfeed" element={<Newfeed />} />
         <Route path="/profile-setting" element={<ProfileSettings />} />
         <Route
