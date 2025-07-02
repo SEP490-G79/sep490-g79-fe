@@ -31,12 +31,12 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { ShelterEstablishmentRequest } from "@/types/ShelterEstablishmentRequest";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import type { ShelterMember } from "@/types/ShelterMember";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../ui/dropdown-menu";
-import { Badge } from "../../ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { ShelterStaffRequestInvitation } from "@/types/ShelterStaffRequestInvitation";
 import { useParams } from "react-router-dom";
 import { SearchFilter } from "@/components/SearchFilter";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 
 const invitation1: ShelterStaffRequestInvitation = {
@@ -97,7 +97,7 @@ type detailDialogData = {
   };
 };
 
-const ShelterStaffRequestManagement = () => {
+const ShelterRequestsList = () => {
     const [invitationsList, setInvitationsList] = useState<ShelterStaffRequestInvitation[]>([invitation1]);
     const [filtererdInvitationsList, setFiltererdInvitationsList] = useState<ShelterStaffRequestInvitation[]>([]);
     const [loadingButton, setLoadingButton] = useState<Boolean>(false);
@@ -133,16 +133,17 @@ const ShelterStaffRequestManagement = () => {
     const authAxios = useAuthAxios();
     const {shelterAPI} = useContext(AppContext)
     const {shelterId} = useParams();
+    const [invitationRefresh, setInvitationRefresh] = useState<boolean>(false);
 
     useEffect(() => {
-      authAxios.get(`${shelterAPI}/get-shelter-invitations-and-requests/${shelterId}`)
+      authAxios.get(`${shelterAPI}/get-user-invitations-and-requests`)
       .then(({data}) => {
-        // console.log(data)
+        console.log(data)
         setInvitationsList(data);
         setFiltererdInvitationsList(data);
       })
       .catch(err => console.log(err?.response.data.message))
-    }, [])
+    }, [invitationRefresh])
 
 
      const columns: ColumnDef<ShelterStaffRequestInvitation>[] = [
@@ -175,6 +176,35 @@ const ShelterStaffRequestManagement = () => {
                  className="h-10 w-10 rounded-full object-cover"
                />
                <span className="my-auto">{row.original.sender.fullName}</span>
+             </p>
+           );
+         },
+       },
+       {
+         accessorKey: "shelter",
+         header: ({ column }) => {
+           return (
+             <Button
+               variant="ghost"
+               onClick={() =>
+                 column.toggleSorting(column.getIsSorted() === "asc")
+               }
+               className="cursor-pointer"
+             >
+               Trạm cứu hộ
+               <ArrowUpDown className="ml-2 h-4 w-4" />
+             </Button>
+           );
+         },
+         cell: ({ row }) => {
+           return (
+             <p className="px-2 flex flex-row gap-2">
+               <img
+                 src={row.original.shelter.avatar}
+                 alt={row.original.shelter.name}
+                 className="h-10 w-10 rounded-full object-cover"
+               />
+               <span className="my-auto">{row.original.shelter.name}</span>
              </p>
            );
          },
@@ -432,12 +462,38 @@ const ShelterStaffRequestManagement = () => {
      ];
 
 
-     const handleApprove = async (data: any) => {
-      
+     const handleApprove = async () => {
+        try {
+          setLoadingButton(true);
+          const response = await authAxios.put(`${shelterAPI}/review-shelter-invitation`, {
+            shelterId: detailDialog.detail.shelter.id, 
+            decision: "approve"
+          })
+          setTimeout(() => {
+            toast.success("Chấp nhận yêu cầu gia nhập thành công!")
+            setInvitationRefresh(prev => !prev);
+            setLoadingButton(false);
+          }, 1000)
+        } catch (error : any) {
+          console.log(error?.response.data.message)
+        }
      }
 
-     const handleReject = async (data: any) => {
-      
+     const handleReject = async () => {
+      try {
+          setLoadingButton(true);
+          const response = await authAxios.put(`${shelterAPI}/review-shelter-invitation`, {
+            shelterId: detailDialog.detail.shelter.id, 
+            decision: "reject"
+          })
+          setTimeout(() => {
+            toast.success("Từ chối yêu cầu gia nhập thành công!")
+            setInvitationRefresh(prev => !prev);
+            setLoadingButton(false);
+          }, 1000)
+        } catch (error : any) {
+          console.log(error?.response.data.message)
+        }
      }
 
 
@@ -462,7 +518,10 @@ const ShelterStaffRequestManagement = () => {
         </div>
       </div>
       {/* Dialog chi tiet */}
-      <Dialog open={detailDialog.isOpen}>
+      <Dialog open={detailDialog.isOpen} 
+      onOpenChange={(open) =>
+          setDetailDialog((prev) => ({ ...prev, isOpen: open }))
+        }>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-center">
@@ -487,20 +546,22 @@ const ShelterStaffRequestManagement = () => {
             <div className="flex flex-row gap-2">
               <span className="my-auto font-medium">Người gửi:</span>
               <Avatar>
-                <AvatarImage src={detailDialog.detail?.sender?.avatar}/>
+                <AvatarImage src={detailDialog.detail?.sender?.avatar} />
               </Avatar>
-              <span className="my-auto">{detailDialog.detail?.sender?.fullName} (
-              {detailDialog.detail?.sender?.email})</span>
-              
+              <span className="my-auto">
+                {detailDialog.detail?.sender?.fullName} (
+                {detailDialog.detail?.sender?.email})
+              </span>
             </div>
 
             <div className="flex flex-row gap-2">
-              <span className="my-auto font-medium">Người nhận:</span>
+              <span className="my-auto font-medium">Trạm cứu hộ:</span>
               <Avatar>
-                <AvatarImage src={detailDialog.detail?.receiver?.avatar}/>
+                <AvatarImage src={detailDialog.detail?.shelter?.avatar} />
               </Avatar>
-              <span className="my-auto">{detailDialog.detail?.receiver?.fullName} (
-              {detailDialog.detail?.receiver?.email})</span>
+              <span className="my-auto">
+                {detailDialog.detail?.shelter?.name}
+              </span>
             </div>
 
             <div className="flex flex-row gap-2">
@@ -561,23 +622,6 @@ const ShelterStaffRequestManagement = () => {
           </div>
 
           <DialogFooter className="flex justify-between gap-3">
-            {/* Nếu là request và chưa hết hạn, chưa duyệt, chưa bị huỷ → hiển thị nút */}
-            {detailDialog.detail?.requestType === "request" &&
-            detailDialog.detail?.requestStatus === "pending" &&
-            new Date(detailDialog.detail?.expireAt) > new Date() &&
-            detailDialog.detail?.requestStatus !== "cancelled" ? (
-              <div className="flex gap-2">
-                <Button variant="default">
-                  Chấp thuận
-                </Button>
-                <Button variant="destructive">
-                  Từ chối
-                </Button>
-              </div>
-            ) : (
-              <div />
-            )}
-
             {/* Nút Đóng luôn hiển thị */}
             <DialogClose asChild>
               <Button
@@ -589,6 +633,48 @@ const ShelterStaffRequestManagement = () => {
                 Đóng
               </Button>
             </DialogClose>
+            {/* Nếu là request và chưa hết hạn, chưa duyệt, chưa bị huỷ → hiển thị nút */}
+            {detailDialog.detail?.requestType === "invitation" &&
+            detailDialog.detail?.requestStatus === "pending" &&
+            new Date(detailDialog.detail?.expireAt) > new Date() &&
+            detailDialog.detail?.requestStatus !== "cancelled" ? (
+              <div className="flex gap-2">
+                {loadingButton ? (
+                  <Button disabled>
+                    <>
+                      <Loader2Icon className="animate-spin mr-2" />
+                      Vui lòng chờ
+                    </>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    className="cursor-pointer"
+                    onClick={() => handleReject()}
+                  >
+                    Từ chối
+                  </Button>
+                )}
+                {loadingButton ? (
+                  <Button disabled>
+                    <>
+                      <Loader2Icon className="animate-spin mr-2" />
+                      Vui lòng chờ
+                    </>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="default"
+                    className="cursor-pointer"
+                    onClick={() => handleApprove()}
+                  >
+                    Chấp thuận
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div />
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -596,4 +682,4 @@ const ShelterStaffRequestManagement = () => {
   );
 }
 
-export default ShelterStaffRequestManagement
+export default ShelterRequestsList;

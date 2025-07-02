@@ -64,6 +64,8 @@ const ShelterStaffsList = () => {
     const authAxios = useAuthAxios();
     const {shelterAPI} = useContext(AppContext)
     const {shelterId} = useParams();
+    const [emailRefresh, setEmailRefresh] = useState<boolean>(false);
+    const [memberRefresh, setMemberRefresh] = useState<boolean>(false);
 
     const form = useForm<InviteFormData>({
     resolver: zodResolver(inviteSchema),
@@ -72,7 +74,9 @@ const ShelterStaffsList = () => {
       role:[],
     },
   });
+  const {reset, setError} = form;
 
+   // lay danh sach member
     useEffect(() => {
       authAxios.get(`${shelterAPI}/get-members/${shelterId}`)
       .then(({data}) => {
@@ -80,31 +84,34 @@ const ShelterStaffsList = () => {
         setFilteredMembers(data);
       })
       .catch(err => console.log(err?.response.data.message))
+    },[memberRefresh])
 
+    // lay email du dieu kien de moi
+    useEffect(() => {
       authAxios.get(`${shelterAPI}/find-eligible-users/${shelterId}`)
       .then(({data}) => {
         console.log(data)
         setEligibleEmails(data);
       })
       .catch(err => console.log(err?.response.data.message))
-    },[])
+    },[emailRefresh])
 
      const columns: ColumnDef<ShelterMember>[] = [
        {
          header: "STT",
          cell: ({ row }) => <p className="text-left px-2">{row.index + 1}</p>,
        },
-      //  {
-      //    accessorKey: "avatar",
-      //    header: "Ảnh đại diện",
-      //    cell: ({ row }) => (
-      //      <img
-      //        src={row.original.avatar}
-      //        alt={row.original.fullName}
-      //        className="h-10 w-10 rounded-full object-cover mx-auto"
-      //      />
-      //    ),
-      //  },
+       //  {
+       //    accessorKey: "avatar",
+       //    header: "Ảnh đại diện",
+       //    cell: ({ row }) => (
+       //      <img
+       //        src={row.original.avatar}
+       //        alt={row.original.fullName}
+       //        className="h-10 w-10 rounded-full object-cover mx-auto"
+       //      />
+       //    ),
+       //  },
        {
          accessorKey: "fullName",
          header: ({ column }) => {
@@ -122,33 +129,38 @@ const ShelterStaffsList = () => {
            );
          },
          cell: ({ row }) => {
-           return <p className="px-2 flex flex-row gap-2"><img
-             src={row.original.avatar}
-             alt={row.original.fullName}
-             className="h-10 w-10 rounded-full object-cover"
-           /><span className="my-auto">{row.original.fullName}</span></p>;
+           return (
+             <p className="px-2 flex flex-row gap-2">
+               <img
+                 src={row.original.avatar}
+                 alt={row.original.fullName}
+                 className="h-10 w-10 rounded-full object-cover"
+               />
+               <span className="my-auto">{row.original.fullName}</span>
+             </p>
+           );
          },
        },
-      //  {
-      //    accessorKey: "email",
-      //    header: ({ column }) => {
-      //      return (
-      //        <Button
-      //          variant="ghost"
-      //          onClick={() =>
-      //            column.toggleSorting(column.getIsSorted() === "asc")
-      //          }
-      //          className="cursor-pointer"
-      //        >
-      //          Email
-      //          <ArrowUpDown className="ml-2 h-4 w-4" />
-      //        </Button>
-      //      );
-      //    },
-      //    cell: ({ row }) => {
-      //      return <span className="px-2">{row.original.email}</span>;
-      //    },
-      //  },
+       //  {
+       //    accessorKey: "email",
+       //    header: ({ column }) => {
+       //      return (
+       //        <Button
+       //          variant="ghost"
+       //          onClick={() =>
+       //            column.toggleSorting(column.getIsSorted() === "asc")
+       //          }
+       //          className="cursor-pointer"
+       //        >
+       //          Email
+       //          <ArrowUpDown className="ml-2 h-4 w-4" />
+       //        </Button>
+       //      );
+       //    },
+       //    cell: ({ row }) => {
+       //      return <span className="px-2">{row.original.email}</span>;
+       //    },
+       //  },
        {
          accessorKey: "roles",
          header: ({ column }) => {
@@ -166,18 +178,13 @@ const ShelterStaffsList = () => {
            );
          },
          cell: ({ row }) => {
-           return (
-             <div className="flex flex-row gap-2">
-               {row.original.shelterRoles.map((role: string, index: number) => (
-                 <Badge
-                   key={index}
-                   variant={role === "staff" ? "secondary" : "destructive"}
-                 >
-                   {role === "staff" ? "Thành viên" : "Quản lý"}
-                 </Badge>
-               ))}
-             </div>
-           );
+           const roles: string[] = row.original.shelterRoles;
+
+           const isManager = roles.some((role) => role !== "staff"); // Ưu tiên vai trò quản lý
+           const label = isManager ? "Quản lý" : "Thành viên";
+           const variant = isManager ? "destructive" : "secondary";
+
+           return <Badge variant={variant}>{label}</Badge>;
          },
        },
        {
@@ -199,7 +206,7 @@ const ShelterStaffsList = () => {
                  className="w-40 rounded-md border bg-background shadow-lg p-1"
                >
                  <DropdownMenuItem
-                   onClick={() => handleKickMember(row.original.fullName)}
+                   onClick={() => handleKickMember(row.original.id)}
                    className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
                  >
                    <Ban className="w-4 h-4" /> Kick thành viên
@@ -210,15 +217,20 @@ const ShelterStaffsList = () => {
        },
      ];
 
-  const handleAddMember = (data: InviteFormData) => {
-    // toast.success(`Đã gửi lời mời đến ${data.email} với vai trò ${data.role}`);
+  const handleInviteMember = (data: InviteFormData) => {
     try {
     //   console.log({
     //     shelterId: shelterId, 
     //     emailsList: data.email, 
     //     roles: data.role
     // })
-    //   return;
+      if (data.email.length < 1 || data.email[0].trim().length < 3) {
+        setError("email", {
+          type: "manual",
+          message: "Phải nhập ít nhất 1 email hợp lệ",
+        });
+        return;
+      }
       authAxios.post(`${shelterAPI}/invite-members/${shelterId}`, {
         emailsList: data.email, 
         roles: data.role
@@ -227,14 +239,9 @@ const ShelterStaffsList = () => {
         console.log(data);
         setTimeout(() => {
           toast.success(`Gửi lời mời thành công`);
-          authAxios.get(`${shelterAPI}/find-eligible-users/${shelterId}`)
-      .then(({data}) => {
-        console.log(data)
-        setEligibleEmails(data);
-      })
-      .catch(err => console.log(err?.response.data.message))
+          setEmailRefresh(prev => !prev);
+          reset();
         })
-        
       })
       .catch(err => console.log(err?.response.data.message))
     } catch (error : any) {
@@ -244,7 +251,19 @@ const ShelterStaffsList = () => {
   };
 
     const handleKickMember = async (userId: string) => {
-      toast.success("Kick thành viên "+ userId + " thành công!")
+      try { 
+        await authAxios.put(`${shelterAPI}/${shelterId}/kick-member`, {
+          shelterId: shelterId,
+          userId: userId,
+        })
+        setTimeout(() => {
+          // console.log(response);
+          toast.success("Kick thành viên thành công")
+          setMemberRefresh(prev => !prev);
+        }, 1100)
+      } catch (error : any) {
+        console.log(error?.response.data.message)
+      }
     }
 
 
@@ -264,7 +283,7 @@ const ShelterStaffsList = () => {
             </h4>
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit(handleAddMember)}
+                onSubmit={form.handleSubmit(handleInviteMember)}
                 className="space-y-4"
               >
                 <FormField

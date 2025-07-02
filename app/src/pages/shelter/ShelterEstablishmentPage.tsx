@@ -845,7 +845,12 @@ useEffect(() => {
       </div>
 
       {/* Dialog chi tiet */}
-      <Dialog open={detailDialog.isOpen}>
+      <Dialog
+        open={detailDialog.isOpen}
+        onOpenChange={(open) =>
+          setDetailDialog((prev) => ({ ...prev, isOpen: open }))
+        }
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-center">
