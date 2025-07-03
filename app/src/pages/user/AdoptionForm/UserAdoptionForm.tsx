@@ -15,12 +15,13 @@ import useAuthAxios from "@/utils/authAxios";
 const UserAdoptionFormPage = () => {
   const [step, setStep] = useState(1);
   const { id } = useParams();
-  const { coreAPI } = useContext(AppContext);
+  const { coreAPI, userProfile } = useContext(AppContext);
   const [loading, setLoading] = useState(true);
   const [agreed, setAgreed] = useState(false);
   const [form, setForm] = useState<AdoptionForm | null>(null);
   const authAxios = useAuthAxios();
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+
 
   const next = () => setStep((prev) => prev + 1);
   const back = () => setStep((prev) => prev - 1);
@@ -113,6 +114,7 @@ const UserAdoptionFormPage = () => {
       onNext={next}
       onBack={back}
       form={form}
+      userProfile={userProfile} 
     />
   );
 
