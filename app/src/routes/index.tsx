@@ -28,6 +28,7 @@ import NotFound from "@/pages/Common/NotFound";
 import ManageShelter from "@/pages/Shelter/ManageShelter";
 import { AdoptionForms } from "@/components/shelter/shelter-management/adoption-form/AdoptionForms";
 import { AdoptionTemplates } from "@/components/shelter/shelter-management/adoption-form/AdoptionTemplates";
+import ShelterRequestsList from "@/pages/Shelter/ShelterRequestsList";
 
 function AppRoutes() {
   return (
@@ -69,6 +70,10 @@ function AppRoutes() {
         <Route
           path="/shelter-establishment"
           element={<ShelterEstablishmentPage />}
+        />
+        <Route
+          path="/shelter-request"
+          element={<ShelterRequestsList />}
         />
       </Route>
 

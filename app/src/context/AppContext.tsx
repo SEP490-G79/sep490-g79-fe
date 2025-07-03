@@ -87,7 +87,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       setUser(null);
       localStorage.removeItem("accessToken");
     })
-    .catch(err => toast.error("Lỗi thoát đăng nhập!"))
+    .catch(err => {
+      toast.error("Lỗi thoát đăng nhập!");
+      setUser(null);
+      localStorage.removeItem("accessToken");
+    })
   };
 
   // Check trạng thái login và access token mỗi khi chuyển trang trừ các trang public

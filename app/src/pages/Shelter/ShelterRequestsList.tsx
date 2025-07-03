@@ -31,42 +31,20 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { ShelterEstablishmentRequest } from "@/types/ShelterEstablishmentRequest";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import type { ShelterMember } from "@/types/ShelterMember";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../ui/dropdown-menu";
-import { Badge } from "../../ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { ShelterStaffRequestInvitation } from "@/types/ShelterStaffRequestInvitation";
 import { useParams } from "react-router-dom";
 import { SearchFilter } from "@/components/SearchFilter";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 
-const invitation1: ShelterStaffRequestInvitation = {
-  requestId: "req001",
-  requestType: "invitation",
-  sender: {
-    id: "user001",
-    email: "alice@pawsclaws.org",
-    fullName: "Alice Trần",
-    avatar: "https://example.com/avatar/alice.png",
-  },
-  receiver: {
-    id: "user010",
-    email: "john.doe@example.com",
-    fullName: "John Doe",
-    avatar: "https://example.com/avatar/john.png",
-  },
-  shelter: {
-    id: "685f5ab190842987ab51901a",
-    name: "Paws & Claws Rescue Center",
-    avatar: "https://example.com/avatar/paws.png",
-    background: "https://example.com/bg/paws.jpg",
-  },
-  roles: ["staff"],
-  requestStatus: "pending",
-  createdAt: new Date("2025-07-01T08:00:00Z"),
-  updatedAt: new Date("2025-07-01T08:00:00Z"),
-  expireAt: new Date("2025-09-01T08:00:00Z"),
-};
+
+const shelterRequest = z.object({
+  email: z.string().email("Email không hợp lệ"),
+});
+
 
 type detailDialogData = {
   isOpen: boolean;
@@ -98,8 +76,8 @@ type detailDialogData = {
   };
 };
 
-const ShelterStaffRequestManagement = () => {
-    const [invitationsList, setInvitationsList] = useState<ShelterStaffRequestInvitation[]>([invitation1]);
+const ShelterRequestsList = () => {
+    const [invitationsList, setInvitationsList] = useState<ShelterStaffRequestInvitation[]>([]);
     const [filtererdInvitationsList, setFiltererdInvitationsList] = useState<ShelterStaffRequestInvitation[]>([]);
     const [loadingButton, setLoadingButton] = useState<Boolean>(false);
     const [detailDialog, setDetailDialog] = useState<detailDialogData>({
@@ -134,17 +112,25 @@ const ShelterStaffRequestManagement = () => {
     const authAxios = useAuthAxios();
     const {shelterAPI} = useContext(AppContext)
     const {shelterId} = useParams();
-    const [refeshRequest, setRefreshRequest] = useState<boolean>(false);
+    const [invitationRefresh, setInvitationRefresh] = useState<boolean>(false);
+    const [submitLoading, setSubmitLoading] = useState<boolean>(false);
 
     useEffect(() => {
-      authAxios.get(`${shelterAPI}/get-shelter-invitations-and-requests/${shelterId}`)
+      authAxios.get(`${shelterAPI}/get-user-invitations-and-requests`)
       .then(({data}) => {
-        // console.log(data)
+        console.log(data)
         setInvitationsList(data);
         setFiltererdInvitationsList(data);
       })
       .catch(err => console.log(err?.response.data.message))
-    }, [refeshRequest])
+    }, [invitationRefresh])
+
+    const form = useForm<z.infer<typeof shelterRequest>>({
+        resolver: zodResolver(shelterRequest),
+        defaultValues: {
+          email: "",
+        },
+      });
 
 
      const columns: ColumnDef<ShelterStaffRequestInvitation>[] = [
@@ -153,7 +139,7 @@ const ShelterStaffRequestManagement = () => {
          cell: ({ row }) => <p className="text-center">{row.index + 1}</p>,
        },
        {
-         accessorKey: "receiver",
+         accessorKey: "sender",
          header: ({ column }) => {
            return (
              <Button
@@ -163,7 +149,7 @@ const ShelterStaffRequestManagement = () => {
                }
                className="cursor-pointer"
              >
-               Tình nguyện viên
+               Người gửi
                <ArrowUpDown className="ml-2 h-4 w-4" />
              </Button>
            );
@@ -172,11 +158,40 @@ const ShelterStaffRequestManagement = () => {
            return (
              <p className="px-2 flex flex-row gap-2">
                <img
-                 src={row.original.receiver.avatar}
-                 alt={row.original.receiver.fullName}
+                 src={row.original.sender.avatar}
+                 alt={row.original.sender.fullName}
                  className="h-10 w-10 rounded-full object-cover"
                />
-               <span className="my-auto">{row.original.receiver.fullName}</span>
+               <span className="my-auto">{row.original.sender.fullName}</span>
+             </p>
+           );
+         },
+       },
+       {
+         accessorKey: "shelter",
+         header: ({ column }) => {
+           return (
+             <Button
+               variant="ghost"
+               onClick={() =>
+                 column.toggleSorting(column.getIsSorted() === "asc")
+               }
+               className="cursor-pointer"
+             >
+               Trạm cứu hộ
+               <ArrowUpDown className="ml-2 h-4 w-4" />
+             </Button>
+           );
+         },
+         cell: ({ row }) => {
+           return (
+             <p className="px-2 flex flex-row gap-2">
+               <img
+                 src={row.original.shelter.avatar}
+                 alt={row.original.shelter.name}
+                 className="h-10 w-10 rounded-full object-cover"
+               />
+               <span className="my-auto">{row.original.shelter.name}</span>
              </p>
            );
          },
@@ -434,12 +449,54 @@ const ShelterStaffRequestManagement = () => {
      ];
 
 
-     const handleApprove = async (data: any) => {
-      
+     const handleApprove = async () => {
+        try {
+          setLoadingButton(true);
+          const response = await authAxios.put(`${shelterAPI}/review-shelter-invitation`, {
+            shelterId: detailDialog.detail.shelter.id, 
+            decision: "approve"
+          })
+          setTimeout(() => {
+            toast.success("Chấp nhận yêu cầu gia nhập thành công!")
+            setInvitationRefresh(prev => !prev);
+            setLoadingButton(false);
+            setDetailDialog({...detailDialog, isOpen: false});
+          }, 1000)
+        } catch (error : any) {
+          console.log(error?.response.data.message)
+        }
      }
 
-     const handleReject = async (data: any) => {
-      
+     const handleReject = async () => {
+      try {
+          setLoadingButton(true);
+          const response = await authAxios.put(`${shelterAPI}/review-shelter-invitation`, {
+            shelterId: detailDialog.detail.shelter.id, 
+            decision: "reject"
+          })
+          setTimeout(() => {
+            toast.success("Từ chối yêu cầu gia nhập thành công!")
+            setInvitationRefresh(prev => !prev);
+            setLoadingButton(false);
+            setDetailDialog({...detailDialog, isOpen: false});
+          }, 1000)
+        } catch (error : any) {
+          console.log(error?.response.data.message)
+        }
+     }
+
+     const handleSendRequest = async () => {
+      try {
+          setSubmitLoading(true);
+          await authAxios.put(`${shelterAPI}/send-staff-request/${shelterId}`)
+          setTimeout(() => {
+            toast.success("Gửi yêu cầu gia nhập thành công!")
+            setInvitationRefresh(prev => !prev);
+            setSubmitLoading(false);
+          }, 1000)
+        } catch (error : any) {
+          console.log(error?.response.data.message)
+        }
      }
 
 
@@ -450,19 +507,101 @@ const ShelterStaffRequestManagement = () => {
           <h4 className="scroll-m-20 min-w-40 text-xl font-semibold tracking-tight text-center">
             Danh sách các yêu cầu gia nhập và lời mời vào trạm cứu hộ
           </h4>
-          <div className="flex flex-row justify-end">
+          <div className="flex flex-row justify-between">
             {/* <SearchFilter<ShelterStaffRequestInvitation>
               data={invitationsList}
               searchFields={["sender", "receiver"]}
               onResultChange={setFiltererdInvitationsList}
               placeholder="Tìm theo tên người gửi hoặc người nhận"
             /> */}
+            <Dialog
+              onOpenChange={(open) => {
+                if (!open) {
+                  form.reset();
+                }
+              }}
+            >
+              <DialogTrigger asChild>
+                {invitationsList.find((invitation) =>
+                  ["active", "pending"].includes(invitation.requestStatus)
+                ) ? (
+                  <p>Bạn đang lời mời hoặc yêu cầu gia nhập đang chờ xử lý</p>
+                ) : (
+                  <Button className="cursor-pointer">
+                    Gửi yêu cầu gia nhập trạm cứu hộ
+                  </Button>
+                )}
+              </DialogTrigger>
+              <DialogContent className="w-full max-w-3xl !max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle className="text-center">
+                    Đơn yêu cầu thành lập trạm cứu hộ
+                  </DialogTitle>
+                  <DialogDescription>
+                    Vui lòng nhập thông tin chính xác và kiểm tra kĩ trước khi
+                    gửi đơn. Sau khi gửi sẽ không chỉnh sửa đơn được.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="px-5 py-3">
+                  <Form {...form}>
+                    <form
+                      onSubmit={form.handleSubmit(handleSendRequest)}
+                      className="space-y-6"
+                      encType="multipart/form-data"
+                    >
+                      {/* Left column */}
+                      <div className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="example@email.com"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      {/* Footer */}
+                      <DialogFooter className="pt-4">
+                        <DialogClose asChild>
+                          <Button
+                            variant="secondary"
+                            className="cursor-pointer"
+                          >
+                            Đóng
+                          </Button>
+                        </DialogClose>
+                        {submitLoading ? (
+                          <Button disabled>
+                            <>
+                              <Loader2Icon className="animate-spin mr-2" />
+                              Vui lòng chờ
+                            </>
+                          </Button>
+                        ) : (
+                          <Button type="submit" className="cursor-pointer">
+                            Gửi yêu cầu
+                          </Button>
+                        )}
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Tooltip>
               <TooltipTrigger asChild>
                             <Button
               variant={"ghost"}
               className="cursor-pointer"
-              onClick={() => setRefreshRequest((prev) => !prev)}
+              onClick={() => setInvitationRefresh((prev) => !prev)}
             >
               <RefreshCcw />
             </Button>
@@ -478,7 +617,12 @@ const ShelterStaffRequestManagement = () => {
         </div>
       </div>
       {/* Dialog chi tiet */}
-      <Dialog open={detailDialog.isOpen}>
+      <Dialog
+        open={detailDialog.isOpen}
+        onOpenChange={(open) =>
+          setDetailDialog((prev) => ({ ...prev, isOpen: open }))
+        }
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-center">
@@ -503,20 +647,22 @@ const ShelterStaffRequestManagement = () => {
             <div className="flex flex-row gap-2">
               <span className="my-auto font-medium">Người gửi:</span>
               <Avatar>
-                <AvatarImage src={detailDialog.detail?.sender?.avatar}/>
+                <AvatarImage src={detailDialog.detail?.sender?.avatar} />
               </Avatar>
-              <span className="my-auto">{detailDialog.detail?.sender?.fullName} (
-              {detailDialog.detail?.sender?.email})</span>
-              
+              <span className="my-auto">
+                {detailDialog.detail?.sender?.fullName} (
+                {detailDialog.detail?.sender?.email})
+              </span>
             </div>
 
             <div className="flex flex-row gap-2">
-              <span className="my-auto font-medium">Người nhận:</span>
+              <span className="my-auto font-medium">Trạm cứu hộ:</span>
               <Avatar>
-                <AvatarImage src={detailDialog.detail?.receiver?.avatar}/>
+                <AvatarImage src={detailDialog.detail?.shelter?.avatar} />
               </Avatar>
-              <span className="my-auto">{detailDialog.detail?.receiver?.fullName} (
-              {detailDialog.detail?.receiver?.email})</span>
+              <span className="my-auto">
+                {detailDialog.detail?.shelter?.name}
+              </span>
             </div>
 
             <div className="flex flex-row gap-2">
@@ -577,23 +723,6 @@ const ShelterStaffRequestManagement = () => {
           </div>
 
           <DialogFooter className="flex justify-between gap-3">
-            {/* Nếu là request và chưa hết hạn, chưa duyệt, chưa bị huỷ → hiển thị nút */}
-            {detailDialog.detail?.requestType === "request" &&
-            detailDialog.detail?.requestStatus === "pending" &&
-            new Date(detailDialog.detail?.expireAt) > new Date() &&
-            detailDialog.detail?.requestStatus !== "cancelled" ? (
-              <div className="flex gap-2">
-                <Button variant="default">
-                  Chấp thuận
-                </Button>
-                <Button variant="destructive">
-                  Từ chối
-                </Button>
-              </div>
-            ) : (
-              <div />
-            )}
-
             {/* Nút Đóng luôn hiển thị */}
             <DialogClose asChild>
               <Button
@@ -605,6 +734,48 @@ const ShelterStaffRequestManagement = () => {
                 Đóng
               </Button>
             </DialogClose>
+            {/* Nếu là request và chưa hết hạn, chưa duyệt, chưa bị huỷ → hiển thị nút */}
+            {detailDialog.detail?.requestType === "invitation" &&
+            detailDialog.detail?.requestStatus === "pending" &&
+            new Date(detailDialog.detail?.expireAt) > new Date() &&
+            detailDialog.detail?.requestStatus !== "cancelled" ? (
+              <div className="flex gap-2">
+                {loadingButton ? (
+                  <Button disabled>
+                    <>
+                      <Loader2Icon className="animate-spin mr-2" />
+                      Vui lòng chờ
+                    </>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    className="cursor-pointer"
+                    onClick={() => handleReject()}
+                  >
+                    Từ chối
+                  </Button>
+                )}
+                {loadingButton ? (
+                  <Button disabled>
+                    <>
+                      <Loader2Icon className="animate-spin mr-2" />
+                      Vui lòng chờ
+                    </>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="default"
+                    className="cursor-pointer"
+                    onClick={() => handleApprove()}
+                  >
+                    Chấp thuận
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div />
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -612,4 +783,4 @@ const ShelterStaffRequestManagement = () => {
   );
 }
 
-export default ShelterStaffRequestManagement
+export default ShelterRequestsList;
