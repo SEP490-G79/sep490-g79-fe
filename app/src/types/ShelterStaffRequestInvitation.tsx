@@ -1,13 +1,7 @@
 export interface ShelterStaffRequestInvitation {
   requestId: string;
   requestType: string;
-  sender: {
-    id: string;
-    email: string;
-    fullName: string;
-    avatar: string;
-  };
-  receiver: {
+  user: {
     id: string;
     email: string;
     fullName: string;
@@ -16,8 +10,8 @@ export interface ShelterStaffRequestInvitation {
   shelter: {
     id: string;
     name: string;
+    email: string;
     avatar: string;
-    background: string;
   };
   roles: string[];
   requestStatus: string;

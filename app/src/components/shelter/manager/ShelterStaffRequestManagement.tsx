@@ -40,45 +40,12 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 
-const invitation1: ShelterStaffRequestInvitation = {
-  requestId: "req001",
-  requestType: "invitation",
-  sender: {
-    id: "user001",
-    email: "alice@pawsclaws.org",
-    fullName: "Alice Trần",
-    avatar: "https://example.com/avatar/alice.png",
-  },
-  receiver: {
-    id: "user010",
-    email: "john.doe@example.com",
-    fullName: "John Doe",
-    avatar: "https://example.com/avatar/john.png",
-  },
-  shelter: {
-    id: "685f5ab190842987ab51901a",
-    name: "Paws & Claws Rescue Center",
-    avatar: "https://example.com/avatar/paws.png",
-    background: "https://example.com/bg/paws.jpg",
-  },
-  roles: ["staff"],
-  requestStatus: "pending",
-  createdAt: new Date("2025-07-01T08:00:00Z"),
-  updatedAt: new Date("2025-07-01T08:00:00Z"),
-  expireAt: new Date("2025-09-01T08:00:00Z"),
-};
-
 type detailDialogData = {
   isOpen: boolean;
   detail: {
+    requestId: string;
     requestType: string;
-    sender: {
-      id: string;
-      email: string;
-      fullName: string;
-      avatar: string;
-    };
-    receiver: {
+    user: {
       id: string;
       email: string;
       fullName: string;
@@ -87,8 +54,8 @@ type detailDialogData = {
     shelter: {
       id: string;
       name: string;
+      email: string;
       avatar: string;
-      background: string;
     };
     roles: string[];
     requestStatus: string;
@@ -99,20 +66,15 @@ type detailDialogData = {
 };
 
 const ShelterStaffRequestManagement = () => {
-    const [invitationsList, setInvitationsList] = useState<ShelterStaffRequestInvitation[]>([invitation1]);
+    const [invitationsList, setInvitationsList] = useState<ShelterStaffRequestInvitation[]>([]);
     const [filtererdInvitationsList, setFiltererdInvitationsList] = useState<ShelterStaffRequestInvitation[]>([]);
     const [loadingButton, setLoadingButton] = useState<Boolean>(false);
     const [detailDialog, setDetailDialog] = useState<detailDialogData>({
       isOpen: false,
       detail: {
+        requestId: "",
         requestType: "",
-        sender: {
-          id: "",
-          email: "",
-          fullName: "",
-          avatar: "",
-        },
-        receiver: {
+        user: {
           id: "",
           email: "",
           fullName: "",
@@ -121,8 +83,8 @@ const ShelterStaffRequestManagement = () => {
         shelter: {
           id: "",
           name: "",
+          email: "",
           avatar: "",
-          background: "",
         },
         roles: [],
         requestStatus: "",
@@ -153,7 +115,7 @@ const ShelterStaffRequestManagement = () => {
          cell: ({ row }) => <p className="text-center">{row.index + 1}</p>,
        },
        {
-         accessorKey: "receiver",
+         accessorKey: "user",
          header: ({ column }) => {
            return (
              <Button
@@ -172,11 +134,11 @@ const ShelterStaffRequestManagement = () => {
            return (
              <p className="px-2 flex flex-row gap-2">
                <img
-                 src={row.original.receiver.avatar}
-                 alt={row.original.receiver.fullName}
+                 src={row.original.user.avatar}
+                 alt={row.original.user.fullName}
                  className="h-10 w-10 rounded-full object-cover"
                />
-               <span className="my-auto">{row.original.receiver.fullName}</span>
+               <span className="my-auto">{row.original.user.fullName}</span>
              </p>
            );
          },
@@ -396,24 +358,19 @@ const ShelterStaffRequestManagement = () => {
                    setDetailDialog({
                      isOpen: true,
                      detail: {
+                      requestId: row.original.requestId,
                        requestType: row.original.requestType,
-                       sender: {
-                         id: row.original.sender.id,
-                         email: row.original.sender.email,
-                         fullName: row.original.sender.fullName,
-                         avatar: row.original.sender.avatar,
-                       },
-                       receiver: {
-                         id: row.original.receiver.id,
-                         email: row.original.receiver.email,
-                         fullName: row.original.receiver.fullName,
-                         avatar: row.original.receiver.avatar,
+                       user: {
+                         id: row.original.user.id,
+                         email: row.original.user.email,
+                         fullName: row.original.user.fullName,
+                         avatar: row.original.user.avatar,
                        },
                        shelter: {
                          id: row.original.shelter.id,
                          name: row.original.shelter.name,
+                         email: row.original.shelter.email,
                          avatar: row.original.shelter.avatar,
-                         background: row.original.shelter.background,
                        },
                        roles: row.original.roles,
                        requestStatus: row.original.requestStatus,
@@ -434,13 +391,42 @@ const ShelterStaffRequestManagement = () => {
      ];
 
 
-     const handleApprove = async (data: any) => {
-      
-     }
-
-     const handleReject = async (data: any) => {
-      
-     }
+     const handleApprove = async () => {
+             try {
+               setLoadingButton(true);
+               await authAxios.put(`${shelterAPI}/${shelterId}/review-user-request`, {
+                 requestId: detailDialog.detail.requestId,
+                 decision: "approve"
+               })
+               setTimeout(() => {
+                 toast.success("Chấp nhận yêu cầu gia nhập thành công!")
+                 setRefreshRequest(prev => !prev);
+                 setLoadingButton(false);
+                 setDetailDialog({...detailDialog, isOpen: false});
+               }, 1000)
+             } catch (error : any) {
+               console.log(error?.response.data.message)
+             }
+          }
+     
+          const handleReject = async () => {
+           try {
+               setLoadingButton(true);
+               await authAxios.put(`${shelterAPI}/${shelterId}/review-user-request`, {
+                 shelterId: detailDialog.detail.shelter.id,
+                 requestId: detailDialog.detail.requestId,
+                 decision: "reject"
+               })
+               setTimeout(() => {
+                 toast.success("Từ chối yêu cầu gia nhập thành công!")
+                 setRefreshRequest(prev => !prev);
+                 setLoadingButton(false);
+                 setDetailDialog({...detailDialog, isOpen: false});
+               }, 1000)
+             } catch (error : any) {
+               console.log(error?.response.data.message)
+             }
+        }
 
 
   return (
@@ -501,22 +487,22 @@ const ShelterStaffRequestManagement = () => {
             </div>
 
             <div className="flex flex-row gap-2">
-              <span className="my-auto font-medium">Người gửi:</span>
+              <span className="my-auto font-medium">Trạm cứu hộ:</span>
               <Avatar>
-                <AvatarImage src={detailDialog.detail?.sender?.avatar}/>
+                <AvatarImage src={detailDialog.detail?.shelter?.avatar}/>
               </Avatar>
-              <span className="my-auto">{detailDialog.detail?.sender?.fullName} (
-              {detailDialog.detail?.sender?.email})</span>
+              <span className="my-auto">{detailDialog.detail?.shelter?.name} (
+              {detailDialog.detail?.shelter?.email})</span>
               
             </div>
 
             <div className="flex flex-row gap-2">
-              <span className="my-auto font-medium">Người nhận:</span>
+              <span className="my-auto font-medium">{detailDialog.detail.requestType === "invitation" ? "Người nhận" : "Người gửi"}:</span>
               <Avatar>
-                <AvatarImage src={detailDialog.detail?.receiver?.avatar}/>
+                <AvatarImage src={detailDialog.detail?.user?.avatar}/>
               </Avatar>
-              <span className="my-auto">{detailDialog.detail?.receiver?.fullName} (
-              {detailDialog.detail?.receiver?.email})</span>
+              <span className="my-auto">{detailDialog.detail?.user?.fullName} (
+              {detailDialog.detail?.user?.email})</span>
             </div>
 
             <div className="flex flex-row gap-2">
@@ -583,10 +569,10 @@ const ShelterStaffRequestManagement = () => {
             new Date(detailDialog.detail?.expireAt) > new Date() &&
             detailDialog.detail?.requestStatus !== "cancelled" ? (
               <div className="flex gap-2">
-                <Button variant="default">
+                <Button variant="default" onClick={() => handleApprove()}>
                   Chấp thuận
                 </Button>
-                <Button variant="destructive">
+                <Button variant="destructive" onClick={() => handleReject()}>
                   Từ chối
                 </Button>
               </div>
