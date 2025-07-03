@@ -23,7 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { createPortal } from "react-dom";
 
 interface MedicalRecord {

@@ -17,9 +17,9 @@ import { FAQ } from "@/pages/Common/FAQ";
 import ShelterStaffManagement from "@/components/shelter/manager/ShelterStaffManagement";
 
 import ShelterManagerLayout from "@/components/layouts/shelter/ShelterManagerLayout";
-import ViewPetDetails from "@/pages/pets/ViewPetDetails";
+
 import PetManagement from "@/components/shelter/shelterPet/PetManagement";
-import ShelterDashboard from "@/pages/shelter/ShelterDashboard";
+
 import PetsListPage from "@/pages/Pets/PetsListPage";
 import PetProfilePage from "@/components/pet/PetProfilePage";
 import ShelterPage from "@/pages/Shelter/ShelterPage";
@@ -27,14 +27,15 @@ import Shelters from "@/pages/Shelter/Shelters";
 import NotFound from "@/pages/Common/NotFound";
 import ManageShelter from "@/pages/Shelter/ManageShelter";
 import { AdoptionForms } from "@/components/shelter/shelter-management/adoption-form/AdoptionForms";
-import ViewPetDetails from "@/pages/Pets/ViewPetDetails";
-import ShelterDashboard from "@/pages/Shelter/ShelterDashboard";
 import TemplateDialog from "@/components/shelter/shelter-management/adoption-template/TemplateDialog";
 import ShelterEstablishmentPage from "@/pages/Shelter/ShelterEstablishmentPage";
 import { AdoptionTemplates } from "@/components/shelter/shelter-management/adoption-template/AdoptionTemplates";
-import ShelterProfile from "@/components/shelter/manager/ShelterProfile";
+
 
 import ShelterRequestsList from "@/pages/Shelter/ShelterRequestsList";
+import ViewPetDetails from "@/pages/Pets/ViewPetDetails";
+import ShelterDashboard from "@/pages/Shelter/ShelterDashboard";
+import ShelterProfile from "@/components/shelter/manager/ShelterProfile";
 
 function AppRoutes() {
   return (
@@ -51,11 +52,7 @@ function AppRoutes() {
       <Route path="/pets/:id" element={<PetProfilePage />} />
       <Route path="/shelters" element={<Shelters />} />
       <Route path="/shelters/:shelterId" element={<ShelterPage />} />
-      <Route path="/pet/:petId" element={<ViewPetDetails />} />
-      <Route
-        path="/shelters/:shelterId/dashboard"
-        element={<ShelterDashboard />}
-      />
+    
 
       <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
         <Route index element={<ShelterProfile />} />
@@ -64,6 +61,8 @@ function AppRoutes() {
         <Route path="adoption-templates" element={<AdoptionTemplates/>} />
         <Route path="adoption-templates/:templateId" element={<TemplateDialog/>} />
         <Route path="adoption-forms" element={<AdoptionForms/>} />
+        <Route path="dashboard" element={<ShelterDashboard />}/>
+
 
       </Route>
 

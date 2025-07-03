@@ -6,7 +6,7 @@ import AppContext from "@/context/AppContext";
 import { type Shelter } from "@/types/Shelter";
 import React, { useContext, useMemo, useState, useEffect } from "react";
 import { Navigate, useParams } from "react-router-dom";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { getShelterDashboardStatistics } from "@/apis/shelter.api";
 
 function ShelterPage() {
