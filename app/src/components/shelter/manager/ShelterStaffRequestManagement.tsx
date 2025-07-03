@@ -20,7 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowUpDown, Ban, Loader2Icon, MoreHorizontal, RotateCcwKey } from "lucide-react";
+import { ArrowUpDown, Ban, Loader2Icon, MoreHorizontal, RefreshCcw, RotateCcwKey } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ import type { ShelterStaffRequestInvitation } from "@/types/ShelterStaffRequestI
 import { useParams } from "react-router-dom";
 import { SearchFilter } from "@/components/SearchFilter";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 const invitation1: ShelterStaffRequestInvitation = {
@@ -133,6 +134,7 @@ const ShelterStaffRequestManagement = () => {
     const authAxios = useAuthAxios();
     const {shelterAPI} = useContext(AppContext)
     const {shelterId} = useParams();
+    const [refeshRequest, setRefreshRequest] = useState<boolean>(false);
 
     useEffect(() => {
       authAxios.get(`${shelterAPI}/get-shelter-invitations-and-requests/${shelterId}`)
@@ -142,7 +144,7 @@ const ShelterStaffRequestManagement = () => {
         setFiltererdInvitationsList(data);
       })
       .catch(err => console.log(err?.response.data.message))
-    }, [])
+    }, [refeshRequest])
 
 
      const columns: ColumnDef<ShelterStaffRequestInvitation>[] = [
@@ -151,7 +153,7 @@ const ShelterStaffRequestManagement = () => {
          cell: ({ row }) => <p className="text-center">{row.index + 1}</p>,
        },
        {
-         accessorKey: "sender",
+         accessorKey: "receiver",
          header: ({ column }) => {
            return (
              <Button
@@ -161,7 +163,7 @@ const ShelterStaffRequestManagement = () => {
                }
                className="cursor-pointer"
              >
-               Người gửi
+               Tình nguyện viên
                <ArrowUpDown className="ml-2 h-4 w-4" />
              </Button>
            );
@@ -170,11 +172,11 @@ const ShelterStaffRequestManagement = () => {
            return (
              <p className="px-2 flex flex-row gap-2">
                <img
-                 src={row.original.sender.avatar}
-                 alt={row.original.sender.fullName}
+                 src={row.original.receiver.avatar}
+                 alt={row.original.receiver.fullName}
                  className="h-10 w-10 rounded-full object-cover"
                />
-               <span className="my-auto">{row.original.sender.fullName}</span>
+               <span className="my-auto">{row.original.receiver.fullName}</span>
              </p>
            );
          },
@@ -448,13 +450,27 @@ const ShelterStaffRequestManagement = () => {
           <h4 className="scroll-m-20 min-w-40 text-xl font-semibold tracking-tight text-center">
             Danh sách các yêu cầu gia nhập và lời mời vào trạm cứu hộ
           </h4>
-          <div className="flex flex-row gap-7">
+          <div className="flex flex-row justify-end">
             {/* <SearchFilter<ShelterStaffRequestInvitation>
               data={invitationsList}
               searchFields={["sender", "receiver"]}
               onResultChange={setFiltererdInvitationsList}
               placeholder="Tìm theo tên người gửi hoặc người nhận"
             /> */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                            <Button
+              variant={"ghost"}
+              className="cursor-pointer"
+              onClick={() => setRefreshRequest((prev) => !prev)}
+            >
+              <RefreshCcw />
+            </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Refresh</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
         <div className="col-span-12 px-5">

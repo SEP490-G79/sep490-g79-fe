@@ -20,7 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowUpDown, Ban, Loader2Icon, MoreHorizontal, RotateCcwKey } from "lucide-react";
+import { ArrowUpDown, Ban, Loader2Icon, MoreHorizontal, RefreshCcw, RotateCcwKey } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
@@ -37,35 +37,14 @@ import { useParams } from "react-router-dom";
 import { SearchFilter } from "@/components/SearchFilter";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 
-const invitation1: ShelterStaffRequestInvitation = {
-  requestId: "req001",
-  requestType: "invitation",
-  sender: {
-    id: "user001",
-    email: "alice@pawsclaws.org",
-    fullName: "Alice Trần",
-    avatar: "https://example.com/avatar/alice.png",
-  },
-  receiver: {
-    id: "user010",
-    email: "john.doe@example.com",
-    fullName: "John Doe",
-    avatar: "https://example.com/avatar/john.png",
-  },
-  shelter: {
-    id: "685f5ab190842987ab51901a",
-    name: "Paws & Claws Rescue Center",
-    avatar: "https://example.com/avatar/paws.png",
-    background: "https://example.com/bg/paws.jpg",
-  },
-  roles: ["staff"],
-  requestStatus: "pending",
-  createdAt: new Date("2025-07-01T08:00:00Z"),
-  updatedAt: new Date("2025-07-01T08:00:00Z"),
-  expireAt: new Date("2025-09-01T08:00:00Z"),
-};
+
+const shelterRequest = z.object({
+  email: z.string().email("Email không hợp lệ"),
+});
+
 
 type detailDialogData = {
   isOpen: boolean;
@@ -98,7 +77,7 @@ type detailDialogData = {
 };
 
 const ShelterRequestsList = () => {
-    const [invitationsList, setInvitationsList] = useState<ShelterStaffRequestInvitation[]>([invitation1]);
+    const [invitationsList, setInvitationsList] = useState<ShelterStaffRequestInvitation[]>([]);
     const [filtererdInvitationsList, setFiltererdInvitationsList] = useState<ShelterStaffRequestInvitation[]>([]);
     const [loadingButton, setLoadingButton] = useState<Boolean>(false);
     const [detailDialog, setDetailDialog] = useState<detailDialogData>({
@@ -134,6 +113,7 @@ const ShelterRequestsList = () => {
     const {shelterAPI} = useContext(AppContext)
     const {shelterId} = useParams();
     const [invitationRefresh, setInvitationRefresh] = useState<boolean>(false);
+    const [submitLoading, setSubmitLoading] = useState<boolean>(false);
 
     useEffect(() => {
       authAxios.get(`${shelterAPI}/get-user-invitations-and-requests`)
@@ -144,6 +124,13 @@ const ShelterRequestsList = () => {
       })
       .catch(err => console.log(err?.response.data.message))
     }, [invitationRefresh])
+
+    const form = useForm<z.infer<typeof shelterRequest>>({
+        resolver: zodResolver(shelterRequest),
+        defaultValues: {
+          email: "",
+        },
+      });
 
 
      const columns: ColumnDef<ShelterStaffRequestInvitation>[] = [
@@ -473,6 +460,7 @@ const ShelterRequestsList = () => {
             toast.success("Chấp nhận yêu cầu gia nhập thành công!")
             setInvitationRefresh(prev => !prev);
             setLoadingButton(false);
+            setDetailDialog({...detailDialog, isOpen: false});
           }, 1000)
         } catch (error : any) {
           console.log(error?.response.data.message)
@@ -490,6 +478,21 @@ const ShelterRequestsList = () => {
             toast.success("Từ chối yêu cầu gia nhập thành công!")
             setInvitationRefresh(prev => !prev);
             setLoadingButton(false);
+            setDetailDialog({...detailDialog, isOpen: false});
+          }, 1000)
+        } catch (error : any) {
+          console.log(error?.response.data.message)
+        }
+     }
+
+     const handleSendRequest = async () => {
+      try {
+          setSubmitLoading(true);
+          await authAxios.put(`${shelterAPI}/send-staff-request/${shelterId}`)
+          setTimeout(() => {
+            toast.success("Gửi yêu cầu gia nhập thành công!")
+            setInvitationRefresh(prev => !prev);
+            setSubmitLoading(false);
           }, 1000)
         } catch (error : any) {
           console.log(error?.response.data.message)
@@ -504,13 +507,109 @@ const ShelterRequestsList = () => {
           <h4 className="scroll-m-20 min-w-40 text-xl font-semibold tracking-tight text-center">
             Danh sách các yêu cầu gia nhập và lời mời vào trạm cứu hộ
           </h4>
-          <div className="flex flex-row gap-7">
+          <div className="flex flex-row justify-between">
             {/* <SearchFilter<ShelterStaffRequestInvitation>
               data={invitationsList}
               searchFields={["sender", "receiver"]}
               onResultChange={setFiltererdInvitationsList}
               placeholder="Tìm theo tên người gửi hoặc người nhận"
             /> */}
+            <Dialog
+              onOpenChange={(open) => {
+                if (!open) {
+                  form.reset();
+                }
+              }}
+            >
+              <DialogTrigger asChild>
+                {invitationsList.find((invitation) =>
+                  ["active", "pending"].includes(invitation.requestStatus)
+                ) ? (
+                  <p>Bạn đang lời mời hoặc yêu cầu gia nhập đang chờ xử lý</p>
+                ) : (
+                  <Button className="cursor-pointer">
+                    Gửi yêu cầu gia nhập trạm cứu hộ
+                  </Button>
+                )}
+              </DialogTrigger>
+              <DialogContent className="w-full max-w-3xl !max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle className="text-center">
+                    Đơn yêu cầu thành lập trạm cứu hộ
+                  </DialogTitle>
+                  <DialogDescription>
+                    Vui lòng nhập thông tin chính xác và kiểm tra kĩ trước khi
+                    gửi đơn. Sau khi gửi sẽ không chỉnh sửa đơn được.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="px-5 py-3">
+                  <Form {...form}>
+                    <form
+                      onSubmit={form.handleSubmit(handleSendRequest)}
+                      className="space-y-6"
+                      encType="multipart/form-data"
+                    >
+                      {/* Left column */}
+                      <div className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="example@email.com"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      {/* Footer */}
+                      <DialogFooter className="pt-4">
+                        <DialogClose asChild>
+                          <Button
+                            variant="secondary"
+                            className="cursor-pointer"
+                          >
+                            Đóng
+                          </Button>
+                        </DialogClose>
+                        {submitLoading ? (
+                          <Button disabled>
+                            <>
+                              <Loader2Icon className="animate-spin mr-2" />
+                              Vui lòng chờ
+                            </>
+                          </Button>
+                        ) : (
+                          <Button type="submit" className="cursor-pointer">
+                            Gửi yêu cầu
+                          </Button>
+                        )}
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                            <Button
+              variant={"ghost"}
+              className="cursor-pointer"
+              onClick={() => setInvitationRefresh((prev) => !prev)}
+            >
+              <RefreshCcw />
+            </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Refresh</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
         <div className="col-span-12 px-5">
@@ -518,10 +617,12 @@ const ShelterRequestsList = () => {
         </div>
       </div>
       {/* Dialog chi tiet */}
-      <Dialog open={detailDialog.isOpen} 
-      onOpenChange={(open) =>
+      <Dialog
+        open={detailDialog.isOpen}
+        onOpenChange={(open) =>
           setDetailDialog((prev) => ({ ...prev, isOpen: open }))
-        }>
+        }
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-center">
