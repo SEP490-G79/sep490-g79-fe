@@ -23,4 +23,5 @@ export interface Pet {
   status: "unavailable" | "available" | "adopted" | "disabled" | "booking" | "delivered";
   createdAt?: string;
   updatedAt?: string;
+  petCode?: string;
 }

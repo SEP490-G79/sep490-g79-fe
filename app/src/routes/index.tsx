@@ -26,8 +26,9 @@ import ShelterPage from "@/pages/Shelter/ShelterPage";
 import Shelters from "@/pages/Shelter/Shelters";
 import NotFound from "@/pages/Common/NotFound";
 import ManageShelter from "@/pages/Shelter/ManageShelter";
-import { AdoptionForms } from "@/components/shelter/shelter-management/adoption-form/AdoptionForms";
+// import { AdoptionForms } from "@/components/shelter/shelter-management/adoption-form/AdoptionForms";
 import { AdoptionTemplates } from "@/components/shelter/shelter-management/adoption-form/AdoptionTemplates";
+import UserAdoptionFormPage from "@/pages/user/AdoptionForm/UserAdoptionForm";
 
 function AppRoutes() {
   return (
@@ -43,11 +44,12 @@ function AppRoutes() {
 
       <Route path="/pets-list" element={<PetsListPage />} />
       <Route path="/pets/:id" element={<PetProfilePage />} />
+      <Route path="/adoption-form/:id" element={<UserAdoptionFormPage />} />
       <Route path="/shelters" element={<Shelters />} />
       <Route path="/shelters/:shelterId" element={<ShelterPage />} />
       <Route path="/pet/:petId" element={<ViewPetDetails />} />
-        <Route path="/shelter/pets" element={<PetManagement />} />
-        <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
+      <Route path="/shelter/pets" element={<PetManagement />} />
+      <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
 
       <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
         <Route index element={<ShelterProfile />} />
@@ -55,14 +57,14 @@ function AppRoutes() {
         <Route path="staffs-management" element={<ShelterStaffManagement />} />
         <Route path="pet-profiles" element={<div>Quản lý pets</div>} />
         <Route path="adoption-templates" element={<AdoptionTemplates/>} />
-        <Route path="adoption-forms" element={<AdoptionForms/>} />
+        {/* <Route path="adoption-forms" element={<AdoptionForms/>} /> */}
       </Route>
 
       <Route element={<PrivateRoutes />}>
         <Route index element={<Navigate to="/home" replace={true} />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/profile/:userId" element={<ProfilePage />} />
+        <Route path="/profile/:userId" element={<ProfilePage />} />
 
         <Route path="/newfeed" element={<Newfeed />} />
         <Route path="/profile-setting" element={<ProfileSettings />} />
