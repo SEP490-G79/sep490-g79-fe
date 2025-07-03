@@ -45,7 +45,7 @@ function ManageShelter() {
           <BreadcrumbItem>
             <BreadcrumbLink
               className="hover:text-primary text-(--muted-foreground)"
-              href={`/shelters/${shelter?._id}`}
+              href={`/shelters/${shelterId}`}
             >
               {shelter?.name}
             </BreadcrumbLink>
