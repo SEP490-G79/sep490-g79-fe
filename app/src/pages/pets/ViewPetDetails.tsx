@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
-import MedicalRecordList from "@/components/pet/MedicalRecordList";
+import MedicalRecordList from "@/components/shelter/shelterPet/MedicalRecordList";
 
 interface Pet {
   _id: string;
@@ -62,7 +62,6 @@ const ViewPetDetails: React.FC = () => {
           alt={pet.name}
           className="w-full md:w-80 h-80 object-cover rounded-xl shadow-md border"
         />
-
         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 text-sm md:text-base text-gray-800">
           <p>
             <strong>Status:</strong> {pet.status}
@@ -113,6 +112,7 @@ const ViewPetDetails: React.FC = () => {
             </p>
           </div>
         </div>
+        zzz
       </div>
       {/* Medical Records Section */}
       {pet._id && <MedicalRecordList petId={pet._id} />}

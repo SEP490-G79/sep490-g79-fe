@@ -1,4 +1,3 @@
-
 export interface FileData {
   fileName: string;
   url: string;
@@ -10,8 +9,8 @@ export interface FileData {
 
 export interface ShelterMember {
   _id: string;
-  roles: ('manager' | 'staff')[];
-  [key:string]:any;
+  roles: ("manager" | "staff")[];
+  [key: string]: any;
 }
 
 export interface Shelter {
@@ -26,10 +25,8 @@ export interface Shelter {
   members: ShelterMember[];
   shelterLicense: FileData;
   foundationDate: string;
-  status: 'verifying' | 'active' | 'banned';
+  status: "verifying" | "active" | "banned";
   warningCount: number;
   createdAt: string;
   updatedAt: string;
 }
-
-

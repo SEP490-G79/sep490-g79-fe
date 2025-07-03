@@ -94,17 +94,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const logout = () => {
-    axios.post(`${authAPI}/logout`,{id: user?.id})
-    .then(res => {
-      toast.success("Thoát đăng nhập thành công");
-      setUser(null);
-      localStorage.removeItem("accessToken");
-    })
-    .catch(err => {
-      toast.error("Lỗi thoát đăng nhập!");
-      setUser(null);
-      localStorage.removeItem("accessToken");
-    })
+    axios
+      .post(`${authAPI}/logout`, { id: user?.id })
+      .then((res) => {
+        toast.success("Thoát đăng nhập thành công");
+        setUser(null);
+        localStorage.removeItem("accessToken");
+      })
+      .catch((err) => {
+        toast.error("Lỗi thoát đăng nhập!");
+        setUser(null);
+        localStorage.removeItem("accessToken");
+      });
   };
 
   // Check trạng thái login và access token mỗi khi chuyển trang trừ các trang public
