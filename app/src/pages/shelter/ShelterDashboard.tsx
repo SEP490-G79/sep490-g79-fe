@@ -71,7 +71,7 @@ const ShelterDashboard = () => {
   return (
     <div className="flex flex-col min-h-screen px-4 py-4 md:px-8 md:py-6 bg-background">
       {/* Breadcrumb */}
-      <Breadcrumb className="mb-6">
+      {/* <Breadcrumb className="mb-6">
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink href="/shelter" className="hover:underline">
@@ -83,7 +83,7 @@ const ShelterDashboard = () => {
             <BreadcrumbPage>Dashboard</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
-      </Breadcrumb>
+      </Breadcrumb> */}
 
       {/* Stats Card Section */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
