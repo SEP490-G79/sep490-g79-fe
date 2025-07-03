@@ -1,9 +1,13 @@
 export interface ShelterMember {
-  index: number;
+  id: string;
   avatar: string;
-  fullName: string;
+  background: string;
+  bio: string;
   email: string;
-  roles: [string];
+  fullName: string;
+  phoneNumber: string;
   status: string;
-  createdAt: Date;
+  warningCount: number;
+  userRoles: string[];     
+  shelterRoles: string[]; 
 }

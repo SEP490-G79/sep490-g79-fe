@@ -11,6 +11,10 @@ export interface User {
   dob: string; 
   phoneNumber: string;
   address: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
   background: string;
   createdAt?: string;
   status:string;
