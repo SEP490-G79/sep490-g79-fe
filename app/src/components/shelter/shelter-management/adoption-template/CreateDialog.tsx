@@ -27,42 +27,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
+import { mockSpeciesList } from "@/types/Species";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { useNavigate, useParams } from "react-router-dom";
 import { ca } from "zod/v4/locales";
 import { toast } from "sonner";
-import type { AdoptionForm } from "@/types/AdoptionForm";
+import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
+
 
 export default function CreateDialog() {
-  const { coreAPI, shelterForms, setShelterForms, petsList } =
-    useContext(AppContext);
+  const { coreAPI, shelterTemplates, setShelterTemplates } = useContext(AppContext);
   const { shelterId } = useParams();
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
-  // lấy ra availablePets là danh sách thú cưng có trạng thái "unavailable" và chưa có form nhân nuôi
-  const availablePets = petsList.filter(
-    (pet: any) =>
-      pet.shelter?._id == shelterId &&
-      pet.status == "unavailable" &&
-      !shelterForms.some((form: AdoptionForm) => form.pet._id == pet._id)
-  );
+
   const FormSchema = z.object({
     title: z.string().min(5, "Tiêu đề không được để trống."),
-    pet: z.string().min(1, "Chọn loài."),
+    species: z.string().min(1, "Chọn loài."),
     description: z.string().optional(),
   });
+
   type FormValues = z.infer<typeof FormSchema>;
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       title: "",
-      pet: "",
+      species: "",
       description: "",
     },
   });
@@ -70,25 +65,26 @@ export default function CreateDialog() {
   const onSubmit = async (values: FormValues) => {
     console.log("Form submitted:", values);
     await authAxios
-      .post(`${coreAPI}/shelters/${shelterId}/adoptionForms/create/${values.pet}`, {
+      .post(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/create`, {
         title: values.title,
+        species: values.species,
         description: values.description,
       })
       .then((res) => {
         toast.success("Tạo mẫu nhận nuôi thành công! Đang chuyển hướng ...");
-        setShelterForms([...shelterForms, res.data]);
+        setShelterTemplates([...shelterTemplates, res.data]);
         form.reset();
         document
           .querySelector<HTMLButtonElement>('[data-slot="dialog-close"]')
           ?.click();
-        // setTimeout(() => {
-        //   navigate(
-        //     `/shelters/${shelterId}/management/adoption-forms/${res.data._id}`
-        //   );
-        // }, 800);
+        setTimeout(() => {
+          navigate(
+            `/shelters/${shelterId}/management/adoption-templates/${res.data._id}`
+          );
+        }, 800);
       })
       .catch((err) => {
-        console.error("Error creating adoption form:", err);
+        console.error("Error creating adoption template:", err);
         toast.error("Tạo mẫu nhận nuôi thất bại. Vui lòng thử lại.");
       });
   };
@@ -96,7 +92,7 @@ export default function CreateDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="default">
+        <Button variant="default" >
           <Plus />
           Tạo mẫu
         </Button>
@@ -106,10 +102,9 @@ export default function CreateDialog() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>Tạo form nhận nuôi</DialogTitle>
+              <DialogTitle>Tạo mẫu nhận nuôi</DialogTitle>
               <DialogDescription>
-                Nhập thông tin cần thiết để tạo mẫu nhận nuôi mới. Bạn có thể
-                chỉnh sửa sau.
+                Tạo mẫu nhận nuôi cho từng loài! Giảm bớt thời gian quản lý.
               </DialogDescription>
             </DialogHeader>
 
@@ -120,9 +115,7 @@ export default function CreateDialog() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Tiêu đề <span className="text-(--destructive)">*</span>
-                    </FormLabel>
+                    <FormLabel>Tiêu đề <span className="text-(--destructive)">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Nhập tiêu đề" {...field} />
                     </FormControl>
@@ -131,16 +124,13 @@ export default function CreateDialog() {
                 )}
               />
 
-              {/* Pet Select */}
+              {/* Species Select */}
               <FormField
                 control={form.control}
-                name="pet"
+                name="species"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Mã thú nuôi{" "}
-                      <span className="text-(--destructive)">*</span>
-                    </FormLabel>
+                    <FormLabel>Loài <span className="text-(--destructive)">*</span></FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
@@ -148,12 +138,12 @@ export default function CreateDialog() {
                         defaultValue={field.value}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Chọn thú nuôi" />
+                          <SelectValue placeholder="Chọn loài" />
                         </SelectTrigger>
                         <SelectContent className="max-h-[10rem]">
-                          {availablePets.map((s: any) => (
-                            <SelectItem key={s._id} value={s._id}>
-                              {s.petCode}
+                          {mockSpeciesList.map((s) => (
+                            <SelectItem key={s.id} value={s.id}>
+                              {s.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
