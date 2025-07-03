@@ -146,6 +146,7 @@ function UserNav() {
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
+
               <Link to={"/shelter-request"}>Danh sách yêu cầu gia nhập và lời mời</Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
@@ -155,6 +156,7 @@ function UserNav() {
           <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
               <Link to={`/profile`}>Hồ sơ cá nhân</Link>
+
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
