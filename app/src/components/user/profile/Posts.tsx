@@ -34,7 +34,7 @@ import { Button } from "@/components/ui/button";
 import EmojiPicker from "emoji-picker-react";
 import { useRef, useEffect } from "react";
 import AppContext from "@/context/AppContext";
-
+import { useParams } from "react-router-dom";
 
 
 
@@ -49,12 +49,16 @@ function Posts() {
   const [selectedEmoji, setSelectedEmoji] = useState("");
   const [postContent, setPostContent] = useState("");
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const { userId } = useParams();
+  const { userProfile } = useContext(AppContext);
 
   const [openCreatePostDialog, setOpenCreatePostDialog] = useState(false);
 
 
+  const isOwnProfile = !userId || userId === userProfile?._id;
 
-  const { userProfile } = useContext(AppContext);
+
+
 
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -198,22 +202,24 @@ Hình ảnh trên mạng xã hội cho thấy hàng chục thi thể không nguy
     <>
       <div className="flex flex-col lg:flex-row gap-0 mt-[10px] relative z-10 min-h-screen mb-10">
         <div className="space-y-6 lg:w-2/3 mr-10">
-          <div
-  className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
-  onClick={() => setOpenCreatePostDialog(true)}
->
-  <img
-    src={userProfile?.avatar || "/placeholder.svg"}
-    alt="Avatar"
-    className="w-10 h-10 rounded-full border"
-  />
+          {isOwnProfile && (
+            <div
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
+              onClick={() => setOpenCreatePostDialog(true)}
+            >
+              <img
+                src={userProfile?.avatar || "/placeholder.svg"}
+                alt="Avatar"
+                className="w-10 h-10 rounded-full border"
+              />
 
-  <div
-    className="flex-1 bg-gray-100 dark:bg-gray-700 text-muted-foreground px-4 py-2 rounded-full text-sm"
-  >
-    Bạn đang nghĩ gì?
-  </div>
-</div>
+              <div
+                className="flex-1 bg-gray-100 dark:bg-gray-700 text-muted-foreground px-4 py-2 rounded-full text-sm"
+              >
+                Bạn đang nghĩ gì?
+              </div>
+            </div>
+          )}
 
 
           <Dialog open={openCreatePostDialog} onOpenChange={setOpenCreatePostDialog}>

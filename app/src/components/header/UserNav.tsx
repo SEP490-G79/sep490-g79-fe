@@ -19,11 +19,14 @@ import { ScrollArea } from "../ui/scroll-area";
 import { mockNotifications, type Notification } from "@/types/Notification";
 
 function UserNav() {
-  const { user, logout } = useContext(AppContext);
+  const { user, logout, shelters } = useContext(AppContext);
   const [notifications, setNotifications] =
     useState<Notification[]>(mockNotifications);
-
   const navigate = useNavigate();
+  const hasShelter = shelters?.filter(shelter =>
+  shelter.members.some(member => member._id === user?._id)
+  );
+
   return (
     <>
       <DropdownMenu>
@@ -132,6 +135,8 @@ function UserNav() {
               <Link to={"#"}>Trung tâm cứu hộ</Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
+          {!hasShelter && 
+          <>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
@@ -141,7 +146,17 @@ function UserNav() {
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
+
+              <Link to={"/shelter-request"}>Danh sách yêu cầu gia nhập và lời mời</Link>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          </>
+          }
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem asChild className="cursor-pointer">
               <Link to={`/profile`}>Hồ sơ cá nhân</Link>
+
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />

@@ -12,6 +12,15 @@ import AppContext from "@/context/AppContext";
 import axios from "axios"
 import useAuthAxios from "@/utils/authAxios";
 
+
+type GoongSuggestion = {
+  place_id: string;
+  description: string;
+};
+const GOONG_API_KEY = import.meta.env.VITE_GOONG_API_KEY;
+
+
+
 export default function EditProfile() {
   const [background, setBackground] = useState<File | null>(null);
   const [avatar, setAvatar] = useState<File | null>(null);
@@ -22,11 +31,18 @@ export default function EditProfile() {
   const [dob, setDob] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
+  const [location, setLocation] = useState({ lat: 0, lng: 0 });
   const [loading, setLoading] = useState(false);
   const { userProfile } = useContext(AppContext);
   const { setUserProfile, setUser } = useContext(AppContext);
   const [openAvatarModal, setOpenAvatarModal] = useState(false);
   const [openBackgroundModal, setOpenBackgroundModal] = useState(false);
+  const [addressSuggestions, setAddressSuggestions] = useState<GoongSuggestion[]>([]);
+  const [placeId, setPlaceId] = useState("");
+  const { userAPI } = useContext(AppContext);
+  const authAxios = useAuthAxios();
+
+
 
   useEffect(() => {
     if (userProfile) {
@@ -50,20 +66,20 @@ export default function EditProfile() {
       formData.append("dob", dob);
       formData.append("phoneNumber", phoneNumber);
       formData.append("address", address);
+      formData.append("location", JSON.stringify(location));
+
       if (avatar) formData.append("avatar", avatar);
       if (background) formData.append("background", background);
 
-      await axios.put(`http://localhost:9999/users/edit-profile`, formData, {
+      await authAxios.put(`${userAPI}/edit-profile`, formData, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      const updated = await axios.get(`http://localhost:9999/users/user-profile`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          "Content-Type": "multipart/form-data",
         },
       });
+
+      const updated = await authAxios.get(`${userAPI}/get-user`);
+
+      
       setUserProfile(updated.data);
       setUser(updated.data);
       toast.success("Cập nhật thông tin thành công!");
@@ -80,6 +96,76 @@ export default function EditProfile() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchAddressSuggestions = async (query: string) => {
+    if (!query.trim()) {
+      setAddressSuggestions([]);
+      return;
+    }
+    try {
+      const res = await axios.get("https://rsapi.goong.io/Place/AutoComplete", {
+        params: {
+          input: query,
+          api_key: GOONG_API_KEY,
+        },
+      });
+      setAddressSuggestions(res.data.predictions || []);
+    } catch (error) {
+      console.error("Autocomplete failed:", error);
+    }
+  };
+
+  const fetchPlaceDetail = async (place_id: string) => {
+    try {
+      const res = await axios.get("https://rsapi.goong.io/Place/Detail", {
+        params: {
+          place_id,
+          api_key: GOONG_API_KEY,
+        },
+      });
+      const result = res.data.result;
+      if (result?.formatted_address && result?.geometry?.location) {
+        setAddress(result.formatted_address);
+        setPlaceId(place_id);
+        setLocation({
+          lat: result.geometry.location.lat,
+          lng: result.geometry.location.lng,
+        });
+      }
+    } catch (error) {
+      console.error("Place Detail error:", error);
+    }
+  };
+
+  const detectCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      return alert("Trình duyệt không hỗ trợ định vị.");
+    }
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const res = await axios.get("https://rsapi.goong.io/Geocode", {
+            params: {
+              latlng: `${coords.latitude},${coords.longitude}`,
+              api_key: GOONG_API_KEY,
+              has_deprecated_administrative_unit: true,
+            },
+          });
+          const place = res.data.results?.[0];
+          if (place) {
+            setAddress(place.formatted_address);
+            setPlaceId(""); // reverse không có place_id
+          }
+        } catch (error) {
+          console.error("Reverse geocode error:", error);
+        }
+      },
+      (err) => {
+        console.error("Lỗi truy cập vị trí:", err);
+      },
+      { enableHighAccuracy: true }
+    );
   };
   return (
     <Card className="shadow-none border shadow-sm">
@@ -145,7 +231,15 @@ export default function EditProfile() {
           <Label htmlFor="dob" className="text-sm mb-1 block">
             Ngày sinh
           </Label>
-          <Input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="mt-1" />
+          <div className="relative">
+            <input
+              id="dob"
+              type="date"
+              value={dob}
+              onChange={(e) => setDob(e.target.value)}
+              className="mt-1 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
+            />
+          </div>
         </div>
 
         <div>
@@ -159,7 +253,36 @@ export default function EditProfile() {
           <Label htmlFor="address" className="text-sm mb-1 block">
             Địa chỉ
           </Label>
-          <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} className="mt-1" />
+          <Input
+            id="address"
+            value={address}
+            onChange={(e) => {
+              setAddress(e.target.value);
+              fetchAddressSuggestions(e.target.value);
+            }}
+            className="mt-1"
+          />
+          {addressSuggestions.length > 0 && (
+            <div className="border mt-1 rounded-md shadow-sm bg-white z-50 max-h-60 overflow-y-auto">
+              {addressSuggestions.map((sug) => (
+                <div
+                  key={sug.place_id}
+                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                  onClick={() => {
+                    fetchPlaceDetail(sug.place_id);
+                    setAddressSuggestions([]);
+                  }}
+                >
+                  {sug.description}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="mt-2">
+            <Button variant="outline" size="sm" onClick={detectCurrentLocation}>
+              📍 Lấy vị trí hiện tại
+            </Button>
+          </div>
         </div>
       </CardContent>
 
