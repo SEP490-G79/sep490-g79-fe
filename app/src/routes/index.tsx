@@ -45,7 +45,10 @@ function AppRoutes() {
       <Route path="/shelters" element={<Shelters />} />
       <Route path="/shelters/:shelterId" element={<ShelterPage />} />
       <Route path="/pet/:petId" element={<ViewPetDetails />} />
-      <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
+      <Route
+        path="/shelters/:shelterId/dashboard"
+        element={<ShelterDashboard />}
+      />
 
       <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
         <Route index element={<ShelterProfile />} />
