@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, CornerDownLeft } from "lucide-react";
+import { Trash2, CornerDownLeft, Check } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
 
@@ -59,7 +59,9 @@ export default function MultipleChoiceOption() {
           key={option.value}
           className={`
             flex items-center gap-4 px-2 py-1 rounded-sm border transition-all duration-200
-            ${option.isTrue ? "border-4 border-green-500" : ""}
+            border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground
+            dark:bg-input/30 dark:border-input dark:hover:bg-input/50
+            ${option.isTrue ? "border-4 " : ""}
           `}
         >
           <div className="flex items-center gap-4 flex-1">
@@ -91,6 +93,7 @@ export default function MultipleChoiceOption() {
 
           {/* Các nút action */}
           <div className="flex items-center gap-2">
+            {option.isTrue && (<Button disabled variant="link" className="text-green-500"><Check/></Button>)}
             <Button
               variant="link"
               size="icon"

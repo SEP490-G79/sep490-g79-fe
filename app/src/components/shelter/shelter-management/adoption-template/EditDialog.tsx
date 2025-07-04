@@ -26,12 +26,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pen, PenLine, PenLineIcon, Plus } from "lucide-react";
-import React, { useContext, useEffect } from "react";
+import { Pen, PenBoxIcon, PenLine, PenLineIcon, Plus } from "lucide-react";
+import React, { useContext, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { mockSpeciesList } from "@/types/Species";
+
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { useNavigate, useParams } from "react-router-dom";
@@ -43,6 +43,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { Species } from "@/types/Species";
+import axios from "axios";
 
 type Props = {
   adoptionTemplate: AdoptionTemplate | undefined;
@@ -57,10 +59,21 @@ export default function EditDialog({
 }: Props) {
   const { coreAPI, shelterTemplates, setShelterTemplates } =
     useContext(AppContext);
+    const [speciesList, setSpeciesList] = useState<Species[]>([]);
   const { shelterId } = useParams();
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    axios.get(`${coreAPI}/species/get-all`)
+    .then((res) => {
+      setSpeciesList(res.data);
+    })
+    .catch((err) => { 
+      console.error("Error fetching species:", err);
+      toast.error("Không thể tải danh sách loài. Vui lòng thử lại sau.");
+    });
+  }, []);
   const FormSchema = z.object({
     title: z.string().min(5, "Tiêu đề không được để trống."),
     species: z.string().min(1, "Chọn loài."),
@@ -115,8 +128,8 @@ export default function EditDialog({
       <Tooltip>
         <TooltipTrigger asChild>
           <DialogTrigger asChild>
-            <Button variant="ghost" className="hover:text-(--primary)">
-              <PenLine />
+            <Button variant="link" className="hover:text-(--primary)">
+              <PenBoxIcon className="h-full w-full " />
             </Button>
           </DialogTrigger>
         </TooltipTrigger>
@@ -168,8 +181,8 @@ export default function EditDialog({
                           <SelectValue placeholder="Chọn loài" />
                         </SelectTrigger>
                         <SelectContent>
-                          {mockSpeciesList.map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
+                          {speciesList.map((s) => (
+                            <SelectItem key={s._id} value={s._id}>
                               {s.name}
                             </SelectItem>
                           ))}

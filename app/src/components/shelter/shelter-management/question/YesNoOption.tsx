@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Trash2, CornerDownLeft } from "lucide-react";
+import { Trash2, CornerDownLeft, Check } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
 
@@ -37,9 +37,12 @@ export default function YesNoOption() {
       {options.map((option) => (
         <div
           key={option.value}
+          onClick={() => handleValueChange(option.value)}
           className={`
             flex items-center gap-4 px-2 py-1 rounded-sm border transition-all duration-200
-            ${option.isTrue ? "border-4 border-green-500" : ""}
+            bg-background shadow-xs hover:bg-accent hover:text-accent-foreground
+            dark:bg-input/30 dark:border-input dark:hover:bg-input/50 cursor-pointer
+            ${option.isTrue ? "border-4" : ""}
           `}
         >
           {/* Radio + Label */}
@@ -50,7 +53,13 @@ export default function YesNoOption() {
               className="cursor-pointer"
             />
             <span className="text-sm font-normal">{option.label}</span>
-            
+          </div>
+          <div className="flex items-center gap-2">
+            {option.isTrue && (
+              <Button disabled variant="link" className="text-green-500">
+                <Check />
+              </Button>
+            )}
           </div>
         </div>
       ))}

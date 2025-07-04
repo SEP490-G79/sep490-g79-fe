@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Trash2, CornerDownLeft } from "lucide-react";
+import { Trash2, CornerDownLeft, Check } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
 
@@ -22,16 +22,16 @@ export default function SingleChoiceOption() {
 
   const handleValueChange = (value: string) => {
     setSelectedValue(value);
-    setOptions(opts =>
-      opts.map(opt => ({
+    setOptions((opts) =>
+      opts.map((opt) => ({
         ...opt,
-        isTrue: opt.value === value
+        isTrue: opt.value === value,
       }))
     );
   };
 
   const handleDelete = (valueToDelete: string) => {
-    setOptions(opts => opts.filter(opt => opt.value !== valueToDelete));
+    setOptions((opts) => opts.filter((opt) => opt.value !== valueToDelete));
     if (selectedValue === valueToDelete) {
       handleValueChange("");
     }
@@ -40,7 +40,7 @@ export default function SingleChoiceOption() {
   const handleLabelChange = (value: string, newLabel: string) => {
     const trimmed = newLabel.trim();
     const duplicate = options.some(
-      opt =>
+      (opt) =>
         opt.value !== value &&
         opt.label.trim().toLowerCase() === trimmed.toLowerCase()
     );
@@ -49,8 +49,8 @@ export default function SingleChoiceOption() {
       toast.error("Không thể tạo option trùng lặp!");
       return;
     }
-    setOptions(opts =>
-      opts.map(opt =>
+    setOptions((opts) =>
+      opts.map((opt) =>
         opt.value === value ? { ...opt, label: trimmed } : opt
       )
     );
@@ -62,12 +62,14 @@ export default function SingleChoiceOption() {
       onValueChange={handleValueChange}
       className="space-y-2"
     >
-      {options.map(option => (
+      {options.map((option) => (
         <div
           key={option.value}
           className={`
             flex items-center gap-4 px-2 py-1 rounded-sm border transition-all duration-200
-            ${option.isTrue ? "border-4 border-green-500" : ""}
+            border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground
+            dark:bg-input/30 dark:border-input dark:hover:bg-input/50
+            ${option.isTrue ? "border-4 " : ""}
           `}
         >
           {/* Radio + Label */}
@@ -80,10 +82,10 @@ export default function SingleChoiceOption() {
             <Input
               type="text"
               defaultValue={option.label}
-              onKeyDown={e => {
+              onKeyDown={(e) => {
                 if (e.key === "Enter") e.currentTarget.blur();
               }}
-              onBlur={e =>
+              onBlur={(e) =>
                 handleLabelChange(option.value, e.currentTarget.value)
               }
               className="
@@ -96,6 +98,8 @@ export default function SingleChoiceOption() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            {option.isTrue && (<Button disabled variant="link" className="text-green-500"><Check/></Button>)}
+
             <Button
               variant="link"
               size="icon"
