@@ -17,7 +17,7 @@ import {
   ToggleLeft,
   Trash,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TextOption from "./TextOption";
 import SingleChoiceOption from "./SingleChoiceOption";
 import YesNoOption from "./YesNoOption";
@@ -30,33 +30,62 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Value } from "@radix-ui/react-select";
+import type { Question } from "@/types/Question";
 
-export function QuestionCard({}) {
+type Props = {
+  question: Question;
+  setQuestionsList: React.Dispatch<React.SetStateAction<Question[]>>;
+};
+
+export function QuestionCard({ question, setQuestionsList }: Props) {
   const [isOpen, setIsOpen] = useState(false);
-  const [questionType, setQuestionType] = useState("");
-  
+  const [selectedQuestion, setSelectedQuestion] = useState<Question>(question);
+  useEffect(() => {
+    setQuestionsList((prev) =>
+      prev.map((q) => (q._id == selectedQuestion._id ? selectedQuestion : q))
+    );
+  }, [selectedQuestion, setQuestionsList]);
   const questionTypes = [
     {
-      value: "text",
+      value: "TEXT",
       Icon: <Text />,
       component: <TextOption />,
     },
     {
-      value: "single",
+      value: "SINGLECHOICE",
       Icon: <CircleCheckBig />,
-      component: <SingleChoiceOption />,
+      component: (
+        <SingleChoiceOption
+          question={selectedQuestion}
+          setSelectedQuestion={setSelectedQuestion}
+        />
+      ),
     },
     {
-      value: "multiple",
+      value: "MULTIPLECHOICE",
       Icon: <SquareCheckBig />,
-      component: <MultipleChoiceOption />,
+      component: (
+        <MultipleChoiceOption
+          question={selectedQuestion}
+          setSelectedQuestion={setSelectedQuestion}
+        />
+      ),
     },
     {
-      value: "yesno",
+      value: "YESNO",
       Icon: <ToggleLeft />,
-      component: <YesNoOption />,
+      component: (
+        <YesNoOption
+          question={selectedQuestion}
+          setSelectedQuestion={setSelectedQuestion}
+        />
+      ),
     },
   ];
+
+  const handleDelete = (deleteID: string) => {
+    setQuestionsList((prev) => prev.filter((q) => q._id != deleteID));
+  };
   return (
     <Collapsible
       open={isOpen}
@@ -88,6 +117,7 @@ export function QuestionCard({}) {
             variant="ghost"
             size="icon"
             className="size-8 text-(--destructive) hover:text-(--destructive) cursor-pointer "
+            onClick={() => handleDelete(selectedQuestion._id)}
           >
             <Trash />
           </Button>
@@ -104,16 +134,22 @@ export function QuestionCard({}) {
         </div>
       </div>
       <CollapsibleContent className="flex flex-col gap-2 px-6">
-        {!questionType ? (
+        {!selectedQuestion.type ? (
           <div className="px-2 grid grid-cols-2 md:grid-cols-4 gap-1">
             {questionTypes.map((type) => (
               <Button
+                key={type.value}
                 variant="outline"
                 className="
                 justify-start w-full
                
                  "
-                onClick={() => setQuestionType(type.value)}
+                onClick={() =>
+                  setSelectedQuestion({
+                    ...selectedQuestion,
+                    type: type.value.toUpperCase(),
+                  })
+                }
               >
                 <span className="text-(--foregrounds) flex gap-2">
                   {" "}
@@ -125,7 +161,10 @@ export function QuestionCard({}) {
           </div>
         ) : (
           <>
-            {questionTypes.find((type) => type.value == questionType)?.component}
+            {
+              questionTypes.find((type) => type.value == selectedQuestion.type)
+                ?.component
+            }
           </>
         )}
       </CollapsibleContent>

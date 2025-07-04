@@ -2,35 +2,37 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, CornerDownLeft, Check } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 import { toast } from "sonner";
+import type { Option, Question } from "@/types/Question";
 
-interface Option {
-  value: string;
-  label: string;
-  isTrue: boolean;
-}
 
-export default function MultipleChoiceOption() {
+type Props = {
+  question: Question;
+  setSelectedQuestion:React.Dispatch<
+  React.SetStateAction<Question>>
+};
+export default function MultipleChoiceOption({ question, setSelectedQuestion }: Props) {
   const [options, setOptions] = React.useState<Option[]>([
-    { value: "1", label: "Option 1", isTrue: false },
-    { value: "2", label: "Option 2", isTrue: false },
-    { value: "3", label: "Option 3", isTrue: false },
-    { value: "4", label: "Option 4", isTrue: false },
+    ...question.options
   ]);
+  useEffect(()=>{
+    setSelectedQuestion({...question,options:options})
+
+  },[])
 
   // Toggle đáp án đúng (isTrue) cho multi-choice
   const handleTrueToggle = (value: string) => {
     setOptions((opts) =>
       opts.map((opt) =>
-        opt.value === value ? { ...opt, isTrue: !opt.isTrue } : opt
+        opt.title == value ? { ...opt, isTrue: !opt.isTrue } : opt
       )
     );
   };
 
   // Xóa option
   const handleDelete = (valueToDelete: string) => {
-    setOptions((opts) => opts.filter((opt) => opt.value !== valueToDelete));
+    setOptions((opts) => opts.filter((opt) => opt.title !== valueToDelete));
   };
 
   // Đổi label + kiểm tra trùng
@@ -38,8 +40,8 @@ export default function MultipleChoiceOption() {
     const trimmed = newLabel.trim();
     const duplicate = options.some(
       (opt) =>
-        opt.value !== value &&
-        opt.label.trim().toLowerCase() === trimmed.toLowerCase()
+        opt.title !== value &&
+        opt.title.trim().toLowerCase() === trimmed.toLowerCase()
     );
     if (duplicate) {
       toast.error("Không thể tạo option trùng lặp!");
@@ -47,7 +49,7 @@ export default function MultipleChoiceOption() {
     }
     setOptions((opts) =>
       opts.map((opt) =>
-        opt.value === value ? { ...opt, label: trimmed } : opt
+        opt.title === value ? { ...opt, label: trimmed } : opt
       )
     );
   };
@@ -56,7 +58,7 @@ export default function MultipleChoiceOption() {
     <div className="space-y-2">
       {options.map((option) => (
         <div
-          key={option.value}
+          key={option.title}
           className={`
             flex items-center gap-4 px-2 py-1 rounded-sm border transition-all duration-200
             border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground
@@ -67,21 +69,21 @@ export default function MultipleChoiceOption() {
           <div className="flex items-center gap-4 flex-1">
             {/* Checkbox để đánh dấu đúng */}
             <Checkbox
-              id={option.value}
+              id={option.title}
               checked={option.isTrue}
-              onCheckedChange={() => handleTrueToggle(option.value)}
+              onCheckedChange={() => handleTrueToggle(option.title)}
               className="cursor-pointer"
             />
 
             {/* Label có thể edit */}
             <Input
               type="text"
-              defaultValue={option.label}
+              defaultValue={option.title}
               onKeyDown={(e) => {
                 if (e.key === "Enter") e.currentTarget.blur();
               }}
               onBlur={(e) =>
-                handleLabelChange(option.value, e.currentTarget.value)
+                handleLabelChange(option.title, e.currentTarget.value)
               }
               className="
               text-sm font-normal bg-transparent border-none outline-none shadow-none dark:bg-transparent
@@ -97,7 +99,7 @@ export default function MultipleChoiceOption() {
             <Button
               variant="link"
               size="icon"
-              onClick={() => handleDelete(option.value)}
+              onClick={() => handleDelete(option.title)}
               className="text-[var(--destructive)] hover:text-[var(--destructive)] cursor-pointer"
             >
               <Trash2 />

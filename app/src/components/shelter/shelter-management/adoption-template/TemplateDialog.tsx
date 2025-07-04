@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, LucideArrowLeft, PenLine, Plus, PlusCircle } from "lucide-react";
+import { Eye, LucideArrowLeft, PenLine, Plus, PlusCircle, SaveAllIcon } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import QuestionCard from "../question/QuestionCard";
@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import { Tooltip, TooltipContent } from "@/components/ui/tooltip";
+import type { Question } from "@/types/Question";
 
 export default function TemplateDialog() {
   const { shelterId, templateId } = useParams<{
@@ -28,6 +29,7 @@ export default function TemplateDialog() {
   const { coreAPI, shelterTemplates, setShelterTemplates } =
     useContext(AppContext);
   const [adoptionTemplate, setAdoptionTemplate] = useState<AdoptionTemplate>();
+  const [questionsList, setQuestionsList] = useState<Question[]>([]);
   const authAxios = useAuthAxios();
 
   useEffect(() => {
@@ -37,9 +39,11 @@ export default function TemplateDialog() {
       .then((res) => {
         const templates: AdoptionTemplate[] = res.data;
         setShelterTemplates(templates);
+
         const found = templates.find((t) => t._id === templateId);
         if (found) {
           setAdoptionTemplate(found);
+          setQuestionsList([...found.questions]);
         } else {
           toast.error("Không tìm thấy mẫu nhận nuôi");
         }
@@ -50,8 +54,24 @@ export default function TemplateDialog() {
       });
   }, [coreAPI, shelterId, templateId]);
 
-  
+  const handleCreateQuestion = () => {
+    const now = new Date();
+    const newQuestion: Question = {
+      _id: "nf38nfgrfe", 
+      title: `Câu hỏi ${questionsList.length + 1}`,
+      priority: "none", 
+      options: [],
+      status: "active",
+      type: "",
+      createdAt: now,
+      updatedAt: now,
+    };
 
+    setQuestionsList((prev) => [...prev, newQuestion]);
+    
+  };
+  // console.log(questionsList);
+  
   return (
     <div className="w-full flex flex-wrap">
       <Breadcrumb className="basis-full mb-3">
@@ -107,6 +127,7 @@ export default function TemplateDialog() {
                       <Button
                         variant={"ghost"}
                         className="text-(--primary) hover:text-(--primary) hover:border-(--primary) "
+                        onClick={handleCreateQuestion}
                       >
                         <Plus strokeWidth={3} />
                       </Button>
@@ -122,8 +143,19 @@ export default function TemplateDialog() {
             <Separator />
 
             <div className="basis-full flex flex-wrap">
-              <QuestionCard />
+              {questionsList?.map((question: Question) => {
+                return (
+                  <QuestionCard
+                    question={question}
+                    setQuestionsList={setQuestionsList}
+                  />
+                );
+              })}
+              <div className="flex basis-full justify-end">
+                  <Button variant={"default"}><SaveAllIcon/> Lưu</Button>
+              </div>
             </div>
+
           </TabsContent>
 
           <TabsContent value="preview">

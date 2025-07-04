@@ -1,59 +1,101 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import type { Option, Question } from "@/types/Question";
 import { Trash2, CornerDownLeft, Check } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-interface Option {
-  value: string;
-  label: string;
-  isTrue: boolean;
-}
+type Props = {
+  question: Question;
+  setSelectedQuestion: React.Dispatch<React.SetStateAction<Question>>;
+};
+export default function SingleChoiceOption({
+  question,
+  setSelectedQuestion,
+}: Props) {
+  const defaultOptions: Option[] = [
+    {
+      title: "Nhập câu trả lời",
+      isTrue: false,
+    },
+  ];
+  const [options, setOptions] = useState<Option[]>(
+    question.options && question.options.length > 0
+      ? question.options
+      : defaultOptions
+  );
 
-export default function SingleChoiceOption() {
-  const [selectedValue, setSelectedValue] = React.useState("");
-  const [options, setOptions] = React.useState<Option[]>([
-    { value: "1", label: "Option 1", isTrue: false },
-    { value: "2", label: "Option 2", isTrue: false },
-    { value: "3", label: "Option 3", isTrue: false },
-    { value: "4", label: "Option 4", isTrue: false },
-  ]);
+  const [selectedValue, setSelectedValue] = useState(
+    options.find((o) => o.isTrue)?.title || ""
+  );
 
-  const handleValueChange = (value: string) => {
-    setSelectedValue(value);
-    setOptions((opts) =>
-      opts.map((opt) => ({
-        ...opt,
-        isTrue: opt.value === value,
-      }))
-    );
-  };
-
+  // delete option
   const handleDelete = (valueToDelete: string) => {
-    setOptions((opts) => opts.filter((opt) => opt.value !== valueToDelete));
-    if (selectedValue === valueToDelete) {
-      handleValueChange("");
-    }
+    const updatedOptions = options.filter((opt) => opt.title !== valueToDelete);
+
+    const newSelected = selectedValue == valueToDelete ? "" : selectedValue;
+
+    setOptions(updatedOptions);
+    setSelectedValue(newSelected);
+
+    // Update selected question
+    setSelectedQuestion({
+      ...question,
+      type: "SINGLECHOICE",
+      options: updatedOptions.map((opt) => ({
+        title: opt.title,
+        isTrue: opt.title == newSelected,
+      })),
+    });
   };
 
-  const handleLabelChange = (value: string, newLabel: string) => {
-    const trimmed = newLabel.trim();
-    const duplicate = options.some(
-      (opt) =>
-        opt.value !== value &&
-        opt.label.trim().toLowerCase() === trimmed.toLowerCase()
-    );
-    if (duplicate) {
-      // Bạn có thể thay alert bằng toast hoặc inline error message
+  // select option
+  const handleValueChange = (value: string) => {
+    const updatedOptions = options.map((opt) => ({
+      ...opt,
+      isTrue: opt.title == value,
+    }));
+    setOptions(updatedOptions);
+    setSelectedValue(value);
+
+    // Update selected question
+    setSelectedQuestion({
+      ...question,
+      type: "SINGLECHOICE",
+      options: updatedOptions,
+    });
+  };
+
+  // update title
+  const handleLabelChange = (oldTitle: string, newRaw: string) => {
+    const newTitle = newRaw.trim() || oldTitle;
+    if (
+      options.some(
+        (opt) =>
+          opt.title !== oldTitle &&
+          opt.title.trim().toLowerCase() === newTitle.toLowerCase()
+      )
+    ) {
       toast.error("Không thể tạo option trùng lặp!");
       return;
     }
-    setOptions((opts) =>
-      opts.map((opt) =>
-        opt.value === value ? { ...opt, label: trimmed } : opt
-      )
+    const updatedOptions = options.map((opt) =>
+      opt.title == oldTitle ? { ...opt, title: newTitle } : opt
     );
+    setOptions(updatedOptions);
+
+    // upate selected value by title
+    if (oldTitle == selectedValue) {
+      setSelectedValue(newTitle);
+    }
+
+    // update selected question
+    setSelectedQuestion({
+      ...question,
+      type: "SINGLECHOICE",
+      options: updatedOptions,
+    });
   };
 
   return (
@@ -64,7 +106,7 @@ export default function SingleChoiceOption() {
     >
       {options.map((option) => (
         <div
-          key={option.value}
+          key={option.title}
           className={`
             flex items-center gap-4 px-2 py-1 rounded-sm border transition-all duration-200
             border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground
@@ -75,18 +117,18 @@ export default function SingleChoiceOption() {
           {/* Radio + Label */}
           <div className="flex items-center gap-4 flex-1">
             <RadioGroupItem
-              value={option.value}
-              id={option.value}
+              value={option.title}
+              id={option.title}
               className="cursor-pointer"
             />
             <Input
               type="text"
-              defaultValue={option.label}
+              defaultValue={option.title}
               onKeyDown={(e) => {
                 if (e.key === "Enter") e.currentTarget.blur();
               }}
               onBlur={(e) =>
-                handleLabelChange(option.value, e.currentTarget.value)
+                handleLabelChange(option.title, e.currentTarget.value)
               }
               className="
                 text-sm font-normal bg-transparent border-none outline-none shadow-none dark:bg-transparent
@@ -98,12 +140,16 @@ export default function SingleChoiceOption() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {option.isTrue && (<Button disabled variant="link" className="text-green-500"><Check/></Button>)}
+            {option.isTrue && (
+              <Button disabled variant="link" className="text-green-500">
+                <Check />
+              </Button>
+            )}
 
             <Button
               variant="link"
               size="icon"
-              onClick={() => handleDelete(option.value)}
+              onClick={() => handleDelete(option.title)}
               className="text-[var(--destructive)] hover:text-[var(--destructive)] cursor-pointer"
             >
               <Trash2 />
@@ -112,9 +158,7 @@ export default function SingleChoiceOption() {
               variant="link"
               size="icon"
               className="text-[var(--muted-foreground)] hover:text-[var(--muted)] cursor-pointer"
-              onClick={() => {
-                /* Ví dụ: undo hoặc duplicate nếu cần */
-              }}
+              onClick={() => {}}
             >
               <CornerDownLeft className="h-4 w-4" />
             </Button>
