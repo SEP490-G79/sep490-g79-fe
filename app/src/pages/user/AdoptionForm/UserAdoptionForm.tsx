@@ -13,11 +13,10 @@ import type { Question } from "@/types/Question";
 
 const UserAdoptionFormPage = () => {
   const getInitialAnswers = (): Record<string, string | string[]> => {
-    if (!id) return {};
+    if (!id || submissionId) return {};
     const saved = localStorage.getItem(`adoptionFormAnswers-${id}`);
     return saved ? JSON.parse(saved) : {};
   };
-
   const { id } = useParams();
   const { coreAPI, userProfile } = useContext(AppContext);
   const [loading, setLoading] = useState(true);
@@ -26,30 +25,24 @@ const UserAdoptionFormPage = () => {
   const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [submission, setSubmission] = useState<any>(null);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>(getInitialAnswers);
-
-
-
-  console.log("answers user", answers);
-
+  const [hasCheckedSubmitted, setHasCheckedSubmitted] = useState(false);
 
 
   const getInitialStep = () => {
-    if (!id) return 1;
+    if (!id || submissionId) return 1;
     const saved = localStorage.getItem(`adoptionFormStep-${id}`);
     return saved ? Number(saved) : 1;
   };
   const [step, setStep] = useState<number>(getInitialStep);
   const getInitialAgreed = () => {
-    if (!id) return false;
+    if (!id || submissionId) return false;
     const saved = localStorage.getItem(`adoptionFormAgreed-${id}`);
     return saved ? JSON.parse(saved) : false;
   };
   const [agreed, setAgreed] = useState<boolean>(getInitialAgreed);
-
-
-
   const next = () => setStep((prev) => prev + 1);
   const back = () => setStep((prev) => prev - 1);
+
   const onAgree = () => {
     setAgreed(true);
   };
@@ -67,74 +60,68 @@ const UserAdoptionFormPage = () => {
         const res = await authAxios.get(`${coreAPI}/pets/get-adoptionForms-by-petId/${id}`);
         setForm(res.data);
 
-        // Khởi tạo câu trả lời mặc định
-        const defaultAnswers: Record<string, string | string[]> = {};
-        res.data.questions.forEach((q: Question) => {
-          defaultAnswers[q._id] = q.type === "MULTIPLECHOICE" ? [] : "";
-        });
-        // Lấy answers đã lưu
-        const savedAnswers = localStorage.getItem(`adoptionFormAnswers-${id}`);
-        if (savedAnswers) {
-          setAnswers(JSON.parse(savedAnswers));
-        } else {
-          setAnswers(defaultAnswers);
-        }
-
-        // Lấy trạng thái agreed
-        const savedAgreed = localStorage.getItem(`adoptionFormAgreed-${id}`);
-        if (savedAgreed) {
-          setAgreed(JSON.parse(savedAgreed));
-        }
-
-        // Gọi API kiểm tra đã nộp chưa
+        // Kiểm tra đã nộp chưa
         const checkRes = await authAxios.post(
           `${coreAPI}/pets/${id}/adoption-submissions/check-user-submitted`,
           { adoptionFormId: res.data._id }
         );
+
         if (checkRes.data.submitted) {
           setStep(3);
           setSubmissionId(checkRes.data.submissionId);
+          setAgreed(true);
         } else {
-          // Nếu chưa nộp thì lấy step từ localStorage
+          const savedAnswers = localStorage.getItem(`adoptionFormAnswers-${id}`);
           const savedStep = localStorage.getItem(`adoptionFormStep-${id}`);
-          if (savedStep) {
-            setStep(Number(savedStep));
-          }
+          const savedAgreed = localStorage.getItem(`adoptionFormAgreed-${id}`);
+
+          const defaultAnswers: Record<string, string | string[]> = {};
+          res.data.questions.forEach((q: Question) => {
+            defaultAnswers[q._id] = q.type === "MULTIPLECHOICE" ? [] : "";
+          });
+
+          setAnswers(savedAnswers ? JSON.parse(savedAnswers) : defaultAnswers);
+          setStep(savedStep ? Number(savedStep) : 1);
+          setAgreed(savedAgreed ? JSON.parse(savedAgreed) : false);
         }
       } catch (err) {
         toast.error("Không thể lấy thông tin đơn xin nhận nuôi");
       } finally {
         setLoading(false);
+        setHasCheckedSubmitted(true); // ✅ Đánh dấu đã check xong
       }
     };
 
     fetchData();
   }, [id]);
 
+
   // Ghi lại mỗi khi step thay đổi
   useEffect(() => {
-    if (id) {
+    if (id && hasCheckedSubmitted && !submissionId) {
       localStorage.setItem(`adoptionFormStep-${id}`, step.toString());
     }
-  }, [step, id]);
-  // Lưu agreed
+  }, [step, id, submissionId, hasCheckedSubmitted]);
+
   useEffect(() => {
-    if (id) {
+    if (id && hasCheckedSubmitted && !submissionId) {
       localStorage.setItem(`adoptionFormAgreed-${id}`, JSON.stringify(agreed));
     }
-  }, [agreed, id]);
+  }, [agreed, id, submissionId, hasCheckedSubmitted]);
 
-  // Lưu answers
   useEffect(() => {
-    if (id) {
+    if (id && hasCheckedSubmitted && !submissionId) {
       localStorage.setItem(`adoptionFormAnswers-${id}`, JSON.stringify(answers));
     }
-  }, [answers, id]);
+  }, [answers, id, submissionId, hasCheckedSubmitted]);
 
 
-  if (loading || !form) {
+
+
+  if (loading || !form || !hasCheckedSubmitted) {
     return <div className="text-center mt-10">Đang tải dữ liệu thú cưng...</div>;
   }
+
 
   const steps = ["Quy định chung", "Đăng ký nhận nuôi", "Chờ phản hồi", "Đơn cam kết"];
 
@@ -168,8 +155,6 @@ const UserAdoptionFormPage = () => {
     </div>
   );
 
-console.log("ngu",form.questions);
-
 
   const renderCurrentStep = () => {
     switch (step) {
@@ -180,6 +165,7 @@ console.log("ngu",form.questions);
           onAgree={onAgree}
           setAgreed={setAgreed}
           onNext={next}
+          readOnly={!!submissionId}
           onBack={back} />;
       case 2:
         return (

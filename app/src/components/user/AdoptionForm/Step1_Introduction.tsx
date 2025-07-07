@@ -21,9 +21,10 @@ interface Step1Props {
   onNext: () => void;
   onBack: () => void;
   setAgreed: (val: boolean) => void;
+  readOnly?: boolean;
 }
 
-const Step1_Introduction = ({ form, agreed, onAgree, onNext, onBack, setAgreed }: Step1Props) => {
+const Step1_Introduction = ({ form, agreed, onAgree, onNext, onBack, setAgreed, readOnly }: Step1Props) => {
   const pet = form.pet;
   const [showAgreementError, setShowAgreementError] = useState(false);
 
@@ -87,18 +88,20 @@ const Step1_Introduction = ({ form, agreed, onAgree, onNext, onBack, setAgreed }
                 id="agree-checkbox"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
-                className="mt-1"
+                disabled={readOnly}
+                className="mt-1  "
               />
               <label htmlFor="agree-checkbox" className="text-sm">
                 Tôi đồng ý với các điều khoản và điều kiện nhận nuôi thú cưng.
               </label>
             </div>
 
-            {showAgreementError && (
+            {!agreed && showAgreementError && (
               <p className="text-sm text-red-500 italic">
                 Bạn cần đồng ý với điều khoản trước khi tiếp tục.
               </p>
             )}
+
 
             <Button onClick={handleNextClick}>Tiếp theo</Button>
           </div>

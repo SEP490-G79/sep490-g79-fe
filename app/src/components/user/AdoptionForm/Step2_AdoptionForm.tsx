@@ -51,8 +51,10 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
 
     const handleAnswerChange = (qid: string, value: string | string[]) => {
         onAnswerChange(qid, value);
-        setErrors((prev) => ({ ...prev, [qid]: false }));
+        const question = questions.find(q => q._id === qid);
+        if (question) validateQuestion(question, value);
     };
+
     const clearAdoptionFormCache = (petId: string) => {
         localStorage.removeItem(`adoptionFormStep-${petId}`);
         localStorage.removeItem(`adoptionFormAnswers-${petId}`);
@@ -106,7 +108,7 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
             );
 
             toast.success("Nộp đơn thành công");
-            clearAdoptionFormCache(pet._id);
+            clearAdoptionFormCache(form.pet._id);
             onNext(res.data._id);
         } catch (error) {
             toast.error("Có lỗi xảy ra khi nộp đơn");
@@ -127,21 +129,23 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
     };
 
     // kiểm tra câu hỏi bắt buộc
-    const validateQuestion = (question: Question) => {
-        if (question.priority === "none") return;
-
-        const value = answers[question._id];
+    const validateQuestion = (question: Question, value?: string | string[]) => {
+        const answer = value !== undefined ? value : answers[question._id];
 
         const isEmpty =
-            (question.type === "TEXT" && (!value || (value as string).trim() === "")) ||
-            (question.type === "SINGLECHOICE" && !value) ||
-            (question.type === "MULTIPLECHOICE" && (!Array.isArray(value) || value.length === 0));
+            (question.priority !== "none") &&
+            (
+                (question.type === "TEXT" && (!answer || (answer as string).trim() === "")) ||
+                (question.type === "SINGLECHOICE" && !answer) ||
+                (question.type === "MULTIPLECHOICE" && (!Array.isArray(answer) || answer.length === 0))
+            );
 
         setErrors((prev) => ({
             ...prev,
             [question._id]: isEmpty,
         }));
     };
+
 
     return (
         <div className="flex justify-center">
@@ -241,13 +245,16 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                                                     name={q._id}
                                                     value={opt.title}
                                                     checked={checked}
+
                                                     disabled={readOnly}
                                                     onChange={() => {
                                                         if (!readOnly) {
                                                             if (q.type === "SINGLECHOICE") {
                                                                 handleSingleChange(q._id, opt.title);
+
                                                             } else if (q.type === "MULTIPLECHOICE") {
                                                                 handleMultipleChange(q._id, opt.title);
+
                                                             }
                                                         }
                                                     }}
@@ -261,13 +268,16 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
 
                                     {q.type === "TEXT" && (
                                         readOnly ? (
-                                            <p className="text-sm text-gray-700 whitespace-pre-line">
+                                            <p className="text-sm dark:text-white whitespace-pre-line">
                                                 {answers[q._id] || <i>Không có câu trả lời</i>}
                                             </p>
                                         ) : (
                                             <textarea
-                                                className="w-full border border-gray-300 rounded p-2"
-                                                rows={2}
+                                                className="w-full border-0 border-b border-gray-300 
+      focus:border-b-2 focus:border-primary 
+      outline-none p-2 transition-all duration-200 ease-in-out"
+                                                rows={1}
+
                                                 value={answers[q._id] || ""}
                                                 onChange={(e) => handleAnswerChange(q._id, e.target.value)}
                                                 placeholder="Hãy nhập câu trả lời"
@@ -330,6 +340,7 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
+
 
 
                 </div>
