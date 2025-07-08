@@ -55,32 +55,30 @@ function FilterSection({ onChange, pets, userProfile }: FilterSectionProps) {
 
   const availablePets = pets.filter(p => p.status === "available");
 
-  const hasValidPrices = availablePets.some(p => p.tokenMoney != null);
+const hasValidPrices = availablePets.some(p => p.tokenMoney != null);
 
-  const roundToNearest = (value: number, step: number) => Math.round(value / step) * step;
-  const step = 10000;
-  const maxPrice = Math.max(...availablePets.map(p => p.tokenMoney ?? 0));
-  const low = roundToNearest(maxPrice / 3, step);
-  const mid = roundToNearest((2 * maxPrice) / 3, step);
-
-  const priceOptions = hasValidPrices
-    ? [
+const priceOptions = hasValidPrices
+  ? [
       { label: "Tất cả", range: [0, Infinity] as [number, number] },
       { label: "Miễn phí", range: [0, 0] as [number, number] },
       {
-        label: `Dưới ${low.toLocaleString()}đ`,
-        range: [0, low] as [number, number],
+        label: "Dưới 200,000đ",
+        range: [1000, 200_000] as [number, number],
       },
       {
-        label: `${low.toLocaleString()}đ - ${mid.toLocaleString()}đ`,
-        range: [low, mid] as [number, number],
+        label: "200,000đ - 500,000đ",
+        range: [200_000, 500_000] as [number, number],
       },
       {
-        label: `Trên ${mid.toLocaleString()}đ`,
-        range: [mid, Infinity] as [number, number],
+        label: "500,000đ - 1,000,000đ",
+        range: [500_000, 1_000_000] as [number, number],
+      },
+      {
+        label: "Trên 1,000,000đ",
+        range: [1_000_000, Infinity] as [number, number],
       },
     ]
-    : [
+  : [
       { label: "Tất cả", range: [0, Infinity] as [number, number] },
     ];
   useEffect(() => {

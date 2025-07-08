@@ -1,12 +1,10 @@
 import type { Question } from "./Question";
+import type { Pet } from "./Pet";
 
-export interface Pet {
-  _id: string;
-  [key: string]: any;
-}
 
 
 export interface AdoptionForm {
+
   _id: string;
   title: string;
   pet: Pet;
