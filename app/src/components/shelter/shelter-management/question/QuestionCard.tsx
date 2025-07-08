@@ -38,7 +38,7 @@ type Props = {
 };
 
 export function QuestionCard({ question, setQuestionsList }: Props) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [selectedQuestion, setSelectedQuestion] = useState<Question>(question);
   useEffect(() => {
     setQuestionsList((prev) =>
@@ -99,7 +99,7 @@ export function QuestionCard({ question, setQuestionsList }: Props) {
           </Button>
           <Input
             type="text"
-            defaultValue="Question titles"
+            defaultValue={question.title}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.currentTarget.blur();

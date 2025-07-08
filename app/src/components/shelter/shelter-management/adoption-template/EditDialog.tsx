@@ -215,10 +215,10 @@ export default function EditDialog({
 
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
+                <Button variant="outline">Hủy</Button>
               </DialogClose>
               <Button className="cursor-pointer" type="submit">
-                Save changes
+                Lưu
               </Button>
             </DialogFooter>
           </form>

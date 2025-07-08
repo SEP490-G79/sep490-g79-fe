@@ -16,7 +16,7 @@ export default function SingleChoiceOption({
 }: Props) {
   const defaultOptions: Option[] = [
     {
-      title: "Nhập câu trả lời",
+      title: "",
       isTrue: false,
     },
   ];
@@ -29,6 +29,37 @@ export default function SingleChoiceOption({
   const [selectedValue, setSelectedValue] = useState(
     options.find((o) => o.isTrue)?.title || ""
   );
+
+  //create option
+  const handleCreateOption = () => {
+    const newOptionTitle = ``;
+    if (options.some((opt) => opt.title.trim() == "")) {
+      toast.error("Vui lòng điền tất cả các câu trả lời trước khi thêm.");
+      return;
+    }
+    if (
+      options.some(
+        (opt) =>
+          opt.title.trim().toLowerCase() == newOptionTitle.trim().toLowerCase()
+      )
+    ) {
+      toast.error("Câu trả lời không được trùng lặp!");
+      return;
+    }
+    const newOption: Option = {
+      title: newOptionTitle,
+      isTrue: false,
+    };
+    const updatedOptions = [...options, newOption];
+    setOptions(updatedOptions);
+
+    // Update selected question
+    setSelectedQuestion({
+      ...question,
+      type: "SINGLECHOICE",
+      options: updatedOptions,
+    });
+  };
 
   // delete option
   const handleDelete = (valueToDelete: string) => {
@@ -69,28 +100,38 @@ export default function SingleChoiceOption({
 
   // update title
   const handleLabelChange = (oldTitle: string, newRaw: string) => {
-    const newTitle = newRaw.trim() || oldTitle;
+    const newTitleTrim = newRaw.trim();
+    if (newTitleTrim.length == 0) {
+      toast.error("Nội dung câu trả lời  không được để trống!");
+      // revert state
+      setOptions((prev) =>
+        prev.map((opt) =>
+          opt.title == oldTitle ? { ...opt, title: oldTitle } : opt
+        )
+      );
+      return;
+    }
     if (
       options.some(
         (opt) =>
           opt.title !== oldTitle &&
-          opt.title.trim().toLowerCase() === newTitle.toLowerCase()
+          opt.title.toLowerCase() === newTitleTrim.toLowerCase()
       )
     ) {
       toast.error("Không thể tạo option trùng lặp!");
+      // revert state
+      setOptions((prev) =>
+        prev.map((opt) =>
+          opt.title === oldTitle ? { ...opt, title: oldTitle } : opt
+        )
+      );
       return;
     }
     const updatedOptions = options.map((opt) =>
-      opt.title == oldTitle ? { ...opt, title: newTitle } : opt
+      opt.title === oldTitle ? { ...opt, title: newTitleTrim } : opt
     );
     setOptions(updatedOptions);
-
-    // upate selected value by title
-    if (oldTitle == selectedValue) {
-      setSelectedValue(newTitle);
-    }
-
-    // update selected question
+    if (selectedValue === oldTitle) setSelectedValue(newTitleTrim);
     setSelectedQuestion({
       ...question,
       type: "SINGLECHOICE",
@@ -124,12 +165,35 @@ export default function SingleChoiceOption({
             <Input
               type="text"
               defaultValue={option.title}
+              autoFocus={option.title == ""}
+              placeholder="Nhập câu trả lời"
+              onFocus={(e) => e.currentTarget.select()}
               onKeyDown={(e) => {
                 if (e.key === "Enter") e.currentTarget.blur();
               }}
-              onBlur={(e) =>
-                handleLabelChange(option.title, e.currentTarget.value)
-              }
+              onBlur={(e) => {
+                const raw = e.currentTarget.value;
+                const trimmed = raw.trim();
+                // empty check
+                if (trimmed == "") {
+                  toast.error("Nội dung câu trả lời  không được để trống!");
+                  // revert UI
+                  e.currentTarget.value = e.currentTarget.defaultValue;
+                  return;
+                }
+                // duplicate check
+                if (
+                  options.some(
+                    (opt) => opt.title !== option.title && opt.title.toLowerCase() === trimmed.toLowerCase()
+                  )
+                ) {
+                  toast.error("Không thể tạo option trùng lặp!");
+                  e.currentTarget.value = e.currentTarget.defaultValue;
+                  return;
+                }
+                // valid
+                handleLabelChange(option.title, raw);
+              }}
               className="
                 text-sm font-normal bg-transparent border-none outline-none shadow-none dark:bg-transparent
                 cursor-pointer hover:bg-[var(--secondary-foreground)]
@@ -158,7 +222,7 @@ export default function SingleChoiceOption({
               variant="link"
               size="icon"
               className="text-[var(--muted-foreground)] hover:text-[var(--muted)] cursor-pointer"
-              onClick={() => {}}
+              onClick={handleCreateOption}
             >
               <CornerDownLeft className="h-4 w-4" />
             </Button>

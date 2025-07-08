@@ -6,7 +6,14 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, LucideArrowLeft, PenLine, Plus, PlusCircle, SaveAllIcon } from "lucide-react";
+import {
+  Eye,
+  LucideArrowLeft,
+  PenLine,
+  Plus,
+  PlusCircle,
+  SaveAllIcon,
+} from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import QuestionCard from "../question/QuestionCard";
@@ -20,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import { Tooltip, TooltipContent } from "@/components/ui/tooltip";
 import type { Question } from "@/types/Question";
+import { Description } from "@radix-ui/react-dialog";
 
 export default function TemplateDialog() {
   const { shelterId, templateId } = useParams<{
@@ -57,9 +65,9 @@ export default function TemplateDialog() {
   const handleCreateQuestion = () => {
     const now = new Date();
     const newQuestion: Question = {
-      _id: "nf38nfgrfe", 
+      _id: `${adoptionTemplate?._id}-question-${Date.now()}`,
       title: `Câu hỏi ${questionsList.length + 1}`,
-      priority: "none", 
+      priority: "none",
       options: [],
       status: "active",
       type: "",
@@ -68,10 +76,43 @@ export default function TemplateDialog() {
     };
 
     setQuestionsList((prev) => [...prev, newQuestion]);
-    
   };
+
   // console.log(questionsList);
-  
+
+  const handleSave = async () => {
+    if (!adoptionTemplate) return;
+    try {
+      const questionsPayload = questionsList.map((question) => {
+        const isExisting = adoptionTemplate.questions.some(
+          (old) => old._id == question._id
+        );
+
+        if (isExisting) {
+          return question;
+        } else {
+          const { _id, ...rest } = question;
+          return rest;
+        }
+      });
+      const updatedTemplate = {
+        title: adoptionTemplate.title,
+        species: adoptionTemplate.species._id,
+        description: adoptionTemplate.description || "",
+        questions: questionsPayload,
+      };
+
+      await authAxios.put(
+        `${coreAPI}/shelters/${shelterId}/adoptionTemplates/${templateId}/update-questions`,
+        updatedTemplate
+      );
+      toast.success("Lưu mẫu nhận nuôi thành công!");
+    } catch (error) {
+      console.error("Error saving adoption template:", error);
+      toast.error("Lỗi khi lưu mẫu nhận nuôi. Vui lòng thử lại sau.");
+    }
+  };
+
   return (
     <div className="w-full flex flex-wrap">
       <Breadcrumb className="basis-full mb-3">
@@ -123,7 +164,7 @@ export default function TemplateDialog() {
               <div className="basis-full sm:basis-1/3 sm:text-right">
                 <div className="flex justify-end">
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger asChild>
                       <Button
                         variant={"ghost"}
                         className="text-(--primary) hover:text-(--primary) hover:border-(--primary) "
@@ -146,16 +187,18 @@ export default function TemplateDialog() {
               {questionsList?.map((question: Question) => {
                 return (
                   <QuestionCard
+                    key={question._id}
                     question={question}
                     setQuestionsList={setQuestionsList}
                   />
                 );
               })}
               <div className="flex basis-full justify-end">
-                  <Button variant={"default"}><SaveAllIcon/> Lưu</Button>
+                <Button variant={"default"} onClick={handleSave}>
+                  <SaveAllIcon /> Lưu
+                </Button>
               </div>
             </div>
-
           </TabsContent>
 
           <TabsContent value="preview">

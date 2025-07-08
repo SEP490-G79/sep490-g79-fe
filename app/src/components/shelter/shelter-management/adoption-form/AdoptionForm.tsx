@@ -15,7 +15,12 @@ import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type { Question } from "@/types/Question";
 
 export default function AdoptionForm() {
   const { shelterId, formId } = useParams<{
@@ -24,6 +29,8 @@ export default function AdoptionForm() {
   }>();
   const { coreAPI, shelterForms, setShelterForms } = useContext(AppContext);
   const [adoptionForm, setAdoptionForm] = useState<AdoptionForm>();
+  const [questionsList, setQuestionsList] = useState<Question[]>([]);
+
   const authAxios = useAuthAxios();
 
   useEffect(() => {
@@ -36,6 +43,7 @@ export default function AdoptionForm() {
         const found = forms.find((t) => t._id === formId);
         if (found) {
           setAdoptionForm(found);
+          setQuestionsList([...found.questions]);
         } else {
           toast.error("Không tìm thấy form nhận nuôi");
         }
@@ -46,6 +54,21 @@ export default function AdoptionForm() {
       });
   }, [coreAPI, shelterId, formId]);
 
+  const handleCreateQuestion = () => {
+    const now = new Date();
+    const newQuestion: Question = {
+      _id: `${adoptionForm?._id}-question-${Date.now()}`,
+      title: `Câu hỏi ${questionsList.length + 1}`,
+      priority: "none",
+      options: [],
+      status: "active",
+      type: "",
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    setQuestionsList((prev) => [...prev, newQuestion]);
+  };
   return (
     <div className="w-full flex flex-wrap">
       <Breadcrumb className="basis-full mb-3">
@@ -60,6 +83,7 @@ export default function AdoptionForm() {
             </BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
+        s
       </Breadcrumb>
 
       <div className="basis-full">
@@ -103,6 +127,8 @@ export default function AdoptionForm() {
                     <Button
                       variant={"ghost"}
                       className="text-(--primary) hover:text-(--primary) hover:border-(--primary) "
+                      onClick={handleCreateQuestion}
+
                     >
                       <Plus strokeWidth={3} />
                     </Button>
@@ -117,8 +143,14 @@ export default function AdoptionForm() {
             <Separator />
 
             <div className="basis-full flex flex-wrap">
-              <QuestionCard />
-              <QuestionCard />
+              {questionsList?.map((question: Question) => {
+                return (
+                  <QuestionCard
+                    question={question}
+                    setQuestionsList={setQuestionsList}
+                  />
+                );
+              })}
             </div>
           </TabsContent>
 
