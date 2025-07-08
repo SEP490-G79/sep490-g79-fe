@@ -38,6 +38,8 @@ import { useParams } from "react-router-dom";
 import { SearchFilter } from "@/components/SearchFilter";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { DataTableReverse } from "@/components/data-table-reverse";
+import { DataTableShelterInvitationAndRequest } from "@/components/data-table-shelter-invitation-request";
 
 
 type detailDialogData = {
@@ -138,7 +140,7 @@ const ShelterStaffRequestManagement = () => {
                  alt={row.original.user.fullName}
                  className="h-10 w-10 rounded-full object-cover"
                />
-               <span className="my-auto">{row.original.user.fullName}</span>
+               <span className="my-auto truncate whitespace-nowrap overflow-hidden max-w-[20vw]">{row.original.user.fullName}</span>
              </p>
            );
          },
@@ -430,7 +432,7 @@ const ShelterStaffRequestManagement = () => {
 
 
   return (
-    <div className="flex flex-1 flex-col py-6 px-10">
+    <div className="flex flex-1 flex-col py-6">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="col-span-12 px-5 flex flex-col gap-5">
           <h4 className="scroll-m-20 min-w-40 text-xl font-semibold tracking-tight text-center">
@@ -445,13 +447,13 @@ const ShelterStaffRequestManagement = () => {
             /> */}
             <Tooltip>
               <TooltipTrigger asChild>
-                            <Button
-              variant={"ghost"}
-              className="cursor-pointer"
-              onClick={() => setRefreshRequest((prev) => !prev)}
-            >
-              <RefreshCcw />
-            </Button>
+                <Button
+                  variant={"ghost"}
+                  className="cursor-pointer"
+                  onClick={() => setRefreshRequest((prev) => !prev)}
+                >
+                  <RefreshCcw />
+                </Button>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Refresh</p>
@@ -460,7 +462,10 @@ const ShelterStaffRequestManagement = () => {
           </div>
         </div>
         <div className="col-span-12 px-5">
-          <DataTable columns={columns} data={filtererdInvitationsList ?? []} />
+          <DataTableShelterInvitationAndRequest
+            columns={columns}
+            data={filtererdInvitationsList ?? []}
+          />
         </div>
       </div>
       {/* Dialog chi tiet */}
@@ -489,20 +494,28 @@ const ShelterStaffRequestManagement = () => {
             <div className="flex flex-row gap-2">
               <span className="my-auto font-medium">Trạm cứu hộ:</span>
               <Avatar>
-                <AvatarImage src={detailDialog.detail?.shelter?.avatar}/>
+                <AvatarImage src={detailDialog.detail?.shelter?.avatar} />
               </Avatar>
-              <span className="my-auto">{detailDialog.detail?.shelter?.name} (
-              {detailDialog.detail?.shelter?.email})</span>
-              
+              <span className="my-auto">
+                {detailDialog.detail?.shelter?.name} (
+                {detailDialog.detail?.shelter?.email})
+              </span>
             </div>
 
             <div className="flex flex-row gap-2">
-              <span className="my-auto font-medium">{detailDialog.detail.requestType === "invitation" ? "Người nhận" : "Người gửi"}:</span>
+              <span className="my-auto font-medium">
+                {detailDialog.detail.requestType === "invitation"
+                  ? "Người nhận"
+                  : "Người gửi"}
+                :
+              </span>
               <Avatar>
-                <AvatarImage src={detailDialog.detail?.user?.avatar}/>
+                <AvatarImage src={detailDialog.detail?.user?.avatar} />
               </Avatar>
-              <span className="my-auto">{detailDialog.detail?.user?.fullName} (
-              {detailDialog.detail?.user?.email})</span>
+              <span className="my-auto">
+                {detailDialog.detail?.user?.fullName} (
+                {detailDialog.detail?.user?.email})
+              </span>
             </div>
 
             <div className="flex flex-row gap-2">
@@ -511,13 +524,13 @@ const ShelterStaffRequestManagement = () => {
                 <div className="flex flex-wrap gap-2 mt-1">
                   {detailDialog.detail.roles.map((role, idx) => {
                     const label =
-                      role === "admin"
+                      role === "manager"
                         ? "Quản lý"
                         : role === "staff"
                         ? "Thành viên"
                         : role;
                     const variant =
-                      role === "admin" ? "destructive" : "secondary";
+                      role === "manager" ? "destructive" : "secondary";
                     return (
                       <Badge key={idx} variant={variant}>
                         {label}
@@ -569,12 +582,30 @@ const ShelterStaffRequestManagement = () => {
             new Date(detailDialog.detail?.expireAt) > new Date() &&
             detailDialog.detail?.requestStatus !== "cancelled" ? (
               <div className="flex gap-2">
-                <Button variant="default" onClick={() => handleApprove()}>
-                  Chấp thuận
-                </Button>
-                <Button variant="destructive" onClick={() => handleReject()}>
-                  Từ chối
-                </Button>
+                {loadingButton ? (
+                  <Button disabled>
+                    <>
+                      <Loader2Icon className="animate-spin mr-2" />
+                      Vui lòng chờ
+                    </>
+                  </Button>
+                ) : (
+                  <Button variant="default" onClick={() => handleApprove()}>
+                    Chấp thuận
+                  </Button>
+                )}
+                {loadingButton ? (
+                  <Button disabled>
+                    <>
+                      <Loader2Icon className="animate-spin mr-2" />
+                      Vui lòng chờ
+                    </>
+                  </Button>
+                ) : (
+                  <Button variant="destructive" onClick={() => handleReject()}>
+                    Từ chối
+                  </Button>
+                )}
               </div>
             ) : (
               <div />

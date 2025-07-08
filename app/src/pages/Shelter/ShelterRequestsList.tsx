@@ -41,6 +41,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import {type  Shelter } from "@/types/Shelter";
 import { EmailSelector } from "@/components/EmailSelector";
 import { EmailRadioSelector } from "@/components/EmailRadioSelector";
+import { DataTableShelterInvitationAndRequest } from "@/components/data-table-shelter-invitation-request";
 
 
 
@@ -576,7 +577,7 @@ const ShelterRequestsList = () => {
           </div>
         </div>
         <div className="col-span-12 px-5">
-          <DataTable columns={columns} data={filtererdInvitationsList ?? []} />
+          <DataTableShelterInvitationAndRequest columns={columns} data={filtererdInvitationsList ?? []} />
         </div>
       </div>
       {/* Dialog chi tiet */}
@@ -634,13 +635,13 @@ const ShelterRequestsList = () => {
                 <div className="flex flex-wrap gap-2 mt-1">
                   {detailDialog.detail.roles.map((role, idx) => {
                     const label =
-                      role === "admin"
+                      role === "manager"
                         ? "Quản lý"
                         : role === "staff"
                         ? "Thành viên"
                         : role;
                     const variant =
-                      role === "admin" ? "destructive" : "secondary";
+                      role === "manager" ? "destructive" : "secondary";
                     return (
                       <Badge key={idx} variant={variant}>
                         {label}
