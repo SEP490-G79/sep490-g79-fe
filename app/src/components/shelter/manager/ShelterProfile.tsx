@@ -29,6 +29,14 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form"
+import axios from "axios"
+import AddressInputWithGoong from "@/utils/AddressInputWithGoong"
+
+type GoongSuggestion = {
+  place_id: string;
+  description: string;
+};
+const GOONG_API_KEY = import.meta.env.VITE_GOONG_API_KEY;
 
 
 const shelterProfileSchema = z.object({
@@ -38,10 +46,12 @@ const shelterProfileSchema = z.object({
   address: z.string().min(5, "Địa chỉ không hợp lệ"),
   email: z.string().email("Email không hợp lệ"),
   hotline: z
-    .string()
-    .trim()
-    .min(3, "Vui lòng nhập số hotline đầy đủ")
-    .regex(/^\d+$/, "Hotline chỉ được chứa số"),
+  .string()
+  .trim()
+  .regex(
+    /^((\+84)|0)(3|5|7|8|9)\d{8}$/,
+    "Hotline không đúng định dạng số điện thoại Việt Nam"
+  ),
   avatar: z.any().optional(),
   background: z.any().optional(),
 })
@@ -58,6 +68,10 @@ const ShelterProfile = () => {
   const { shelterAPI } = useContext(AppContext)
   const { shelterId } = useParams()
   const [loading, setLoading] = useState<boolean>(false);
+  const [location, setLocation] = useState({ lat: 0, lng: 0 });
+  const [openBackgroundModal, setOpenBackgroundModal] = useState(false);
+  const [addressSuggestions, setAddressSuggestions] = useState<GoongSuggestion[]>([]);
+  const [placeId, setPlaceId] = useState("");
 
   const form = useForm<ShelterFormValues>({
     resolver: zodResolver(shelterProfileSchema),
@@ -96,9 +110,10 @@ const ShelterProfile = () => {
       const formData = new FormData()
       // formData.append("name", data.name)
       formData.append("bio", data.bio)
-      formData.append("hotline", data.hotline.toString())
+      formData.append("hotline", data.hotline)
       formData.append("email", data.email)
       formData.append("address", data.address)
+      formData.append("location", JSON.stringify(location)); 
       if (data.avatar instanceof File) {
         formData.append("avatar", data.avatar)
       }
@@ -156,6 +171,83 @@ const ShelterProfile = () => {
 
 
   const currentValues = watch()
+
+   const fetchAddressSuggestions = async (query: string) => {
+    if (!query.trim()) {
+      setAddressSuggestions([]);
+      return;
+    }
+    try {
+      const res = await axios.get("https://rsapi.goong.io/Place/AutoComplete", {
+        params: {
+          input: query,
+          api_key: GOONG_API_KEY,
+        },
+      });
+      setAddressSuggestions(res.data.predictions || []);
+    } catch (error) {
+      console.error("Autocomplete failed:", error);
+    }
+  };
+
+  const fetchPlaceDetail = async (place_id: string) => {
+    try {
+      const res = await axios.get("https://rsapi.goong.io/Place/Detail", {
+        params: {
+          place_id,
+          api_key: GOONG_API_KEY,
+        },
+      });
+      const result = res.data.result;
+      if (result?.formatted_address && result?.geometry?.location) {
+        // set địa chỉ vào trong react-hook-form
+        console.log(result.formatted_address);
+        setPlaceId(place_id);
+        setLocation({
+          lat: result.geometry.location.lat,
+          lng: result.geometry.location.lng,
+        });
+        setValue("address", result.formatted_address);
+      }
+    } catch (error) {
+      console.error("Place Detail error:", error);
+    }
+  };
+
+  const detectCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      return alert("Trình duyệt không hỗ trợ định vị.");
+    }
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const res = await axios.get("https://rsapi.goong.io/Geocode", {
+            params: {
+              latlng: `${coords.latitude},${coords.longitude}`,
+              api_key: GOONG_API_KEY,
+              has_deprecated_administrative_unit: true,
+            },
+          });
+          const place = res.data.results?.[0];
+          if (place) {
+            // set địa chỉ vào trong react-hook-form
+            setValue("address", place.formatted_address);
+            setLocation({
+              lat: coords.latitude,
+              lng: coords.longitude,
+            });
+            setPlaceId(""); // reverse không có place_id
+          }
+        } catch (error) {
+          console.error("Reverse geocode error:", error);
+        }
+      },
+      (err) => {
+        console.error("Lỗi truy cập vị trí:", err);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
 
   return (
     <Form {...form}>
@@ -285,7 +377,7 @@ const ShelterProfile = () => {
                 <FormItem>
                   <FormLabel>Tên trạm</FormLabel>
                   <FormControl>
-                    <Input placeholder="Tên trạm" {...field} disabled/>
+                    <Input placeholder="Tên trạm" {...field} disabled />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -299,7 +391,7 @@ const ShelterProfile = () => {
                 <FormItem>
                   <FormLabel>Mã trạm</FormLabel>
                   <FormControl>
-                    <Input placeholder="Mã trạm" {...field} disabled/>
+                    <Input placeholder="Mã trạm" {...field} disabled />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -324,13 +416,15 @@ const ShelterProfile = () => {
               control={form.control}
               name="address"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Địa chỉ</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Địa chỉ" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+                <AddressInputWithGoong
+                  value={field.value}
+                  onChange={(val) => {
+                    field.onChange(val);
+                    setValue("address", val);
+                  }}
+                  onLocationChange={(loc) => setLocation(loc)}
+                  error={form.formState.errors.address?.message}
+                />
               )}
             />
 
@@ -355,7 +449,7 @@ const ShelterProfile = () => {
                 <FormItem>
                   <FormLabel>Số hotline</FormLabel>
                   <FormControl>
-                    <Input placeholder="Hotline" {...field}/>
+                    <Input placeholder="Hotline" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

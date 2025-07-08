@@ -37,7 +37,7 @@ const adoptions: { title: string; href: string; description: string }[] = [
   },
   {
     title: "Danh sách trung tâm cứu hộ",
-    href: "#",
+    href: "/shelters",
     description:
       "Xem các trung tâm cứu trợ đang chăm sóc thú cưng và sẵn sàng kết nối với bạn.",
   },

@@ -1,8 +1,11 @@
+
 export type QuestionType = "SINGLECHOICE" | "MULTIPLECHOICE" | "TEXT";
 export type QuestionPriority = "none" | "low" | "medium" | "high";
 export type QuestionStatus = "active" | "inactive";
 
-export interface QuestionOption {
+
+export interface Option {
+
   title: string;
   isTrue: boolean;
 }
@@ -17,3 +20,4 @@ export interface Question {
   createdAt?: string;
   updatedAt?: string;
 }
+

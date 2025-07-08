@@ -4,10 +4,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react";
-import axios from "axios";
+import AppContext from "@/context/AppContext";
+import axios from "axios"
+import useAuthAxios from "@/utils/authAxios";
 
 export default function ChangePassword() {
     const [showOldPassword, setShowOldPassword] = useState(false);
@@ -16,6 +18,9 @@ export default function ChangePassword() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const { userAPI } = useContext(AppContext);
+    const authAxios = useAuthAxios();
+
     const handleChangePassword = async () => {
         if (!oldPassword || !newPassword || !confirmPassword) {
             return toast.error("Vui lòng điền đầy đủ thông tin.");
@@ -27,20 +32,13 @@ export default function ChangePassword() {
         try {
             setLoading(true);
             await new Promise(resolve => setTimeout(resolve, 1000));
-            const accessToken = localStorage.getItem("accessToken");
 
-            const response = await axios.put(
-                `http://localhost:9999/users/change-password`,
+            await authAxios.put(`${userAPI}/change-password`,
                 {
                     oldPassword,
                     newPassword,
                     confirmPassword,
                 },
-                {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                }
             );
 
             toast.success("Đổi mật khẩu thành công!");
