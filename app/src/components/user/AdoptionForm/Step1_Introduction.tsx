@@ -37,6 +37,34 @@ const Step1_Introduction = ({ form, agreed, onAgree, onNext, onBack, setAgreed, 
     }
   };
 
+  const getStatusLabel = (status: string | undefined) => {
+    switch (status) {
+      case "available":
+        return "Sẵn sàng nhận nuôi";
+      case "pending":
+        return "Đang chờ xử lý";
+      case "adopted":
+        return "Đã được nhận nuôi";
+      case "unavailable":
+        return "Không khả dụng";
+      default:
+        return "Không rõ";
+    }
+  };
+
+
+  const money = Number(pet?.tokenMoney);
+
+  const tokenMoneyDisplay =
+    isNaN(money)
+      ? "Chưa xác định"
+      : money === 0
+        ? "Miễn phí"
+        : new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+          maximumFractionDigits: 0,
+        }).format(money);
 
 
   return (
@@ -66,9 +94,27 @@ const Step1_Introduction = ({ form, agreed, onAgree, onNext, onBack, setAgreed, 
           <div><strong>Màu sắc:</strong> {pet.color}</div>
           <div><strong>Đặc điểm:</strong> {pet.identificationFeature || "Không có"}</div>
           <div><strong>Triệt sản:</strong> {pet.sterilizationStatus ? "Đã triệt sản" : "Chưa triệt sản"}</div>
-          <div><strong>Vị trí tìm thấy:</strong> {pet.foundLocation || "Không rõ"}</div>
-          <div><strong>Tiền cọc:</strong> {Number(pet.tokenMoney).toLocaleString()}đ</div>
-          <div><strong>Trạng thái:</strong> <Badge>{pet.status}</Badge></div>
+          <div>
+            <strong>Phí nhận nuôi:</strong>{" "}
+            <span
+              className={`text-sm font-medium ${money === 0
+                ? "text-lime-600"
+                : isNaN(money)
+                  ? "text-muted-foreground"
+                  : "text-yellow-500"
+                }`}
+            >
+              {tokenMoneyDisplay}
+            </span>
+          </div>
+
+          <div>
+            <strong>Trạng thái:</strong>{" "}
+            <Badge>
+              {getStatusLabel(pet.status)}
+            </Badge>
+          </div>
+
         </CardContent>
       </Card>
 

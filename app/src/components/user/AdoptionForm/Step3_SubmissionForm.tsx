@@ -13,7 +13,7 @@ import {
   CardFooter,
   CardDescription,
 } from "@/components/ui/card";
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle,FileText  } from 'lucide-react';
 
 
 interface Step3Props {
@@ -61,11 +61,6 @@ const Step3_SubmissionForm = ({ submissionId, onNext, onBack, onLoadedSubmission
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
 
-
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack}>Quay lại</Button>
-        <Button onClick={onNext}>Tiếp tục</Button>
-      </div>
       <Card className="max-w-3xl mx-auto shadow-lg dark:border-primary">
         <CardHeader className="flex items-center gap-3">
           <CheckCircle className="text-green-500 w-6 h-6" />
@@ -94,14 +89,24 @@ const Step3_SubmissionForm = ({ submissionId, onNext, onBack, onLoadedSubmission
             </p>
           </div>
 
+
           <div className="bg-yellow-50 p-4 rounded-md text-yellow-700 border border-yellow-300 text-sm">
             Đơn đăng ký của bạn đang được xem xét. Nhân viên của trung tâm sẽ chủ động liên hệ qua số điện thoại hoặc email nếu hồ sơ đạt yêu cầu.
             Vui lòng kiên nhẫn chờ đợi phản hồi trong thời gian sớm nhất.
           </div>
         </CardContent>
 
-        <CardFooter className="flex justify-end">
-          <Button onClick={onNext}>Tiếp tục</Button>
+        <CardFooter className="flex justify-start">
+  
+    <p
+  onClick={onBack}
+  className="flex items-center gap-2 text-sm text-primary mt-4 underline cursor-pointer hover:text-foreground"
+>
+  <FileText />
+  Bạn có thể xem lại đơn đăng ký của bạn
+</p>
+
+        
         </CardFooter>
       </Card>
 

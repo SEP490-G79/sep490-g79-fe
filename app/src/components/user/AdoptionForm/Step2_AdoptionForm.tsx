@@ -37,11 +37,12 @@ interface Step2Props {
     form: AdoptionForm;
     userProfile: User | null;
     readOnly?: boolean;
+    onNextNormal: () => void
 
 }
 
 
-const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack, form, userProfile, readOnly }: Step2Props) => {
+const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack, form, userProfile, readOnly, onNextNormal }: Step2Props) => {
     const pet = form.pet;
     const activeQuestions = questions.filter((q) => q.status === "active");
     const authAxios = useAuthAxios();
@@ -274,9 +275,9 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                                         ) : (
                                             <textarea
                                                 className="w-full border-0 border-b border-gray-300 
-      focus:border-b-2 focus:border-primary 
-      outline-none p-2 transition-all duration-200 ease-in-out"
-                                                rows={1}
+                                                focus:border-b-2 focus:border-primary 
+                                                 outline-none p-2 transition-all duration-200 ease-in-out"
+                                                rows={2}
 
                                                 value={answers[q._id] || ""}
                                                 onChange={(e) => handleAnswerChange(q._id, e.target.value)}
@@ -301,9 +302,17 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                     {/* Navigation Buttons */}
                     <div className="flex justify-between ">
                         <Button variant="outline" onClick={onBack}>
-                            {readOnly ? "Quay lại" : "Tôi bỏ cuộc"
+                            {readOnly ? "Xem lại" : "Quay lại"
                             }
                         </Button>
+                    
+                        {readOnly &&(
+                            <Button variant="outline" className="bg-primary" onClick={onNextNormal}>
+                                Tiếp theo
+                            </Button>
+                        )
+
+                        }
 
 
                         {!readOnly && (

@@ -44,7 +44,7 @@ function AppRoutes() {
 
       <Route path="/pets-list" element={<PetsListPage />} />
       <Route path="/pets/:id" element={<PetProfilePage />} />
-      <Route path="/adoption-form/:id" element={<UserAdoptionFormPage />} />
+      <Route path="/adoption-form/:id/:submissionId?" element={<UserAdoptionFormPage />} />
       <Route path="/shelters" element={<Shelters />} />
       <Route path="/shelters/:shelterId" element={<ShelterPage />} />
       <Route path="/pet/:petId" element={<ViewPetDetails />} />

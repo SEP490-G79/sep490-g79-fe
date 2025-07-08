@@ -10,6 +10,12 @@ import Step3_SubmissionForm from "@/components/user/AdoptionForm/Step3_Submissio
 import Step4_ConsentForm from "@/components/user/AdoptionForm/Step4_ConsentForm";
 import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { Question } from "@/types/Question";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const UserAdoptionFormPage = () => {
   const getInitialAnswers = (): Record<string, string | string[]> => {
@@ -17,12 +23,12 @@ const UserAdoptionFormPage = () => {
     const saved = localStorage.getItem(`adoptionFormAnswers-${id}`);
     return saved ? JSON.parse(saved) : {};
   };
-  const { id } = useParams();
+  const { id,submissionId: routeSubmissionId  } = useParams();
   const { coreAPI, userProfile } = useContext(AppContext);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<AdoptionForm | null>(null);
   const authAxios = useAuthAxios();
-  const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [submissionId, setSubmissionId] = useState<string | null>(routeSubmissionId ?? null);
   const [submission, setSubmission] = useState<any>(null);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>(getInitialAnswers);
   const [hasCheckedSubmitted, setHasCheckedSubmitted] = useState(false);
@@ -124,36 +130,86 @@ const UserAdoptionFormPage = () => {
 
 
   const steps = ["Quy định chung", "Đăng ký nhận nuôi", "Chờ phản hồi", "Đơn cam kết"];
-
-  const renderStepIndicator = () => (
+const renderStepIndicator = () => (
+  <TooltipProvider>
     <div className="flex items-center justify-between w-full max-w-4xl mx-auto px-4 py-4 relative">
       {steps.map((label, index) => {
         const isActive = index === step - 1;
-        const isCompleted = index < step - 1;
+        const isCompleted = submissionId ? index < 3 : index < step - 1;
+        const isLineCompleted = submissionId ? index < 2 : index < step - 1;
         const isLast = index === steps.length - 1;
 
+        const canNavigate = submissionId ? index <= 2 : index <= step - 1;
+
+        const tooltipMessage = isCompleted
+          ? "Bước đã hoàn thành"
+          : isActive
+          ? "Bước hiện tại"
+          : `Cần hoàn thành bước trước để đến "${label}"`;
+
+        const StepCircle = (
+          <div
+            className={`rounded-full w-12 h-12 flex items-center justify-center text-sm font-medium
+              ${isCompleted
+                ? "bg-green-500 text-white"
+                : isActive
+                ? "bg-blue-500 text-white"
+                : "bg-gray-300 text-gray-600"}`}
+          >
+            {index + 1}
+          </div>
+        );
+
         return (
-          <div key={index} className="relative flex-1 flex items-center justify-center">
+          <div
+            key={index}
+            className={`relative flex-1 flex items-center justify-center ${
+              canNavigate ? "cursor-pointer" : "cursor-not-allowed"
+            }`}
+            onClick={() => {
+              if (canNavigate) {
+                setStep(index + 1);
+              }
+            }}
+          >
             {!isLast && (
               <div className="absolute top-1/3 left-1/2 w-full h-1 bg-gray-300 z-0">
-                <div className={`h-1 ${isCompleted ? "bg-green-500 w-full" : "bg-gray-300 w-0"}`} />
+                <div
+                  className={`h-1 transition-all duration-300 ${
+                    isLineCompleted ? "bg-green-500 w-full" : "bg-gray-300 w-0"
+                  }`}
+                />
               </div>
             )}
 
             <div className="relative z-10 flex flex-col items-center">
-              <div
-                className={`rounded-full w-12 h-12 flex items-center justify-center text-sm font-medium
-                ${isCompleted ? "bg-green-500 text-white" : isActive ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-600"}`}
-              >
-                {index + 1}
-              </div>
-              <div className="text-sm font-medium mt-1">{label}</div>
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  {StepCircle}
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-sm text-center">
+                  {tooltipMessage}
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <div className="text-sm font-medium mt-1 text-center">
+                    {label}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-sm text-center">
+                  {tooltipMessage}
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         );
       })}
     </div>
-  );
+  </TooltipProvider>
+);
+
 
 
   const renderCurrentStep = () => {
@@ -178,6 +234,7 @@ const UserAdoptionFormPage = () => {
               next();
             }}
             onBack={back}
+            onNextNormal={next}
             form={form}
             userProfile={userProfile}
             readOnly={!!submissionId}
