@@ -37,6 +37,7 @@ import ShelterRequestsList from "@/pages/Shelter/ShelterRequestsList";
 import ViewPetDetails from "@/pages/Pets/ViewPetDetails";
 import ShelterDashboard from "@/pages/Shelter/ShelterDashboard";
 import ShelterProfile from "@/components/shelter/manager/ShelterProfile";
+import AdoptionForm from "../components/shelter/shelter-management/adoption-form/AdoptionForm";
 
 function AppRoutes() {
   return (
@@ -66,6 +67,7 @@ function AppRoutes() {
         <Route path="adoption-templates" element={<AdoptionTemplates/>} />
         <Route path="adoption-templates/:templateId" element={<TemplateDialog/>} />
         <Route path="adoption-forms" element={<AdoptionForms/>} />
+        <Route path="adoption-forms/:formId" element={<AdoptionForm/>} />
         <Route path="dashboard" element={<ShelterDashboard />}/>
       </Route>
 

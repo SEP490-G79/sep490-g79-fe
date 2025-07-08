@@ -1,9 +1,4 @@
 
-export type QuestionType = "SINGLECHOICE" | "MULTIPLECHOICE" | "TEXT";
-export type QuestionPriority = "none" | "low" | "medium" | "high";
-export type QuestionStatus = "active" | "inactive";
-
-
 export interface Option {
 
   title: string;
@@ -13,11 +8,13 @@ export interface Option {
 export interface Question {
   _id: string;
   title: string;
-  priority: QuestionPriority;
-  options: QuestionOption[];
-  status: QuestionStatus;
-  type: QuestionType;
-  createdAt?: string;
-  updatedAt?: string;
+  priority: string;
+  options: Option[];
+  status: string;
+  type: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
+
+
 

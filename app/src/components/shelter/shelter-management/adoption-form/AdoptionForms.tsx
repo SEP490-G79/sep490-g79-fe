@@ -12,7 +12,14 @@ import {
   type VisibilityState,
   type PaginationState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, List, MoreHorizontal, Pen, Trash } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  List,
+  MoreHorizontal,
+  Pen,
+  Trash,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,12 +41,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {type AdoptionForm } from "@/types/AdoptionForm";
+import { type AdoptionForm } from "@/types/AdoptionForm";
 import { Badge } from "@/components/ui/badge";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import CreateDialog from "./CreateDialog";
+import { toast } from "sonner";
 
 export function AdoptionForms() {
   const { shelterId } = useParams();
@@ -55,6 +63,19 @@ export function AdoptionForms() {
       .replace(/đ/g, "d")
       .replace(/Đ/g, "D");
 
+  const handleDelete = (formId: string) => {
+    
+    authAxios
+      .delete(`${coreAPI}/shelters/${shelterId}/adoptionForms/${formId}/delete`)
+      .then(() => {
+        setShelterForms([...shelterForms].filter((form) => form._id != formId));
+        
+        toast.success("Xóa form nhận nuôi thành công");
+      })
+      .catch((err) => {
+        toast.error(err.data.response.message);
+      });
+  }
   React.useEffect(() => {
     authAxios
       .get(`${coreAPI}/shelters/${shelterId}/adoptionForms/get-by-shelter`)
@@ -148,7 +169,7 @@ export function AdoptionForms() {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        const adoptionForms = row.original;
+        const adoptionForm = row.original;
 
         return (
           <DropdownMenu>
@@ -161,12 +182,15 @@ export function AdoptionForms() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem><Pen/> Chỉnh sửa</DropdownMenuItem>
-              <DropdownMenuItem><List/> Xem dánh sách yêu cầu</DropdownMenuItem>
-              <DropdownMenuItem
-                variant="destructive"
-              
-              >
+              <DropdownMenuItem>
+                <Link to={`${adoptionForm._id}`} className="flex gap-1">
+                  <Pen /> Chỉnh sửa
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <List /> Xem dánh sách yêu cầu
+              </DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onClick={()=>handleDelete(adoptionForm._id)}>
                 <Trash /> Xóa form
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -185,7 +209,10 @@ export function AdoptionForms() {
     pageSize: 5,
   });
   const table = useReactTable({
-    data: shelterForms.sort((a:any, b:any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    data: shelterForms.sort(
+      (a: any, b: any) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    ),
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -215,8 +242,7 @@ export function AdoptionForms() {
           }
           className="max-w-sm"
         />
-        <CreateDialog/>
-
+        <CreateDialog />
       </div>
       <div className="rounded-md border">
         <Table>
