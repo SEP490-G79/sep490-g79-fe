@@ -1,688 +1,533 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+  Card, CardAction, CardContent, CardDescription,
+  CardFooter, CardHeader, CardTitle,
 } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Globe, GlobeLock, Heart, MessageSquare, Ellipsis, Pin, Trash2, Pencil, SmileIcon, ImageIcon, MapIcon, TagIcon, MapPinIcon } from "lucide-react";
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "@/components/ui/select";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Globe, GlobeLock, Heart, MessageSquare, Ellipsis, Trash2, Pencil, SmileIcon, ImageIcon, MapPinIcon, X } from "lucide-react";
+import EmojiPicker from "emoji-picker-react";
+import { PhotoProvider, PhotoView } from "react-photo-view";
+import 'react-photo-view/dist/react-photo-view.css';
+import AppContext from "@/context/AppContext";
+import useAuthAxios from "@/utils/authAxios";
+import { toast } from "sonner";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
-import { PhotoProvider, PhotoView } from 'react-photo-view';
-import 'react-photo-view/dist/react-photo-view.css';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import EmojiPicker from "emoji-picker-react";
-import { useRef, useEffect } from "react";
-import AppContext from "@/context/AppContext";
-import { useParams } from "react-router-dom";
-
-
+import type { PostType } from "@/types/Post";
+import PostDetailDialog from "@/components/post/PostDetail";
+import EditPostDialog from "@/components/post/EditPostDialog";
+import axios from "axios";
 
 dayjs.extend(relativeTime);
 dayjs.locale("vi");
 
 function Posts() {
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
-  const [expandedPosts, setExpandedPosts] = useState<Record<string | number, boolean>>({});
-  const [expandedPostEdit, setExpandedPostEdit] = useState<Record<string | number, boolean>>({});
-  const [showPicker, setShowPicker] = useState(false);
-  const [selectedEmoji, setSelectedEmoji] = useState("");
+  const authAxios = useAuthAxios();
+  const { userProfile, accessToken, coreAPI, setUserProfile } = useContext(AppContext);
+  const [postsData, setPostsData] = useState<PostType[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+  const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [postContent, setPostContent] = useState("");
+  const [privacy, setPrivacy] = useState("public");
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [showPicker, setShowPicker] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
-  const { userId } = useParams();
-  const { userProfile } = useContext(AppContext);
-
-  const [openCreatePostDialog, setOpenCreatePostDialog] = useState(false);
-
-
-  const isOwnProfile = !userId || userId === userProfile?._id;
-
-
-
-
-
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  interface PostType {
-    id: string | number;
-    createdBy: string;
-    title: string;
-    privacy: string;
-    photos: string[];
-    likedBy: string[];
-    status: string;
-    createdAt: string;
-  }
-
+  const currentUserId = userProfile?._id || "guest";
   const [editingPost, setEditingPost] = useState<PostType | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [detailPostId, setDetailPostId] = useState<string | null>(null);
+  const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm: () => void;
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    onConfirm: () => { },
+  });
+  const fetchUser = async () => {
+    try {
+      if (!userProfile && accessToken) {
+        const res = await authAxios.get(`${coreAPI}/users/get-user`);
+        setUserProfile(res.data);
+      }
+    } catch (err) {
+      console.error("Lỗi lấy thông tin người dùng:", err);
+    }
+  };
 
-  const posts = [
-    {
-      id: 1,
-      createdBy: "Trần Hữu Hảo",
-      title: `Tên lửa siêu vượt âm Fattah là vũ khí có tốc độ tối thiểu gấp 5 lần âm thanh (Mach 5), tương đương hơn 6.200 km/h. IRGC ra mắt tên lửa Fattah hồi tháng 6/2023, mô tả đây là "bước nhảy vọt lớn trong lĩnh vực tên lửa" của nước này. Giới chức Iran cho hay Fattah có tầm bắn 1.400 km, tốc độ tối đa khoảng 15.000 km/h, nhanh gấp 14 lần âm thanh, và có khả năng "xuyên thủng mọi lá chắn phòng thủ".
+  const fetchPosts = async () => {
+    try {
+      setLoadingPosts(true);
+      const res = await axios.get(`${coreAPI}/posts/get-posts-list`, accessToken ? {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      } : {});
+      const mapped = res.data.map((post: any) => ({
+        _id: post._id,
+        title: post.title,
+        photos: post.photos,
+        privacy: post.privacy || "public",
+        status: post.status,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
+        createdBy: post.createdBy._id,
+        user: {
+          avatar: post.createdBy.avatar,
+          fullName: post.createdBy.fullName,
+        },
+        likedBy: post.likedBy.map((u: any) => u._id),
+        latestComment: post.latestComment ? {
+          _id: post.latestComment._id,
+          message: post.latestComment.message,
+          commenter: {
+            _id: post.latestComment.commenter._id,
+            fullName: post.latestComment.commenter.fullName,
+            avatar: post.latestComment.commenter.avatar,
+          },
+        } : null,
+      }));
+      setPostsData(mapped);
+    } catch (err) {
+      toast.error("Lỗi tải bài viết");
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
 
-Tuy nhiên, có nhiều đánh giá liên quan đến tên lửa này. Bộ Quốc phòng Israel từng nhận định Fattah là tên lửa một tầng đẩy dùng nhiên liệu rắn, dựa trên thiết kế cơ sở của Kheibar Shekan. Nó mang được đầu đạn hồi quyển cỡ lớn có khả năng cơ động (MaRV), nhờ được lắp động cơ đẩy cỡ nhỏ để tăng tốc và thay đổi đường bay sau khi tách khỏi tầng đẩy.
 
-MaRV có tính năng tương tự phương tiện lướt siêu vượt âm, nhưng cơ động kém hơn và chủ yếu vẫn bay theo quỹ đạo cố định trong giai đoạn giữa hành trình. Điều này khiến một số chuyên gia cho rằng Fattah chỉ là tên lửa đạn đạo thông thường, không thuộc nhóm vũ khí siêu vượt âm, vì thiếu khả năng cơ động liên tục ở tốc độ cao trong bầu khí quyển để vượt qua lưới phòng không đối phương.
 
-Dù vậy, MaRV vẫn sở hữu những khả năng vượt trội so với đầu đạn thông thường như đột ngột tăng độ cao khi lao tới mục tiêu và tạo ra đường bay trồi sụt, giúp tăng tầm bắn, điều chỉnh hướng bay và gây khó khăn cho lá chắn tên lửa đối phương.
-IDF đã nắm được thông tin về số người thương vong do hỏa lực của chúng tôi khi đám đông tiến đến gần. Thông tin chi tiết về sự việc đang được xem xét. IDF lấy làm tiếc về bất cứ tổn hại nào với những người không liên quan và đang hành động để giảm thiểu thiệt hại tối đa cho người dân Gaza, trong khi vẫn đảm bảo an toàn cho binh sĩ", tuyên bố có đoạn.
+  useEffect(() => {
+    fetchUser();
+    fetchPosts();
+  }, []);
 
-Hình ảnh trên mạng xã hội cho thấy hàng chục thi thể không nguyên vẹn nằm trên đường chính phía đông Khan Younis. Các nhân chứng cho biết xe tăng Israel đã bắn ít nhất hai phát vào đám đông hàng nghìn người tụ tập trên tuyến đường này với hy vọng nhận được thức ăn từ các xe tải cứu trợ đi qua.
 
-"Họ để chúng tôi tiến lên phía trước, rồi xe tăng bất ngờ nã đạn", Alaa, một nhân chứng kể lại tại bệnh viện Nasser, nơi các nạn nhân bị thương nằm la liệt trên sàn, ngoài hành lang. Ít nhất 20 người bị thương đang trong tình trạng nguy kịch.`,
 
-      privacy: "public",
-      photos: [
-        "https://i.pinimg.com/736x/b8/c4/b9/b8c4b99567ca22c481880d7983d60b1e.jpg",
-        "https://i.pinimg.com/736x/c8/3b/c9/c83bc998e196e566b46a2bc60f169d42.jpg",
-        "https://i.pinimg.com/736x/06/f1/04/06f10465e63c9877dcc815e014ee1a3a.jpg",
-        "https://i.pinimg.com/736x/aa/29/5b/aa295bd9c166296bebbed87cdf118f5d.jpg",
-        "https://i.pinimg.com/736x/aa/29/5b/aa295bd9c166296bebbed87cdf118f5d.jpg",
-        "https://i.pinimg.com/736x/d8/8d/66/d88d66b30a635e86379654164d0e8a98.jpg",
-      ],
-      likedBy: ["hao", " hehe"],
-      status: "active",
-      createdAt: "2025-06-17T07:10:49.904Z",
-    },
-    {
-      id: "2",
-      createdBy: "Trần Hữu Hảo",
-      title: "My private moment",
-      privacy: "private",
-      photos: ["https://i.pinimg.com/736x/b8/c4/b9/b8c4b99567ca22c481880d7983d60b1e.jpg"],
-      likedBy: ["hehe"],
-      status: "hidden",
-      createdAt: "2025-03-01T10:00:00Z",
-    },
-    {
-      id: "3",
-      createdBy: "Trần Hữu Hảo",
-      title: "Sunset memories",
-      privacy: "public",
-      photos: [],
-      likedBy: ["hao"],
-      status: "active",
-      createdAt: "2025-06-01T10:00:00Z",
-    },
-  ];
 
-  const user = {
-    fullName: "Hảo trần",
-    bio: "Game thủ vô tri!",
-    location: "Hanoi, Vietnam",
-    background:
-      "https://i.pinimg.com/736x/c8/3b/c9/c83bc998e196e566b46a2bc60f169d42.jpg",
-    avatar:
-      "https://i.pinimg.com/736x/b8/c4/b9/b8c4b99567ca22c481880d7983d60b1e.jpg",
-    email: "FV2rD@example.com",
-    dob: "01/01/2000",
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
+        setShowPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleCreatePost = async () => {
+    if (!postContent.trim()) {
+      toast.error("Nội dung bài viết không được để trống");
+      return;
+    }
+    try {
+      if (selectedImages.length > 5) {
+        toast.error("Bạn chỉ có thể đăng tối đa 5 ảnh");
+        return;
+      }
+      setLoading(true);
+      const formData = new FormData();
+      formData.append("title", postContent);
+      formData.append("privacy", privacy);
+      selectedImages.forEach((file) => formData.append("photos", file));
+      await authAxios.post(`${coreAPI}/posts/create`, formData);
+      toast.success("Đăng bài thành công");
+      setPostContent("");
+      setSelectedImages([]);
+      setPreviewUrls([]);
+      setOpenCreateDialog(false);
+      await fetchPosts();
+    } catch (err: any) {
+      toast.error("Lỗi tạo bài viết: " + (err.response?.data?.message || ""));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLike = async (postId: string) => {
+    try {
+      await authAxios.post(`${coreAPI}/posts/react/${postId}`);
+      setPostsData(prev =>
+        prev.map(p =>
+          p._id === postId
+            ? {
+              ...p,
+              likedBy: p.likedBy.includes(currentUserId)
+                ? p.likedBy.filter(id => id !== currentUserId)
+                : [...p.likedBy, currentUserId],
+            }
+            : p
+        )
+      );
+      await fetchPosts();
+    } catch (err) {
+      toast.error("Lỗi khi like");
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    try {
+      await authAxios.delete(`${coreAPI}/posts/${postId}`);
+      toast.success("Đã xoá bài viết");
+      setPostsData(prev => prev.filter(p => p._id !== postId));
+      await fetchPosts();
+    } catch (err) {
+      toast.error("Không thể xoá bài viết");
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedImages(prev => [...prev, ...files]);
+    const urls = files.map(file => URL.createObjectURL(file));
+    setPreviewUrls(prev => [...prev, ...urls]);
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
   const formatCreatedAt = (date: string | Date): string => {
     const now = dayjs();
     const target = dayjs(date);
-
-    if (now.isSame(target, 'day')) {
-      return target.fromNow();
-    }
-
-    return target.format('DD/MM/YYYY');
-  };
-  const [postsData, setPostsData] = useState(posts);
-  const currentUserId = "hao";
-
-  const toggleExpand = (postId: string | number) => {
-    setExpandedPosts(prev => ({
-      ...prev,
-      [postId]: !prev[postId],
-    }));
+    if (now.isSame(target, "day")) return target.fromNow();
+    return target.format("DD/MM/YYYY");
   };
 
-  const toggleEditExpand = (postId: string | number) => {
-    setExpandedPostEdit(prev => ({
-      ...prev,
-      [postId]: !prev[postId],
-    }));
-  };
-
-  const toggleLike = (postId: string | number) => {
-    setPostsData(prev =>
-      prev.map(item =>
-        item.id === postId
-          ? {
-            ...item, likedBy: item.likedBy.includes(currentUserId)
-              ? item.likedBy.filter(id => id !== currentUserId)
-              : [...item.likedBy, currentUserId]
-          }
-          : item
-      )
-    );
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        emojiPickerRef.current &&
-        !emojiPickerRef.current.contains(event.target as Node)
-      ) {
-        setShowPicker(false);
-      }
-    };
-
-    if (showPicker) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showPicker]);
   return (
-    <>
-      <div className="flex flex-col lg:flex-row gap-0 mt-[10px] relative z-10 min-h-screen mb-10">
-        <div className="space-y-6 lg:w-2/3 mr-10">
-          {isOwnProfile && (
-            <div
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
-              onClick={() => setOpenCreatePostDialog(true)}
-            >
-              <img
-                src={userProfile?.avatar || "/placeholder.svg"}
-                alt="Avatar"
-                className="w-10 h-10 rounded-full border"
-              />
-
-              <div
-                className="flex-1 bg-gray-100 dark:bg-gray-700 text-muted-foreground px-4 py-2 rounded-full text-sm"
-              >
-                Bạn đang nghĩ gì?
-              </div>
+    <div className="space-y-6 max-w-2xl mx-auto py-10 px-4">
+      {userProfile?._id && (
+        <>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
+            onClick={() => setOpenCreateDialog(true)}
+          >
+            <img src={userProfile.avatar || "/placeholder.svg"} className="w-10 h-10 rounded-full border" />
+            <div className="flex-1 bg-gray-100 dark:bg-gray-700 text-muted-foreground px-4 py-2 rounded-full text-sm">
+              Bạn đang nghĩ gì?
             </div>
-          )}
+          </div>
 
-
-          <Dialog open={openCreatePostDialog} onOpenChange={setOpenCreatePostDialog}>
-            <DialogContent className="sm:max-w-[600px] p-0  ">
-              {/* Header của dialog */}
+          <Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
+            <DialogContent className="sm:max-w-[600px] p-0">
               <DialogHeader className="border-b px-6 pt-4 pb-2 bg-background">
                 <DialogTitle className="text-lg font-semibold">Tạo bài viết</DialogTitle>
               </DialogHeader>
 
-              {/* Nội dung */}
               <div className="px-6 pb-6 pt-4 space-y-4 bg-background">
-                {/* Avatar + chọn quyền riêng tư */}
                 <div className="flex items-start gap-3">
-                  <img
-                    src={userProfile?.avatar || "/placeholder.svg"}
-                    alt="Avatar"
-                    className="w-12 h-12 rounded-full border border-border object-cover object-center"
-                  />
+                  <img src={userProfile.avatar || "/placeholder.svg"} className="w-12 h-12 rounded-full border" />
                   <div className="flex flex-col">
-                    <span className="font-medium text-sm">{userProfile?.fullName}</span>
-                    <Select defaultValue="public">
-                      <SelectTrigger className="w-[140px] h-7 text-xs mt-1">
+                    <span className="font-medium text-sm">{userProfile.fullName}</span>
+                    <Select value={privacy} onValueChange={setPrivacy}>
+                      <SelectTrigger className="w-[140px] h-7 text-xs mt-1 cursor-pointer">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="public">
-                          <Globe className="mr-2 h-4 w-4" /> Công khai
-                        </SelectItem>
-                        <SelectItem value="private">
-                          <GlobeLock className="mr-2 h-4 w-4" /> Riêng tư
-                        </SelectItem>
+                        <SelectItem value="public"><Globe className="mr-2 h-4 w-4" />Công khai</SelectItem>
+                        <SelectItem value="private"><GlobeLock className="mr-2 h-4 w-4" />Riêng tư</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                {/* Nội dung bài viết */}
                 <Textarea
                   value={postContent}
                   onChange={(e) => setPostContent(e.target.value)}
                   placeholder="Bạn đang nghĩ gì?"
-                  className="resize-none min-h-[100px] border-0 border-b focus:ring-0 focus-visible:ring-0 text-base placeholder:text-muted-foreground"
+                  className="resize-none border text-base placeholder:text-muted-foreground"
                 />
 
-                {/* Hành động bổ sung */}
-                <div className="flex gap-4 text-muted-foreground relative pl-1">
-                  <div className="relative">
-                    <SmileIcon
-                      className="w-5 h-5 cursor-pointer"
-                      onClick={() => setShowPicker(!showPicker)}
+                {previewUrls.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 max-h-[150px] overflow-y-auto">
+                    {previewUrls.map((url, idx) => (
+                      <div key={idx} className="relative">
+                        <img src={url} className="w-full h-32 object-cover rounded-lg" />
+                        <button
+                          onClick={() => removeImage(idx)}
+                          className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-4 text-muted-foreground">
+                  <label htmlFor="upload-image">
+                    <ImageIcon className="w-5 h-5 cursor-pointer" />
+                    <input
+                      type="file"
+                      id="upload-image"
+                      className="hidden"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageChange}
                     />
+                  </label>
+                  <div className="relative">
+                    <SmileIcon className="w-5 h-5 cursor-pointer" onClick={() => setShowPicker(!showPicker)} />
                     {showPicker && (
-                      <div
-                        ref={emojiPickerRef}
-                        className="absolute z-[9999] -top-50 -left-95"
-                      >
-                        <EmojiPicker
-                          onEmojiClick={(emojiData) => {
-                            setPostContent((prev) => prev + emojiData.emoji);
-                            setShowPicker(false);
-                          }}
-                          autoFocusSearch={false}
-                        />
+                      <div ref={emojiPickerRef} className="absolute z-50 left-10">
+                        <EmojiPicker onEmojiClick={(emojiData) => {
+                          setPostContent(prev => prev + emojiData.emoji);
+                        }} />
                       </div>
                     )}
                   </div>
-
-                  <ImageIcon className="w-5 h-5 cursor-pointer" />
-                  <MapPinIcon className="w-5 h-5 cursor-pointer" />
+                  <MapPinIcon className="w-5 h-5" />
                 </div>
 
-                {/* Nút đăng bài */}
-                <div className="flex justify-end pt-2">
+                <div className="flex justify-end gap-2 mt-4">
                   <Button
+                    variant="ghost"
                     onClick={() => {
-                      // Gửi bài viết ở đây
-                      setOpenCreatePostDialog(false);
+                      setConfirmDialog({
+                        open: true,
+                        title: "Xác nhận huỷ bài viết",
+                        description: "Bạn có chắc muốn huỷ bài viết? Nội dung và ảnh đã nhập sẽ bị xoá.",
+                        confirmText: "Huỷ bài",
+                        cancelText: "Quay lại",
+                        onConfirm: () => {
+                          setPostContent("");
+                          setSelectedImages([]);
+                          setPreviewUrls([]);
+                          setOpenCreateDialog(false);
+                        },
+                      });
+
                     }}
                   >
-                    Đăng bài
+                    Hủy
+                  </Button>
+
+                  <Button onClick={handleCreatePost} disabled={loading}>
+                    {loading ? "Đang đăng..." : "Đăng bài"}
                   </Button>
                 </div>
+
               </div>
             </DialogContent>
           </Dialog>
-
-
-
-          {postsData?.map((post) => (
-
-            <Card key={post?.id} className="border-secondary dark:bg-gray-800  shadow-xl">
-              <CardHeader className="pt-0 relative">
-                <CardTitle className="text-lg font-semibold">
-                  <div className="flex items-center gap-x-3">
-                    <img
-                      src={user.avatar || "/placeholder.svg"}
-                      alt="Avatar"
-                      className="w-14 h-14 rounded-full border border-secondary shadow-md"
-                    />
-                    <div className="flex flex-col justify-top h-14">
-                      <span>{post.createdBy}</span>
-                      <div className="text-xs text-sidebar-ring flex items-center gap-2">
+        </>
+      )}
+      {loadingPosts ? (
+        <div className="text-muted-foreground text-center py-4">Đang tải bài viết...</div>
+      ) : ([...postsData]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .filter(post => String(post.createdBy) === currentUserId).map(post => (
+          <Card key={post._id} className="shadow-md dark:bg-gray-800">
+            <CardHeader className="pt-4 pb-2 relative">
+              <CardTitle className="text-lg font-semibold">
+                <div className="flex items-start justify-between">
+                  <div className="flex gap-x-3">
+                    <img src={post.user.avatar || "/placeholder.svg"} className="w-14 h-14 rounded-full border" />
+                    <div className="flex flex-col">
+                      <span>{post.user.fullName}</span>
+                      <div className="text-xs text-muted-foreground flex items-center gap-2">
                         <span>{formatCreatedAt(post.createdAt)}</span>
-                        {post.privacy === "private" ? (
-                          <GlobeLock size={16} className="text-sidebar-ring" />
-                        ) : (
-                          <Globe size={16} className="text-sidebar-ring" />
-                        )}
+                        {post.privacy.includes("public") ? <Globe className="w-4 h-4" /> : <GlobeLock className="w-4 h-4" />}
                       </div>
                     </div>
-
-
                   </div>
-                </CardTitle>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="absolute top-2 right-2 p-2 hover:bg-muted rounded-md">
-                      <Ellipsis className="w-5 h-5" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    side="bottom"
-                    align="end"
-                    sideOffset={4}
-                    alignOffset={0}
-                    className="w-48 p-1 rounded-lg shadow-md border z-50"
+
+                  {String(post.createdBy?._id || post.createdBy) === currentUserId && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-2 hover:bg-muted rounded-md">
+                          <Ellipsis className="w-5 h-5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => { setEditingPost(post); setIsEditOpen(true); }}>
+                          <Pencil className="w-4 h-4 text-blue-500 mr-2" /> Chỉnh sửa
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() =>
+                          setConfirmDialog({
+                            open: true,
+                            title: "Xác nhận xóa bài viết",
+                            description: "Bạn có chắc chắn muốn xóa bài viết này? Thao tác này không thể hoàn tác.",
+                            confirmText: "Xoá",
+                            cancelText: "Hủy",
+                            onConfirm: () => handleDeletePost(post._id),
+                          })
+                        }>
+                          <Trash2 className="w-4 h-4 text-red-500 mr-2" /> Xóa
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+              </CardTitle>
+            </CardHeader>
+
+            <CardDescription className="px-6 pb-2 whitespace-pre-line text-sm text-foreground">
+              {post.title.length > 300 && !expandedPosts[post._id] ? (
+                <>
+                  {post.title.slice(0, 300)}...
+                  <button
+                    onClick={() =>
+                      setExpandedPosts(prev => ({ ...prev, [post._id]: true }))
+                    }
+                    className="text-blue-500 underline ml-1 text-xs cursor-pointer"
                   >
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setEditingPost({ ...post });
-                        setIsEditModalOpen(true);
-                      }}
-
-
-                      className="flex items-center gap-2 hover:bg-accent cursor-pointer"
-                    >
-                      <Pencil className="w-4 h-4 text-blue-500" />
-                      <span className="text-sm">Chỉnh sửa</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-
-                      className="flex items-center gap-2 hover:bg-accent cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                      <span className="text-sm">Xóa bài đăng</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <CardDescription className="text-sm text-gray-500 mt-4">
-                  <div className="text-sm text-sidebar-foreground whitespace-pre-line">
-                    {post.title.length > 400 && !expandedPosts[post.id]
-                      ? `${post.title.slice(0, 300)}...`
-                      : post.title}
-                  </div>
-
-                  {post.title.length > 400 && (
+                    Xem thêm
+                  </button>
+                </>
+              ) : (
+                <>
+                  {post.title}
+                  {post.title.length > 300 && (
                     <button
-                      onClick={() => toggleExpand(post.id)}
-                      className="text-blue-500 text-sm underline mt-1"
+                      onClick={() =>
+                        setExpandedPosts(prev => ({ ...prev, [post._id]: false }))
+                      }
+                      className="text-blue-500 underline ml-1 text-xs"
                     >
-                      {expandedPosts[post.id] ? "Ẩn bớt" : "Xem thêm"}
+                      Ẩn bớt
                     </button>
                   )}
+                </>
+              )}
+            </CardDescription>
 
-                </CardDescription>
-
-
-              </CardHeader>
-              {post?.photos.length > 0 && (
-                <CardContent>
-                  <PhotoProvider maskOpacity={0} >
-                    {post.photos.length === 1 && (
-                      <PhotoView src={post.photos[0]}>
+            {post.photos.length > 0 && (
+              <CardContent>
+                <PhotoProvider>
+                  <div className="grid grid-cols-2 gap-2">
+                    {post.photos.slice(0, 3).map((url, idx) => (
+                      <PhotoView key={idx} src={url}>
                         <img
-                          src={post.photos[0]}
-                          alt="Single"
-                          className="w-full h-80 object-cover rounded-lg cursor-pointer"
+                          src={url}
+                          alt={`Ảnh ${idx + 1}`}
+                          className="w-full h-40 object-cover rounded-lg cursor-pointer"
                         />
                       </PhotoView>
-                    )}
-
-                    {post.photos.length === 2 && (
-                      <div className="grid grid-cols-2 gap-2">
-                        {post.photos.map((url, idx) => (
-                          <PhotoView key={idx} src={url}>
-                            <img
-                              src={url}
-                              alt={`Photo ${idx}`}
-                              className="w-full h-64 object-cover rounded-lg cursor-pointer"
-                            />
-                          </PhotoView>
-                        ))}
-                      </div>
-                    )}
-
-                    {post.photos.length === 3 && (
-                      <div className="grid grid-cols-3 gap-2">
-                        <PhotoView src={post.photos[0]}>
-                          <img
-                            src={post.photos[0]}
-                            alt="Photo 0"
-                            className="col-span-2 h-64 object-cover rounded-lg cursor-pointer"
-                          />
-                        </PhotoView>
-                        <div className="flex flex-col gap-2">
-                          {post.photos.slice(1).map((url, idx) => (
-                            <PhotoView key={idx} src={url}>
-                              <img
-                                src={url}
-                                alt={`Photo ${idx + 1}`}
-                                className="h-31 object-cover rounded-lg cursor-pointer"
-                              />
-                            </PhotoView>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    ))}
 
                     {post.photos.length > 3 && (
-                      <div className="grid grid-cols-2 gap-2 relative">
-                        {post.photos.slice(0, 3).map((url, idx) => (
-                          <PhotoView key={idx} src={url}>
-                            <img
-                              src={url}
-                              alt={`Photo ${idx}`}
-                              className="w-full h-40 object-cover rounded-lg cursor-pointer"
-                            />
-                          </PhotoView>
-                        ))}
-                        <PhotoView src={post.photos[3]}>
-                          <div className="relative cursor-pointer">
-                            <img
-                              src={post.photos[3]}
-                              alt="Photo 3"
-                              className="w-full h-40 object-cover rounded-lg brightness-75"
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-white  bg-secondary/30 text-base font-medium px-2 py-1 rounded-md backdrop-blur-none">
-                                +{post.photos.length - 4}
-                              </span>
-                            </div>
-                          </div>
-                        </PhotoView>
-                      </div>
-                    )}
-
-                    {post.photos.length === 0 && (
-                      <p className="text-gray-400 italic">No photos</p>
-                    )}
-                  </PhotoProvider>
-                </CardContent>
-              )}
-
-              <CardFooter className="text-sm text-gray-500 justify-between px-4">
-                <div className="flex w-full">
-                  <div
-                    className={`flex items-center gap-1 cursor-pointer w-1/2 ml-4 ${postsData.find(item => item.id === post.id)?.likedBy.includes(currentUserId)
-                      ? 'text-red-500'
-                      : ''
-                      }`}
-                    onClick={() => toggleLike(post.id)}
-                  >
-                    <Heart className="w-5 h-5" />
-                    <span>
-                      {postsData.find(item => item.id === post.id)?.likedBy.length ?? 0}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1 justify-start w-1/2">
-                    <MessageSquare className="w-5 h-5" />
-                    <span>Bình luận</span>
-                  </div>
-                </div>
-              </CardFooter>
-
-
-
-            </Card>
-          ))}
-        </div>
-        <div className="w-full lg:w-1/3">{/* Sidebar (if any) */}</div>
-      </div>
-      {isEditModalOpen && editingPost && (
-        <PhotoProvider>
-          <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-
-            <DialogContent
-              className="max-w-2xl max-h-[80vh] overflow-y-auto"
-            >
-              <DialogHeader>
-                <DialogTitle>Chỉnh sửa bài viết</DialogTitle>
-              </DialogHeader>
-
-              {/* Header tương tự Card */}
-              <div className="flex items-center gap-x-3 mt-4">
-                <img
-                  src={user.avatar || "/placeholder.svg"}
-                  alt="Avatar"
-                  className="w-14 h-14 rounded-full border border-secondary shadow-md"
-                />
-                <div className="flex flex-col justify-top h-14">
-                  <span>{editingPost.createdBy}</span>
-                  <div className="text-xs text-sidebar-ring flex items-center gap-2">
-                    <span>{formatCreatedAt(editingPost.createdAt)}</span>
-
-                    {/* Dropdown chỉnh sửa quyền riêng tư */}
-                    <Select
-                      value={editingPost.privacy}
-                      onValueChange={(value) =>
-                        setEditingPost({ ...editingPost, privacy: value })
-                      }
-                    >
-                      <SelectTrigger className="w-[130px] h-7 text-xs bg-background text-sidebar-foreground">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="public"><Globe />Công khai</SelectItem>
-                        <SelectItem value="private"><GlobeLock />Riêng tư</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-              {/* Tiêu đề */}
-              {editingPost && (
-                <div className="mt-4">
-                  <div
-                    contentEditable
-                    suppressContentEditableWarning
-                    className="w-full bg-transparent focus:outline-none pb-1"
-                    style={{ minHeight: '3rem' }}
-                    onInput={e => {
-                      const text = (e.target as HTMLDivElement).innerText;
-                      setEditingPost(prev => prev ? { ...prev, title: text } : prev);
-                    }}
-                  >
-                    {expandedPostEdit[editingPost.id] || editingPost.title.length <= 300
-                      ? editingPost.title
-                      : editingPost.title.slice(0, 300)}
-                  </div>
-                  {editingPost.title.length > 300 && (
-                    <button
-                      type="button"
-                      onClick={() => toggleEditExpand(editingPost.id)}
-                      className="text-blue-500 text-sm mt-1"
-                    >
-                      {expandedPostEdit[editingPost.id] ? 'Ẩn bớt' : 'Xem thêm'}
-                    </button>
-                  )}
-                </div>
-              )}
-
-
-              {/* Ảnh */}
-              <div className="mt-4">
-                <PhotoProvider maskOpacity={0}>
-                  {editingPost.photos.length === 1 && (
-                    <PhotoView src={editingPost.photos[0]}>
-                      <img
-                        src={editingPost.photos[0]}
-                        alt="Single"
-                        className="w-full h-80 object-cover rounded-lg cursor-pointer"
-                      />
-                    </PhotoView>
-                  )}
-
-                  {editingPost.photos.length === 2 && (
-                    <div className="grid grid-cols-2 gap-2">
-                      {editingPost.photos.map((url, idx) => (
-                        <PhotoView key={idx} src={url}>
-                          <img
-                            src={url}
-                            alt={`Photo ${idx}`}
-                            className="w-full h-64 object-cover rounded-lg cursor-pointer"
-                          />
-                        </PhotoView>
-                      ))}
-                    </div>
-                  )}
-
-                  {editingPost.photos.length === 3 && (
-                    <div className="grid grid-cols-3 gap-2">
-                      <PhotoView src={editingPost.photos[0]}>
-                        <img
-                          src={editingPost.photos[0]}
-                          alt="Photo 0"
-                          className="col-span-2 h-64 object-cover rounded-lg cursor-pointer"
-                        />
-                      </PhotoView>
-                      <div className="flex flex-col gap-2">
-                        {editingPost.photos.slice(1).map((url, idx) => (
-                          <PhotoView key={idx} src={url}>
-                            <img
-                              src={url}
-                              alt={`Photo ${idx + 1}`}
-                              className="h-31 object-cover rounded-lg cursor-pointer"
-                            />
-                          </PhotoView>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {editingPost.photos.length > 3 && (
-                    <div className="grid grid-cols-2 gap-2 relative">
-                      {editingPost.photos.slice(0, 3).map((url, idx) => (
-                        <PhotoView key={idx} src={url}>
-                          <img
-                            src={url}
-                            alt={`Photo ${idx}`}
-                            className="w-full h-40 object-cover rounded-lg cursor-pointer"
-                          />
-                        </PhotoView>
-                      ))}
-                      <PhotoView src={editingPost.photos[3]}>
+                      <PhotoView src={post.photos[3]}>
                         <div className="relative cursor-pointer">
                           <img
-                            src={editingPost.photos[3]}
-                            alt="Photo 3"
+                            src={post.photos[3]}
+                            alt="Ảnh thứ 4"
                             className="w-full h-40 object-cover rounded-lg brightness-75"
                           />
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-white  bg-secondary/30 text-base font-medium px-2 py-1 rounded-md backdrop-blur-none">
-                              +{editingPost.photos.length - 4}
+                            <span className="text-white bg-black/50 text-sm font-semibold px-3 py-1 rounded-lg">
+                              +{post.photos.length - 3}
                             </span>
                           </div>
                         </div>
                       </PhotoView>
-                    </div>
-                  )}
-
-                  {editingPost.photos.length === 0 && (
-                    <p className="text-gray-400 italic">No photos</p>
-                  )}
+                    )}
+                  </div>
                 </PhotoProvider>
+              </CardContent>
+            )}
+            
+
+            <CardFooter className="text-sm text-gray-500 px-4">
+              <div className="flex w-full justify-between">
+                <div onClick={() => handleLike(post._id)} className={`flex items-center gap-1 cursor-pointer ${post.likedBy.includes(currentUserId) ? "text-red-500" : ""}`}>
+                  <Heart className="w-5 h-5" />
+                  <span>{post.likedBy.length}</span>
+                </div>
+                <div className="flex items-center gap-1 cursor-pointer" onClick={() => setDetailPostId(post._id)}>
+                  <MessageSquare className="w-5 h-5" />
+                  <span>Bình luận</span>
+                </div>
               </div>
+            </CardFooter>
 
-              {/* Footer hành động */}
+            <hr/>
 
-              <DialogFooter>
-                <button
-                  // onClick={() => {
-                  //   if (editingPost) {
-                  //     setPostsData(prev =>
-                  //       prev.map(item =>
-                  //         item.id === editingPost.id ? { ...editingPost } : item
-                  //       )
-                  //     );
-                  //     setIsEditModalOpen(false);
-                  //   }
-                  // }}
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  Lưu thay đổi
-                </button>
-              </DialogFooter>
+            {post.latestComment && (
+              <div className="flex items-start gap-2 px-4 mt-1 hover:bg-muted/60 rounded-md">
+                <img src={post.latestComment.commenter.avatar} className="w-8 h-8 rounded-full" />
+                <div className="bg-muted px-3 py-2 rounded-xl max-w-[80%]">
+                  <p className="text-xs font-semibold">{post.latestComment.commenter.fullName}</p>
+                  <p className="text-sm">{post.latestComment.message}</p>
+                </div>
+              </div>
+            )}
 
-            </DialogContent>
-          </Dialog>
-        </PhotoProvider>
+            <div className="px-4 pb-3">
+              <button onClick={() => setDetailPostId(post._id)} className="text-gray-600 hover:underline text-sm cursor-pointer">
+                Xem thêm
+              </button>
+            </div>
+          </Card>
+        )))}
+
+      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {confirmDialog.cancelText || "Hủy"}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                confirmDialog.onConfirm();
+                setConfirmDialog({ ...confirmDialog, open: false });
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {confirmDialog.confirmText || "Xác nhận"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
+      {editingPost && (
+        <EditPostDialog
+          open={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          post={editingPost}
+          onSave={() => {
+            setIsEditOpen(false);
+            fetchPosts();
+          }}
+        />
       )}
-    </>
+
+      {detailPostId && (
+        <PostDetailDialog
+          postId={detailPostId}
+          open={!!detailPostId}
+          onOpenChange={(open) => {
+            if (!open) setDetailPostId(null);
+          }}
+        />
+      )}
+    </div>
   );
 }
 

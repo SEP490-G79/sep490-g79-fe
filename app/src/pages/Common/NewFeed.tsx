@@ -1,177 +1,321 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
 import PostCard from "@/components/post/PostCard";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import EditPostDialog from "@/components/post/EditPostDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
+import { Textarea, } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SmileIcon, ImageIcon, MapPinIcon, Globe, GlobeLock } from "lucide-react";
-import { useRef, useEffect } from "react";
+import { SmileIcon, ImageIcon, MapPinIcon, Globe, GlobeLock, X } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import AppContext from "@/context/AppContext";
+import useAuthAxios from "@/utils/authAxios";
+import { toast } from "sonner";
+import axios from "axios";
+import type { PostType } from "@/types/Post";
+import PostDetailDialog from "@/components/post/PostDetail";
 
-
-function Newfeed() {
-  const currentUserId = "hao";
-
-const currentUser = 
-  {
-    id: "hao",
-    avatar: "https://i.pinimg.com/736x/f8/ab/a4/f8aba4c637ecd88f18b58b2967f62c05.jpg",
-    fullName: "Hao nè hẹ hẹ ehj",
-  }
-
-
-  const initialPosts = [
-    {
-      id: 1,
-      createdBy: "Nguyễn Văn A",
-      user: {
-        avatar: "https://i.pinimg.com/736x/f8/ab/a4/f8aba4c637ecd88f18b58b2967f62c05.jpg",
-        fullName: "Nguyễn Văn A",
-      },
-      title: "Newjeans never die",
-      privacy: "public",
-      photos: [
-        "https://i.pinimg.com/736x/b8/c4/b9/b8c4b99567ca22c481880d7983d60b1e.jpg",
-        "https://i.pinimg.com/736x/c8/3b/c9/c83bc998e196e566b46a2bc60f169d42.jpg",
-        "https://i.pinimg.com/736x/06/f1/04/06f10465e63c9877dcc815e014ee1a3a.jpg",
-        "https://i.pinimg.com/736x/aa/29/5b/aa295bd9c166296bebbed87cdf118f5d.jpg",
-        "https://i.pinimg.com/736x/aa/29/5b/aa295bd9c166296bebbed87cdf118f5d.jpg",
-        "https://i.pinimg.com/736x/d8/8d/66/d88d66b30a635e86379654164d0e8a98.jpg",
-      ],
-      likedBy: ["toi","tao"],
-      status: "active",
-      createdAt: "2025-06-01T10:00:00Z",
-    },
-    {
-      id: 2,
-      createdBy: "Trần B",
-      user: {
-        avatar: "https://i.pinimg.com/736x/7f/ea/10/7fea104bdd0286284ed2c80797657384.jpg",
-        fullName: "Trần B",
-      },
-      title: "Hẹ Hẹ Hẹ Hẹ Hẹ ",
-      privacy: "public",
-      photos: ["https://i.pinimg.com/736x/07/49/c1/0749c1507d82680963885ad9a6a8d3d3.jpg"],
-      likedBy: ["hao"],
-      status: "active",
-      createdAt: "2025-06-03T14:00:00Z",
-    },
-  ];
-
-  const [postsData, setPostsData] = useState(initialPosts);
+const Newfeed = () => {
+  const { userProfile, coreAPI, accessToken, setUserProfile } = useContext(AppContext);
+  const authAxios = useAuthAxios();
+  const [posts, setPosts] = useState<PostType[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingPosts, setLoadingPosts] = useState(false);
   const [postContent, setPostContent] = useState("");
   const [privacy, setPrivacy] = useState("public");
-const [showPicker, setShowPicker] = useState(false);
-    const [selectedEmoji, setSelectedEmoji] = useState("");
-    const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [showPicker, setShowPicker] = useState(false);
+  const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [editingPost, setEditingPost] = useState<PostType | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const currentUserId = userProfile?._id || "guest";
+  const [detailPostId, setDetailPostId] = useState<string | null>(null);
 
-     const { userProfile } = useContext(AppContext);
+  const fetchPosts = useCallback(async () => {
+    try {
+      setLoadingPosts(true);
+      const res = await axios.get(`${coreAPI}/posts/get-posts-list`, accessToken ? {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      } : {});
+      //console.log("posts response:", res.data);
+      const mapped: PostType[] = res.data.map((post: any) => ({
+        _id: post._id,
+        title: post.title,
+        photos: post.photos,
+        privacy: post.privacy || "public",
+        status: post.status,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
+        createdBy: post.createdBy._id,
+        user: {
+          avatar: post.createdBy.avatar,
+          fullName: post.createdBy.fullName,
+        },
+        likedBy: post.likedBy.map((u: any) => u._id),
+        latestComment: post.latestComment ? {
+          _id: post.latestComment._id,
+          message: post.latestComment.message,
+          commenter: {
+            _id: post.latestComment.commenter._id,
+            fullName: post.latestComment.commenter.fullName,
+            avatar: post.latestComment.commenter.avatar,
+          },
+        } : null,
+      }));
+      setPosts(mapped);
+    } catch (err) {
+      console.error("Lỗi lấy bài viết:", err);
+    } finally {
+      setLoadingPosts(false);
+    }
+  }, [coreAPI, accessToken]);
 
-useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+  useEffect(() => {
+    if (accessToken && !userProfile) {
+      authAxios.get(`${coreAPI}/users/get-user`)
+        .then(res => setUserProfile(res.data))
+        .catch(console.error);
+    }
+  }, [accessToken, userProfile, coreAPI]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
         setShowPicker(false);
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
-    const handleLike = (postId: string | number) => {
-    setPostsData(prev =>
-      prev.map(post =>
-        post.id === postId
-          ? {
-              ...post,
-              likedBy: post.likedBy.includes(currentUserId)
-                ? post.likedBy.filter(id => id !== currentUserId)
-                : [...post.likedBy, currentUserId],
-            }
-          : post
-      )
-    );
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedImages(prev => [...prev, ...files]);
+    const urls = files.map(file => URL.createObjectURL(file));
+    setPreviewUrls(prev => [...prev, ...urls]);
   };
 
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handlePostSubmit = async () => {
+    if (!postContent.trim() && selectedImages.length === 0) return;
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append("title", postContent);
+      formData.append("privacy", privacy);
+      selectedImages.forEach(file => formData.append("photos", file));
+      await authAxios.post(`${coreAPI}/posts/create`, formData);
+      toast.success("Đăng bài thành công");
+      setPostContent("");
+      setSelectedImages([]);
+      setPreviewUrls([]);
+      setOpenCreateDialog(false);
+      await fetchPosts();
+    } catch (error: any) {
+      const message = error?.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại.";
+      toast.error(`Lỗi tạo bài viết: ${message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLike = async (postId: string | number) => {
+    if (!userProfile?._id) {
+      toast.warning("Bạn cần đăng nhập để thả tim.");
+      return;
+    }
+    try {
+      await authAxios.post(`${coreAPI}/posts/react/${postId}`);
+      setPosts(prev =>
+        prev.map(p =>
+          p._id === postId
+            ? {
+              ...p,
+              likedBy: p.likedBy.includes(currentUserId)
+                ? p.likedBy.filter(id => id !== currentUserId)
+                : [...p.likedBy, currentUserId],
+            }
+            : p
+        )
+      );
+    } catch (err) {
+      console.error("Lỗi like:", err);
+    }
+  };
+  const handleDeletePost = async (postId: string | number) => {
+    try {
+      await authAxios.delete(`${coreAPI}/posts/${postId}`);
+      toast.success("Xoá bài viết thành công");
+      setPosts((prev) => prev.filter((p) => p._id !== postId));
+    } catch (err) {
+      toast.error("Không thể xoá bài viết");
+      console.error("Delete error:", err);
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto py-10 px-4">
       <h1 className="text-2xl font-bold mb-4">Bảng tin</h1>
-      {/* Form tạo bài viết */}
-      <Card className="border-secondary dark:bg-gray-800 shadow-xl">
-        <CardHeader className="flex flex-row items-center gap-x-3">
-          <img
-            src={userProfile?.avatar || "/placeholder.svg"}
-            alt="Avatar"
-            className="w-14 h-14 rounded-full border border-secondary shadow-md"
-          />
-          <div className="flex flex-col">
-            <span className="font-medium">{userProfile?.fullName}</span>
-            <Select defaultValue={privacy} onValueChange={setPrivacy}>
-              <SelectTrigger className="w-[140px] h-7 text-xs mt-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="public">
-                  <Globe className="mr-2 w-4 h-4" />Công khai
-                </SelectItem>
-                <SelectItem value="private">
-                  <GlobeLock className="mr-2 w-4 h-4" />Riêng tư
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
 
-        <CardContent className="mt-4 p-0">
-          <Textarea
-            value={postContent}
-            onChange={(e) => setPostContent(e.target.value)}
-            placeholder="Bạn đang nghĩ gì?"
-            className="resize-none min-h-[100px] border-0 border-b focus:ring-0 focus-visible:ring-0 dark:bg-gray-800 text-lg placeholder:text-muted-foreground"
-          />
-
-          <div className="flex gap-4 mt-4 pl-6 text-muted-foreground relative">
-            <div className="relative">
-              <SmileIcon
-                className="w-6 h-6 cursor-pointer"
-                onClick={() => setShowPicker(!showPicker)}
-              />
-              {showPicker && (
-                <div ref={emojiPickerRef} className="absolute z-50 top-8">
-                  <EmojiPicker
-                    onEmojiClick={(emojiData) => {
-                      setPostContent((prev) => prev + emojiData.emoji);
-                    }}
-                    autoFocusSearch={false}
-                  />
-                </div>
-              )}
+      {userProfile?._id && (
+        <>
+          <div
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
+            onClick={() => setOpenCreateDialog(true)}
+          >
+            <img src={userProfile.avatar || "/placeholder.svg"} className="w-10 h-10 rounded-full border" />
+            <div className="flex-1 bg-gray-100 dark:bg-gray-700 text-muted-foreground px-4 py-2 rounded-full text-sm">
+              Bạn đang nghĩ gì?
             </div>
+          </div>
 
-            <ImageIcon className="w-6 h-6 cursor-pointer" />
-            <MapPinIcon className="w-6 h-6 cursor-pointer" />
-          </div>
-          <div className="flex justify-end mt-6 pr-6">
-            <Button variant="default" >Đăng bài</Button>
-          </div>
-        </CardContent>
-      </Card>
-      {postsData.map((post) => (
-        <PostCard
-          key={post.id}
-          post={post}
-          currentUserId={currentUserId}
-          onLike={handleLike}
-      
+          <Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
+            <DialogContent className="sm:max-w-[600px] p-0">
+              <DialogHeader className="border-b px-6 pt-4 pb-2 bg-background">
+                <DialogTitle className="text-lg font-semibold">Tạo bài viết</DialogTitle>
+              </DialogHeader>
+
+              <div className="px-6 pb-6 pt-4 space-y-4 bg-background">
+                <div className="flex items-start gap-3">
+                  <img src={userProfile.avatar || "/placeholder.svg"} className="w-12 h-12 rounded-full border" />
+                  <div className="flex flex-col">
+                    <span className="font-medium text-sm">{userProfile.fullName}</span>
+                    <Select value={privacy} onValueChange={setPrivacy}>
+                      <SelectTrigger className="w-[140px] h-7 text-xs mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="public"><Globe className="mr-2 h-4 w-4" />Công khai</SelectItem>
+                        <SelectItem value="private"><GlobeLock className="mr-2 h-4 w-4" />Riêng tư</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <Textarea
+                  value={postContent}
+                  onChange={(e) => setPostContent(e.target.value)}
+                  placeholder="Bạn đang nghĩ gì?"
+                  className="resize-none border border-border text-base placeholder:text-muted-foreground overflow-y-auto max-h-[200px] focus:ring-0"
+                />
+
+                {previewUrls.length > 0 && (
+                  <div className="max-h-[200px] overflow-y-auto pr-1">
+                    <div className="grid grid-cols-3 gap-2">
+                      {previewUrls.map((url, idx) => (
+                        <div key={idx} className="relative">
+                          <img src={url} className="w-full h-32 object-cover rounded-lg" />
+                          <button
+                            onClick={() => removeImage(idx)}
+                            className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-4 text-muted-foreground relative pl-1">
+                  <label htmlFor="image-upload">
+                    <ImageIcon className="w-5 h-5 cursor-pointer" />
+                    <input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
+                  </label>
+
+                  <div className="relative">
+                    <SmileIcon className="w-5 h-5 cursor-pointer" onClick={() => setShowPicker(!showPicker)} />
+                    {showPicker && (
+                      <div ref={emojiPickerRef} className="absolute left-15 bottom-[-200px] z-50 ">
+                        <EmojiPicker
+                          onEmojiClick={(emojiData) => {
+                            setPostContent(prev => prev + emojiData.emoji);
+                          }}
+                          autoFocusSearch={false}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <MapPinIcon className="w-5 h-5 cursor-pointer" />
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <Button onClick={handlePostSubmit} disabled={loading}>
+                    {loading ? "Đang đăng..." : "Đăng bài"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
+
+      {loadingPosts ? (
+        <p className="text-center text-muted-foreground">Đang tải bài viết...</p>
+      ) : (
+        posts
+          .slice()
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .map((post) => (
+            <PostCard
+              key={post._id}
+              post={post}
+              currentUserId={currentUserId}
+              onLike={handleLike}
+              isGuest={!userProfile?._id}
+              onEdit={(post) => {
+                setEditingPost(post);
+                setIsEditOpen(true);
+              }}
+              onDelete={(post) => handleDeletePost(post._id)}
+              latestComment={post.latestComment}
+              onViewDetail={(postId) => setDetailPostId(postId)}
+            />
+          ))
+      )}
+
+      {editingPost && (
+        <EditPostDialog
+          open={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          post={editingPost}
+          onSave={(updatedPost) => {
+            setPosts(prev => prev.map(p => (p._id === updatedPost._id ? updatedPost : p)));
+            setIsEditOpen(false);
+            fetchPosts();
+          }}
         />
-      ))}
+      )}
+
+      {detailPostId && (
+        <PostDetailDialog
+          postId={detailPostId}
+          open={!!detailPostId}
+          onOpenChange={(open) => {
+            if (!open) setDetailPostId(null);
+          }}
+        />
+      )}
+
     </div>
   );
-}
+};
 
 export default Newfeed;

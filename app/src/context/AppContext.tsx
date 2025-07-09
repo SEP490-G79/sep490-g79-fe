@@ -13,7 +13,7 @@ import type { Shelter } from "@/types/Shelter";
 import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import type { AdoptionForm } from "@/types/AdoptionForm";
 
-const excludedURLs = ["/", "/login", "/register", "/active-account", "/faq"];
+const excludedURLs = ["/", "/login", "/register", "/active-account", "/faq", "/donation", "/donation/success", "/donation/cancel", "/newfeed"];
 
 interface AppContextType {
   user: User | null;
