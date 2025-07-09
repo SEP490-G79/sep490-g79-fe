@@ -6,7 +6,14 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, LucideArrowLeft, PenLine } from "lucide-react";
+import {
+  Eye,
+  LucideArrowLeft,
+  PenLine,
+  Plus,
+  PlusCircle,
+  SaveAllIcon,
+} from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import QuestionCard from "../question/QuestionCard";
@@ -15,6 +22,12 @@ import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+
+import { TooltipTrigger } from "@radix-ui/react-tooltip";
+import { Tooltip, TooltipContent } from "@/components/ui/tooltip";
+import type { Question } from "@/types/Question";
+import { Description } from "@radix-ui/react-dialog";
 
 export default function TemplateDialog() {
   const { shelterId, templateId } = useParams<{
@@ -24,6 +37,7 @@ export default function TemplateDialog() {
   const { coreAPI, shelterTemplates, setShelterTemplates } =
     useContext(AppContext);
   const [adoptionTemplate, setAdoptionTemplate] = useState<AdoptionTemplate>();
+  const [questionsList, setQuestionsList] = useState<Question[]>([]);
   const authAxios = useAuthAxios();
 
   useEffect(() => {
@@ -33,9 +47,11 @@ export default function TemplateDialog() {
       .then((res) => {
         const templates: AdoptionTemplate[] = res.data;
         setShelterTemplates(templates);
+
         const found = templates.find((t) => t._id === templateId);
         if (found) {
           setAdoptionTemplate(found);
+          setQuestionsList([...found.questions]);
         } else {
           toast.error("Không tìm thấy mẫu nhận nuôi");
         }
@@ -45,6 +61,57 @@ export default function TemplateDialog() {
         toast.error("Lỗi khi tải dữ liệu mẫu nhận nuôi");
       });
   }, [coreAPI, shelterId, templateId]);
+
+  const handleCreateQuestion = () => {
+    const now = new Date();
+    const newQuestion: Question = {
+      _id: `${adoptionTemplate?._id}-question-${Date.now()}`,
+      title: `Câu hỏi ${questionsList.length + 1}`,
+      priority: "none",
+      options: [],
+      status: "active",
+      type: "",
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    setQuestionsList((prev) => [...prev, newQuestion]);
+  };
+
+  // console.log(questionsList);
+
+  const handleSave = async () => {
+    if (!adoptionTemplate) return;
+    try {
+      const questionsPayload = questionsList.map((question) => {
+        const isExisting = adoptionTemplate.questions.some(
+          (old) => old._id == question._id
+        );
+
+        if (isExisting) {
+          return question;
+        } else {
+          const { _id, ...rest } = question;
+          return rest;
+        }
+      });
+      const updatedTemplate = {
+        title: adoptionTemplate.title,
+        species: adoptionTemplate.species._id,
+        description: adoptionTemplate.description || "",
+        questions: questionsPayload,
+      };
+
+      await authAxios.put(
+        `${coreAPI}/shelters/${shelterId}/adoptionTemplates/${templateId}/update-questions`,
+        updatedTemplate
+      );
+      toast.success("Lưu mẫu nhận nuôi thành công!");
+    } catch (error) {
+      console.error("Error saving adoption template:", error);
+      toast.error("Lỗi khi lưu mẫu nhận nuôi. Vui lòng thử lại sau.");
+    }
+  };
 
   return (
     <div className="w-full flex flex-wrap">
@@ -56,7 +123,7 @@ export default function TemplateDialog() {
               href={`/shelters/${shelterId}/management/adoption-templates`}
             >
               <LucideArrowLeft className="w-4 h-4 translate-0.5" />
-              <span className="hover:underline">Quay lại</span>
+              <span className="hover:underline">Quản lý mẫu nhận nuôi</span>
             </BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
@@ -76,14 +143,18 @@ export default function TemplateDialog() {
           <TabsContent value="edit">
             <div className="basis-full flex mb-3 ">
               <div className="basis-full sm:basis-2/3 sm:text-left">
-                <h1 className="text-xl font-medium mb-2">
+                <h1 className="text-xl font-medium mb-2 hover:text-(--primary)">
+                  <EditDialog
+                    adoptionTemplate={adoptionTemplate}
+                    setAdoptionTemplate={setAdoptionTemplate}
+                  />
                   Tiêu đề: {adoptionTemplate?.title}
                 </h1>
-                <h1 className="text-md font-medium mb-2">
+                {/* <h1 className="text-md font-medium ml-10 mb-2">
                   Loài: {adoptionTemplate?.species?.name}
-                </h1>
-                <div className=" flex gap-3 mb-2 ">
-                  <p className="text-sm">Mô tả: </p>
+                </h1> */}
+                <div className=" flex gap-3 ml-10 mb-2 ">
+                  {/* <p className="text-sm">Mô tả: </p> */}
                   <p className="text-sm text-(--muted-foreground)">
                     {adoptionTemplate?.description ||
                       "Mô tả mẫu nhận nuôi chưa được cung cấp."}
@@ -91,18 +162,42 @@ export default function TemplateDialog() {
                 </div>
               </div>
               <div className="basis-full sm:basis-1/3 sm:text-right">
-                <EditDialog
-                  adoptionTemplate={adoptionTemplate}
-                  setAdoptionTemplate={setAdoptionTemplate}
-                />
+                <div className="flex justify-end">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={"ghost"}
+                        className="text-(--primary) hover:text-(--primary) hover:border-(--primary) "
+                        onClick={handleCreateQuestion}
+                      >
+                        <Plus strokeWidth={3} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span className="text-sm">Thêm câu hỏi</span>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
             </div>
 
             <Separator />
 
             <div className="basis-full flex flex-wrap">
-              <QuestionCard />
-              <QuestionCard />
+              {questionsList?.map((question: Question) => {
+                return (
+                  <QuestionCard
+                    key={question._id}
+                    question={question}
+                    setQuestionsList={setQuestionsList}
+                  />
+                );
+              })}
+              <div className="flex basis-full justify-end">
+                <Button variant={"default"} onClick={handleSave}>
+                  <SaveAllIcon /> Lưu
+                </Button>
+              </div>
             </div>
           </TabsContent>
 

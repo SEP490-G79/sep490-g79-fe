@@ -43,6 +43,7 @@
     "dayjs": "^1.11.13",
     "embla-carousel-react": "^8.6.0",
     "emoji-picker-react": "^4.12.2",
+    "framer-motion": "^12.23.0",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.514.0",
     "motion": "^12.19.2",
