@@ -110,7 +110,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 
   // Check trạng thái login và access token mỗi khi chuyển trang trừ các trang public
   useEffect(() => {
-    if (!excludedURLs.includes(location.pathname)) {
+    if (accessToken) {
       authAxios
         .get(`${coreAPI}/users/get-user`)
         .then((res) => {
@@ -118,7 +118,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
           setUserProfile(res?.data);
         })
         .catch((error) => {
-          // console.log(error.response?.data?.message);
+          console.log(error.response?.data?.message);
         });
     }
   }, [location.pathname]);

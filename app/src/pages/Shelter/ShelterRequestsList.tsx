@@ -470,6 +470,19 @@ const ShelterRequestsList = () => {
 
   return (
     <div className="flex flex-1 flex-col py-6 px-10">
+            <Breadcrumb className="container mb-3 py-1 px-2">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/home">Trang chủ</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="#">
+                    Yêu cầu gia nhập hoặc lời mời vào trạm cứu hộ
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="col-span-12 px-5 flex flex-col gap-5">
           <h4 className="scroll-m-20 min-w-40 text-xl font-semibold tracking-tight text-center">
