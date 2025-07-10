@@ -27,7 +27,6 @@ export default function MultipleChoiceOption({
       : defaultOptions
   );
 
-
   //create option
   const handleCreateOption = () => {
     const newOptionTitle = ``;
@@ -58,7 +57,6 @@ export default function MultipleChoiceOption({
       options: updatedOptions,
     });
   };
-
 
   // Toggle đáp án đúng (isTrue) cho multi-choice
   const handleTrueToggle = (value: string) => {
@@ -142,31 +140,34 @@ export default function MultipleChoiceOption({
               autoFocus={option.title == ""}
               defaultValue={option.title}
               onKeyDown={(e) => {
-                if (e.key === "Enter") e.currentTarget.blur();
-              }}
-              onBlur={(e) =>{
-                const raw = e.currentTarget.value;
-                const trimmed = raw.trim();
-                // empty check
-                if (trimmed == "") {
-                  toast.error("Nội dung câu trả lời  không được để trống!");
-                  // revert UI
-                  e.currentTarget.value = e.currentTarget.defaultValue;
-                  return;
+                if (e.key === "Enter") {
+                  // e.currentTarget.blur();
+                  const raw = e.currentTarget.value;
+                  const trimmed = raw.trim();
+                  // empty check
+                  if (trimmed == "") {
+                    toast.error("Nội dung câu trả lời  không được để trống!");
+                    // revert UI
+                    e.currentTarget.value = e.currentTarget.defaultValue;
+                    return;
+                  }
+                  // duplicate check
+                  if (
+                    options.some(
+                      (opt) =>
+                        opt.title !== option.title &&
+                        opt.title.toLowerCase() === trimmed.toLowerCase()
+                    )
+                  ) {
+                    toast.error("Không thể tạo option trùng lặp!");
+                    e.currentTarget.value = e.currentTarget.defaultValue;
+                    return;
+                  }
+                  // valid
+                  handleLabelChange(option.title, raw);
                 }
-                // duplicate check
-                if (
-                  options.some(
-                    (opt) => opt.title !== option.title && opt.title.toLowerCase() === trimmed.toLowerCase()
-                  )
-                ) {
-                  toast.error("Không thể tạo option trùng lặp!");
-                  e.currentTarget.value = e.currentTarget.defaultValue;
-                  return;
-                }
-                // valid
-                handleLabelChange(option.title, raw);
               }}
+              // onBlur={(e) => {}}
               className="
               text-sm font-normal bg-transparent border-none outline-none shadow-none dark:bg-transparent
               cursor-pointer hover:bg-[var(--secondary-foreground)]
