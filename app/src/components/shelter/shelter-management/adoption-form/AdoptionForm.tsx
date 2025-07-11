@@ -31,6 +31,7 @@ import {
 import type { Question } from "@/types/Question";
 import { Dock, DockIcon } from "@/components/ui/magicui/dock";
 import { Skeleton } from "@/components/ui/skeleton";
+import PreviewForm from "./PreviewForm";
 
 export default function AdoptionForm() {
   const { shelterId, formId } = useParams<{
@@ -289,7 +290,8 @@ export default function AdoptionForm() {
           </TabsContent>
 
           <TabsContent value="preview">
-            <p>Preview: {adoptionForm?.title}</p>
+            {/* <p>Preview: {adoptionForm?.title}</p> */}
+            <PreviewForm/>
           </TabsContent>
         </Tabs>
       </div>

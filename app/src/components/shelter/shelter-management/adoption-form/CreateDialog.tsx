@@ -90,31 +90,43 @@ export default function CreateDialog() {
 
   const onSubmit = async (values: FormValues) => {
     console.log("Form submitted:", values);
-    // await authAxios
-    //   .post(
-    //     `${coreAPI}/shelters/${shelterId}/adoptionForms/create/${values.pet}`,
-    //     {
-    //       title: values.title,
-    //       description: values.description,
-    //     }
-    //   )
-    //   .then((res) => {
-    //     toast.success("Tạo mẫu nhận nuôi thành công! Đang chuyển hướng ...");
-    //     setShelterForms([...shelterForms, res.data]);
-    //     form.reset();
-    //     document
-    //       .querySelector<HTMLButtonElement>('[data-slot="dialog-close"]')
-    //       ?.click();
-    //     // setTimeout(() => {
-    //     //   navigate(
-    //     //     `/shelters/${shelterId}/management/adoption-forms/${res.data._id}`
-    //     //   );
-    //     // }, 800);
-    //   })
-    //   .catch((err) => {
-    //     console.error("Error creating adoption form:", err);
-    //     toast.error("Tạo mẫu nhận nuôi thất bại. Vui lòng thử lại.");
-    //   });
+    if (values.adoptionTemplate) {
+      const selectedTemplate = shelterTemplates.find(
+        (template) => template._id == values.adoptionTemplate
+      );
+      if (selectedTemplate) {
+        values.description = selectedTemplate.description || "";
+        
+        await authAxios
+          .post(
+            `${coreAPI}/shelters/${shelterId}/adoptionForms/create/${values.pet}`,
+            {
+              title: values.title,
+              description: values.description,
+              questions:selectedTemplate.questions || []
+            }
+          )
+          .then((res) => {
+            toast.success(
+              "Tạo mẫu nhận nuôi thành công! Đang chuyển hướng ..."
+            );
+            setShelterForms([...shelterForms, res.data]);
+            form.reset();
+            document
+              .querySelector<HTMLButtonElement>('[data-slot="dialog-close"]')
+              ?.click();
+            // setTimeout(() => {
+            //   navigate(
+            //     `/shelters/${shelterId}/management/adoption-forms/${res.data._id}`
+            //   );
+            // }, 800);
+          })
+          .catch((err) => {
+            console.error("Error creating adoption form:", err);
+            toast.error("Tạo mẫu nhận nuôi thất bại. Vui lòng thử lại.");
+          });
+      }
+    }
   };
 
   const petSpecialization = availablePets.find(
@@ -122,10 +134,11 @@ export default function CreateDialog() {
   )?.species.name;
 
   console.log("Pet Specialization:", petSpecialization);
-  
+
   const templates = shelterTemplates
     .filter(
-      (template) => !petSpecialization || template.species.name == petSpecialization
+      (template) =>
+        !petSpecialization || template.species.name == petSpecialization
     )
     .map((template) => ({
       value: template._id,
