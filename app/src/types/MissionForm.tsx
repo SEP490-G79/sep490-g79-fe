@@ -6,6 +6,7 @@ export interface MissionForm {
   transportMethod: string;
   adoptionForm: {
     pet: {
+      _id: string;
       name: string;
       photos: string[];
       tokenMoney: number;

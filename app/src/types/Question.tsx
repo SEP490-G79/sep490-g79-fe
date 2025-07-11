@@ -1,4 +1,6 @@
+
 export interface Option {
+
   title: string;
   isTrue: boolean;
 }
