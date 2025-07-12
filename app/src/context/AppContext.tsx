@@ -35,6 +35,7 @@ interface AppContextType {
   petsList: any;
   petAPI: string;
   medicalRecordAPI: string;
+  blogAPI: string;
   setShelters: (shelter: Shelter[]) => void;
   setShelterTemplates: (shelterTemplates: AdoptionTemplate[]) => void;
   setShelterForms: (shelterForms: AdoptionForm[]) => void;
@@ -60,6 +61,7 @@ const AppContext = createContext<AppContextType>({
   petsList: [],
   petAPI: "",
   medicalRecordAPI: "",
+  blogAPI: ",",
   setShelters: () => [],
   setShelterTemplates: () => [],
   setShelterForms: () => [],
@@ -87,6 +89,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const shelterAPI = "http://localhost:9999/shelters";
   const petAPI = "http://localhost:9999/pets";
   const medicalRecordAPI = "http://localhost:9999/medical-records";
+  const blogAPI = "http://localhost:9999/blogs";
 
   const login = (accessToken: string, userData: User) => {
     setUser(userData);
@@ -167,6 +170,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         petsList,
         petAPI,
         medicalRecordAPI,
+        blogAPI,
         setShelters,
         shelterTemplates,
         setShelterTemplates,

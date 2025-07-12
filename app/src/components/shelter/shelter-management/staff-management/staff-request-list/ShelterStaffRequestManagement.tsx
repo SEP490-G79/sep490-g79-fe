@@ -1,45 +1,19 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ArrowUpDown, Ban, Loader2Icon, MoreHorizontal, RefreshCcw, RotateCcwKey } from "lucide-react";
+import { ArrowUpDown, Loader2Icon, MoreHorizontal, RefreshCcw } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DialogClose } from "@radix-ui/react-dialog";
-import { DataTable } from "@/components/data-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { ShelterEstablishmentRequest } from "@/types/ShelterEstablishmentRequest";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import type { ShelterMember } from "@/types/ShelterMember";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../ui/dropdown-menu";
-import { Badge } from "../../ui/badge";
 import type { ShelterStaffRequestInvitation } from "@/types/ShelterStaffRequestInvitation";
 import { useParams } from "react-router-dom";
-import { SearchFilter } from "@/components/SearchFilter";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { DataTableReverse } from "@/components/data-table-reverse";
 import { DataTableShelterInvitationAndRequest } from "@/components/data-table-shelter-invitation-request";
+import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 
 type detailDialogData = {

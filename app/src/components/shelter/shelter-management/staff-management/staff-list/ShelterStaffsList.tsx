@@ -2,8 +2,6 @@ import React, { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
-
 import {
   Form,
   FormControl,
@@ -12,37 +10,27 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { ArrowUpDown, Ban, ChevronDown, Loader2Icon, MoreHorizontal, RotateCcwKey, UserRoundCog } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { ShelterEstablishmentRequest } from "@/types/ShelterEstablishmentRequest";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import type { ShelterMember } from "@/types/ShelterMember";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../../ui/dropdown-menu";
-import { Badge } from "../../ui/badge";
 import { useParams } from "react-router-dom";
 import { DataTableStaff } from "@/components/data-table-staff";
 import { Separator } from "@/components/ui/separator";
 import { SearchFilter } from "@/components/SearchFilter";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Command, CommandItem } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { EmailSelector } from "@/components/EmailSelector";
-import type { DropdownMenuCheckboxItemProps } from "@radix-ui/react-dropdown-menu";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import StaffTable from "./StaffTable";
 
 
 const inviteSchema = z.object({
@@ -115,182 +103,8 @@ const ShelterStaffsList = () => {
       .catch(err => console.log(err?.response.data.message))
     },[emailRefresh])
 
-     const columns: ColumnDef<ShelterMember>[] = [
-       {
-         header: "STT",
-         cell: ({ row }) => <p className="text-left px-2">{row.index + 1}</p>,
-       },
-       //  {
-       //    accessorKey: "avatar",
-       //    header: "Ảnh đại diện",
-       //    cell: ({ row }) => (
-       //      <img
-       //        src={row.original.avatar}
-       //        alt={row.original.fullName}
-       //        className="h-10 w-10 rounded-full object-cover mx-auto"
-       //      />
-       //    ),
-       //  },
-       {
-         accessorKey: "fullName",
-         header: ({ column }) => {
-           return (
-             <Button
-               variant="ghost"
-               onClick={() =>
-                 column.toggleSorting(column.getIsSorted() === "asc")
-               }
-               className="cursor-pointer"
-             >
-               Họ và tên
-               <ArrowUpDown className="ml-2 h-4 w-4" />
-             </Button>
-           );
-         },
-         cell: ({ row }) => {
-           return (
-             <p className="px-2 flex flex-row gap-2">
-               <img
-                 src={row.original.avatar}
-                 alt={row.original.fullName}
-                 className="h-10 w-10 rounded-full object-cover"
-               />
-               <span className="my-auto">{row.original.fullName}</span>
-             </p>
-           );
-         },
-       },
-       //  {
-       //    accessorKey: "email",
-       //    header: ({ column }) => {
-       //      return (
-       //        <Button
-       //          variant="ghost"
-       //          onClick={() =>
-       //            column.toggleSorting(column.getIsSorted() === "asc")
-       //          }
-       //          className="cursor-pointer"
-       //        >
-       //          Email
-       //          <ArrowUpDown className="ml-2 h-4 w-4" />
-       //        </Button>
-       //      );
-       //    },
-       //    cell: ({ row }) => {
-       //      return <span className="px-2">{row.original.email}</span>;
-       //    },
-       //  },
-       {
-         accessorKey: "roles",
-         header: ({ column }) => {
-           return (
-             <Button
-               variant="ghost"
-               onClick={() =>
-                 column.toggleSorting(column.getIsSorted() === "asc")
-               }
-               className="cursor-pointer"
-             >
-               Vai trò
-               <ArrowUpDown className="ml-2 h-4 w-4" />
-             </Button>
-           );
-         },
-         cell: ({ row }) => {
-           return (
-             <div className="flex gap-2">
-               {row.original?.shelterRoles?.sort((a,b) => b.localeCompare(a)).map((role) => {
-                 if (role === "manager") {
-                   return <Badge variant="destructive">Quản lý</Badge>;
-                 } else {
-                   return <Badge variant="outline">Thành viên</Badge>;
-                 }
-               })}
-             </div>
-           );
-         },
-       },
-       {
-         id: "actions",
-         cell: ({ row }) =>
-           user?._id === row.original.id || !isManager ? (
-             ""
-           ) : (
-             <DropdownMenu>
-               <DropdownMenuTrigger asChild>
-                 <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer">
-                   <MoreHorizontal className="w-4 h-4" />
-                 </Button>
-               </DropdownMenuTrigger>
-
-               <DropdownMenuContent
-                 align="center"
-                 sideOffset={0}
-                 className="w-40 rounded-md border bg-background shadow-lg p-1"
-               >
-                {row.original.shelterRoles.includes("manager") ? "" :
-                <AlertDialog>
-                   <AlertDialogTrigger asChild>
-                     <DropdownMenuItem 
-                     onSelect={(e) => e.preventDefault()}
-                     className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded">
-                       <Ban className="w-4 h-4" />
-                       Kick thành viên
-                     </DropdownMenuItem>
-                   </AlertDialogTrigger>
-
-                   <AlertDialogContent>
-                     <AlertDialogHeader>
-                       <AlertDialogTitle>
-                         Xác nhận kick thành viên
-                       </AlertDialogTitle>
-                       <AlertDialogDescription className="flex gap-2">
-                         Kick thành viên
-                        <Avatar>
-                          <AvatarImage src={row.original.avatar} alt={row.original.fullName + " avatar"} />
-                        </Avatar>
-                         <strong>{row.original.fullName}</strong> ra khỏi
-                         trạm cứu hộ?
-                       </AlertDialogDescription>
-                     </AlertDialogHeader>
-                     <AlertDialogFooter>
-                       <AlertDialogCancel>Hủy</AlertDialogCancel>
-                       <AlertDialogAction
-                         onClick={() => handleKickMember(row.original.id)}
-                       >
-                         Xác nhận kick
-                       </AlertDialogAction>
-                     </AlertDialogFooter>
-                   </AlertDialogContent>
-                 </AlertDialog>
-                }
-                 
-
-                 <DropdownMenuItem
-                   onClick={() => {
-                     changeRoleForm.reset({
-                       userId: row.original.id,
-                       roles: row.original.shelterRoles,
-                     });
-                     setOpenDialog(true);
-                   }}
-                   className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
-                 >
-                   <UserRoundCog /> Chỉnh vai trò
-                 </DropdownMenuItem>
-               </DropdownMenuContent>
-             </DropdownMenu>
-           ),
-       },
-     ];
-
   const handleInviteMember = (data: InviteFormData) => {
     try {
-    //   console.log({
-    //     shelterId: shelterId, 
-    //     emailsList: data.email, 
-    //     roles: data.role
-    // })
       if (data.email.length < 1 || data.email[0].trim().length < 3) {
         setError("email", {
           type: "manual",
@@ -314,7 +128,6 @@ const ShelterStaffsList = () => {
     } catch (error : any) {
       console.log(error?.response.data.message);
     }
-    // TODO: Call API inviteMember(data)
   };
 
     const handleKickMember = async (userId: string) => {
@@ -338,8 +151,6 @@ const ShelterStaffsList = () => {
     const handleChangeMemberRole = async (roleData : RoleFormData) => {
       try {
         const {userId, roles} = roleData;
-        // console.log(roleData);
-
         if(roles.length === 0){
           toast.error("Người dùng phải có ít nhất 1 vai trò")
           return false;
@@ -473,7 +284,13 @@ const ShelterStaffsList = () => {
             onResultChange={setFilteredMembers}
             placeholder="Tìm theo tên"
           />
-          <DataTableStaff columns={columns} data={filteredMembers ?? []} />
+          <StaffTable user={user} 
+          isManager={isManager || false} 
+          handleKickMember={handleKickMember} 
+          changeRoleForm={changeRoleForm} 
+          setOpenDialog={setOpenDialog} 
+          filteredMembers={filteredMembers ?? []}
+          />
         </div>
       </div>
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
@@ -543,7 +360,13 @@ const ShelterStaffsList = () => {
             onResultChange={setFilteredMembers}
             placeholder="Tìm theo tên"
           />
-          <DataTableStaff columns={columns} data={filteredMembers ?? []} />
+          <StaffTable user={user} 
+          isManager={isManager || false} 
+          handleKickMember={handleKickMember} 
+          changeRoleForm={changeRoleForm} 
+          setOpenDialog={setOpenDialog} 
+          filteredMembers={filteredMembers ?? []}
+          />
         </div>
   }
   
