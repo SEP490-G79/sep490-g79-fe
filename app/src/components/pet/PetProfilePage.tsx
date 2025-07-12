@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate,useLocation  } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,7 +41,9 @@ const PetProfilePage = () => {
   const { petAPI, medicalRecordAPI } = useContext(AppContext);
   const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-
+  const { userProfile } = useContext(AppContext);
+  const navigate = useNavigate();
+  const location = useLocation();
   useEffect(() => {
     if (!id) return;
 
@@ -210,12 +212,23 @@ const PetProfilePage = () => {
             {pet.status === "available" && (
               <div className="flex gap-2 mt-4">
                 <Button
-                  className="px-3 py-1 text-sm"
+  className="px-3 py-1 text-sm"
+  onClick={() => {
+    if (!userProfile) {
+      toast.warning("Bạn cần đăng nhập để nhận nuôi thú cưng", {
+        action: {
+          label: "Đăng nhập",
+          onClick: () => navigate(`/login?redirect=${encodeURIComponent(`/adoption-form/${pet._id}`)}`),
+        },
+      });
+      return;
+    }
 
-                >
-                 
-                 <Link to={`/adoption-form/${pet._id}`}>Nhận nuôi</Link>
-                </Button>
+    navigate(`/adoption-form/${pet._id}`);
+  }}
+>
+  Nhận nuôi
+</Button>
 
                 <Button
                   variant="outline"

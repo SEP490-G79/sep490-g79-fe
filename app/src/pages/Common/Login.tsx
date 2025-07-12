@@ -34,7 +34,9 @@ export const Login = () => {
   const { login, authAPI,loginLoading, setLoginLoading } = useContext(AppContext);
   const navigate = useNavigate();
   const hasRun = useRef(false);
-
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPath = searchParams.get("redirect") || "";
   const loginSchema = z.object({
     email: z.string().trim().min(1, {
       message: "Tên tài khoản hoặc email không được để trống",
@@ -87,7 +89,7 @@ export const Login = () => {
               setTimeout(() => {
                 setLoginLoading(false);
                 login(accessToken, user);
-                navigate("/home")
+                navigate(redirectPath ? decodeURIComponent(redirectPath) : "/home");
               }, 2000);
               break;
           }
@@ -125,7 +127,7 @@ export const Login = () => {
       login(response.data.accessToken, response.data.user)
       setTimeout(() => {
         setLoginLoading(false);
-        navigate("/home");
+        navigate(redirectPath ? decodeURIComponent(redirectPath) : "/home");
       }, 2000);
     }
   } catch (error: any) {
@@ -145,9 +147,10 @@ export const Login = () => {
 };
 
 function handleGoogleLogin(){
-    window.open(`${authAPI}/loginByGoogle`, "_self");
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPaths = searchParams.get("redirect") || ""; 
+    window.open(`${authAPI}/loginByGoogle?redirect=${decodeURIComponent(redirectPaths)}`, "_self");
   }
-
   return (
     <div className="w-full h-full flex">
       <div className="basis-1/2 flex items-center justify-center p-4">
