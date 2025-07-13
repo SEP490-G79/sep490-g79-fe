@@ -1,86 +1,173 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, CornerDownLeft } from "lucide-react";
-import React from "react";
+import { Trash2, CornerDownLeft, Check } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
+import type { Option, Question } from "@/types/Question";
 
-interface Option {
-  value: string;
-  label: string;
-  isTrue: boolean;
-}
+type Props = {
+  question: Question;
+  setSelectedQuestion: React.Dispatch<React.SetStateAction<Question>>;
+};
+export default function MultipleChoiceOption({
+  question,
+  setSelectedQuestion,
+}: Props) {
+  const defaultOptions: Option[] = [
+    {
+      title: "",
+      isTrue: false,
+    },
+  ];
 
-export default function MultipleChoiceOption() {
-  const [options, setOptions] = React.useState<Option[]>([
-    { value: "1", label: "Option 1", isTrue: false },
-    { value: "2", label: "Option 2", isTrue: false },
-    { value: "3", label: "Option 3", isTrue: false },
-    { value: "4", label: "Option 4", isTrue: false },
-  ]);
+  const [options, setOptions] = useState<Option[]>(
+    question.options && question.options.length > 0
+      ? question.options
+      : defaultOptions
+  );
+
+  //create option
+  const handleCreateOption = () => {
+    const newOptionTitle = ``;
+    if (options.some((opt) => opt.title.trim() == "")) {
+      toast.error("Vui lòng điền tất cả các câu trả lời trước khi thêm.");
+      return;
+    }
+    if (
+      options.some(
+        (opt) =>
+          opt.title.trim().toLowerCase() == newOptionTitle.trim().toLowerCase()
+      )
+    ) {
+      toast.error("Câu trả lời không được trùng lặp!");
+      return;
+    }
+    const newOption: Option = {
+      title: newOptionTitle,
+      isTrue: false,
+    };
+    const updatedOptions = [...options, newOption];
+    setOptions(updatedOptions);
+
+    // Update selected question
+    setSelectedQuestion({
+      ...question,
+      type: "MULTIPLECHOICE",
+      options: updatedOptions,
+    });
+  };
 
   // Toggle đáp án đúng (isTrue) cho multi-choice
   const handleTrueToggle = (value: string) => {
-    setOptions((opts) =>
-      opts.map((opt) =>
-        opt.value === value ? { ...opt, isTrue: !opt.isTrue } : opt
-      )
+    const updated = options.map((opt) =>
+      opt.title == value ? { ...opt, isTrue: !opt.isTrue } : opt
     );
+    setOptions(updated);
+    // update selected question
+    setSelectedQuestion({
+      ...question,
+      type: "MULTIPLECHOICE",
+      options: updated,
+    });
   };
 
   // Xóa option
   const handleDelete = (valueToDelete: string) => {
-    setOptions((opts) => opts.filter((opt) => opt.value !== valueToDelete));
+    const updated = options.filter((opt) => opt.title !== valueToDelete);
+    setOptions(updated);
+    setSelectedQuestion({
+      ...question,
+      type: "MULTIPLECHOICE",
+      options: updated,
+    });
   };
 
   // Đổi label + kiểm tra trùng
-  const handleLabelChange = (value: string, newLabel: string) => {
-    const trimmed = newLabel.trim();
-    const duplicate = options.some(
-      (opt) =>
-        opt.value !== value &&
-        opt.label.trim().toLowerCase() === trimmed.toLowerCase()
-    );
-    if (duplicate) {
-      toast.error("Không thể tạo option trùng lặp!");
+  const handleLabelChange = (oldTitle: string, newRaw: string) => {
+    const newTitle = newRaw.trim();
+    if (newTitle == "") {
+      toast.error("Câu trả lời không được để trống!");
       return;
     }
-    setOptions((opts) =>
-      opts.map((opt) =>
-        opt.value === value ? { ...opt, label: trimmed } : opt
+    if (
+      options.some(
+        (opt) =>
+          opt.title.trim().toLowerCase() === newTitle.toLowerCase() &&
+          opt.title !== oldTitle
       )
+    ) {
+      toast.error("Câu trả lời không được trùng lặp!");
+      return;
+    }
+
+    const updated = options.map((opt) =>
+      opt.title == oldTitle ? { ...opt, title: newTitle } : opt
     );
+    setOptions(updated);
+    setSelectedQuestion({
+      ...question,
+      type: "MULTIPLECHOICE",
+      options: updated,
+    });
   };
 
   return (
     <div className="space-y-2">
       {options.map((option) => (
         <div
-          key={option.value}
+          key={option.title}
           className={`
             flex items-center gap-4 px-2 py-1 rounded-sm border transition-all duration-200
-            ${option.isTrue ? "border-4 border-green-500" : ""}
+            border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground
+            dark:bg-input/30 dark:border-input dark:hover:bg-input/50
+            ${option.isTrue ? "border-4 " : ""}
           `}
         >
           <div className="flex items-center gap-4 flex-1">
             {/* Checkbox để đánh dấu đúng */}
             <Checkbox
-              id={option.value}
+              id={option.title}
               checked={option.isTrue}
-              onCheckedChange={() => handleTrueToggle(option.value)}
+              onCheckedChange={() => handleTrueToggle(option.title)}
               className="cursor-pointer"
             />
 
             {/* Label có thể edit */}
             <Input
               type="text"
-              defaultValue={option.label}
+              placeholder="Nhập câu trả lời"
+              autoFocus={option.title == ""}
+              defaultValue={option.title}
               onKeyDown={(e) => {
-                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Enter") {
+                  // e.currentTarget.blur();
+                  const raw = e.currentTarget.value;
+                  const trimmed = raw.trim();
+                  // empty check
+                  if (trimmed == "") {
+                    toast.error("Nội dung câu trả lời  không được để trống!");
+                    // revert UI
+                    e.currentTarget.value = e.currentTarget.defaultValue;
+                    return;
+                  }
+                  // duplicate check
+                  if (
+                    options.some(
+                      (opt) =>
+                        opt.title !== option.title &&
+                        opt.title.toLowerCase() === trimmed.toLowerCase()
+                    )
+                  ) {
+                    toast.error("Không thể tạo option trùng lặp!");
+                    e.currentTarget.value = e.currentTarget.defaultValue;
+                    return;
+                  }
+                  // valid
+                  handleLabelChange(option.title, raw);
+                }
               }}
-              onBlur={(e) =>
-                handleLabelChange(option.value, e.currentTarget.value)
-              }
+              // onBlur={(e) => {}}
               className="
               text-sm font-normal bg-transparent border-none outline-none shadow-none dark:bg-transparent
               cursor-pointer hover:bg-[var(--secondary-foreground)]
@@ -91,10 +178,15 @@ export default function MultipleChoiceOption() {
 
           {/* Các nút action */}
           <div className="flex items-center gap-2">
+            {option.isTrue && (
+              <Button disabled variant="link" className="text-green-500">
+                <Check />
+              </Button>
+            )}
             <Button
               variant="link"
               size="icon"
-              onClick={() => handleDelete(option.value)}
+              onClick={() => handleDelete(option.title)}
               className="text-[var(--destructive)] hover:text-[var(--destructive)] cursor-pointer"
             >
               <Trash2 />
@@ -103,9 +195,7 @@ export default function MultipleChoiceOption() {
               variant="link"
               size="icon"
               className="text-[var(--muted-foreground)] hover:text-[var(--muted)] cursor-pointer"
-              onClick={() => {
-                // placeholder cho undo/duplicate nếu cần
-              }}
+              onClick={handleCreateOption}
             >
               <CornerDownLeft className="h-4 w-4" />
             </Button>

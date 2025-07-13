@@ -26,6 +26,7 @@ import ShelterPage from "@/pages/Shelter/ShelterPage";
 import Shelters from "@/pages/Shelter/Shelters";
 import NotFound from "@/pages/Common/NotFound";
 import ManageShelter from "@/pages/Shelter/ManageShelter";
+import UserAdoptionFormPage from "@/pages/user/AdoptionForm/UserAdoptionForm";
 import { AdoptionForms } from "@/components/shelter/shelter-management/adoption-form/AdoptionForms";
 import TemplateDialog from "@/components/shelter/shelter-management/adoption-template/TemplateDialog";
 import ShelterEstablishmentPage from "@/pages/Shelter/ShelterEstablishmentPage";
@@ -36,6 +37,7 @@ import ShelterRequestsList from "@/pages/Shelter/ShelterRequestsList";
 import ViewPetDetails from "@/pages/Pets/ViewPetDetails";
 import ShelterDashboard from "@/pages/Shelter/ShelterDashboard";
 import ShelterProfile from "@/components/shelter/manager/ShelterProfile";
+import AdoptionForm from "../components/shelter/shelter-management/adoption-form/AdoptionForm";
 
 import DonationPage from "@/pages/Donation/DonationPage";
 import DonateSuccess from "@/pages/Donation/DonateSuccess";
@@ -54,20 +56,23 @@ function AppRoutes() {
 
       <Route path="/pets-list" element={<PetsListPage />} />
       <Route path="/pets/:id" element={<PetProfilePage />} />
+      <Route path="/adoption-form/:id/:submissionId?" element={<UserAdoptionFormPage />} />
       <Route path="/shelters" element={<Shelters />} />
       <Route path="/shelters/:shelterId" element={<ShelterPage />} />
+      <Route path="/pet/:petId" element={<ViewPetDetails />} />
+      <Route path="/shelter/pets" element={<PetManagement />} />
+      <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
 
 
       <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
         <Route index element={<ShelterProfile />} />
         <Route path="staffs-management" element={<ShelterStaffManagement />} />
         <Route path="pet-profiles" element={<PetManagement />} />
-        <Route path="adoption-templates" element={<AdoptionTemplates />} />
-        <Route path="adoption-templates/:templateId" element={<TemplateDialog />} />
-        <Route path="adoption-forms" element={<AdoptionForms />} />
-        <Route path="dashboard" element={<ShelterDashboard />} />
-
-
+        <Route path="adoption-templates" element={<AdoptionTemplates/>} />
+        <Route path="adoption-templates/:templateId" element={<TemplateDialog/>} />
+        <Route path="adoption-forms" element={<AdoptionForms/>} />
+        <Route path="adoption-forms/:formId" element={<AdoptionForm/>} />
+        <Route path="dashboard" element={<ShelterDashboard />}/>
       </Route>
 
       <Route element={<PrivateRoutes />}>

@@ -27,27 +27,39 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { mockSpeciesList } from "@/types/Species";
+
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { useNavigate, useParams } from "react-router-dom";
 import { ca } from "zod/v4/locales";
 import { toast } from "sonner";
 import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
+import axios from "axios";
+import type { Species } from "@/types/Species";
 
 
 export default function CreateDialog() {
   const { coreAPI, shelterTemplates, setShelterTemplates } = useContext(AppContext);
+  const [speciesList, setSpeciesList] = useState<Species[]>([]);
   const { shelterId } = useParams();
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
-
+  useEffect(() => {
+    axios.get(`${coreAPI}/species/get-all`)
+    .then((res) => {
+      setSpeciesList(res.data);
+    })
+    .catch((err) => { 
+      console.error("Error fetching species:", err);
+      toast.error("Không thể tải danh sách loài. Vui lòng thử lại sau.");
+    });
+  }, []);
   const FormSchema = z.object({
-    title: z.string().min(5, "Tiêu đề không được để trống."),
+    title: z.string().min(5, "Tiêu đề phải trên 5 ký tự."),
     species: z.string().min(1, "Chọn loài."),
     description: z.string().optional(),
   });
@@ -141,8 +153,8 @@ export default function CreateDialog() {
                           <SelectValue placeholder="Chọn loài" />
                         </SelectTrigger>
                         <SelectContent className="max-h-[10rem]">
-                          {mockSpeciesList.map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
+                          {speciesList.map((s) => (
+                            <SelectItem key={s._id} value={s._id}>
                               {s.name}
                             </SelectItem>
                           ))}
