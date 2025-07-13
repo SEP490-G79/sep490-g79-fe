@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef, useContext, useCallback } from "rea
 import PostCard from "@/components/post/PostCard";
 import EditPostDialog from "@/components/post/EditPostDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
 import { Textarea, } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { SmileIcon, ImageIcon, MapPinIcon, Globe, GlobeLock, X } from "lucide-react";
+import { SmileIcon, ImageIcon, MapPinIcon, Globe, GlobeLock, X, RefreshCcw } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
@@ -13,6 +14,8 @@ import { toast } from "sonner";
 import axios from "axios";
 import type { PostType } from "@/types/Post";
 import PostDetailDialog from "@/components/post/PostDetail";
+import { useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 const Newfeed = () => {
   const { userProfile, coreAPI, accessToken, setUserProfile } = useContext(AppContext);
@@ -31,6 +34,16 @@ const Newfeed = () => {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const currentUserId = userProfile?._id || "guest";
   const [detailPostId, setDetailPostId] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const postId = searchParams.get("postId");
+  const navigate = useNavigate();
+
+
+  useEffect(() => {
+    if (postId) {
+      setDetailPostId(postId);
+    }
+  }, [postId]);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -67,7 +80,9 @@ const Newfeed = () => {
     } catch (err) {
       console.error("Lỗi lấy bài viết:", err);
     } finally {
-      setLoadingPosts(false);
+      setTimeout(() => {
+        setLoadingPosts(false);
+      }, 1000);
     }
   }, [coreAPI, accessToken]);
 
@@ -77,11 +92,13 @@ const Newfeed = () => {
         .then(res => setUserProfile(res.data))
         .catch(console.error);
     }
-  }, [accessToken, userProfile, coreAPI]);
-
-  useEffect(() => {
+    if (!accessToken) {
+      setUserProfile(null);
+    }
     fetchPosts();
-  }, [fetchPosts]);
+  }, [accessToken, userProfile, coreAPI, fetchPosts]);
+
+
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -179,12 +196,12 @@ const Newfeed = () => {
           </div>
 
           <Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
-            <DialogContent className="sm:max-w-[600px] p-0">
-              <DialogHeader className="border-b px-6 pt-4 pb-2 bg-background">
+            <DialogContent className="sm:max-w-[600px] bg-background rounded-xl overflow-hidden border border-border p-0">
+              <DialogHeader className="bg-background px-6 pt-4 pb-2">
                 <DialogTitle className="text-lg font-semibold">Tạo bài viết</DialogTitle>
               </DialogHeader>
 
-              <div className="px-6 pb-6 pt-4 space-y-4 bg-background">
+              <div className="bg-background px-6 pb-6 pt-4 space-y-4">
                 <div className="flex items-start gap-3">
                   <img src={userProfile.avatar || "/placeholder.svg"} className="w-12 h-12 rounded-full border" />
                   <div className="flex flex-col">
@@ -266,9 +283,59 @@ const Newfeed = () => {
           </Dialog>
         </>
       )}
+      {!userProfile?._id && (
+        <div className="text-center text-muted-foreground py-6">
+          <p>
+            Hãy{" "}
+            <span
+              className="text-blue-500 underline cursor-pointer"
+              onClick={() => {
+                localStorage.setItem("redirectAfterLogin", "/newfeed");
+                navigate("/login");
+              }}
+            >
+              đăng nhập
+            </span>{" "}
+            để tạo bài viết.
+          </p>
+        </div>
+      )}
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          onClick={fetchPosts}
+          disabled={loadingPosts}
+          className="flex items-center gap-2 text-sm"
+        >
+          <RefreshCcw className={`w-4 h-4 ${loadingPosts ? "animate-spin" : ""}`} />
+          {loadingPosts ? "Đang tải..." : "Tải lại bài viết"}
+        </Button>
+      </div>
 
       {loadingPosts ? (
-        <p className="text-center text-muted-foreground">Đang tải bài viết...</p>
+        <div className="space-y-6">
+          {[...Array(3)].map((_, idx) => (
+            <div key={idx} className="p-4 border rounded-xl bg-background shadow space-y-4">
+              <div className="flex gap-4 items-center">
+                <Skeleton className="w-12 h-12 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-1/4" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+              <Skeleton className="h-40 w-full rounded" />
+              <div className="flex justify-between mt-4">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         posts
           .slice()
@@ -304,15 +371,26 @@ const Newfeed = () => {
         />
       )}
 
-      {detailPostId && (
-        <PostDetailDialog
-          postId={detailPostId}
-          open={!!detailPostId}
-          onOpenChange={(open) => {
-            if (!open) setDetailPostId(null);
-          }}
-        />
-      )}
+      <PostDetailDialog
+        postId={detailPostId || ""}
+        open={!!detailPostId}
+        onOpenChange={(open) => {
+          if (!open) setDetailPostId(null);
+        }}
+        onPostUpdated={(updatedPost) => {
+          setPosts(prev =>
+            prev.map(p => {
+              if (p._id !== updatedPost._id) return p;
+              return {
+                ...p,
+                ...updatedPost,
+                createdBy: (updatedPost.createdBy as any)._id || updatedPost.createdBy,
+                latestComment: updatedPost.latestComment ?? p.latestComment,
+              };
+            })
+          );
+        }}
+      />
 
     </div>
   );

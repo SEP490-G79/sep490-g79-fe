@@ -31,9 +31,10 @@ import axios from "axios";
 
 export const Login = () => {
   // const [loginLoading, setLoginLoading] = useState<Boolean>(false);
-  const { login, authAPI,loginLoading, setLoginLoading } = useContext(AppContext);
+  const { login, authAPI, loginLoading, setLoginLoading } = useContext(AppContext);
   const navigate = useNavigate();
   const hasRun = useRef(false);
+
 
   const loginSchema = z.object({
     email: z.string().trim().min(1, {
@@ -51,7 +52,7 @@ export const Login = () => {
     },
   });
 
-   useEffect(() => {
+  useEffect(() => {
     // cho toast hien thi 1 lan duy nhat
     if (hasRun.current) return;
     hasRun.current = true;
@@ -60,46 +61,52 @@ export const Login = () => {
     const isLoginByGoogle = urlParams.get("isLoginByGoogle");
     const message = urlParams.get("message");
 
-    if(isLoginByGoogle === 'false'){
+    if (isLoginByGoogle === 'false') {
       setLoginLoading(false);
       setTimeout(() => {
-                setLoginLoading(false);
-                toast.error(message);
-              }, 1000);
+        setLoginLoading(false);
+        toast.error(message);
+      }, 1000);
     }
 
-    if(isLoginByGoogle === 'true'){
-        setLoginLoading(true);
-        axios.get(`${authAPI}/getUserByAccessToken`,{withCredentials: true})
-          .then(res => {
-            const {user, accessToken} = res.data;
-            switch(user.status){
-              case 'verifying':
-                setLoginLoading(false);
-                toast.error("Tài khoản của bạn chưa kích hoạt! Hãy kích hoạt thông qua email")
-                    break;
-              case 'banned':
-                setLoginLoading(false);
-                toast.error("Tài khoản của bạn đã bị khóa!")
-                    break;
-             default:
+    if (isLoginByGoogle === 'true') {
+      setLoginLoading(true);
+      axios.get(`${authAPI}/getUserByAccessToken`, { withCredentials: true })
+        .then(res => {
+          const { user, accessToken } = res.data;
+          switch (user.status) {
+            case 'verifying':
+              setLoginLoading(false);
+              toast.error("Tài khoản của bạn chưa kích hoạt! Hãy kích hoạt thông qua email")
+              break;
+            case 'banned':
+              setLoginLoading(false);
+              toast.error("Tài khoản của bạn đã bị khóa!")
+              break;
+            default:
               toast.success("Đăng nhập bằng tài khoản google thành công!")
               setTimeout(() => {
                 setLoginLoading(false);
                 login(accessToken, user);
-                navigate("/home")
+                const redirectPath = localStorage.getItem("redirectAfterLogin");
+                if (redirectPath) {
+                  localStorage.removeItem("redirectAfterLogin");
+                  navigate(redirectPath);
+                } else {
+                  navigate("/home");
+                }
               }, 2000);
               break;
           }
-          })
-          .catch(error => {
-            console.log(error?.response.data.message);
-          });
-      }
+        })
+        .catch(error => {
+          console.log(error?.response.data.message);
+        });
+    }
   }, [])
 
 
-  const sendActiveToken = async (activeToken : string) => {
+  const sendActiveToken = async (activeToken: string) => {
     try {
       const res = await axios.post(`${authAPI}/send-activation-email`, {
         activeToken: activeToken
@@ -108,43 +115,49 @@ export const Login = () => {
     } catch (error: any) {
       console.log(error?.response.data.message)
     }
-    
+
   }
 
   const onLogin = async ({ email, password }: z.infer<typeof loginSchema>) => {
-  setLoginLoading(true);
-  try {
-    const response = await axios.post(`${authAPI}/login`, {
-      email: email,
-      password: password,
-      type: 'user'
-    });
+    setLoginLoading(true);
+    try {
+      const response = await axios.post(`${authAPI}/login`, {
+        email: email,
+        password: password,
+        type: 'user'
+      });
 
-    if (response.status === 200) {
-      toast.success("Đăng nhập thành công!");
-      login(response.data.accessToken, response.data.user)
-      setTimeout(() => {
-        setLoginLoading(false);
-        navigate("/home");
-      }, 2000);
-    }
-  } catch (error: any) {
-    if(error.response?.status === 400){
-      toast.error(error?.response.data.message);
-    }else {
-      toast.error(error?.response.data.message, {
+      if (response.status === 200) {
+        toast.success("Đăng nhập thành công!");
+        login(response.data.accessToken, response.data.user)
+        setTimeout(() => {
+          setLoginLoading(false);
+          const redirectPath = localStorage.getItem("redirectAfterLogin");
+          if (redirectPath) {
+            localStorage.removeItem("redirectAfterLogin");
+            navigate(redirectPath);
+          } else {
+            navigate("/home");
+          }
+        }, 2000);
+      }
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        toast.error(error?.response.data.message);
+      } else {
+        toast.error(error?.response.data.message, {
           description: "Gửi lại mã xác nhận ?",
           action: {
             label: "Gửi lại",
             onClick: () => sendActiveToken(error?.response.data.activeToken),
           },
         })
+      }
+      setLoginLoading(false);
     }
-    setLoginLoading(false);
-  }
-};
+  };
 
-function handleGoogleLogin(){
+  function handleGoogleLogin() {
     window.open(`${authAPI}/loginByGoogle`, "_self");
   }
 

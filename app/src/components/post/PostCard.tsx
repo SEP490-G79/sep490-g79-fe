@@ -70,9 +70,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
         <CardTitle className="text-lg font-semibold">
           <div className="flex items-start justify-between">
             <div className="flex gap-x-3">
-              <img src={post.user.avatar || "/placeholder.svg"} className="w-14 h-14 rounded-full border" />
+              <img src={post.user?.avatar || "https://cdn.pixabay.com/photo/2021/07/02/04/48/user-6380868_960_720.png"} className="w-14 h-14 rounded-full border" />
               <div className="flex flex-col justify-top">
-                <span>{post.user.fullName}</span>
+                <span>{post.user?.fullName || "Người dùng"}</span>
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
                   <span>{formatCreatedAt(post.createdAt)}</span>
                   {post.privacy.includes("public") ? <Globe className="w-4 h-4" /> : <GlobeLock className="w-4 h-4" />}
@@ -81,7 +81,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
             </div>
 
             {/* Chỉ hiển thị khi là chủ bài viết */}
-            {String(post.createdBy) === String(currentUserId) && (
+            {String(typeof post.createdBy === "object" ? post.createdBy._id : post.createdBy) === String(currentUserId) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="p-2 hover:bg-muted rounded-md">

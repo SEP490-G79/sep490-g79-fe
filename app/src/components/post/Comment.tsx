@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Ellipsis, Pencil, Trash2, Check, X, Smile } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
     DropdownMenu,
@@ -42,6 +43,7 @@ export default function Comment({ comments, postId, fetchComments }: Props) {
     const [showPicker, setShowPicker] = useState(false);
     const [showEditPicker, setShowEditPicker] = useState(false);
     const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     const handleAddComment = async () => {
         if (!newComment.trim()) return;
@@ -115,7 +117,19 @@ export default function Comment({ comments, postId, fetchComments }: Props) {
             ) : (
                 // Nếu là guest thì hiển thị lời nhắc đăng nhập
                 <div className="text-sm text-muted-foreground mt-2">
-                    <span>Vui lòng <strong><a href="/login">Đăng nhập</a></strong> để bình luận.</span>
+                    <span>
+                        Vui lòng{" "}
+                        <strong>
+                            <a
+                                href="/login"
+                                onClick={() => localStorage.setItem("redirectAfterLogin", `/newfeed?postId=${postId}`)}
+                                className="text-blue-600 hover:underline"
+                            >
+                                Đăng nhập
+                            </a>
+                        </strong>{" "}
+                        để bình luận.
+                    </span>
                 </div>
             )}
 

@@ -8,7 +8,6 @@ import { Login } from "@/pages/Common/Login";
 import EmailVerification from "@/components/EmailVerification";
 import ProfilePage from "@/pages/user/profile/ProfilePage";
 import Newfeed from "@/pages/Common/NewFeed";
-import PostDetail from "@/components/post/PostDetail";
 import ProfileSettings from "@/pages/user/profile/ProfileSetting";
 import HomePage from "@/pages/Common/HomePage";
 import HandleVerify from "@/pages/Common/HandleVerify";
@@ -93,7 +92,7 @@ function AppRoutes() {
       <Route path="/donation/success" element={<DonateSuccess />} />
       <Route path="/donation/cancel" element={<DonateCancel />} />
       <Route path="/newfeed" element={<Newfeed />}/>
-      <Route path="/post-detail/:postId" element={<PostDetail />} />
+  
       
 
 
