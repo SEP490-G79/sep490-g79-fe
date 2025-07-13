@@ -7,7 +7,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import { Login } from "@/pages/Common/Login";
 import ProfilePage from "@/pages/user/profile/ProfilePage";
 import Newfeed from "@/pages/Common/NewFeed";
-import ProfileSettings from "@/components/user-profile/ProfileSetting";
+import ProfileSettings from "@/pages/user/profile/ProfileSetting";
 import HomePage from "@/pages/Common/HomePage";
 import HandleVerify from "@/pages/Common/HandleVerify";
 import { Register } from "@/pages/Common/Register";
@@ -32,6 +32,10 @@ import AdoptionForm from "../components/shelter/shelter-management/adoption-form
 import ShelterStaffManagement from "@/pages/Shelter/ShelterStaffManagement";
 import BlogDetail from "@/components/shelter/shelter-blog/BlogDetail";
 import BlogManagement from "@/components/shelter/shelter-management/blog/BlogManagement";
+
+import DonationPage from "@/pages/Donation/DonationPage";
+import DonateSuccess from "@/pages/Donation/DonateSuccess";
+import DonateCancel from "@/pages/Donation/DonateCancel";
 
 function AppRoutes() {
   return (
@@ -74,7 +78,7 @@ function AppRoutes() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/profile/:userId" element={<ProfilePage />} />
 
-        <Route path="/newfeed" element={<Newfeed />} />
+        
         <Route path="/profile-setting" element={<ProfileSettings />} />
         <Route
           path="/shelter-establishment"
@@ -85,6 +89,15 @@ function AppRoutes() {
           element={<ShelterRequestsList />}
         />
       </Route>
+
+      <Route path="/donation" element={<DonationPage />} />
+      <Route path="/donation/success" element={<DonateSuccess />} />
+      <Route path="/donation/cancel" element={<DonateCancel />} />
+      <Route path="/newfeed" element={<Newfeed />}/>
+  
+      
+
+
 
       <Route path="*" element={<NotFound />} />
     </Routes>

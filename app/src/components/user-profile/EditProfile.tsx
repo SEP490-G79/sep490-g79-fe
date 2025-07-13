@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, LocateFixed } from "lucide-react";
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react";
 import ImageUploadModal from "./ImageUploadModal";
@@ -71,15 +71,11 @@ export default function EditProfile() {
       if (avatar) formData.append("avatar", avatar);
       if (background) formData.append("background", background);
 
-      await authAxios.put(`${userAPI}/edit-profile`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      await authAxios.put(`${userAPI}/edit-profile`, formData);
 
       const updated = await authAxios.get(`${userAPI}/get-user`);
 
-      
+
       setUserProfile(updated.data);
       setUser(updated.data);
       toast.success("Cập nhật thông tin thành công!");
@@ -253,15 +249,27 @@ export default function EditProfile() {
           <Label htmlFor="address" className="text-sm mb-1 block">
             Địa chỉ
           </Label>
-          <Input
-            id="address"
-            value={address}
-            onChange={(e) => {
-              setAddress(e.target.value);
-              fetchAddressSuggestions(e.target.value);
-            }}
-            className="mt-1"
-          />
+          <div className="flex items-center gap-2 mt-1">
+            <Input
+              id="address"
+              value={address}
+              onChange={(e) => {
+                setAddress(e.target.value);
+                fetchAddressSuggestions(e.target.value);
+              }}
+              className="flex-1 h-9"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={detectCurrentLocation}
+              className="flex items-center gap-1 px-3 h-9 rounded-md cursor-pointer"
+            >
+              <LocateFixed/>
+              Lấy vị trí hiện tại
+            </Button>
+          </div>
           {addressSuggestions.length > 0 && (
             <div className="border mt-1 rounded-md shadow-sm bg-white z-50 max-h-60 overflow-y-auto">
               {addressSuggestions.map((sug) => (
@@ -278,12 +286,8 @@ export default function EditProfile() {
               ))}
             </div>
           )}
-          <div className="mt-2">
-            <Button variant="outline" size="sm" onClick={detectCurrentLocation}>
-              📍 Lấy vị trí hiện tại
-            </Button>
-          </div>
         </div>
+
       </CardContent>
 
       <CardContent className="border-t pt-6">

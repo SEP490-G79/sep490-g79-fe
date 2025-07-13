@@ -23,7 +23,7 @@ const useAuthAxios = () => {
   const { logout } = useContext(AppContext);
 
   const authAxios = axios.create({
-    timeout: 7000,
+    timeout: 50000,
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
