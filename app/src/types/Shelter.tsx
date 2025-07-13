@@ -13,6 +13,19 @@ export interface ShelterMember {
   [key: string]: any;
 }
 
+export interface Invitation {
+  _id: string;
+  shelter: string;
+  user: string; 
+  type: string;
+  roles: string[];
+  status: string;
+  expireAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+
 export interface Shelter {
   _id: string;
   name: string;
@@ -24,6 +37,7 @@ export interface Shelter {
   background: string;
   members: ShelterMember[];
   shelterLicense: FileData;
+  invitations?: Invitation[];
   foundationDate: string;
   status: "verifying" | "active" | "banned";
   warningCount: number;

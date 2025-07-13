@@ -5,7 +5,6 @@ import PrivateRoutes from "./PrivateRoutes";
 import LandingPage from "@/pages/Common/LandingPage";
 import { Navigate, Outlet } from "react-router-dom";
 import { Login } from "@/pages/Common/Login";
-import EmailVerification from "@/components/EmailVerification";
 import ProfilePage from "@/pages/user/profile/ProfilePage";
 import Newfeed from "@/pages/Common/NewFeed";
 import ProfileSettings from "@/pages/user/profile/ProfileSetting";
@@ -13,13 +12,7 @@ import HomePage from "@/pages/Common/HomePage";
 import HandleVerify from "@/pages/Common/HandleVerify";
 import { Register } from "@/pages/Common/Register";
 import { FAQ } from "@/pages/Common/FAQ";
-
-import ShelterStaffManagement from "@/components/shelter/manager/ShelterStaffManagement";
-
-import ShelterManagerLayout from "@/components/layouts/shelter/ShelterManagerLayout";
-
 import PetManagement from "@/components/shelter/shelterPet/PetManagement";
-
 import PetsListPage from "@/pages/Pets/PetsListPage";
 import PetProfilePage from "@/components/pet/PetProfilePage";
 import ShelterPage from "@/pages/Shelter/ShelterPage";
@@ -31,13 +24,14 @@ import { AdoptionForms } from "@/components/shelter/shelter-management/adoption-
 import TemplateDialog from "@/components/shelter/shelter-management/adoption-template/TemplateDialog";
 import ShelterEstablishmentPage from "@/pages/Shelter/ShelterEstablishmentPage";
 import { AdoptionTemplates } from "@/components/shelter/shelter-management/adoption-template/AdoptionTemplates";
-
-
 import ShelterRequestsList from "@/pages/Shelter/ShelterRequestsList";
 import ViewPetDetails from "@/pages/Pets/ViewPetDetails";
 import ShelterDashboard from "@/pages/Shelter/ShelterDashboard";
-import ShelterProfile from "@/components/shelter/manager/ShelterProfile";
+import ShelterProfile from "@/components/shelter/shelter-management/profile/ShelterProfile";
 import AdoptionForm from "../components/shelter/shelter-management/adoption-form/AdoptionForm";
+import ShelterStaffManagement from "@/pages/Shelter/ShelterStaffManagement";
+import BlogDetail from "@/components/shelter/shelter-blog/BlogDetail";
+import BlogManagement from "@/components/shelter/shelter-management/blog/BlogManagement";
 
 import DonationPage from "@/pages/Donation/DonationPage";
 import DonateSuccess from "@/pages/Donation/DonateSuccess";
@@ -59,20 +53,23 @@ function AppRoutes() {
       <Route path="/adoption-form/:id/:submissionId?" element={<UserAdoptionFormPage />} />
       <Route path="/shelters" element={<Shelters />} />
       <Route path="/shelters/:shelterId" element={<ShelterPage />} />
+      <Route path="/shelters/:shelterId/blog/:blogId" element={<BlogDetail />} />
       <Route path="/pet/:petId" element={<ViewPetDetails />} />
       <Route path="/shelter/pets" element={<PetManagement />} />
       <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
 
 
       <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
-        <Route index element={<ShelterProfile />} />
+        <Route index element={<ShelterDashboard />} />
+        <Route path="dashboard" element={<ShelterDashboard />}/>
+        <Route path="shelter-profile" element={<ShelterProfile />} />
         <Route path="staffs-management" element={<ShelterStaffManagement />} />
+        <Route path="blogs-management" element={<BlogManagement />} />
         <Route path="pet-profiles" element={<PetManagement />} />
         <Route path="adoption-templates" element={<AdoptionTemplates/>} />
         <Route path="adoption-templates/:templateId" element={<TemplateDialog/>} />
         <Route path="adoption-forms" element={<AdoptionForms/>} />
         <Route path="adoption-forms/:formId" element={<AdoptionForm/>} />
-        <Route path="dashboard" element={<ShelterDashboard />}/>
       </Route>
 
       <Route element={<PrivateRoutes />}>

@@ -35,6 +35,9 @@ export const Login = () => {
   const navigate = useNavigate();
   const hasRun = useRef(false);
 
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPath = searchParams.get("redirect") || "";
 
   const loginSchema = z.object({
     email: z.string().trim().min(1, {
@@ -88,6 +91,7 @@ export const Login = () => {
               setTimeout(() => {
                 setLoginLoading(false);
                 login(accessToken, user);
+
                 const redirectPath = localStorage.getItem("redirectAfterLogin");
                 if (redirectPath) {
                   localStorage.removeItem("redirectAfterLogin");
@@ -95,6 +99,7 @@ export const Login = () => {
                 } else {
                   navigate("/home");
                 }
+                navigate(redirectPath ? decodeURIComponent(redirectPath) : "/home");
               }, 2000);
               break;
           }
@@ -127,6 +132,7 @@ export const Login = () => {
         type: 'user'
       });
 
+
       if (response.status === 200) {
         toast.success("Đăng nhập thành công!");
         login(response.data.accessToken, response.data.user)
@@ -157,10 +163,11 @@ export const Login = () => {
     }
   };
 
-  function handleGoogleLogin() {
-    window.open(`${authAPI}/loginByGoogle`, "_self");
+function handleGoogleLogin(){
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPaths = searchParams.get("redirect") || ""; 
+    window.open(`${authAPI}/loginByGoogle?redirect=${decodeURIComponent(redirectPaths)}`, "_self");
   }
-
   return (
     <div className="w-full h-full flex">
       <div className="basis-1/2 flex items-center justify-center p-4">

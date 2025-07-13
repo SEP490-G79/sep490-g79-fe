@@ -7,6 +7,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+
 import { Heart, MessageSquare, Globe, GlobeLock } from "lucide-react";
 import {
   DropdownMenu,
@@ -32,6 +33,8 @@ import type { CommentType } from "@/types/Comment";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ReportPostDialog from "./ReportPost";
+
 interface PostCardProps {
   post: PostType;
   currentUserId: string;
@@ -62,10 +65,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
     ? post.title.slice(0, 300) + "..."
     : post.title;
   return (
-
-
-
     <Card className="shadow-md dark:bg-gray-800">
+
       <CardHeader className="pt-4 pb-2 relative">
         <CardTitle className="text-lg font-semibold">
           <div className="flex items-start justify-between">
@@ -126,6 +127,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
             </AlertDialog>
           </div>
         </CardTitle>
+        <ReportPostDialog postId={post.id} key={post.id} />
+
       </CardHeader>
 
       <CardDescription className="px-6 pb-2 text-sm text-foreground dark:text-gray-300 whitespace-pre-line">
@@ -142,6 +145,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
 
       {post?.photos.length > 0 && (
         <CardContent>
+
           <PhotoProvider>
             <div className="grid grid-cols-2 gap-2">
               {/* Hiển thị 3 ảnh đầu */}
@@ -157,6 +161,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
 
               {/* Ảnh thứ 4 có overlay nếu còn ảnh nữa */}
               {post.photos.length > 3 && (
+
                 <PhotoView src={post.photos[3]}>
                   <div className="relative cursor-pointer">
                     <img
@@ -165,12 +170,15 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                       className="w-full h-40 object-cover rounded-lg brightness-75"
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
+
                       <span className="text-white bg-secondary/30 text-base font-medium px-2 py-1 rounded-md">
                         +{post.photos.length - 3}
+
                       </span>
                     </div>
                   </div>
                 </PhotoView>
+
               )}
 
               {/* Các ảnh còn lại để PhotoProvider nhận */}
@@ -188,14 +196,17 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
         <div className="flex w-full justify-between">
           {/* Nửa trái: Like */}
           <div
+
             onClick={() => onLike(post._id)}
             className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${post.likedBy.includes(currentUserId) ? "text-red-500" : ""}`}
+
           >
             <Heart className="w-5 h-5" />
             <span>{post.likedBy.length}</span>
           </div>
 
           {/* Nửa phải: Bình luận */}
+
           <div
             className="flex items-center gap-1 justify-start w-1/2 cursor-pointer"
             onClick={() => { onViewDetail(post._id) }}>
@@ -226,6 +237,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
           Xem thêm
         </button>
       </div>
+
     </Card>
   );
 };

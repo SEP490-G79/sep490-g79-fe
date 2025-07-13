@@ -33,8 +33,10 @@ function ManageShelter() {
       });
   }, [shelterId]);
   const navs = [
-    { title: "Thông tin chung", href: "" },
+    { title: "Thông tin chung", href: "dashboard" },
+    { title: "Hồ sơ trung tâm", href: "shelter-profile" },
     { title: "Quản lý thành viên", href: "staffs-management" },
+    { title: "Quản lý blog", href: "blogs-management" },
     { title: "Quản lý hồ sơ thú nuôi", href: "pet-profiles" },
     { title: "Quản lý mẫu nhận nuôi", href: "adoption-templates" },
     { title: "Quản lý form nhận nuôi", href: "adoption-forms" },
