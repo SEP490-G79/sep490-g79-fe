@@ -64,18 +64,17 @@ export function AdoptionForms() {
       .replace(/Đ/g, "D");
 
   const handleDelete = (formId: string) => {
-    
     authAxios
       .delete(`${coreAPI}/shelters/${shelterId}/adoptionForms/${formId}/delete`)
       .then(() => {
         setShelterForms([...shelterForms].filter((form) => form._id != formId));
-        
+
         toast.success("Xóa form nhận nuôi thành công");
       })
       .catch((err) => {
         toast.error(err.data.response.message);
       });
-  }
+  };
   React.useEffect(() => {
     authAxios
       .get(`${coreAPI}/shelters/${shelterId}/adoptionForms/get-by-shelter`)
@@ -190,7 +189,10 @@ export function AdoptionForms() {
               <DropdownMenuItem>
                 <List /> Xem dánh sách yêu cầu
               </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={()=>handleDelete(adoptionForm._id)}>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => handleDelete(adoptionForm._id)}
+              >
                 <Trash /> Xóa form
               </DropdownMenuItem>
             </DropdownMenuContent>

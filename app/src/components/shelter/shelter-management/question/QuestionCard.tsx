@@ -90,7 +90,11 @@ export function QuestionCard({ question, setQuestionsList }: Props) {
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className="basis-full flex flex-col gap-2 my-1 py-5 "
+      className="basis-full flex flex-col gap-2 my-1 py-5 hover:bg-(--secondary)/40 rounded-sm
+      border-2 border-(--border)/20 dark:border-(--border)/20 dark:bg-(--secondary)/30 transition-colors duration-200 hover:border-(--primary) dark:hover:border-(--primary)
+      hover:shadow-sm shadow-xs dark:hover:shadow-none dark:shadow-(--secondary) cursor-pointer
+      dark:hover:bg-(--secondary)/50 hover:cursor-grab active:cursor-grabbing active:shadow-none
+      "
     >
       <div className="flex items-center justify-between gap-4 px-4">
         <div className="flex">
@@ -105,14 +109,21 @@ export function QuestionCard({ question, setQuestionsList }: Props) {
                 e.currentTarget.blur();
               }
             }}
+            onBlur={(e) => {
+              setSelectedQuestion({
+                ...selectedQuestion,
+                title: e.currentTarget.value,
+              });
+            }}
             className="text-sm overflow-hidden font-semibold px-2 py-1 
             bg-transparent border-none outline-none shadow-none cursor-pointer
-            dark:bg-transparent
+            dark:bg-transparent hover:bg-(--secondary-foreground)
             focus:outline-1 focus:outline-(--border) focus:border-1 focus:border-(--border) focus:cursor-text
             rounded-sm transition-colors duration-200 min-w-[25rem]"
           />
         </div>
         <div>
+          
           <Button
             variant="ghost"
             size="icon"

@@ -59,7 +59,7 @@ export default function CreateDialog() {
     });
   }, []);
   const FormSchema = z.object({
-    title: z.string().min(5, "Tiêu đề không được để trống."),
+    title: z.string().min(5, "Tiêu đề phải trên 5 ký tự."),
     species: z.string().min(1, "Chọn loài."),
     description: z.string().optional(),
   });
