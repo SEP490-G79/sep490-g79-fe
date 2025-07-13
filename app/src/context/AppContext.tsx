@@ -109,19 +109,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   // Check trạng thái login và access token mỗi khi chuyển trang trừ các trang public
-  useEffect(() => {
-    if (!excludedURLs.includes(location.pathname)) {
-      authAxios
-        .get(`${coreAPI}/users/get-user`)
-        .then((res) => {
-          setUser(res?.data);
-          setUserProfile(res?.data);
-        })
-        .catch((error) => {
-          // console.log(error.response?.data?.message);
-        });
-    }
-  }, [location.pathname]);
+useEffect(() => {
+  const token = localStorage.getItem("accessToken");
+  if (token) {
+    authAxios
+      .get(`${coreAPI}/users/get-user`)
+      .then((res) => {
+        setUser(res.data);
+        setUserProfile(res.data);
+      })
+      .catch(() => {
+        setUser(null);
+        setUserProfile(null);
+        localStorage.removeItem("accessToken");
+      });
+  } else {
+    setUser(null);
+    setUserProfile(null); 
+  }
+}, [localStorage.getItem("accessToken")]); 
+
 
   // get pets list
   useEffect(() => {
