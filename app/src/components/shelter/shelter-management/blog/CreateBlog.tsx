@@ -12,13 +12,15 @@ import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
+import { useParams } from "react-router-dom";
 ;
 
 
 const CreateBlog = () => {
-    const [selectedImage, setSelectedImage] = useState<string>();
+    const [selectedImage, setSelectedImage] = useState<File>();
     const authAxios = useAuthAxios();
     const {blogAPI} = useContext(AppContext);
+    const {shelterId} = useParams();
 
     const FormSchema = z.object({
     thumbnail_url: z.string(),
@@ -41,21 +43,23 @@ type FormValues = z.infer<typeof FormSchema>;
 
   const handeUploadImage = (e : React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    setSelectedImage(file ? URL.createObjectURL(file) : undefined)
+    setSelectedImage(file)
   }
 
-  const handleSave = async (values: FormValues) => {
+  const handleCreate = async (values: FormValues) => {
     try {
         if(!values){
             return;
         }
-        // const formData = new FormData();
-        // formData.append("title", values.title);
-        // formData.append("description", values.description);
-        // formData.append("content", values.content);
-        // selectedImage && formData.append("thumbnail", selectedImage)
 
-        // await authAxios.post(`${blogAPI}/create-blog`, formData)
+        const formData = new FormData();
+        formData.append("shelter", shelterId);
+        formData.append("title", values.title);
+        formData.append("description", values.description);
+        formData.append("content", values.content);
+        selectedImage && formData.append("thumbnail_url", selectedImage)
+
+        await authAxios.post(`${blogAPI}/create-blog/${shelterId}`, formData)
         toast.success("Tạo blog thành công!")
     } catch (error : any) {
         toast.error(error?.response.data.message);
@@ -85,7 +89,7 @@ type FormValues = z.infer<typeof FormSchema>;
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleCreate)} className="space-y-4">
             <FormField
               control={form.control}
               name="title"
@@ -110,7 +114,7 @@ type FormValues = z.infer<typeof FormSchema>;
                       <p>Ảnh bìa</p>
                       {selectedImage ? (
                         <img
-                          src={selectedImage}
+                          src={URL.createObjectURL(selectedImage)}
                           className="max-h-[25vh] max-w-[20vw] rounded border object-cover"
                         />
                       ) : null}

@@ -69,20 +69,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId,onLike }) => {
             </div>
           </div>
         </CardTitle>
-        <div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={(e) => e.preventDefault()}>
-                <ReportPostDialog postId={post.id} key={post.id} />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <ReportPostDialog postId={post.id} key={post.id} />
       </CardHeader>
 
       <CardDescription className="px-6 pb-2 text-sm text-foreground dark:text-gray-300">

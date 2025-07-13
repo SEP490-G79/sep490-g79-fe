@@ -17,9 +17,12 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { toast } from "sonner";
 import useAuthAxios from "@/utils/authAxios";
+import AppContext from "@/context/AppContext";
+import { Flag } from "lucide-react";
+import { Input } from "../ui/input";
 
 const predefinedReasons = [
   "Thông tin thú cưng sai sự thật",
@@ -43,6 +46,26 @@ export default function ReportPostDialog({
   const [selectedReason, setSelectedReason] = useState<string>("");
   const [customReason, setCustomReason] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [photos, setPhotos] = useState<File[]>();
+  const {reportAPI} = useContext(AppContext)
+
+   const handleUploadPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (e.target.files !== null) {
+        const selectedPhotos: FileList = e.target.files;
+        if (!selectedPhotos) {
+          return;
+        }
+        const photosArray = Array.from(selectedPhotos);
+        setPhotos(photosArray);
+      }
+      
+
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
 
   const handleSubmit = async () => {
     const reason =
@@ -52,10 +75,24 @@ export default function ReportPostDialog({
       toast.error("Vui lòng chọn hoặc nhập lý do báo cáo.");
       return;
     }
+
+    const formData = new FormData();
+      formData.append("reportType", "post");
+      formData.append("postId", postId);
+      formData.append("reason", reason);
+
+      photos &&
+        photos.forEach((file) => {
+          formData.append("photos", file);
+        });
+
+      await authAxios.post(`${reportAPI}/report-post`, formData);
+
     console.log({
         reportType: "post",
         post: postId,
         reason,
+        photos
       })
 
     try {
@@ -81,7 +118,9 @@ export default function ReportPostDialog({
   return (
     <Dialog>
         <DialogTrigger asChild>
-            <p>Báo cáo</p>
+          <p className="text-xs text-destructive cursor-pointer hover:underline font-semibold flex">
+            <Flag className="w-4 h-4"/> Báo cáo
+        </p>
         </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
@@ -107,6 +146,7 @@ export default function ReportPostDialog({
             </SelectContent>
           </Select>
 
+
           {selectedReason === "Khác" && (
             <Textarea
               placeholder="Nhập lý do cụ thể..."
@@ -114,6 +154,18 @@ export default function ReportPostDialog({
               onChange={(e) => setCustomReason(e.target.value)}
             />
           )}
+
+          {/* upload photo */}
+          <label className="block text-sm font-medium">Ảnh bằng chứng</label>
+          <Input type="file" accept="image/*" multiple  onChange={handleUploadPhoto}/>
+          {photos !== undefined && photos.length > 0 && 
+          <div className="flex gap-2">
+            {photos.map((photo: File, index: number) => {
+              return <img src={URL.createObjectURL(photo)} alt={index +" photo"} key={index} className="max-h-15 max-w-20"/>
+            })}
+          </div>
+          }
+
         </div>
 
         <DialogFooter>
@@ -122,8 +174,8 @@ export default function ReportPostDialog({
             Hủy
           </Button>
             </DialogClose>
-          <Button type="submit" variant="default" onClick={handleSubmit}>
-            Gửi báo cáo
+          <Button type="submit" variant="default" onClick={handleSubmit} disabled={loading}>
+            {loading ? "Đang gửi..." : "Gửi báo cáo"}
           </Button>
         </DialogFooter>
       </DialogContent>

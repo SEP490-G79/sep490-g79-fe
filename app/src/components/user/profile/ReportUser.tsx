@@ -17,9 +17,12 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { toast } from "sonner";
 import useAuthAxios from "@/utils/authAxios";
+import { Input } from "@/components/ui/input";
+import { Flag } from "lucide-react";
+import AppContext from "@/context/AppContext";
 
 const predefinedReasons = [
   "Người dùng đăng thông tin sai sự thật",
@@ -36,6 +39,25 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
   const [selectedReason, setSelectedReason] = useState<string>("");
   const [customReason, setCustomReason] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [photos, setPhotos] = useState<File[]>();
+  const {reportAPI} = useContext(AppContext)
+
+  const handleUploadPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (e.target.files !== null) {
+        const selectedPhotos: FileList = e.target.files;
+        if (!selectedPhotos) {
+          return;
+        }
+        const photosArray = Array.from(selectedPhotos);
+        setPhotos(photosArray);
+      }
+      
+
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   const handleSubmit = async () => {
     const reason =
@@ -48,35 +70,47 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
 
     try {
       setLoading(true);
-      // Gửi API report user
-      // await authAxios.post("/report/report-user", {
-      //   reportType: "user",
-      //   user: userId,
-      //   reason,
-      // });
+      const formData = new FormData();
+      formData.append("reportType", "user");
+      formData.append("userId", userId);
+      formData.append("reason", reason);
+
+      photos &&
+        photos.forEach((file) => {
+          formData.append("photos", file);
+        });
+
+      await authAxios.post(`${reportAPI}/report-user`, formData);
 
       console.log({
         reportType: "user",
-        user: userId,
+        userId: userId,
         reason,
-      })
+        photos,
+      });
       toast.success("Đã gửi báo cáo người dùng thành công.");
       closeRef.current?.click();
       setSelectedReason("");
       setCustomReason("");
-    } catch (err) {
-      console.error(err);
-      toast.error("Có lỗi xảy ra khi gửi báo cáo.");
+      setPhotos([]);
+    } catch (err : any) {
+      toast.error(err?.response.data.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Dialog>
+    <Dialog onOpenChange={(open) => {
+      if(!open){
+              setSelectedReason("");
+              setCustomReason("");
+              setPhotos([]);
+      }
+    }}>
       <DialogTrigger asChild>
-        <p className="text-sm text-red-500 cursor-pointer hover:underline">
-          Báo cáo người dùng
+        <p className="text-xs text-destructive cursor-pointer hover:underline font-semibold flex">
+          <Flag className="w-4 h-4"/> Báo cáo
         </p>
       </DialogTrigger>
 
@@ -113,6 +147,17 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
               onChange={(e) => setCustomReason(e.target.value)}
             />
           )}
+
+          {/* upload photo */}
+          <label className="block text-sm font-medium">Ảnh bằng chứng</label>
+          <Input type="file" accept="image/*" multiple  onChange={handleUploadPhoto}/>
+          {photos !== undefined && photos.length > 0 && 
+          <div className="flex gap-2">
+            {photos.map((photo: File, index: number) => {
+              return <img src={URL.createObjectURL(photo)} alt={index +" photo"} key={index} className="max-h-15 max-w-20"/>
+            })}
+          </div>
+          }
         </div>
 
         <DialogFooter>

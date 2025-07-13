@@ -92,18 +92,7 @@ function ProfilePage() {
                 </Button>
               </Link>
             ): 
-            <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={(e) => e.preventDefault()}>
-                <ReportUserDialog userId={userId} key={userId} />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <ReportUserDialog userId={userId} key={userId} />
             }
           </div>
 
