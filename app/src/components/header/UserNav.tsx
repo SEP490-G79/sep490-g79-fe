@@ -129,13 +129,17 @@ function UserNav() {
               </p>
             </div>
           </DropdownMenuLabel>
+          {hasShelter !== undefined && hasShelter?.length >= 1 && 
+          <>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
-              <Link to={"#"}>Trung tâm cứu hộ</Link>
+              <Link to={`/shelters/${hasShelter[0]?._id}`}>Trung tâm cứu hộ</Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
-          {!hasShelter && 
+          </>
+          }
+          {hasShelter !== undefined && hasShelter?.length < 1  && 
           <>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>

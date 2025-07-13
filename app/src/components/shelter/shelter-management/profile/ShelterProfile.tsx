@@ -65,13 +65,17 @@ const ShelterProfile = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
   const authAxios = useAuthAxios()
-  const { shelterAPI } = useContext(AppContext)
+  const { shelterAPI, shelters, user } = useContext(AppContext)
   const { shelterId } = useParams()
   const [loading, setLoading] = useState<boolean>(false);
   const [location, setLocation] = useState({ lat: 0, lng: 0 });
   const [openBackgroundModal, setOpenBackgroundModal] = useState(false);
   const [addressSuggestions, setAddressSuggestions] = useState<GoongSuggestion[]>([]);
   const [placeId, setPlaceId] = useState("");
+
+  const currentShelter = shelters?.find(shelter => String(shelter._id) === String(shelterId));
+  const member = currentShelter?.members?.find(m => String(m._id) === String(user?._id));
+  const isManager = member?.roles?.includes("manager") || false;
 
   const form = useForm<ShelterFormValues>({
     resolver: zodResolver(shelterProfileSchema),
@@ -280,6 +284,7 @@ const ShelterProfile = () => {
                       className="object-cover w-full h-full rounded-md"
                     />
                   </div>
+                  {isManager &&
                   <Button
                     type="button"
                     variant="outline"
@@ -290,7 +295,9 @@ const ShelterProfile = () => {
                     <FilePlus className="mr-2 h-4 w-4" />
                     Chọn ảnh nền
                   </Button>
+                  }
                   <input
+                  disabled={!isManager}
                     type="file"
                     hidden
                     accept="image/*"
@@ -322,7 +329,7 @@ const ShelterProfile = () => {
                     </h4>
                     <div className="flex flex-row gap-2">
                       <div
-                        onClick={() => avatarInputRef.current?.click()}
+                        onClick={() => isManager && avatarInputRef.current?.click()}
                         className="cursor-pointer"
                       >
                         <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
@@ -337,7 +344,9 @@ const ShelterProfile = () => {
                           </AvatarFallback>
                         </Avatar>
                       </div>
+                      {isManager && 
                       <Button
+                      disabled={!isManager}
                         type="button"
                         variant="outline"
                         size="sm"
@@ -347,7 +356,9 @@ const ShelterProfile = () => {
                         <FilePlus className="mr-2 h-4 w-4" />
                         Chọn ảnh
                       </Button>
+                      }
                       <input
+                      disabled={!isManager}
                         type="file"
                         hidden
                         accept="image/*"
@@ -377,7 +388,7 @@ const ShelterProfile = () => {
                 <FormItem>
                   <FormLabel>Tên trạm</FormLabel>
                   <FormControl>
-                    <Input placeholder="Tên trạm" {...field} disabled />
+                    <Input  placeholder="Tên trạm" {...field} disabled />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -405,7 +416,7 @@ const ShelterProfile = () => {
                 <FormItem>
                   <FormLabel>Mô tả</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Mô tả..." {...field} />
+                    <Textarea placeholder="Mô tả..." {...field} disabled={!isManager}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -416,6 +427,7 @@ const ShelterProfile = () => {
               control={form.control}
               name="address"
               render={({ field }) => (
+                isManager ?
                 <AddressInputWithGoong
                   value={field.value}
                   onChange={(val) => {
@@ -424,7 +436,8 @@ const ShelterProfile = () => {
                   }}
                   onLocationChange={(loc) => setLocation(loc)}
                   error={form.formState.errors.address?.message}
-                />
+                /> :
+                <Input placeholder="Địa chỉ" {...field} disabled/>
               )}
             />
 
@@ -435,7 +448,7 @@ const ShelterProfile = () => {
                 <FormItem>
                   <FormLabel>Email của trạm</FormLabel>
                   <FormControl>
-                    <Input placeholder="Email" {...field} />
+                    <Input placeholder="Email" {...field} disabled={!isManager}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -449,14 +462,15 @@ const ShelterProfile = () => {
                 <FormItem>
                   <FormLabel>Số hotline</FormLabel>
                   <FormControl>
-                    <Input placeholder="Hotline" {...field} />
+                    <Input placeholder="Hotline" {...field} disabled={!isManager}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="pt-4 flex gap-2">
+              {isManager && 
+               <div className="pt-4 flex gap-2">
               {loading ? (
                 <Button disabled>
                   <>
@@ -479,6 +493,8 @@ const ShelterProfile = () => {
                 Hủy
               </Button>
             </div>
+              }
+           
           </CardContent>
         </Card>
       </form>

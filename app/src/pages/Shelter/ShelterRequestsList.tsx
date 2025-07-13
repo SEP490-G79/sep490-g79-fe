@@ -41,6 +41,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import {type  Shelter } from "@/types/Shelter";
 import { EmailSelector } from "@/components/EmailSelector";
 import { EmailRadioSelector } from "@/components/EmailRadioSelector";
+import { DataTableShelterInvitationAndRequest } from "@/components/data-table-shelter-invitation-request";
 
 
 
@@ -469,6 +470,19 @@ const ShelterRequestsList = () => {
 
   return (
     <div className="flex flex-1 flex-col py-6 px-10">
+            <Breadcrumb className="container mb-3 py-1 px-2">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/home">Trang chủ</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="#">
+                    Yêu cầu gia nhập hoặc lời mời vào trạm cứu hộ
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="col-span-12 px-5 flex flex-col gap-5">
           <h4 className="scroll-m-20 min-w-40 text-xl font-semibold tracking-tight text-center">
@@ -576,7 +590,7 @@ const ShelterRequestsList = () => {
           </div>
         </div>
         <div className="col-span-12 px-5">
-          <DataTable columns={columns} data={filtererdInvitationsList ?? []} />
+          <DataTableShelterInvitationAndRequest columns={columns} data={filtererdInvitationsList ?? []} />
         </div>
       </div>
       {/* Dialog chi tiet */}
@@ -634,13 +648,13 @@ const ShelterRequestsList = () => {
                 <div className="flex flex-wrap gap-2 mt-1">
                   {detailDialog.detail.roles.map((role, idx) => {
                     const label =
-                      role === "admin"
+                      role === "manager"
                         ? "Quản lý"
                         : role === "staff"
                         ? "Thành viên"
                         : role;
                     const variant =
-                      role === "admin" ? "destructive" : "secondary";
+                      role === "manager" ? "destructive" : "secondary";
                     return (
                       <Badge key={idx} variant={variant}>
                         {label}

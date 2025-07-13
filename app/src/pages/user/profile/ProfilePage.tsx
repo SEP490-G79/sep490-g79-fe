@@ -4,7 +4,7 @@ import Posts from "@/components/user/profile/Posts";
 import AdoptionActivities from "@/components/user/profile/AdoptionActivities";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Pencil } from "lucide-react";
+import { MoreHorizontal, Pencil } from "lucide-react";
 import AppContext from "@/context/AppContext";
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import 'react-photo-view/dist/react-photo-view.css';
@@ -12,6 +12,8 @@ import { useParams } from "react-router-dom";
 import type { User } from "@/types/User";
 import { toast } from "sonner";
 import axios from "axios";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import ReportUserDialog from "@/components/user/profile/ReportUser";
 
 function ProfilePage() {
   const [showActivities, setShowActivities] = useState(false);
@@ -83,13 +85,15 @@ function ProfilePage() {
               </button>
             </div>
             {/* Post button */}
-            {isOwnProfile && (
+            {isOwnProfile ? (
               <Link to="/profile-setting">
                 <Button variant="default" className="-mt-10">
                   <Pencil /> Chỉnh sửa thông tin
                 </Button>
               </Link>
-            )}
+            ): 
+            <ReportUserDialog userId={userId} key={userId} />
+            }
           </div>
 
 

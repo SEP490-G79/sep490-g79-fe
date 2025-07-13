@@ -35,6 +35,8 @@ interface AppContextType {
   petsList: any;
   petAPI: string;
   medicalRecordAPI: string;
+  blogAPI: string;
+  reportAPI: string;
   setShelters: (shelter: Shelter[]) => void;
   setShelterTemplates: (shelterTemplates: AdoptionTemplate[]) => void;
   setShelterForms: (shelterForms: AdoptionForm[]) => void;
@@ -60,6 +62,8 @@ const AppContext = createContext<AppContextType>({
   petsList: [],
   petAPI: "",
   medicalRecordAPI: "",
+  blogAPI: "",
+  reportAPI: "",
   setShelters: () => [],
   setShelterTemplates: () => [],
   setShelterForms: () => [],
@@ -87,6 +91,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const shelterAPI = "http://localhost:9999/shelters";
   const petAPI = "http://localhost:9999/pets";
   const medicalRecordAPI = "http://localhost:9999/medical-records";
+  const blogAPI = "http://localhost:9999/blogs";
+  const reportAPI = "http://localhost:9999/reports";
 
   const login = (accessToken: string, userData: User) => {
     setUser(userData);
@@ -109,6 +115,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   // Check trạng thái login và access token mỗi khi chuyển trang trừ các trang public
+
 useEffect(() => {
   const token = localStorage.getItem("accessToken");
   if (token) {
@@ -174,6 +181,8 @@ useEffect(() => {
         petsList,
         petAPI,
         medicalRecordAPI,
+        blogAPI,
+        reportAPI,
         setShelters,
         shelterTemplates,
         setShelterTemplates,
