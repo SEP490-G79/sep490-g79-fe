@@ -67,10 +67,6 @@ function PetsListPage() {
   const itemsPerPage = 8;
   const { petsList, userProfile } = useAppContext();
 
-
-
-
-
   const handleFiltersChange = (newFilters: FilterState) => {
     setFilters(newFilters);
     setPage(1);
@@ -84,7 +80,7 @@ function PetsListPage() {
         .replace(/[\u0300-\u036f]/g, '');
 
     const rawStopWords = [
-      'tôi', 'muốn', 'tìm', 'một', 'bạn', 'con', 'cần', 'có', 'em', 'mình',
+      'tôi', 'muốn', 'tìm', 'một', 'bạn', 'con', 'cần', 'có', 'em', 'mình', 'pet',
       'đến', 'cho', 'của', 'ở', 'với', 'để', 'nữa', 'rồi', 'và', 'hoặc', 'thì', 'là', 'màu', 'mẫu', 'giống', 'loài', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'
     ];
 
@@ -198,7 +194,7 @@ function PetsListPage() {
       <div className="max-w-7xl mx-auto pt-10 min-h-[300px]">
         {currentPets?.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
-            {userProfile && currentPets?.map((pet) => (
+            { currentPets?.map((pet) => (
               <PetsList key={pet?._id} pet={pet} user={userProfile} />
             ))}
 
@@ -209,7 +205,7 @@ function PetsListPage() {
       </div>
 
       <div className="flex justify-center min-h-[250px]">
-        {filteredPets.length > 0 && (
+        {filteredPets.length > 1 && (
           <PaginationSection
             currentPage={page}
             totalPages={totalPages}

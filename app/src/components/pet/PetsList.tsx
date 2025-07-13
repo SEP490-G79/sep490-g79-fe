@@ -6,10 +6,11 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { Pet } from "@/types/Pet";
 import type { User } from "@/types/User";
 import { Cake, Weight, Cat } from "lucide-react";
+import { toast } from "sonner";
 
 interface PetCardProps {
     pet: Pet;
@@ -21,7 +22,7 @@ interface PetCardProps {
 
 function PetsList({ pet, user }: PetCardProps) {
     const isWished = user?.wishList.includes(pet?._id);
-
+    const navigate = useNavigate();
 
     const ageDisplay =
         pet?.age != null
@@ -90,12 +91,21 @@ function PetsList({ pet, user }: PetCardProps) {
                         <button
                             className={`absolute top-2 right-2 z-10 p-1 hover:scale-130 transition-transform duration-200 ${isWished ? "text-red-600" : "text-gray-400"
                                 }`}
-                            onClick={() => {
-                                console.log(
-                                    `${isWished ? "Remove from" : "Add to"} wishlist:`,
-                                    pet._id
-                                );
-                            }}
+                           onClick={() => {
+      if (!user) {
+        toast.warning("Bạn cần đăng nhập để sử dụng tính năng này.");
+        setTimeout(() => {
+      navigate("/login");
+    }, 800);
+        return;
+      }
+
+      // TODO: Xử lý thêm / xóa wishlist ở đây
+      console.log(
+        `${isWished ? "Remove from" : "Add to"} wishlist:`,
+        pet._id
+      );
+    }}
                         >
                             <Heart
                                 className={`w-6 h-6 ${isWished ? "fill-red-600" : "fill-none"

@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +14,8 @@ import type { MedicalRecord } from "@/types/MedicalRecord";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import MedicalRecordBook from "@/components/pet/MedicalRecordBook";
+
 interface Pet {
   _id: string;
   name: string;
@@ -41,7 +43,9 @@ const PetProfilePage = () => {
   const { petAPI, medicalRecordAPI } = useContext(AppContext);
   const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-
+  const { userProfile } = useContext(AppContext);
+  const navigate = useNavigate();
+  const location = useLocation();
   useEffect(() => {
     if (!id) return;
 
@@ -169,7 +173,9 @@ const PetProfilePage = () => {
               <p><strong>Giống:</strong> {pet.breeds?.length ? pet.breeds.map(b => b.name).join(", ") : "Chưa xác định"}</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <p><strong>Tuổi:</strong> {pet.age ?? "Chưa xác định"}</p>
+              <p><strong>Tuổi:</strong> {" "}
+                {typeof pet?.age === "number" ? pet.age < 12 ? `${pet.age} tháng` : `${Math.floor(pet.age / 12)} năm` : "Chưa xác định"}
+              </p>
               <p><strong>Giới tính:</strong> {pet.isMale === true ? "Đực" : pet.isMale === false ? "Cái" : "Chưa xác định"}</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -211,24 +217,30 @@ const PetProfilePage = () => {
               <div className="flex gap-2 mt-4">
                 <Button
                   className="px-3 py-1 text-sm"
+                  onClick={() => {
+                    if (!userProfile) {
+                      toast.warning("Bạn cần đăng nhập để nhận nuôi thú cưng", {
+                        action: {
+                          label: "Đăng nhập",
+                          onClick: () => navigate(`/login?redirect=${encodeURIComponent(`/adoption-form/${pet._id}`)}`),
+                        },
+                      });
+                      return;
+                    }
 
+                    navigate(`/adoption-form/${pet._id}`);
+                  }}
                 >
-                 
-                 <Link to={`/adoption-form/${pet._id}`}>Nhận nuôi</Link>
+                  Nhận nuôi
                 </Button>
-
                 <Button
                   variant="outline"
                   className="px-3 py-1 text-sm"
-
                 >
                   Liên hệ trung tâm
                 </Button>
               </div>
-
             )}
-
-
             <Separator className="my-2" />
 
             <p><strong>Trung tâm:</strong> {pet.shelter?.name ?? "Chưa xác định"}</p>
@@ -236,22 +248,12 @@ const PetProfilePage = () => {
           </div>
         </CardContent>
       </Card>
+     {medicalRecords.length > 0 && (
+  <div className="mt-6">
+    <MedicalRecordBook records={medicalRecords} />
+  </div>
+)}
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold ">
-            Hành trình của {pet.name} tại trung tâm
-          </CardTitle>
-          {pet.bio && (
-            <CardDescription className="w-xl">{pet.bio}</CardDescription>
-          )}
-        </CardHeader>
-        <CardContent>
-          <PhotoProvider>
-            <Timeline data={medicalTimelineData} />
-          </PhotoProvider>
-        </CardContent>
-      </Card>
 
     </div>
   );
