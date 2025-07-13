@@ -80,7 +80,7 @@ function PetsListPage() {
         .replace(/[\u0300-\u036f]/g, '');
 
     const rawStopWords = [
-      'tôi', 'muốn', 'tìm', 'một', 'bạn', 'con', 'cần', 'có', 'em', 'mình',
+      'tôi', 'muốn', 'tìm', 'một', 'bạn', 'con', 'cần', 'có', 'em', 'mình', 'pet',
       'đến', 'cho', 'của', 'ở', 'với', 'để', 'nữa', 'rồi', 'và', 'hoặc', 'thì', 'là', 'màu', 'mẫu', 'giống', 'loài', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'
     ];
 
