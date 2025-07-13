@@ -8,26 +8,39 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Eye,
+  Github,
+  Home,
+  Linkedin,
   LucideArrowLeft,
+  Mail,
+  Pen,
   PenLine,
   Plus,
   PlusCircle,
   SaveAllIcon,
+  X,
 } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import QuestionCard from "../question/QuestionCard";
 import EditDialog from "./EditDialog";
 import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
-import { TooltipTrigger } from "@radix-ui/react-tooltip";
-import { Tooltip, TooltipContent } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { Question } from "@/types/Question";
-import { Description } from "@radix-ui/react-dialog";
+
+import { cn } from "@/lib/utils";
+import { Dock, DockIcon } from "@/components/ui/magicui/dock";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TemplateDialog() {
   const { shelterId, templateId } = useParams<{
@@ -38,10 +51,16 @@ export default function TemplateDialog() {
     useContext(AppContext);
   const [adoptionTemplate, setAdoptionTemplate] = useState<AdoptionTemplate>();
   const [questionsList, setQuestionsList] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const authAxios = useAuthAxios();
 
   useEffect(() => {
+    handleRefresh();
+  }, [coreAPI, shelterId, templateId]);
+
+  const handleRefresh = async () => {
     if (!shelterId || !templateId) return;
+    setIsLoading(true);
     authAxios
       .get(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/get-all`)
       .then((res) => {
@@ -59,8 +78,13 @@ export default function TemplateDialog() {
       .catch((err) => {
         console.error(err);
         toast.error("Lỗi khi tải dữ liệu mẫu nhận nuôi");
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
       });
-  }, [coreAPI, shelterId, templateId]);
+  };
 
   const handleCreateQuestion = () => {
     const now = new Date();
@@ -84,17 +108,28 @@ export default function TemplateDialog() {
     if (!adoptionTemplate) return;
     try {
       const questionsPayload = questionsList.map((question) => {
+        const filteredOptions = question.options.filter(
+          (opt) => opt.title.trim() != ""
+        );
+
         const isExisting = adoptionTemplate.questions.some(
-          (old) => old._id == question._id
+          (old) => old._id === question._id
         );
 
         if (isExisting) {
-          return question;
+          return {
+            ...question,
+            options: filteredOptions,
+          };
         } else {
           const { _id, ...rest } = question;
-          return rest;
+          return {
+            ...rest,
+            options: filteredOptions,
+          };
         }
       });
+
       const updatedTemplate = {
         title: adoptionTemplate.title,
         species: adoptionTemplate.species._id,
@@ -106,6 +141,7 @@ export default function TemplateDialog() {
         `${coreAPI}/shelters/${shelterId}/adoptionTemplates/${templateId}/update-questions`,
         updatedTemplate
       );
+      handleRefresh();
       toast.success("Lưu mẫu nhận nuôi thành công!");
     } catch (error) {
       console.error("Error saving adoption template:", error);
@@ -113,9 +149,39 @@ export default function TemplateDialog() {
     }
   };
 
+  //
+  const DATA = {
+    navbar: [
+      {
+        href: "#",
+        icon: <SaveAllIcon className="size-5 " />,
+        label: "Lưu",
+        function: handleSave,
+      },
+      {
+        href: "#",
+        icon: <Plus className="size-5 " />,
+        label: "Thêm câu hỏi",
+        function: handleCreateQuestion,
+      },
+    ],
+  };
+
+  if (isLoading) {
+    return (
+      <div className="w-full p-4">
+        <Skeleton className="h-6 w-1/3 mb-4" />
+        <Skeleton className="h-10 mb-2" />
+        {[...Array(3)].map((_, idx) => (
+          <Skeleton key={idx} className="h-24 mb-2" />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full flex flex-wrap">
-      <Breadcrumb className="basis-full mb-3">
+      {/* <Breadcrumb className="basis-full mb-3">
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink
@@ -127,10 +193,10 @@ export default function TemplateDialog() {
             </BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
-      </Breadcrumb>
+      </Breadcrumb> */}
 
       <div className="basis-full">
-        <Tabs defaultValue="edit" className="w-full">
+        {/* <Tabs defaultValue="edit" className="w-full">
           <TabsList>
             <TabsTrigger value="edit">
               <PenLine /> Chỉnh sửa
@@ -140,7 +206,7 @@ export default function TemplateDialog() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="edit">
+          <TabsContent value="edit"> */}
             <div className="basis-full flex mb-3 ">
               <div className="basis-full sm:basis-2/3 sm:text-left">
                 <h1 className="text-xl font-medium mb-2 hover:text-(--primary)">
@@ -163,27 +229,16 @@ export default function TemplateDialog() {
               </div>
               <div className="basis-full sm:basis-1/3 sm:text-right">
                 <div className="flex justify-end">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant={"ghost"}
-                        className="text-(--primary) hover:text-(--primary) hover:border-(--primary) "
-                        onClick={handleCreateQuestion}
-                      >
-                        <Plus strokeWidth={3} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <span className="text-sm">Thêm câu hỏi</span>
-                    </TooltipContent>
-                  </Tooltip>
+                  <Button variant={"default"} onClick={handleSave}>
+                    <SaveAllIcon /> Lưu
+                  </Button>
                 </div>
               </div>
             </div>
 
             <Separator />
 
-            <div className="basis-full flex flex-wrap">
+            <div className="basis-full flex flex-wrap ">
               {questionsList?.map((question: Question) => {
                 return (
                   <QuestionCard
@@ -193,18 +248,63 @@ export default function TemplateDialog() {
                   />
                 );
               })}
-              <div className="flex basis-full justify-end">
-                <Button variant={"default"} onClick={handleSave}>
-                  <SaveAllIcon /> Lưu
+              <div className="flex basis-full justify-start my-3">
+                {/* <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={"ghost"}
+                      className="text-(--primary) hover:text-(--primary) hover:border-(--primary) "
+                      onClick={handleCreateQuestion}
+                    >
+                      <Plus strokeWidth={3} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span className="text-sm">Thêm câu hỏi</span>
+                  </TooltipContent>
+                </Tooltip> */}
+                <Button
+                  variant={"outline"}
+                  size={"sm"}
+                  onClick={handleCreateQuestion}
+                >
+                  <Plus /> Thêm câu hỏi
                 </Button>
               </div>
+              <div className="flex flex-col items-center justify-center sticky bottom-4 left-0 right-0 mx-auto">
+                <TooltipProvider>
+                  <Dock
+                    direction="middle"
+                    className="bg-(--background) border-2 border-(--border)"
+                  >
+                    {DATA.navbar.map((item) => (
+                      <DockIcon key={item.label}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={item.function}
+                              variant="ghost"
+                              className="hover:text-(--primary)"
+                            >
+                              {item.icon}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{item.label}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </DockIcon>
+                    ))}
+                  </Dock>
+                </TooltipProvider>
+              </div>
             </div>
-          </TabsContent>
+          {/* </TabsContent>
 
           <TabsContent value="preview">
             <p>Preview: {adoptionTemplate?.title}</p>
           </TabsContent>
-        </Tabs>
+        </Tabs> */}
       </div>
     </div>
   );
