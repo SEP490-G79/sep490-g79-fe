@@ -10,17 +10,28 @@ import {
 import { Separator } from "@/components/ui/separator";
 import AppContext from "@/context/AppContext";
 import { type Shelter } from "@/types/Shelter";
-import React, { useContext, useMemo } from "react";
+import useAuthAxios from "@/utils/authAxios";
+import React, { useContext, useEffect, useMemo } from "react";
 import { Outlet, useParams } from "react-router-dom";
 
 function ManageShelter() {
   const { shelterId } = useParams();
-  const {shelters} = useContext(AppContext);
-
+  const {shelters,coreAPI,setShelterTemplates} = useContext(AppContext);
+  const authAxios = useAuthAxios();
   const shelter = useMemo<Shelter | undefined>(() => {
     return (shelters ?? [])?.find((s) => s._id == shelterId);
   }, [shelterId, shelters]);
 
+  useEffect(() => {
+    authAxios
+      .get(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/get-all`)
+      .then((res) => {
+        setShelterTemplates(res.data);
+      })
+      .catch((err) => {
+        console.log(err.data.response.message);
+      });
+  }, [shelterId]);
   const navs = [
     { title: "Thông tin chung", href: "dashboard" },
     { title: "Hồ sơ trung tâm", href: "shelter-profile" },

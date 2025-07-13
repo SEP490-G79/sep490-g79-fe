@@ -14,6 +14,7 @@ import {
 import {
   ArrowUpDown,
   ChevronDown,
+  Copy,
   MoreHorizontal,
   Pen,
   Plus,
@@ -55,7 +56,8 @@ import EditDialog from "./EditDialog";
 
 export function AdoptionTemplates() {
   const { shelterId } = useParams();
-  const { coreAPI ,shelterTemplates, setShelterTemplates } = useContext(AppContext);
+  const { coreAPI, shelterTemplates, setShelterTemplates } =
+    useContext(AppContext);
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
 
@@ -80,6 +82,19 @@ export function AdoptionTemplates() {
       toast.error("Xoá mẫu đơn thất bại");
     }
   };
+  const handleDuplicate = async (templateId: any) => {
+    try {
+      const response = await authAxios.post(
+        `${coreAPI}/shelters/${shelterId}/adoptionTemplates/${templateId}/duplicateTemplate`
+      );
+      setShelterTemplates([...shelterTemplates, response.data]);
+      toast.success("Tạo bản sao thành công");
+    } catch (error) {
+      console.error(error);
+      toast.error("Tạo bản sao thất bại");
+    }
+  };
+
   const columns: ColumnDef<AdoptionTemplate>[] = [
     {
       accessorKey: "stt",
@@ -120,7 +135,7 @@ export function AdoptionTemplates() {
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Giống
+          Loài vật
           <ArrowUpDown className="ml-1" />
         </Button>
       ),
@@ -192,6 +207,14 @@ export function AdoptionTemplates() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem
+                className="flex gap-1"
+                onClick={() => {
+                  handleDuplicate(adoptionTemplate._id);
+                }}
+              >
+                <Copy /> Tạo bản sao
+              </DropdownMenuItem> 
+              <DropdownMenuItem
                 variant="destructive"
                 onClick={() => handleDelete(adoptionTemplate._id)}
               >
@@ -204,16 +227,6 @@ export function AdoptionTemplates() {
     },
   ];
 
-  useEffect(() => {
-    authAxios
-      .get(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/get-all`)
-      .then((res) => {
-        setShelterTemplates(res.data);
-      })
-      .catch((err) => {
-        console.log(err.data.response.message);
-      });
-  }, [shelterId]);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -223,7 +236,10 @@ export function AdoptionTemplates() {
     pageSize: 5,
   });
   const table = useReactTable({
-    data: shelterTemplates.sort((a:any, b:any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    data: shelterTemplates.sort(
+      (a: any, b: any) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    ),
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -253,7 +269,7 @@ export function AdoptionTemplates() {
           }}
           className="max-w-sm"
         />
-        <CreateDialog/>
+        <CreateDialog />
       </div>
       <div className="rounded-md border">
         {shelterTemplates ? (

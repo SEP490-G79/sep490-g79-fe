@@ -18,6 +18,17 @@ function ShelterPage() {
   const [dashboardData, setDashboardData] =
     useState<ShelterDashboardStatistics | null>(null);
 
+  const shelter = useMemo<Shelter | undefined>(() => {
+    return shelters.find((s) => s._id == shelterId);
+  }, [shelterId, shelters]);
+
+  useEffect(() => {
+    if (!shelter) return;
+    getShelterDashboardStatistics(shelter._id)
+      .then(setDashboardData)
+      .catch(() => toast.error("Không thể tải dữ liệu dashboard"));
+  }, [shelter]);
+
   if (!shelters || shelters.length == 0) {
     return (
       <div className="w-full h-full flex flex-wrap justify-around px-10 py-5">
@@ -33,18 +44,6 @@ function ShelterPage() {
       </div>
     );
   }
-
-  const shelter = useMemo<Shelter | undefined>(() => {
-    return shelters.find((s) => s._id == shelterId);
-  }, [shelterId, shelters]);
-
-  useEffect(() => {
-    if (!shelter) return;
-    getShelterDashboardStatistics(shelter._id)
-      .then(setDashboardData)
-      .catch(() => toast.error("Không thể tải dữ liệu dashboard"));
-  }, [shelter]);
-
   if (!shelter) {
     return <Navigate to="/404" replace />;
   }
