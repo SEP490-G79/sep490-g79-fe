@@ -45,7 +45,7 @@ const shelterEstablishmentSchema = z.object({
     .trim()
     .min(3, "Tên trạm không được để trống")
     .regex(/^[^\d]*$/, "Tên trạm không được chứa số"),
-  shelterCode: z.string().min(1),
+  shelterCode: z.string().min(3, "Mã trạm phải có ít nhất 3 kí tự"),
   hotline: z
   .string()
   .trim()

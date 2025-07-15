@@ -25,3 +25,4 @@ export interface Pet {
   updatedAt?: string;
   petCode?: string;
 }
+
