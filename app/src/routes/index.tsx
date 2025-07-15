@@ -30,12 +30,13 @@ import ShelterDashboard from "@/pages/Shelter/ShelterDashboard";
 import ShelterProfile from "@/components/shelter/shelter-management/profile/ShelterProfile";
 import AdoptionForm from "../components/shelter/shelter-management/adoption-form/AdoptionForm";
 import ShelterStaffManagement from "@/pages/Shelter/ShelterStaffManagement";
-import BlogDetail from "@/components/shelter/shelter-blog/BlogDetail";
+import BlogDetail from "@/components/shelter/shelter-page/shelter-blog/BlogDetail";
 import BlogManagement from "@/components/shelter/shelter-management/blog/BlogManagement";
 
 import DonationPage from "@/pages/Donation/DonationPage";
 import DonateSuccess from "@/pages/Donation/DonateSuccess";
 import DonateCancel from "@/pages/Donation/DonateCancel";
+import BlogsFeed from "@/pages/Blog/BlogsFeed";
 
 function AppRoutes() {
   return (
@@ -94,6 +95,7 @@ function AppRoutes() {
       <Route path="/donation/success" element={<DonateSuccess />} />
       <Route path="/donation/cancel" element={<DonateCancel />} />
       <Route path="/newfeed" element={<Newfeed />}/>
+      <Route path="/blogfeed" element={<BlogsFeed />}/>
   
       
 

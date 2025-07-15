@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import type { Blog } from "@/types/Blog";
 import { useNavigate } from "react-router-dom";
@@ -9,11 +8,11 @@ import { Button } from "@/components/ui/button";
 const BlogCard = ({ blog} : {blog: Blog}) => {
   const navigate = useNavigate();
   return (
-    <div className="rounded-lg shadow-sm border overflow-hidden w-full max-w-[20vw]">
+    <div className="rounded-lg shadow-sm border overflow-hidden w-full min-h-[10vh] max-w-[20vw] flex flex-col justify-between">
       {/* Ảnh hiển thị ngang */}
       <div>
           <img
-            src={blog.thumbnail_url}
+            src={blog.thumbnail_url || "https://thumbs.dreamstime.com/b/no-image-available-icon-flat-vector-no-image-available-icon-flat-vector-illustration-132482953.jpg"}
             alt={`thumbnail-${blog.title}`}
             className="object-cover h-40 w-full cursor-pointer"
             onClick={() => {

@@ -8,7 +8,7 @@ import { getTimeAgo } from "@/utils/dateUtils";
 const BlogRecommendation = ({ blog} : {blog: Blog}) => {
   const navigate = useNavigate();
   return (
-    <div className="rounded-lg shadow-sm border overflow-hidden w-full max-w-[30vw]">
+    <div className="rounded-lg shadow-sm border overflow-hidden w-full">
       {/* Ảnh hiển thị ngang */}
       <div>
           <img

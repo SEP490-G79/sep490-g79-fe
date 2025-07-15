@@ -16,11 +16,12 @@ import { useParams } from "react-router-dom";
 ;
 
 
-const CreateBlog = () => {
+const CreateBlog = ({open, setIsOpen}: {open: boolean, setIsOpen: React.Dispatch<React.SetStateAction<boolean>>}) => {
     const [selectedImage, setSelectedImage] = useState<File>();
     const authAxios = useAuthAxios();
     const {blogAPI} = useContext(AppContext);
     const {shelterId} = useParams();
+    const [loading, setLoading] = useState<boolean>(false);
 
     const FormSchema = z.object({
     thumbnail_url: z.string(),
@@ -52,32 +53,38 @@ type FormValues = z.infer<typeof FormSchema>;
             return;
         }
 
+        setLoading(true)
         const formData = new FormData();
-        formData.append("shelter", shelterId);
         formData.append("title", values.title);
         formData.append("description", values.description);
         formData.append("content", values.content);
         selectedImage && formData.append("thumbnail_url", selectedImage)
 
-        await authAxios.post(`${blogAPI}/create-blog/${shelterId}`, formData)
+        await authAxios.post(`${blogAPI}/create/${shelterId}`, formData)
         toast.success("Tạo blog thành công!")
+        setIsOpen(false);
     } catch (error : any) {
         toast.error(error?.response.data.message);
+    } finally{
+      setLoading(false)
     }
   };
 
   return (
-     <Dialog onOpenChange={(open) => {
+     <Dialog open={open} onOpenChange={(open) => {
         if(!open){
-            form.reset();
+            form.reset({
+              thumbnail_url: "",
+              title: "",
+              description: "",
+              content: "",
+            });
             setSelectedImage(undefined);
         }
      }}>
-        <DialogTrigger asChild>
-            <Button variant="default">
+            <Button variant="default" onClick={() => setIsOpen(true)}>
               <Plus /> Tạo blog mới
             </Button>
-        </DialogTrigger>
       <DialogContent className="min-w-[60vw] max-w-[90vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-semibold">
@@ -162,9 +169,9 @@ type FormValues = z.infer<typeof FormSchema>;
 
             <DialogFooter className="pt-4">
               <DialogClose asChild>
-                    <Button variant="outline">Đóng</Button>
+                    <Button variant="outline" disabled={loading} onClick={() => setIsOpen(false)}>Đóng</Button>
               </DialogClose>
-            <Button type="submit">Lưu thay đổi</Button>
+            <Button type="submit" disabled={loading}>{loading ? "Vui lòng chờ..." : "Lưu thay đổi"}</Button>
             </DialogFooter>
           </form>
         </Form>

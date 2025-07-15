@@ -13,9 +13,10 @@ type BlogTableProps = {
     setViewBlogMode: React.Dispatch<React.SetStateAction<boolean>>;
     setEditBlogMode: React.Dispatch<React.SetStateAction<boolean>>;
     setSelectedBlog: React.Dispatch<React.SetStateAction<Blog | undefined>>;
+    deleteBlog: (blogId: string) => Promise<void>
 }
 
-const BlogTable = ({filteredBlogs,setViewBlogMode, setEditBlogMode, setSelectedBlog}: BlogTableProps) => {
+const BlogTable = ({filteredBlogs,setViewBlogMode, setEditBlogMode, setSelectedBlog, deleteBlog}: BlogTableProps) => {
     const columns: ColumnDef<Blog>[] = [
        {
          header: "STT",
@@ -27,18 +28,15 @@ const BlogTable = ({filteredBlogs,setViewBlogMode, setEditBlogMode, setSelectedB
            return (
              <Button
                variant="ghost"
-               onClick={() =>
-                 column.toggleSorting(column.getIsSorted() === "asc")
-               }
                className="cursor-pointer"
              >
                Ảnh nền
-               <ArrowUpDown className="ml-2 h-4 w-4" />
              </Button>
            );
          },
          cell: ({ row }) => {
            return (
+            row.original.thumbnail_url &&
                <img
                  src={row.original.thumbnail_url}
                  alt={row.original._id}
@@ -174,9 +172,9 @@ const BlogTable = ({filteredBlogs,setViewBlogMode, setEditBlogMode, setSelectedB
                      </AlertDialogHeader>
                      <AlertDialogFooter>
                        <AlertDialogCancel>Hủy</AlertDialogCancel>
-                       <AlertDialogAction
+                       <AlertDialogAction onClick={() => deleteBlog(row?.original._id)}
                        >
-                         Xác nhận kick
+                         Xác nhận
                        </AlertDialogAction>
                      </AlertDialogFooter>
                    </AlertDialogContent>

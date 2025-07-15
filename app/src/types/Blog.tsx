@@ -1,6 +1,33 @@
+import type { Shelter } from "./Shelter";
+
 export interface Blog {
   _id: string;
   shelter: string;
+  thumbnail_url: string;
+  title: string;
+  description?: string;
+  content: string;
+  status: "moderating" | "published";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BlogCard {
+  _id: string;
+  shelter: string;
+  thumbnail_url: string;
+  title: string;
+  description?: string;
+  content: string;
+  status: "moderating" | "published";
+  createdAt: string;
+  updatedAt: string;
+}
+
+
+export interface BlogDetail {
+  _id: string;
+  shelter: Shelter;
   thumbnail_url: string;
   title: string;
   description?: string;

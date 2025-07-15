@@ -10,6 +10,7 @@ import {useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
+import { useParams } from "react-router-dom";
 ;
 
 
@@ -18,15 +19,17 @@ type EditBlogProps = {
 }
 
 const EditBlog = ({ blog}: EditBlogProps) => {
-    const [selectedImage, setSelectedImage] = useState<string>();
+    const [selectedImage, setSelectedImage] = useState<File>();
     const authAxios = useAuthAxios();
     const {blogAPI} = useContext(AppContext);
+    const {shelterId} = useParams();
+    const [loading, setLoading] = useState<boolean>(false);
 
     const FormSchema = z.object({
     thumbnail_url: z.string(),
     title: z.string().trim().min(2, "Vui lòng nhập tiêu đề").max(30, "Tiêu đề không được dài hơn 30 ký tự"),
     description: z.string().trim().min(10, "Vui lòng nhập miêu tả đầy đủ").max(300, "Miêu tả không được dài hơn 300 ký tự"),
-    content: z.string().trim().min(50, "Vui lòng nhập nội dung đầy đủ").max(1500, "Nội dung không được dài hơn 1000 ký tự"),
+    content: z.string().trim().min(50, "Vui lòng nhập nội dung đầy đủ").max(5000, "Nội dung không được dài hơn 5000 ký tự"),
 })
 type FormValues = z.infer<typeof FormSchema>;
 
@@ -52,7 +55,7 @@ type FormValues = z.infer<typeof FormSchema>;
 
   const handeUploadImage = (e : React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    setSelectedImage(file ? URL.createObjectURL(file) : undefined)
+    setSelectedImage(file)
   }
 
   const handleSave = async (values: FormValues) => {
@@ -60,16 +63,19 @@ type FormValues = z.infer<typeof FormSchema>;
         if(!values){
             return;
         }
+        setLoading(true)
         const formData = new FormData();
         formData.append("title", values.title);
         formData.append("description", values.description);
         formData.append("content", values.content);
-        selectedImage && formData.append("thumbnail", selectedImage)
+        selectedImage && formData.append("thumbnail_url", selectedImage)
 
-        await authAxios.put(`${blogAPI}/edit-blog`, formData)
+        await authAxios.put(`${blogAPI}/${blog?._id}/update/${shelterId}`, formData)
         toast.success("Cập nhập blog thành công!")
     } catch (error : any) {
         toast.error(error?.response.data.message);
+    } finally{
+      setLoading(false)
     }
   };
 
@@ -104,7 +110,7 @@ type FormValues = z.infer<typeof FormSchema>;
                         <p>Ảnh bìa</p>
                         {selectedImage ? 
                         <img
-                            src={selectedImage}
+                            src={URL.createObjectURL(selectedImage)}
                             width={400}
                             height={300}
                             className="max-h-[25vh] max-w-[20vw]"
@@ -150,7 +156,7 @@ type FormValues = z.infer<typeof FormSchema>;
                 </FormItem>
               )}
             />
-            <Button type="submit">Lưu thay đổi</Button>
+            <Button type="submit" disabled={loading}>{loading ? "Vui lòng chờ..." : "Lưu thay đổi"}</Button>
           </form>
         </Form>
       </div>
