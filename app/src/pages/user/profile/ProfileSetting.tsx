@@ -1,7 +1,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
-import EditProfile from "./EditProfile";
-import ChangePassword from "./ChangePassword";
+import EditProfile from "../../../components/user-profile/EditProfile";
+import ChangePassword from "../../../components/user-profile/ChangePassword";
 
 export default function ProfileSettings() {
 

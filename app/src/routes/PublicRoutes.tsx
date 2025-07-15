@@ -4,8 +4,7 @@ import { Register } from "@/pages/Common/Register";
 import HomePage from "@/pages/Common/HomePage";
 import Newfeed from "@/pages/Common/NewFeed";
 import ProfilePage from "@/pages/user/profile/ProfilePage";
-import ProfileSettings from "@/components/user-profile/ProfileSetting";
-
+import ProfileSettings from "@/pages/user/profile/ProfileSetting";
 import React from "react";
 import { Navigate, Outlet, Route } from "react-router-dom";
 import HandleVerify from "@/pages/Common/HandleVerify";

@@ -1,0 +1,106 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage,
+} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Settings } from "lucide-react";
+import React from "react";
+import { Link } from "react-router-dom";
+import type { Shelter } from "@/types/Shelter";
+
+interface ShelterBgProps {
+  shelter: Shelter;
+}
+
+export const ShelterBg: React.FC<ShelterBgProps> = ({ shelter }) => {
+  const foundation = new Date(shelter.foundationDate).toLocaleDateString();
+
+  return (
+    <>
+      <Breadcrumb className="basis-full mb-1">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink
+              className="hover:text-primary text-muted-foreground"
+              href="/"
+            >
+              Trang chủ
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink
+              className="hover:text-primary text-muted-foreground"
+              href="/shelters"
+            >
+              Trung tâm cứu hộ
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{shelter.name}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      <img
+        src={shelter.background}
+        alt={`${shelter.name} background`}
+        className="w-full h-[15rem] object-cover rounded-md"
+      />
+
+      <div className="flex flex-wrap justify-between items-center py-2 px-5">
+        <div className="flex items-center space-x-4">
+          <img
+            src={shelter.avatar}
+            alt={`${shelter.name} avatar`}
+            className="w-20 h-20 object-cover rounded-md border-2 border-primary"
+          />
+          <div className="flex flex-col">
+            <h2 className="text-2xl font-bold text-foreground line-clamp-1">
+              {shelter.name}
+            </h2>
+
+            <div className="flex -space-x-2 mt-2">
+              {shelter.members.map((member) => (
+               <Link to={`/profile/${member._id}`}>
+                  <Avatar key={member._id} className="ring-2 ring-primary">
+                    <AvatarImage src={member.avatar} />
+                    <AvatarFallback>
+                      {member.fullName.trim().split(" ").pop()?.charAt(0) ?? ""}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
+              ))}
+            </div>
+
+            <p className="text-sm text-muted-foreground mt-2">
+              Ngày thành lập: {foundation}
+            </p>
+          </div>
+        </div>
+
+        <Button variant="ghost" asChild>
+          <Link
+            to={`/shelters/${shelter._id}/management`}
+            onClick={() =>
+              window.scrollTo({ top: 0, left: 0, behavior: "instant" })
+            }
+          >
+            <Settings />
+          </Link>
+        </Button>
+      </div>
+
+      {/* <Separator /> */}
+    </>
+  );
+};
+
+export default ShelterBg;
