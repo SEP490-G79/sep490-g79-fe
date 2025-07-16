@@ -16,7 +16,7 @@ const BlogRecommendation = ({ blog} : {blog: Blog}) => {
             alt={`thumbnail-${blog.title}`}
             className="object-cover h-25 w-full cursor-pointer"
             onClick={() => {
-                navigate(`/shelters/${blog.shelter}/blog/${blog._id}`)
+                navigate(`/shelters/${blog.shelter._id}/blog/${blog._id}`)
             }}
           />
       </div>

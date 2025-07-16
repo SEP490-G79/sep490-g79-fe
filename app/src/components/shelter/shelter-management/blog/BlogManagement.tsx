@@ -67,7 +67,7 @@ const BlogManagement = () => {
               setEditBlogMode(false);
               setViewBlogMode(false);
             }}
-            className="flex gap-2 hover:amber-500"
+            className="flex gap-2 hover:text-amber-500 cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4 my-auto" /> Quay lại
           </p>
