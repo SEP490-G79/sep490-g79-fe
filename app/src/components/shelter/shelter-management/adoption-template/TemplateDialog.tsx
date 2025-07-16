@@ -41,6 +41,17 @@ import type { Question } from "@/types/Question";
 import { cn } from "@/lib/utils";
 import { Dock, DockIcon } from "@/components/ui/magicui/dock";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 
 export default function TemplateDialog() {
   const { shelterId, templateId } = useParams<{
@@ -180,8 +191,9 @@ export default function TemplateDialog() {
   }
 
   return (
-    <div className="w-full flex flex-wrap">
-      {/* <Breadcrumb className="basis-full mb-3">
+    <DndContext>
+      <div className="w-full flex flex-wrap">
+        {/* <Breadcrumb className="basis-full mb-3">
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink
@@ -195,8 +207,8 @@ export default function TemplateDialog() {
         </BreadcrumbList>
       </Breadcrumb> */}
 
-      <div className="basis-full">
-        {/* <Tabs defaultValue="edit" className="w-full">
+        <div className="basis-full">
+          {/* <Tabs defaultValue="edit" className="w-full">
           <TabsList>
             <TabsTrigger value="edit">
               <PenLine /> Chỉnh sửa
@@ -207,49 +219,79 @@ export default function TemplateDialog() {
           </TabsList>
 
           <TabsContent value="edit"> */}
-            <div className="basis-full flex mb-3 ">
-              <div className="basis-full sm:basis-2/3 sm:text-left">
-                <h1 className="text-xl font-medium mb-2 hover:text-(--primary)">
-                  <EditDialog
-                    adoptionTemplate={adoptionTemplate}
-                    setAdoptionTemplate={setAdoptionTemplate}
-                  />
-                  Tiêu đề: {adoptionTemplate?.title}
-                </h1>
-                {/* <h1 className="text-md font-medium ml-10 mb-2">
+          <div className="basis-full flex mb-3 ">
+            <div className="basis-full sm:basis-2/3 sm:text-left">
+              <h1 className="text-xl font-medium mb-2 hover:text-(--primary)">
+                <EditDialog
+                  adoptionTemplate={adoptionTemplate}
+                  setAdoptionTemplate={setAdoptionTemplate}
+                />
+                Tiêu đề: {adoptionTemplate?.title}
+              </h1>
+              {/* <h1 className="text-md font-medium ml-10 mb-2">
                   Loài: {adoptionTemplate?.species?.name}
                 </h1> */}
-                <div className=" flex gap-3 ml-10 mb-2 ">
-                  {/* <p className="text-sm">Mô tả: </p> */}
-                  <p className="text-sm text-(--muted-foreground)">
+              <div className=" flex gap-3 ml-10 mb-2 ">
+                {/* <p className="text-sm">Mô tả: </p> */}
+                {/* <p className="text-sm text-(--muted-foreground)">
                     {adoptionTemplate?.description ||
                       "Mô tả mẫu nhận nuôi chưa được cung cấp."}
-                  </p>
-                </div>
-              </div>
-              <div className="basis-full sm:basis-1/3 sm:text-right">
-                <div className="flex justify-end">
-                  <Button variant={"default"} onClick={handleSave}>
-                    <SaveAllIcon /> Lưu
-                  </Button>
-                </div>
+                  </p> */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="link" className="hover:underline">
+                      Xem chi tiết
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-4xl">
+                    <DialogHeader>
+                      <DialogTitle>Điều kiện nhận nuôi</DialogTitle>
+                    </DialogHeader>
+                    <div className="w-full h-[30rem] ">
+                      <MinimalTiptapEditor
+                        throttleDelay={2000}
+                        editorContentClassName="description"
+                        output="html"
+                        content={adoptionTemplate?.description}
+                        immediatelyRender={false}
+                        editable={false}
+                        injectCSS
+                        editorClassName="focus:outline-none"
+                        className="border-none w-full h-full"
+                      />
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button variant="outline">Đóng</Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
+            <div className="basis-full sm:basis-1/3 sm:text-right">
+              <div className="flex justify-end">
+                <Button variant={"default"} onClick={handleSave}>
+                  <SaveAllIcon /> Lưu
+                </Button>
+              </div>
+            </div>
+          </div>
 
-            <Separator />
+          <Separator />
 
-            <div className="basis-full flex flex-wrap ">
-              {questionsList?.map((question: Question) => {
-                return (
-                  <QuestionCard
-                    key={question._id}
-                    question={question}
-                    setQuestionsList={setQuestionsList}
-                  />
-                );
-              })}
-              <div className="flex basis-full justify-start my-3">
-                {/* <Tooltip>
+          <div className="basis-full flex flex-wrap ">
+            {questionsList?.map((question: Question) => {
+              return (
+                <QuestionCard
+                  key={question._id}
+                  question={question}
+                  setQuestionsList={setQuestionsList}
+                />
+              );
+            })}
+            <div className="flex basis-full justify-start my-3">
+              {/* <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant={"ghost"}
@@ -263,49 +305,50 @@ export default function TemplateDialog() {
                     <span className="text-sm">Thêm câu hỏi</span>
                   </TooltipContent>
                 </Tooltip> */}
-                <Button
-                  variant={"outline"}
-                  size={"sm"}
-                  onClick={handleCreateQuestion}
-                >
-                  <Plus /> Thêm câu hỏi
-                </Button>
-              </div>
-              <div className="flex flex-col items-center justify-center sticky bottom-4 left-0 right-0 mx-auto">
-                <TooltipProvider>
-                  <Dock
-                    direction="middle"
-                    className="bg-(--background) border-2 border-(--border)"
-                  >
-                    {DATA.navbar.map((item) => (
-                      <DockIcon key={item.label}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              onClick={item.function}
-                              variant="ghost"
-                              className="hover:text-(--primary)"
-                            >
-                              {item.icon}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{item.label}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </DockIcon>
-                    ))}
-                  </Dock>
-                </TooltipProvider>
-              </div>
+              <Button
+                variant={"outline"}
+                size={"sm"}
+                onClick={handleCreateQuestion}
+              >
+                <Plus /> Thêm câu hỏi
+              </Button>
             </div>
+            <div className="flex flex-col items-center justify-center sticky bottom-4 left-0 right-0 mx-auto">
+              <TooltipProvider>
+                <Dock
+                  direction="middle"
+                  className="bg-(--background) border-2 border-(--border)"
+                >
+                  {DATA.navbar.map((item) => (
+                    <DockIcon key={item.label}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={item.function}
+                            variant="ghost"
+                            className="hover:text-(--primary)"
+                          >
+                            {item.icon}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{item.label}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </DockIcon>
+                  ))}
+                </Dock>
+              </TooltipProvider>
+            </div>
+          </div>
           {/* </TabsContent>
 
           <TabsContent value="preview">
             <p>Preview: {adoptionTemplate?.title}</p>
           </TabsContent>
         </Tabs> */}
+        </div>
       </div>
-    </div>
+    </DndContext>
   );
 }
