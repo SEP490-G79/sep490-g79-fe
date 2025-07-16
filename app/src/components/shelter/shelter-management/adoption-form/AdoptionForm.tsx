@@ -32,6 +32,7 @@ import type { Question } from "@/types/Question";
 import { Dock, DockIcon } from "@/components/ui/magicui/dock";
 import { Skeleton } from "@/components/ui/skeleton";
 import PreviewForm from "./PreviewForm";
+import EditDialog from "./EditDialog";
 
 export default function AdoptionForm() {
   const { shelterId, formId } = useParams<{
@@ -198,13 +199,11 @@ export default function AdoptionForm() {
             <div className="basis-full flex mb-3 ">
               <div className="basis-full sm:basis-2/3 sm:text-left">
                 <h1 className="text-xl font-medium mb-2 hover:text-(--primary)">
-                  {/* <EditDialog
-                    adoptionTemplate={adoptionTemplate}
-                    setAdoptionTemplate={setAdoptionTemplate}
-                  /> */}
-                  <Button variant={"link"}>
-                    <PenBox strokeWidth={2} />
-                  </Button>
+                  <EditDialog 
+                    adoptionForm={adoptionForm}
+                    setAdoptionForm={setAdoptionForm}
+                    setIsLoading={setIsLoading}
+                  />
                   Tiêu đề: {adoptionForm?.title}
                 </h1>
                 {/* <h1 className="text-md font-medium ml-10 mb-2">
@@ -212,10 +211,11 @@ export default function AdoptionForm() {
                 </h1> */}
                 <div className=" flex gap-3 ml-10 mb-2 ">
                   {/* <p className="text-sm">Mô tả: </p> */}
-                  <p className="text-sm text-(--muted-foreground)">
+                  {/* <p className="text-sm text-(--muted-foreground)">
                     {adoptionForm?.description ||
                       "Mô tả mẫu nhận nuôi chưa được cung cấp."}
-                  </p>
+                  </p> */}
+                  <span className="font-medium text-sm">Pet code: <span className="font-normal italic">#{adoptionForm?.pet.petCode}</span></span>
                 </div>
               </div>
               <div className="basis-full sm:basis-1/3 sm:text-right">

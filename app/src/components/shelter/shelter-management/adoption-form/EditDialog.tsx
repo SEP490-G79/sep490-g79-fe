@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Pen, PenBoxIcon, PenLine, PenLineIcon, Plus } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -37,33 +37,48 @@ import useAuthAxios from "@/utils/authAxios";
 import { useNavigate, useParams } from "react-router-dom";
 import { ca } from "zod/v4/locales";
 import { toast } from "sonner";
-import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
+import type { AdoptionForm } from "@/types/AdoptionForm";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type { Pet } from "@/types/Pet";
 import axios from "axios";
-import type { Species } from "@/types/Species";
-import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 
+type Props = {
+  adoptionForm: AdoptionForm | undefined;
+  setAdoptionForm: React.Dispatch<
+    React.SetStateAction<AdoptionForm | undefined>
+  >;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+};
 
-export default function CreateDialog() {
-  const { coreAPI, shelterTemplates, setShelterTemplates } =
+export default function EditDialog({
+  adoptionForm,
+  setAdoptionForm,
+  setIsLoading,
+}: Props) {
+  const { coreAPI, shelterForms, setShelterForms } =
     useContext(AppContext);
-  const [speciesList, setSpeciesList] = useState<Species[]>([]);
+    const [petList, setPetList] = useState<Pet[]>([]);
   const { shelterId } = useParams();
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
+
   useEffect(() => {
-    axios
-      .get(`${coreAPI}/species/get-all`)
-      .then((res) => {
-        setSpeciesList(res.data);
-      })
-      .catch((err) => {
-        console.error("Error fetching species:", err);
-        toast.error("Không thể tải danh sách loài. Vui lòng thử lại sau.");
-      });
-  }, []);
+    axios.get(`${coreAPI}/pets/get-pet-list`)
+    .then((res) => {
+      setPetList(res.data);
+    })
+    .catch((err) => { 
+      console.error("Error fetching pet:", err);
+      toast.error("Không thể tải danh sách thú cưng. Vui lòng thử lại sau.");
+    });
+  }, [coreAPI]);
   const FormSchema = z.object({
-    title: z.string().min(5, "Tiêu đề phải trên 5 ký tự."),
-    species: z.string().min(1, "Chọn loài."),
+    title: z.string().min(5, "Tiêu đề không được để trống."),
+    pet: z.string().min(1, "Chọn thú nuôi."),
     description: z.string().optional(),
   });
 
@@ -71,55 +86,71 @@ export default function CreateDialog() {
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      title: "",
-      species: "",
-      description: "",
+      title: adoptionForm?.title,
+      pet: adoptionForm?.pet?._id,
+      description: adoptionForm?.description,
     },
   });
 
+  useEffect(() => {
+    form.reset({
+      title: adoptionForm?.title,
+      pet: adoptionForm?.pet?._id,
+      description: adoptionForm?.description ?? "",
+    });
+  }, [adoptionForm, form]);
+
   const onSubmit = async (values: FormValues) => {
-    console.log("Form submitted:", values);
+    setIsLoading(true);
     await authAxios
-      .post(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/create`, {
+      .put(`${coreAPI}/shelters/${shelterId}/adoptionForms/${adoptionForm?._id}/edit`, {
         title: values.title,
-        species: values.species,
+        pet: values.pet,
         description: values.description,
       })
       .then((res) => {
-        toast.success("Tạo mẫu nhận nuôi thành công! Đang chuyển hướng ...");
-        setShelterTemplates([...shelterTemplates, res.data]);
-        form.reset();
+        const updatedForm: AdoptionForm = res.data;
+        setAdoptionForm(updatedForm);
+        const updatedForms = shelterForms.map((form) =>
+          form._id == updatedForm._id ? updatedForm : form
+        );
+        setShelterForms([...updatedForms]);
         document
           .querySelector<HTMLButtonElement>('[data-slot="dialog-close"]')
           ?.click();
-        setTimeout(() => {
-          navigate(
-            `/shelters/${shelterId}/management/adoption-templates/${res.data._id}`
-          );
-        }, 800);
+
       })
       .catch((err) => {
-        console.error("Error creating adoption template:", err);
-        toast.error("Tạo mẫu nhận nuôi thất bại. Vui lòng thử lại.");
-      });
+        console.error("Error creating adoption form:", err);
+        toast.error("Sửa form nhận nuôi thất bại. Vui lòng thử lại.");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      })
   };
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="default">
-          <Plus />
-          Tạo mẫu
-        </Button>
-      </DialogTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DialogTrigger asChild>
+            <Button variant="link" className="hover:text-(--primary)">
+              <PenBoxIcon className="h-full w-full " />
+            </Button>
+          </DialogTrigger>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Chỉnh sửa thông tin mẫu</p>
+        </TooltipContent>
+      </Tooltip>
 
-      <DialogContent className="sm:min-w-2xl ">
+      <DialogContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>Tạo mẫu nhận nuôi</DialogTitle>
+              <DialogTitle>Chỉnh sửa form nhận nuôi</DialogTitle>
               <DialogDescription>
-                Tạo mẫu nhận nuôi cho từng loài! Giảm bớt thời gian quản lý.
+          
               </DialogDescription>
             </DialogHeader>
 
@@ -130,9 +161,7 @@ export default function CreateDialog() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Tiêu đề <span className="text-(--destructive)">*</span>
-                    </FormLabel>
+                    <FormLabel>Tiêu đề</FormLabel>
                     <FormControl>
                       <Input placeholder="Nhập tiêu đề" {...field} />
                     </FormControl>
@@ -141,15 +170,13 @@ export default function CreateDialog() {
                 )}
               />
 
-              {/* Species Select */}
+              {/* Pet Select */}
               <FormField
                 control={form.control}
-                name="species"
+                name="pet"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Loài <span className="text-(--destructive)">*</span>
-                    </FormLabel>
+                    <FormLabel>Thú nuôi</FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
@@ -157,10 +184,10 @@ export default function CreateDialog() {
                         defaultValue={field.value}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Chọn loài" />
+                          <SelectValue placeholder="Chọn thú nuôi" />
                         </SelectTrigger>
-                        <SelectContent className="max-h-[10rem]">
-                          {speciesList.map((s) => (
+                        <SelectContent>
+                          {petList.map((s) => (
                             <SelectItem key={s._id} value={s._id}>
                               {s.name}
                             </SelectItem>
@@ -180,21 +207,10 @@ export default function CreateDialog() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Mô tả</FormLabel>
-                    <FormControl className="w-full">
-                      {/* <Textarea
+                    <FormControl>
+                      <Textarea
                         placeholder="Thêm mô tả (tùy chọn)"
                         {...field}
-                      /> */}
-                      <MinimalTiptapEditor
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        className="w-full"
-                        editorContentClassName="p-5"
-                        output="html"
-                        placeholder="Enter your description..."
-                        autofocus={true}
-                        editable={true}
-                        editorClassName="focus:outline-hidden"
                       />
                     </FormControl>
                     <FormMessage />
@@ -208,7 +224,7 @@ export default function CreateDialog() {
                 <Button variant="outline">Hủy</Button>
               </DialogClose>
               <Button className="cursor-pointer" type="submit">
-                Tạo
+                Lưu
               </Button>
             </DialogFooter>
           </form>
