@@ -111,7 +111,7 @@ export default function CreateDialog() {
           )
           .then((res) => {
             toast.success(
-              "Tạo mẫu nhận nuôi thành công! Đang chuyển hướng ..."
+              "Tạo form nhận nuôi thành công! Đang chuyển hướng ..."
             );
             setShelterForms([...shelterForms, res.data]);
             form.reset();
@@ -126,7 +126,7 @@ export default function CreateDialog() {
           })
           .catch((err) => {
             console.error("Error creating adoption form:", err);
-            toast.error("Tạo mẫu nhận nuôi thất bại. Vui lòng thử lại.");
+            toast.error("Tạo form nhận nuôi thất bại. Vui lòng thử lại.");
           });
       }
     }
@@ -153,7 +153,7 @@ export default function CreateDialog() {
       <DialogTrigger asChild>
         <Button variant="default">
           <Plus />
-          Tạo mẫu
+          Tạo form
         </Button>
       </DialogTrigger>
 
@@ -163,7 +163,7 @@ export default function CreateDialog() {
             <DialogHeader>
               <DialogTitle>Tạo form nhận nuôi</DialogTitle>
               <DialogDescription>
-                Nhập thông tin cần thiết để tạo mẫu nhận nuôi mới. Bạn có thể
+                Nhập thông tin cần thiết để tạo form nhận nuôi mới. Bạn có thể
                 chỉnh sửa sau.
               </DialogDescription>
             </DialogHeader>
@@ -257,7 +257,7 @@ export default function CreateDialog() {
                 name="adoptionTemplate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mẫu nhận nuôi</FormLabel>
+                    <FormLabel>Form nhận nuôi</FormLabel>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild>
@@ -271,14 +271,14 @@ export default function CreateDialog() {
                               ? templates.find(
                                   (template) => template.value == field.value
                                 )?.label
-                              : "Chọn mẫu..."}
+                              : "Chọn form..."}
                             <ChevronsUpDown className="opacity-50" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[300px] p-0">
                           <Command className="w-full">
                             <Input
-                              placeholder={`Tìm mẫu...`}
+                              placeholder={`Tìm form...`}
                               className="
                               placeholder:text-muted-foreground flex h-10 w-full rounded-none
                               bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50 border-0
@@ -288,7 +288,7 @@ export default function CreateDialog() {
                               }}
                             />
                             <CommandList>
-                              <CommandEmpty>Không tìm thấy mẫu.</CommandEmpty>
+                              <CommandEmpty>Không tìm thấy form.</CommandEmpty>
                               <CommandGroup>
                                 {templates
                                   .filter((template) => {
@@ -340,6 +340,7 @@ export default function CreateDialog() {
                         output="html"
                         placeholder="Enter your description..."
                         autofocus={true}
+                        hideToolbar={false}
                         editable={true}
                         editorClassName="focus:outline-hidden"
                       />

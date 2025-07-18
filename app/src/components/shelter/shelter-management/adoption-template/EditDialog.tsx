@@ -181,10 +181,10 @@ export default function EditDialog({
                         value={field.value}
                         defaultValue={field.value}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-1/3">
                           <SelectValue placeholder="Chọn loài" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="w-1/3">
                           {speciesList.map((s) => (
                             <SelectItem key={s._id} value={s._id}>
                               {s.name}
@@ -215,6 +215,7 @@ export default function EditDialog({
                         placeholder="Enter your description..."
                         autofocus={true}
                         editable={true}
+                        hideToolbar={false}
                         editorClassName="focus:outline-hidden"
                       />
                     </FormControl>

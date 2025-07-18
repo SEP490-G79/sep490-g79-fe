@@ -53,7 +53,10 @@ import {
 } from "@/components/ui/dialog";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import { DndContext, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 export default function TemplateDialog() {
   const { shelterId, templateId } = useParams<{
@@ -173,8 +176,7 @@ export default function TemplateDialog() {
   const handleDragStart = (event: any) => {
     const { active } = event;
     const draggedId = active?.id;
-    const found = questionsList.find((q)=> q._id === draggedId);
-
+    const found = questionsList.find((q) => q._id === draggedId);
   };
 
   const handleDragEnd = (e: any) => {
@@ -271,41 +273,11 @@ export default function TemplateDialog() {
                   Loài: {adoptionTemplate?.species?.name}
                 </h1> */}
               <div className=" flex gap-3 ml-10 mb-2 ">
-                {/* <p className="text-sm">Mô tả: </p> */}
-                {/* <p className="text-sm text-(--muted-foreground)">
-                    {adoptionTemplate?.description ||
-                      "Mô tả mẫu nhận nuôi chưa được cung cấp."}
-                  </p> */}
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="link" className="hover:underline">
-                      Xem chi tiết
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-6xl">
-                    <DialogHeader>
-                      <DialogTitle>Điều kiện nhận nuôi</DialogTitle>
-                    </DialogHeader>
-                    <div className="w-full h-[30rem] ">
-                      <MinimalTiptapEditor
-                        throttleDelay={2000}
-                        editorContentClassName="description"
-                        output="html"
-                        content={adoptionTemplate?.description}
-                        immediatelyRender={false}
-                        editable={false}
-                        injectCSS
-                        editorClassName="focus:outline-none"
-                        className="border-none w-full h-full"
-                      />
-                    </div>
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button variant="outline">Đóng</Button>
-                      </DialogClose>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+              <p className="text-sm">Loài vật: </p>
+                <p className="text-sm text-(--muted-foreground)">
+                    {adoptionTemplate?.species?.name || "Chưa chọn loài"}
+                  </p>
+                
               </div>
             </div>
             <div className="basis-full sm:basis-1/3 sm:text-right">
@@ -315,7 +287,7 @@ export default function TemplateDialog() {
                 </Button>
               </div>
             </div>
-          </div>  
+          </div>
 
           <Separator />
 
@@ -327,9 +299,8 @@ export default function TemplateDialog() {
               {questionsList?.map((question: Question) => {
                 return (
                   <QuestionCard
-                  
                     key={question._id}
-                    _id={question._id}  
+                    _id={question._id}
                     question={question}
                     setQuestionsList={setQuestionsList}
                   />

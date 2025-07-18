@@ -242,6 +242,7 @@ export default function EditDialog({ adoptionForm, setAdoptionForm }: Props) {
                         placeholder="Enter your description..."
                         autofocus={true}
                         editable={true}
+                        hideToolbar={false}
                         editorClassName="focus:outline-hidden"
                       />
                     </FormControl>

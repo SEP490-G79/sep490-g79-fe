@@ -48,10 +48,12 @@ import useAuthAxios from "@/utils/authAxios";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import CreateDialog from "./CreateDialog";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { Pet } from "@/types/Pet";
 
 export function AdoptionForms() {
   const { shelterId } = useParams();
-  const { coreAPI, shelterForms, setShelterForms } =
+  const { coreAPI, shelterForms, setShelterForms, petsList } =
     React.useContext(AppContext);
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
@@ -111,17 +113,33 @@ export function AdoptionForms() {
     },
     {
       accessorKey: "pet",
-      accessorFn: (row) => row.pet?.petCode ?? "",
+      accessorFn: (s) => s.pet,
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Mã thú nuôi
+          Thú nuôi
           <ArrowUpDown className="ml-1" />
         </Button>
       ),
-      cell: ({ row }) => <span className="ps-3">{row.getValue("pet")}</span>,
+      cell: ({ row }) => {
+        const pet = row.getValue<Pet>("pet");
+        return (
+          <div className="flex items-center">
+            <Avatar className=" w-8 h-8">
+              <AvatarImage src={petsList.find((p:Pet)=>p._id== pet._id)?.photos[0]} alt={pet.name} className="object-center object-cover" />
+              <AvatarFallback>
+                {pet.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="ml-2 flex flex-col overflow-hidden">
+              <span className="text-sm truncate font-medium">{pet.name}</span>
+              <span className="text-sm truncate">#{pet.petCode}</span>
+            </div>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "createdAt",
@@ -325,4 +343,3 @@ export function AdoptionForms() {
     </div>
   );
 }
-
