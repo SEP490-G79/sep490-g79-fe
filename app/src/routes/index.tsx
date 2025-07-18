@@ -36,6 +36,7 @@ import BlogManagement from "@/components/shelter/shelter-management/blog/BlogMan
 import DonationPage from "@/pages/Donation/DonationPage";
 import DonateSuccess from "@/pages/Donation/DonateSuccess";
 import DonateCancel from "@/pages/Donation/DonateCancel";
+import SubmissionForms from "@/components/shelter/shelter-submission/SubmissionForms";
 
 function AppRoutes() {
   return (
@@ -70,6 +71,7 @@ function AppRoutes() {
         <Route path="adoption-templates/:templateId" element={<TemplateDialog/>} />
         <Route path="adoption-forms" element={<AdoptionForms/>} />
         <Route path="adoption-forms/:formId" element={<AdoptionForm/>} />
+        <Route path="submission-forms" element={<SubmissionForms/>} />
       </Route>
 
       <Route element={<PrivateRoutes />}>
