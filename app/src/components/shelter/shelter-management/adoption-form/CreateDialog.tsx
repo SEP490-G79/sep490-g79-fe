@@ -99,14 +99,14 @@ export default function CreateDialog() {
       );
       if (selectedTemplate) {
         values.description = selectedTemplate.description || "";
-
+      const newQuestions = selectedTemplate.questions.map(({_id,...question})=>question) || [];
         await authAxios
           .post(
-            `${coreAPI}/shelters/${shelterId}/adoptionForms/create/${values.pet}`,
+            `${coreAPI}/shelters/${shelterId}/adoptionForms/create-by-template/${values.pet}`,
             {
               title: values.title,
               description: values.description,
-              questions: selectedTemplate.questions || [],
+              questions: newQuestions || [],
             }
           )
           .then((res) => {

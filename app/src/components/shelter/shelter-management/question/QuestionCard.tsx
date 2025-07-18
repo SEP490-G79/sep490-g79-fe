@@ -119,10 +119,10 @@ export function QuestionCard({ question, setQuestionsList, _id }: Props) {
   };
 
   const mockPriority = [
-    { value: "NONE", label: "Không", icon:<CircleSlash/> },
-    { value: "LOW", label: "Thấp", icon:<ChevronsDown/> },
-    { value: "MEDIUM", label: "Trung bình", icon:<Equal/> },
-    { value: "HIGH", label: "Cao", icon:<ChevronsUp/> },
+    { value: "NONE", label: "Không", icon: <CircleSlash /> },
+    { value: "LOW", label: "Thấp", icon: <ChevronsDown /> },
+    { value: "MEDIUM", label: "Trung bình", icon: <Equal /> },
+    { value: "HIGH", label: "Cao", icon: <ChevronsUp /> },
   ];
   return (
     <Collapsible
@@ -176,6 +176,7 @@ export function QuestionCard({ question, setQuestionsList, _id }: Props) {
                 role="combobox"
                 // aria-expanded={open}
                 className="w-[150px] justify-between"
+                disabled={selectedQuestion.type.toUpperCase() == "TEXT"}
               >
                 {mockPriority.find(
                   (p) =>
@@ -189,24 +190,33 @@ export function QuestionCard({ question, setQuestionsList, _id }: Props) {
               <Command>
                 <CommandList>
                   <CommandGroup>
-                    {mockPriority.map((opt) => (
-                      <CommandItem
-                        key={opt.value}
-                        value={opt.value.toLowerCase()}
-                        onSelect={(val) =>
-                          setSelectedQuestion((prev) => ({
-                            ...prev,
-                            priority: val,
-                          }))
-                        }
-                        className="flex items-center justify-between"
-                      >
-                        <span className="flex gap-2">{opt.icon} {opt.label}</span>
-                        {selectedQuestion.priority.toUpperCase() == opt.value.toUpperCase() && (
-                          <Check className="text-primary ml-2" />
-                        )}
-                      </CommandItem>
-                    ))}
+                    {mockPriority
+                      .filter((o) =>
+                        selectedQuestion.type.toUpperCase() == "TEXT"
+                          ? o.value.toUpperCase() == "TEXT"
+                          : true
+                      )
+                      .map((opt) => (
+                        <CommandItem
+                          key={opt.value}
+                          value={opt.value.toLowerCase()}
+                          onSelect={(val) =>
+                            setSelectedQuestion((prev) => ({
+                              ...prev,
+                              priority: val,
+                            }))
+                          }
+                          className="flex items-center justify-between"
+                        >
+                          <span className="flex gap-2">
+                            {opt.icon} {opt.label}
+                          </span>
+                          {selectedQuestion.priority.toUpperCase() ==
+                            opt.value.toUpperCase() && (
+                            <Check className="text-primary ml-2" />
+                          )}
+                        </CommandItem>
+                      ))}
                   </CommandGroup>
                 </CommandList>
               </Command>
