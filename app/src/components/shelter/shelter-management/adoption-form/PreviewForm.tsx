@@ -115,7 +115,7 @@ function PreviewForm() {
                           </DialogDescription>
                         </DialogHeader>
                         <div className="w-full h-[30rem] ">
-
+                            {adoptionForm?.description}
                         </div>
                         <DialogFooter>
                           <DialogClose asChild>

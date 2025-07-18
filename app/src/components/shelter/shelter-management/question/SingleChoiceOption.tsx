@@ -156,7 +156,7 @@ export default function SingleChoiceOption({
           `}
         >
           {/* Radio + Label */}
-          <div className="flex items-center gap-4 flex-1">
+          <div className="flex items-center gap-10 flex-1">
             <RadioGroupItem
               value={option.title}
               id={option.title}
@@ -199,7 +199,7 @@ export default function SingleChoiceOption({
               // onBlur={(e) => {}}
               className="
                 text-sm font-normal bg-transparent border-none outline-none shadow-none dark:bg-transparent
-                cursor-pointer hover:bg-[var(--secondary-foreground)]
+                cursor-pointer hover:bg-[var(--secondary-foreground)] dark:hover:bg-[var(--secondary-foreground)]/20
                 focus:outline-1 focus:cursor-text flex-1 max-w-[40rem] overflow-hidden
               "
             />

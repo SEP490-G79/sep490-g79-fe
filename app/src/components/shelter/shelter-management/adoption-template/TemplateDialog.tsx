@@ -52,6 +52,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
+import { DndContext, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 export default function TemplateDialog() {
   const { shelterId, templateId } = useParams<{
@@ -160,6 +162,39 @@ export default function TemplateDialog() {
     }
   };
 
+  // DND
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 5,
+    },
+  });
+
+  const sensors = useSensors(mouseSensor);
+  const handleDragStart = (event: any) => {
+    const { active } = event;
+    const draggedId = active?.id;
+    const found = questionsList.find((q)=> q._id === draggedId);
+
+  };
+
+  const handleDragEnd = (e: any) => {
+    const { active, over } = e;
+
+    // console.log("Drag Ended:", active.id, "over:", over?.id);
+    if (active.id != over?.id) {
+      setQuestionsList((prev) => {
+        const oldIndex = prev.findIndex((q) => q._id == active.id);
+        const newIndex = prev.findIndex((q) => q._id == over?.id);
+
+        const updatedQuestions = [...prev];
+        const [movedQuestion] = updatedQuestions.splice(oldIndex, 1);
+        updatedQuestions.splice(newIndex, 0, movedQuestion);
+
+        return updatedQuestions;
+      });
+    }
+  };
+
   //
   const DATA = {
     navbar: [
@@ -191,7 +226,11 @@ export default function TemplateDialog() {
   }
 
   return (
-    <DndContext>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <div className="w-full flex flex-wrap">
         {/* <Breadcrumb className="basis-full mb-3">
         <BreadcrumbList>
@@ -243,7 +282,7 @@ export default function TemplateDialog() {
                       Xem chi tiết
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-4xl">
+                  <DialogContent className="sm:max-w-6xl">
                     <DialogHeader>
                       <DialogTitle>Điều kiện nhận nuôi</DialogTitle>
                     </DialogHeader>
@@ -276,20 +315,27 @@ export default function TemplateDialog() {
                 </Button>
               </div>
             </div>
-          </div>
+          </div>  
 
           <Separator />
 
           <div className="basis-full flex flex-wrap ">
-            {questionsList?.map((question: Question) => {
-              return (
-                <QuestionCard
-                  key={question._id}
-                  question={question}
-                  setQuestionsList={setQuestionsList}
-                />
-              );
-            })}
+            <SortableContext
+              items={questionsList.map((q) => q._id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {questionsList?.map((question: Question) => {
+                return (
+                  <QuestionCard
+                  
+                    key={question._id}
+                    _id={question._id}  
+                    question={question}
+                    setQuestionsList={setQuestionsList}
+                  />
+                );
+              })}
+            </SortableContext>
             <div className="flex basis-full justify-start my-3">
               {/* <Tooltip>
                   <TooltipTrigger asChild>

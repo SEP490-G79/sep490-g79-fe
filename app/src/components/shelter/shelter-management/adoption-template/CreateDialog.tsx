@@ -156,7 +156,7 @@ export default function CreateDialog() {
                         value={field.value}
                         defaultValue={field.value}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-1/2">
                           <SelectValue placeholder="Chọn loài" />
                         </SelectTrigger>
                         <SelectContent className="max-h-[10rem]">

@@ -22,7 +22,9 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -37,48 +39,43 @@ import useAuthAxios from "@/utils/authAxios";
 import { useNavigate, useParams } from "react-router-dom";
 import { ca } from "zod/v4/locales";
 import { toast } from "sonner";
-import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
+import type { AdoptionForm } from "@/types/AdoptionForm";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Species } from "@/types/Species";
+import type { Pet } from "@/types/Pet";
 import axios from "axios";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type Props = {
-  adoptionTemplate: AdoptionTemplate | undefined;
-  setAdoptionTemplate: React.Dispatch<
-    React.SetStateAction<AdoptionTemplate | undefined>
+  adoptionForm: AdoptionForm | undefined;
+  setAdoptionForm: React.Dispatch<
+    React.SetStateAction<AdoptionForm | undefined>
   >;
 };
 
-export default function EditDialog({
-  adoptionTemplate,
-  setAdoptionTemplate,
-}: Props) {
-  const { coreAPI, shelterTemplates, setShelterTemplates } =
+export default function EditDialog({ adoptionForm, setAdoptionForm }: Props) {
+  const { coreAPI, shelterForms, setShelterForms, petsList } =
     useContext(AppContext);
-  const [speciesList, setSpeciesList] = useState<Species[]>([]);
+  const [petList, setPetList] = useState<Pet[]>([]);
   const { shelterId } = useParams();
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    axios
-      .get(`${coreAPI}/species/get-all`)
-      .then((res) => {
-        setSpeciesList(res.data);
-      })
-      .catch((err) => {
-        console.error("Error fetching species:", err);
-        toast.error("Không thể tải danh sách loài. Vui lòng thử lại sau.");
-      });
-  }, []);
+  const availablePets = petsList.filter(
+    (pet: any) =>
+      pet.shelter?._id == shelterId &&
+      pet.status == "unavailable" &&
+      !shelterForms.some((form: AdoptionForm) => form.pet._id == pet._id)
+  );
+  console.log(adoptionForm?.pet?._id);
+
   const FormSchema = z.object({
     title: z.string().min(5, "Tiêu đề không được để trống."),
-    species: z.string().min(1, "Chọn loài."),
+    pet: z.string().min(1, "Chọn thú nuôi."),
     description: z.string().optional(),
   });
 
@@ -86,44 +83,44 @@ export default function EditDialog({
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      title: adoptionTemplate?.title,
-      species: adoptionTemplate?.species?._id,
-      description: adoptionTemplate?.description,
+      title: adoptionForm?.title,
+      pet: adoptionForm?.pet?._id,
+      description: adoptionForm?.description,
     },
   });
 
   useEffect(() => {
     form.reset({
-      title: adoptionTemplate?.title,
-      species: adoptionTemplate?.species?._id,
-      description: adoptionTemplate?.description ?? "",
+      title: adoptionForm?.title,
+      pet: adoptionForm?.pet?._id,
+      description: adoptionForm?.description ?? "",
     });
-  }, [adoptionTemplate, form]);
+  }, [adoptionForm, form]);
 
   const onSubmit = async (values: FormValues) => {
     await authAxios
       .put(
-        `${coreAPI}/shelters/${shelterId}/adoptionTemplates/${adoptionTemplate?._id}/edit`,
+        `${coreAPI}/shelters/${shelterId}/adoptionForms/${adoptionForm?._id}/edit`,
         {
           title: values.title,
-          species: values.species,
+          pet: values.pet,
           description: values.description,
         }
       )
       .then((res) => {
-        const updatedTemplate: AdoptionTemplate = res.data;
-        setAdoptionTemplate(updatedTemplate);
-        const updatedTemplates = shelterTemplates.map((template) =>
-          template._id == updatedTemplate._id ? updatedTemplate : template
+        const updatedForm: AdoptionForm = res.data;
+        setAdoptionForm(updatedForm);
+        const updatedForms = shelterForms.map((form) =>
+          form._id == updatedForm._id ? updatedForm : form
         );
-        setShelterTemplates([...updatedTemplates]);
+        setShelterForms([...updatedForms]);
         document
           .querySelector<HTMLButtonElement>('[data-slot="dialog-close"]')
           ?.click();
       })
       .catch((err) => {
-        console.error("Error creating adoption template:", err);
-        toast.error("Tạo mẫu nhận nuôi thất bại. Vui lòng thử lại.");
+        console.error("Error creating adoption form:", err);
+        toast.error("Tạo form nhận nuôi thất bại. Vui lòng thử lại.");
       });
   };
 
@@ -138,7 +135,7 @@ export default function EditDialog({
           </DialogTrigger>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Chỉnh sửa thông tin mẫu</p>
+          <p>Chỉnh sửa thông tin form</p>
         </TooltipContent>
       </Tooltip>
 
@@ -146,9 +143,9 @@ export default function EditDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>Chỉnh sửa mẫu nhận nuôi</DialogTitle>
+              <DialogTitle>Chỉnh sửa form nhận nuôi</DialogTitle>
               <DialogDescription>
-                Tạo mẫu nhận nuôi cho từng loài! Giảm bớt thời gian quản lý.
+                Tạo form nhận nuôi cho từng loài! Giảm bớt thời gian quản lý.
               </DialogDescription>
             </DialogHeader>
 
@@ -168,28 +165,58 @@ export default function EditDialog({
                 )}
               />
 
-              {/* Species Select */}
+              {/* Pet Select */}
               <FormField
                 control={form.control}
-                name="species"
+                name="pet"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Loài</FormLabel>
+                    <FormLabel>Thú nuôi</FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                         defaultValue={field.value}
+                        disabled
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn loài" />
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Chọn thú nuôi">
+                            {adoptionForm?.pet?.name}
+                          </SelectValue>
                         </SelectTrigger>
-                        <SelectContent>
-                          {speciesList.map((s) => (
-                            <SelectItem key={s._id} value={s._id}>
-                              {s.name}
-                            </SelectItem>
-                          ))}
+                        <SelectContent className="max-h-[10rem]">
+                          <SelectGroup>
+                            <SelectLabel>Mã thú nuôi</SelectLabel>
+                            {availablePets.map((s: any) => (
+                              <SelectItem
+                                key={s._id}
+                                value={s._id}
+                                className="flex items-center w-full mx-2 py-1"
+                              >
+                                <Avatar className="rounded-none w-8 h-8">
+                                  <AvatarImage
+                                    src={s?.photos[0]}
+                                    alt={s?.name}
+                                    className="w-8 h-8 object-center object-cover"
+                                  />
+                                  <AvatarFallback className="rounded-none">
+                                    <span className="font-medium">
+                                      {s.name.charAt(0).toUpperCase()}
+                                    </span>
+                                  </AvatarFallback>
+                                </Avatar>
+
+                                <div className="ml-2 flex flex-col overflow-hidden ">
+                                  <span className="text-sm font-medium truncate">
+                                    {s.name}
+                                  </span>
+                                  <span className="text-xs text-(--muted-foreground) truncate">
+                                    #{s.petCode}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
                         </SelectContent>
                       </Select>
                     </FormControl>

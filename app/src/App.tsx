@@ -12,7 +12,7 @@ function App() {
       <div className="min-h-screen flex flex-col w-full">
         <AppHeader />
 
-        <div className="min-h-screen w-full">
+        <div className="min-h-[calc(100vh-50px)] w-full">
           <AppRoutes />
         </div>
         <AppFooter />

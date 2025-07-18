@@ -12,8 +12,9 @@ import { SectionFive } from "./components/section/five";
 import { LinkBubbleMenu } from "./components/bubble-menu/link-bubble-menu";
 import { useMinimalTiptapEditor } from "./hooks/use-minimal-tiptap";
 import { MeasuredContainer } from "./components/measured-container";
-import { Separator } from "../separator";
+
 import { cn } from "@/lib/utils";
+import { Separator } from "../separator";
 
 export interface MinimalTiptapProps
   extends Omit<UseMinimalTiptapEditorProps, "onUpdate"> {
@@ -86,7 +87,7 @@ export const MinimalTiptapEditor = React.forwardRef<
       name="editor"
       ref={ref}
       className={cn(
-        "flex h-auto min-h-72 w-full flex-col rounded-md border border-input shadow-sm focus-within:border-primary",
+        "flex h-80 min-h-72 w-full flex-col rounded-sm border border-input shadow-sm ",
         className
       )}
     >
@@ -94,7 +95,7 @@ export const MinimalTiptapEditor = React.forwardRef<
       <EditorContent
         editor={editor}
         className={cn(
-          "minimal-tiptap-editor h-80 overflow-y-scroll",
+          "minimal-tiptap-editor h-full overflow-y-auto",
           editorContentClassName
         )}
       />
