@@ -8,6 +8,7 @@ total: number;
   performedBy: {
     _id: string;
     email: string;
+    fullName: string;
   };
 
   adoptionForm: {
