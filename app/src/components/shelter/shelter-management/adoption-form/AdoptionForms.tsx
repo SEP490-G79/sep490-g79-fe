@@ -127,7 +127,7 @@ export function AdoptionForms() {
         const pet = row.getValue<Pet>("pet");
         return (
           <div className="flex items-center">
-            <Avatar className=" w-8 h-8">
+            <Avatar className=" w-8 h-8 ring-1 ring-primary">
               <AvatarImage src={petsList.find((p:Pet)=>p._id== pet._id)?.photos[0]} alt={pet.name} className="object-center object-cover" />
               <AvatarFallback>
                 {pet.name.charAt(0).toUpperCase()}
@@ -209,6 +209,7 @@ export function AdoptionForms() {
               </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
+                disabled={adoptionForm.status.toUpperCase() != "DRAFT"}
                 onClick={() => handleDelete(adoptionForm._id)}
               >
                 <Trash /> Xóa form
