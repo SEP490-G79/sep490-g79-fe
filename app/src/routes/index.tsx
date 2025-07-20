@@ -37,6 +37,7 @@ import DonationPage from "@/pages/Donation/DonationPage";
 import DonateSuccess from "@/pages/Donation/DonateSuccess";
 import DonateCancel from "@/pages/Donation/DonateCancel";
 import SubmissionForms from "@/components/shelter/shelter-submission/SubmissionForms";
+import PetSubmission from "@/components/shelter/shelter-submission/PetSubmission";
 
 function AppRoutes() {
   return (
@@ -72,6 +73,7 @@ function AppRoutes() {
         <Route path="adoption-forms" element={<AdoptionForms/>} />
         <Route path="adoption-forms/:formId" element={<AdoptionForm/>} />
         <Route path="submission-forms" element={<SubmissionForms/>} />
+        <Route path="submission-forms/:petId" element={<PetSubmission />} />
       </Route>
 
       <Route element={<PrivateRoutes />}>

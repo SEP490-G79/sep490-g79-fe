@@ -18,11 +18,11 @@ import {
     PaginationLink,
 } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
-
-
+import { useNavigate } from "react-router-dom";
+import type { MissionForm } from "@/types/MissionForm";
 
 export default function SubmissionForms() {
-    const { coreAPI } = useAppContext();
+    const { coreAPI, setSubmissionsByPetId } = useAppContext();
     const authAxios = useAuthAxios();
     const { shelterId } = useParams();
     const [submissions, setSubmissions] = useState([]);
@@ -31,13 +31,14 @@ export default function SubmissionForms() {
     const [totalAvailablePets, setTotalAvailablePets] = useState(0);
     const petsPerPage = 6;
     const [submissionCountByPet, setSubmissionCountByPet] = useState<Record<string, number>>({});
+const navigate = useNavigate();
 
     useEffect(() => {
         if (!shelterId) return;
 
         const fetchPets = async () => {
             try {
-                const res = await authAxios.get(`${coreAPI}/pets/get-by-shelter/${shelterId}`, {
+                const res = await authAxios.get(`${coreAPI}/pets/get-by-shelter-for-submission/${shelterId}`, {
                     params: {
                         page: currentPage,
                         limit: petsPerPage,
@@ -55,37 +56,41 @@ export default function SubmissionForms() {
         fetchPets();
     }, [shelterId, currentPage]);
 
-   useEffect(() => {
-  if (!availablePets.length) return;
+    useEffect(() => {
+        if (!availablePets.length) return;
 
-  const fetchSubmissions = async () => {
-    try {
-      const petIds = availablePets.map((pet) => pet._id);
-      const res = await authAxios.post(`${coreAPI}/adoption-submissions/by-pet-ids`, { petIds });
+        const fetchSubmissions = async () => {
+            try {
+                const petIds = availablePets.map((pet) => pet._id);
+                const res = await authAxios.post(`${coreAPI}/adoption-submissions/by-pet-ids`, { petIds });
 
-      const submissions = res.data || [];
-      setSubmissions(submissions);
+                const submissions = res.data || [];
+                setSubmissions(submissions);
 
-      // Tạo map đếm submission theo petId
- const countMap: Record<string, number> = {};
-      for (const submission of submissions) {
-        const petId = submission?.adoptionForm?.pet?._id;
+                // Tạo map đếm submission theo petId
+                const countMap: Record<string, number> = {};
+                const grouped: Record<string, MissionForm[]> = {};
+                for (const submission of submissions) {
+                    const petId = submission?.adoptionForm?.pet?._id;
 
-        if (!petId) continue; // Bỏ qua nếu không có
+                    if (!petId) continue; // Bỏ qua nếu không có
 
-        if (!countMap[petId]) countMap[petId] = 0;
-        countMap[petId]++;
-      }
+                    if (!countMap[petId]) countMap[petId] = 0;
+                    countMap[petId]++;
+                    if (!grouped[petId]) grouped[petId] = [];
+  grouped[petId].push(submission);
+                }
 
-      setSubmissionCountByPet(countMap);
+                setSubmissionCountByPet(countMap);
+                setSubmissionsByPetId(grouped);
 
-    } catch (error) {
-      toast.error("Không thể lấy danh sách submissions");
-    }
-  };
+            } catch (error) {
+                toast.error("Không thể lấy danh sách submissions");
+            }
+        };
 
-  fetchSubmissions();
-}, [availablePets]);
+        fetchSubmissions();
+    }, [availablePets]);
 
 
 
@@ -162,23 +167,28 @@ export default function SubmissionForms() {
             {/* Danh sách thú cưng */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
                 {availablePets.map((pet) => (
-                    <Card key={pet._id} className="relative  shadow-md hover:shadow-lg transition">
-                          <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
-    {submissionCountByPet[pet._id] || 0} đơn
-  </div>
-                        <CardContent className="flex items-center gap-4 p-4">
+                    <Card key={pet._id}                
+  onClick={() => navigate(`/shelters/${shelterId}/management/submission-forms/${pet._id}`)}
+   className="relative  shadow-md hover:shadow-lg transition">
+                        <div className="absolute top-2 right-2 bg-primary text-white text-xs font-semibold px-2 py-1 rounded-full">
+  {submissionCountByPet[pet._id]
+    ? `${submissionCountByPet[pet._id]} yêu cầu`
+    : "Chưa có yêu cầu"}
+</div>
+                        <CardContent className="flex items-top gap-4 ">
                             <div className="basis-1/3 flex justify-center">
                                 <img
                                     src={pet.photos?.[0] || "/placeholder-avatar.png"}
                                     alt={pet.name}
-                                    className="w-24 h-20 rounded-lg object-cover border"
+                                    className="w-34 h-30 rounded-lg object-cover border"
                                 />
                             </div>
                             <div className="basis-2/3 space-y-1">
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-lg ">
                                     Mã thú cưng: {pet.petCode ?? "N/A"}
                                 </p>
-                                <h2 className="text-lg font-semibold">{pet.name}</h2>
+                                <h2 className="text-lg ">Tên: {pet.name}</h2>
+                                <h2 className="text-lg ">Ngày bắt đầu mở đơn: {pet.name}</h2>
                             </div>
                         </CardContent>
                     </Card>

@@ -49,6 +49,7 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
     const { coreAPI } = useContext(AppContext);
     const [errors, setErrors] = useState<Record<string, boolean>>({});
     const [openConfirm, setOpenConfirm] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleAnswerChange = (qid: string, value: string | string[]) => {
         onAnswerChange(qid, value);
@@ -93,6 +94,7 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
 
     const handleSubmit = async () => {
         try {
+            setIsSubmitting(true); // bật loading
             const payload = {
                 adoptionFormId: form._id,
                 answers: Object.entries(answers).map(([questionId, value]) => ({
@@ -114,8 +116,11 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
         } catch (error) {
             toast.error("Có lỗi xảy ra khi nộp đơn");
             console.error(error);
+        } finally {
+            setIsSubmitting(false); // tắt loading dù thành công hay thất bại
         }
     };
+
 
     const handleSingleChange = (qid: string, value: string) => {
         handleAnswerChange(qid, value);
@@ -305,8 +310,8 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                             {readOnly ? "Xem lại" : "Quay lại"
                             }
                         </Button>
-                    
-                        {readOnly &&(
+
+                        {readOnly && (
                             <Button variant="outline" className="bg-primary" onClick={onNextNormal}>
                                 Tiếp theo
                             </Button>
@@ -339,13 +344,15 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                                     Huỷ
                                 </Button>
                                 <Button
+                                    disabled={isSubmitting}
                                     onClick={async () => {
                                         setOpenConfirm(false);
                                         await handleSubmit();
                                     }}
                                 >
-                                    Đồng ý và gửi
+                                    {isSubmitting ? "Đang gửi..." : "Đồng ý và gửi"}
                                 </Button>
+
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
