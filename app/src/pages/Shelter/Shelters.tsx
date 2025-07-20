@@ -10,7 +10,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
-import {type Shelter } from "@/types/Shelter";
+import { type Shelter } from "@/types/Shelter";
 import {
   Pagination,
   PaginationContent,
@@ -21,19 +21,54 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import AppContext from "@/context/AppContext";
-
+import {
+  sortSheltersByProximity,
+  detectCurrentLocation,
+} from "@/utils/sortByDistance";
+import { Button } from "@/components/ui/button";
+import { SlidersHorizontal } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+interface LatLng {
+  lat: number;
+  lng: number;
+}
 export default function Shelters() {
   // Từ khoá tìm kiếm
-  const {shelters} = useContext(AppContext);
+  const { shelters } = useContext(AppContext);
   const [searchTerm, setSearchTerm] = useState("");
+  const [userLocation, setUserLocation] = useState<LatLng | null>(null);
+  const [loadingLoc, setLoadingLoc] = useState(false);
 
-  const filteredShelters = useMemo<Shelter[]>(() => {
-    return (shelters ?? []).filter(s =>
-      s.name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [searchTerm, shelters])
+  const filteredShelters = useMemo(
+    () =>
+      (shelters ?? []).filter((s) =>
+        s.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [searchTerm, shelters]
+  );
 
-  // Placeholder cho input
+  const handleSortByDistance = async () => {
+    setLoadingLoc(true);
+    try {
+      const loc: LatLng = await detectCurrentLocation();
+      if (loc) setUserLocation(loc);
+      // console.log("Vị trí người dùng:", loc);
+    } catch (err) {
+      console.error("Lấy vị trí thất bại:", err);
+    } finally {
+      setLoadingLoc(false);
+    }
+  };
+
+  const displayedShelters = useMemo(() => {
+    if (userLocation) {
+      // toast.success("Sắp xếp danh sách theo vị trí của bạn thành công!");
+      return sortSheltersByProximity(filteredShelters, userLocation);
+    }
+    return filteredShelters;
+  }, [filteredShelters, userLocation]);
+
   const placeholders = [
     "Tìm kiếm trung tâm cứu hộ",
     "Tìm kiếm theo tên trung tâm",
@@ -46,7 +81,64 @@ export default function Shelters() {
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     setSearchTerm("");
   };
+  if (loadingLoc) {
+    return (
+      <div className="w-full h-full flex flex-wrap justify-around px-10 py-5">
+        <Breadcrumb className="basis-full mb-1">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                className="hover:text-primary text-muted-foreground"
+                href="/"
+              >
+                Trang chủ
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Trung tâm</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
+        {/* Search */}
+        <div className="basis-full flex justify-center my-5">
+          <PlaceholdersAndVanishInput
+            placeholders={placeholders}
+            onChange={handleChange}
+            onSubmit={onSubmit}
+          />
+          <Button
+            variant="ghost"
+            className=""
+            size="default"
+            onClick={handleSortByDistance}
+            disabled={loadingLoc}
+          >
+            <SlidersHorizontal />
+          </Button>
+        </div>
+
+        {/* Title */}
+        <div className="basis-full my-5 text-center">
+          <h1 className="text-3xl font-bold">Hệ Thống Trung Tâm Cứu Hộ</h1>
+          <p className="text-xl">
+            Chọn một nơi gần bạn nhất và chung tay mang đến tương lai tươi sáng
+            cho các bé.
+          </p>
+        </div>
+
+        {/* Grid of cards skeleton */}
+        <div className="basis-full px-40 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-50 w-full rounded-lg" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="w-full h-full flex flex-wrap justify-around px-10 py-5">
       {/* Breadcrumb */}
@@ -68,12 +160,21 @@ export default function Shelters() {
       </Breadcrumb>
 
       {/* Search */}
-      <div className="basis-full my-5">
+      <div className="basis-full flex justify-center my-5">
         <PlaceholdersAndVanishInput
           placeholders={placeholders}
           onChange={handleChange}
           onSubmit={onSubmit}
         />
+        <Button
+          variant="ghost"
+          className=""
+          size="default"
+          onClick={handleSortByDistance}
+          disabled={loadingLoc}
+        >
+          <SlidersHorizontal />
+        </Button>
       </div>
 
       {/* Title */}
@@ -87,7 +188,7 @@ export default function Shelters() {
 
       {/* Danh sách ShelterCard */}
       <div className="basis-full px-40 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5">
-        {filteredShelters?.map((s) => (
+        {displayedShelters?.map((s) => (
           <ShelterCard key={s._id} shelter={s} />
         ))}
       </div>
