@@ -65,7 +65,7 @@ const supports: { title: string; href: string; description: string }[] = [
   },
   {
     title: "Danh sách bài viết",
-    href: "#",
+    href: "/blogfeed",
     description:
       "Đọc các câu chuyện, hướng dẫn chăm sóc và thông tin hữu ích về thế giới thú cưng.",
   },
