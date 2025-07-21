@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import CreatableSelect from "react-select/creatable";
+import { PET_STATUSES } from "@/components/shelter/shelterPet/petStatus";
+
 import ReactSelect from "react-select";
 import {
   Select,
@@ -219,6 +221,33 @@ export default function PetForm({
           </SelectContent>
         </Select>
       </div>
+      {isEditing && ["available", "unavailable"].includes(form.status) && (
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium">Trạng thái *</label>
+          <Select
+            value={form.status}
+            onValueChange={(v) => {
+              setForm({ ...form, status: v });
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              {PET_STATUSES.map(({ value, label }) => (
+                <SelectItem
+                  key={value}
+                  value={value}
+                  disabled={!["unavailable", "available"].includes(value)}
+                >
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <div className="flex flex-col gap-1 col-span-full">
         <label className="text-sm font-medium">Loài *</label>
         <CreatableSelect

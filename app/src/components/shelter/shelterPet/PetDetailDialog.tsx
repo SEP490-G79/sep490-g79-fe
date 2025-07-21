@@ -57,6 +57,7 @@ export default function PetDetailDialog({ open, onClose, pet }: Props) {
               .map((b: any) => (typeof b === "string" ? b : b.name))
               .join(", ")}
           </p>
+
           <p className="col-span-2">
             <strong>Mô tả:</strong> {pet.bio || "Không có"}
           </p>

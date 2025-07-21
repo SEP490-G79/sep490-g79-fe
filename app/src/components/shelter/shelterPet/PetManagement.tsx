@@ -138,12 +138,12 @@ export default function PetManagement() {
       if (isEditing && form._id) {
         const payload = {
           ...form,
-          shelter:
-            typeof form.shelter === "object" ? form.shelter._id : form.shelter,
+          shelter: shelterId, // đảm bảo gửi đúng shelter đang thao tác
           age: Number(form.age),
           weight: Number(form.weight),
         };
         await updatePet(form._id, shelterId, payload);
+
         toast.success("Cập nhật thành công");
       } else {
         await createPet(shelterId, payload);
@@ -166,7 +166,11 @@ export default function PetManagement() {
         breeds: [],
       });
     } catch (err) {
-      toast.error("Bạn không có quyền tạo thú nuôi!");
+      const message =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        "Đã có lỗi xảy ra";
+      toast.error(message);
     }
   };
 

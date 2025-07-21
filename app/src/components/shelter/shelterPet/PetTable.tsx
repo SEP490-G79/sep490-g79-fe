@@ -14,6 +14,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { PET_STATUSES } from "@/components/shelter/shelterPet/petStatus";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +36,9 @@ interface PetTableProps {
   onDelete: (petId: string) => void;
   onView: (pet: any) => void;
 }
+const statusMap = Object.fromEntries(
+  PET_STATUSES.map(({ value, label }) => [value, label])
+);
 
 export default function PetTable({
   data,
@@ -66,11 +71,12 @@ export default function PetTable({
     {
       accessorKey: "status",
       header: "Trạng thái",
-      cell: ({ row }) =>
-        row.original.status === "available"
-          ? "Sẵn sàng nhận nuôi"
-          : "Chưa sẵn sàng",
+      cell: ({ row }) => {
+        const status = row.original.status;
+        return statusMap[status] || "Không rõ";
+      },
     },
+
     {
       accessorKey: "breeds",
       header: "Giống",
