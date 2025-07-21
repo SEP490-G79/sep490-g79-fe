@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -19,14 +20,55 @@ export default function DonationPage() {
   const [errors, setErrors] = useState({ amount: "", message: "" });
   const [loading, setLoading] = useState(false);
 
+  const handleAmountChange = (value: string) => {
+    setAmount(value);
+    const newErrors = { ...errors };
+
+    if (!value || Number(value) < 5000) {
+      newErrors.amount = "Vui lòng nhập số tiền lớn hơn hoặc bằng 5000 VND";
+    } else if (Number(value) > 10000000000) {
+      newErrors.amount = "Số tiền không được vượt quá 10.000.000.000 VND";
+    } else if (!/^\d+$/.test(value)) {
+      newErrors.amount = "Số tiền chỉ được chứa các chữ số";
+    } else {
+      newErrors.amount = "";
+    }
+
+    setErrors(newErrors);
+  };
+
+  const handleMessageChange = (value: string) => {
+    setMessage(value);
+    const newErrors = { ...errors };
+
+    if (value.length > 25) {
+      newErrors.message = "Lời nhắn không được vượt quá 25 ký tự";
+    } else {
+      newErrors.message = "";
+    }
+
+    setErrors(newErrors);
+  };
+
   const handleDonate = async () => {
     const newErrors: any = {};
+
     if (!amount || Number(amount) < 5000) {
       newErrors.amount = "Vui lòng nhập số tiền lớn hơn hoặc bằng 5000 VND";
+    } else if (Number(amount) > 10000000000) {
+      newErrors.amount = "Số tiền không được vượt quá 10.000.000.000 VND";
+    } else if (!/^\d+$/.test(amount)) {
+      newErrors.amount = "Số tiền chỉ được chứa các chữ số";
+    } else {
+      newErrors.amount = "";
     }
+
     if (message.length > 25) {
       newErrors.message = "Lời nhắn không được vượt quá 25 ký tự";
+    } else {
+      newErrors.message = "";
     }
+
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
@@ -44,7 +86,8 @@ export default function DonationPage() {
       });
       window.location.href = res.data.url;
     } catch (error: any) {
-      alert(error?.response?.data?.message || "Có lỗi xảy ra khi tạo liên kết thanh toán");
+      toast.error("Đã xảy ra lỗi khi tạo liên kết thanh toán. Vui lòng thử lại sau.");
+      console.error("Error creating payment link:", error.message);
     } finally {
       setLoading(false);
     }
@@ -110,7 +153,7 @@ export default function DonationPage() {
               type="number"
               min="1"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => handleAmountChange(e.target.value)}
               placeholder="Nhập số tiền"
               className={`mt-3 w-full ${errors.amount ? "border-destructive ring-destructive focus-visible:ring-destructive" : ""}`}
             />
@@ -122,7 +165,7 @@ export default function DonationPage() {
             <Input
               type="text"
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => handleMessageChange(e.target.value)}
               placeholder="Viết lời nhắn nếu muốn"
               className={`mt-3 w-full ${errors.message ? "border-destructive ring-destructive focus-visible:ring-destructive" : ""}`}
             />

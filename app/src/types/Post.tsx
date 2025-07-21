@@ -12,6 +12,20 @@ export interface PostType {
     fullName: string;
     avatar: string;
   };
+  shelter?: {
+    _id: string;
+    name: string;
+    avatar: string;
+    members: {
+      _id: string;
+      roles: ("manager" | "staff")[];
+    }[];
+  } | null;
+  address: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
   user: {
     avatar: string;
     fullName: string;
