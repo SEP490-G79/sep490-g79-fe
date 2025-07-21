@@ -15,8 +15,8 @@ export const usePetApi = () => {
   const updatePet = (petId: string, shelterId: string, data: any) =>
     authAxios.put(`${API_URL}/edit/${petId}/${shelterId}`, data);
 
-  const deletePet = (petId: string, shelterId: string) =>
-    authAxios.delete(`${API_URL}/delete/${petId}/${shelterId}`);
+  const disablePet = (petId: string, shelterId: string) =>
+    authAxios.patch(`${API_URL}/delete/${petId}/${shelterId}`);
 
   const analyzePetImage = (imageBase64: string) =>
     authAxios
@@ -27,7 +27,7 @@ export const usePetApi = () => {
     getAllPets,
     createPet,
     updatePet,
-    deletePet,
+    disablePet,
     analyzePetImage,
   };
 };

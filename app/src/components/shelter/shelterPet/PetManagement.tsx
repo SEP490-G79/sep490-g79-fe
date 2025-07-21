@@ -17,7 +17,7 @@ import { usePetApi } from "@/apis/pet.api";
 
 export default function PetManagement() {
   const { user } = useAppContext();
-  const { getAllPets, createPet, updatePet, deletePet } = usePetApi();
+  const { getAllPets, createPet, updatePet, disablePet } = usePetApi();
 
   const [pagination, setPagination] = React.useState({
     total: 0,
@@ -235,7 +235,7 @@ export default function PetManagement() {
           setIsEditing(true);
         }}
         onDelete={async (id) => {
-          await deletePet(id, shelterId);
+          await disablePet(id, shelterId);
           toast.success("Xóa thành công");
           fetchPets();
         }}
