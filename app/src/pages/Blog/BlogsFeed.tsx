@@ -85,9 +85,9 @@ export default function BlogsFeed() {
       </Carousel>
 
       <div className="px-30">
-        <div className="w-full my-2">
+        {/* <div className="w-full my-2">
           <BlogPreview blog={blogs[0]} />
-        </div>
+        </div> */}
         <div className="w-full my-2">
           <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight text-center">
             {" "}

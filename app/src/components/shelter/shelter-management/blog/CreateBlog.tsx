@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { useParams } from "react-router-dom";
+import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
+import htmlUtils from "@/utils/htmlUtils";
 ;
 
 
@@ -22,13 +24,29 @@ const CreateBlog = ({open, setIsOpen}: {open: boolean, setIsOpen: React.Dispatch
     const {blogAPI} = useContext(AppContext);
     const {shelterId} = useParams();
     const [loading, setLoading] = useState<boolean>(false);
+    const {stripHtml} = htmlUtils;
 
     const FormSchema = z.object({
-    thumbnail_url: z.string(),
-    title: z.string().trim().min(2, "Vui lòng nhập tiêu đề").max(30, "Tiêu đề không được dài hơn 30 ký tự"),
-    description: z.string().trim().min(10, "Vui lòng nhập miêu tả đầy đủ").max(300, "Miêu tả không được dài hơn 300 ký tự"),
-    content: z.string().trim().min(50, "Vui lòng nhập nội dung đầy đủ").max(1500, "Nội dung không được dài hơn 1000 ký tự"),
-})
+      thumbnail_url: z.string(),
+      title: z
+        .string()
+        .trim()
+        .min(2, "Vui lòng nhập tiêu đề")
+        .max(100, "Tiêu đề không được dài hơn 100 ký tự"),
+      description: z
+        .string()
+        .trim()
+        .min(10, "Vui lòng nhập miêu tả đầy đủ")
+        .max(300, "Miêu tả không được dài hơn 300 ký tự"),
+      content: z
+        .string()
+        .refine((value) => stripHtml(value).trim().length >= 50, {
+          message: "Nội dung phải có ít nhất 50 ký tự thực tế",
+        })
+        .refine((value) => stripHtml(value).trim().length <= 10000, {
+          message: "Nội dung không được vượt quá 10000 ký tự",
+        }),
+    });
 type FormValues = z.infer<typeof FormSchema>;
 
     const form = useForm<FormValues>({
@@ -71,38 +89,45 @@ type FormValues = z.infer<typeof FormSchema>;
   };
 
   return (
-     <Dialog open={open} onOpenChange={(open) => {
-        if(!open){
-            form.reset({
-              thumbnail_url: "",
-              title: "",
-              description: "",
-              content: "",
-            });
-            setSelectedImage(undefined);
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        if (!open) {
+          form.reset({
+            thumbnail_url: "",
+            title: "",
+            description: "",
+            content: "",
+          });
+          setSelectedImage(undefined);
         }
-     }}>
-            <Button variant="default" onClick={() => setIsOpen(true)}>
-              <Plus /> Tạo blog mới
-            </Button>
+      }}
+    >
+      <Button variant="default" onClick={() => setIsOpen(true)}>
+        <Plus /> Tạo blog mới
+      </Button>
       <DialogContent className="min-w-[60vw] max-w-[90vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-semibold">
             Tạo blog
           </DialogTitle>
           <DialogDescription>
-            Blog khi mới sẽ được đưa vào danh sách chờ duyệt trước khi được đăng lên hệ thống
+            Blog khi mới sẽ được đưa vào danh sách chờ duyệt trước khi được đăng
+            lên hệ thống
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleCreate)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleCreate)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tiêu đề</FormLabel>
+                  <FormLabel>Tiêu đề <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -144,7 +169,7 @@ type FormValues = z.infer<typeof FormSchema>;
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Miêu tả</FormLabel>
+                  <FormLabel>Miêu tả <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Textarea {...field} />
                   </FormControl>
@@ -158,9 +183,19 @@ type FormValues = z.infer<typeof FormSchema>;
               name="content"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nội dung</FormLabel>
+                  <FormLabel>Nội dung <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Textarea rows={8} {...field} />
+                    <MinimalTiptapEditor
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      className="w-full mb-2"
+                      editorContentClassName="p-5"
+                      output="html"
+                      placeholder="Viết nội dung bài blog ở đây..."
+                      autofocus={true}
+                      editable={true}
+                      editorClassName="focus:outline-hidden"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -169,9 +204,17 @@ type FormValues = z.infer<typeof FormSchema>;
 
             <DialogFooter className="pt-4">
               <DialogClose asChild>
-                    <Button variant="outline" disabled={loading} onClick={() => setIsOpen(false)}>Đóng</Button>
+                <Button
+                  variant="outline"
+                  disabled={loading}
+                  onClick={() => setIsOpen(false)}
+                >
+                  Đóng
+                </Button>
               </DialogClose>
-            <Button type="submit" disabled={loading}>{loading ? "Vui lòng chờ..." : "Lưu thay đổi"}</Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Vui lòng chờ..." : "Lưu thay đổi"}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

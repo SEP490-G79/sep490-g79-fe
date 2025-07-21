@@ -76,34 +76,33 @@ const BlogDetail = () => {
         })}
       </div>
         <div className="col-span-9 mx-auto py-8 w-full">
-          <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-4">
-            {blog.title}
-          </h1>
-          <div className="flex mb-2 justify-between">
-            <div className="flex gap-2 text-sm text-muted-foreground">
-              <Avatar className="h-8 w-8 my-auto"><AvatarImage src={blog.shelter.avatar} alt="shelter avatar"   className="cursor-pointer"  onClick={() => navigate(`/shelters/${shelterId}`)}/></Avatar>
-              <div>
-                <span className="text-md font-md">{blog.shelter?.name || "Trạm A"}</span>
-                <p className="flex">
-                  {getTimeAgo(new Date(blog.createdAt))}
-                </p>
-              </div>
-            </div>
-            {
-              user && user.location && blog.shelter.location && blog.shelter.address &&
-              <div className="text-sm italic text-muted-foreground">
-                {/* <p>{calculateDistance(blog.shelter.location, user?.location)}</p> */}
-                <p><strong>Địa điểm</strong>: {blog.shelter.address}</p>
-              </div>
-            }
-          </div>
-          {blog.thumbnail_url && (
+                    {blog.thumbnail_url && (
             <img
               src={blog.thumbnail_url}
               alt="Blog Thumbnail"
               className="w-full h-auto max-h-[40vh] object-cover rounded-md mb-6"
             />
           )}
+          <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-4">
+            {blog.title}
+          </h1>
+          <div className="flex mb-2 justify-between">
+            <div className="flex gap-2 text-sm">
+              <Avatar className="my-auto">
+              <AvatarImage className="cursor-pointer" src={blog.createdBy.avatar} alt={`avatar cua ${blog.createdBy.fullName}`} onClick={() => navigate(`/profile/${blog.createdBy._id}`)}/>
+            </Avatar>
+              <div>
+                <span className="font-semibold ">{blog.createdBy?.fullName || ""}</span>
+                <p className="flex text-muted-foreground">
+                  {getTimeAgo(new Date(blog.createdAt))}
+                </p>
+              </div>
+            </div>
+              <div className="text-sm italic text-muted-foreground">
+                <p className="cursor-pointer transition-colors duration-200 hover:text-amber-500" onClick={() => navigate(`/shelters/${shelterId}`)}>{blog?.shelter.name}</p>
+                {user && user.location && blog.shelter.location && blog.shelter.address && <p><strong>Địa điểm</strong>: {blog.shelter.address}</p>}                
+              </div>
+          </div>
           {blog.description && (
             <p className="italic text-lg mb-6">{blog.description}</p>
           )}
@@ -111,9 +110,9 @@ const BlogDetail = () => {
             className="prose prose-lg max-w-none text-justify [&>*]:mb-4"
             dangerouslySetInnerHTML={{ __html: blog.content }}
           />
-          <div className="mt-10 text-sm text-right text-gray-500 italic">
+          {/* <div className="mt-10 text-sm text-right text-gray-500 italic">
             Cập nhật lần cuối: {getTimeAgo(new Date(blog.updatedAt))}
-          </div>
+          </div> */}
         </div>
     </div>
   );

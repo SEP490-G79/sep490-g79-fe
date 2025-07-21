@@ -12,11 +12,16 @@ export interface Blog {
       lng: number;
     };
   };
+  createdBy: {
+    _id: string;
+    fullName: string;
+    avatar?: string;
+  }
   thumbnail_url: string;
   title: string;
   description?: string;
   content: string;
-  status: "moderating" | "published";
+  status: "moderating" | "published" | "rejected";
   createdAt: string;
   updatedAt: string;
 }
