@@ -1,6 +1,6 @@
 import PetCard from "@/components/landing-page/PetCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Posts from "@/components/user/profile/Posts";
+import ShelterPosts from "../shelter-post/ShelterPost";
 import Blogs from "../shelter-blog/Blogs";
 
 function ShelterContent() {
@@ -41,7 +41,7 @@ function ShelterContent() {
             </div>
           </TabsContent>
           <TabsContent value="posts" className="pt-4">
-            <Posts />
+            <ShelterPosts />
           </TabsContent>
           <TabsContent value="blogs" className="pt-4">
             <Blogs />

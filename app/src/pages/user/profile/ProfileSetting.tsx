@@ -2,6 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import EditProfile from "../../../components/user-profile/EditProfile";
 import ChangePassword from "../../../components/user-profile/ChangePassword";
+import DonationHistory from "@/components/user-profile/DonationHistory";
 
 export default function ProfileSettings() {
 
@@ -49,6 +50,10 @@ export default function ProfileSettings() {
 
           <TabsContent value="change-password" className="flex-1">
             <ChangePassword />
+          </TabsContent>
+
+          <TabsContent value="donate-history" className="flex-1">
+            <DonationHistory />
           </TabsContent>
         </Tabs>
       </div>

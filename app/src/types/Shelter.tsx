@@ -43,4 +43,5 @@ export interface Shelter {
   warningCount: number;
   createdAt: string;
   updatedAt: string;
+  [key: string]: any;
 }
