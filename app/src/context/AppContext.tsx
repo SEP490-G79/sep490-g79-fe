@@ -13,7 +13,17 @@ import type { Shelter } from "@/types/Shelter";
 import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import type { AdoptionForm } from "@/types/AdoptionForm";
 
-const excludedURLs = ["/", "/login", "/register", "/active-account", "/faq", "/donation", "/donation/success", "/donation/cancel", "/newfeed"];
+const excludedURLs = [
+  "/",
+  "/login",
+  "/register",
+  "/active-account",
+  "/faq",
+  "/donation",
+  "/donation/success",
+  "/donation/cancel",
+  "/newfeed",
+];
 
 interface AppContextType {
   user: User | null;
@@ -37,6 +47,8 @@ interface AppContextType {
   medicalRecordAPI: string;
   blogAPI: string;
   reportAPI: string;
+  shelterId: string | null;
+  setShelterId: (id: string | null) => void;
   setShelters: (shelter: Shelter[]) => void;
   setShelterTemplates: (shelterTemplates: AdoptionTemplate[]) => void;
   setShelterForms: (shelterForms: AdoptionForm[]) => void;
@@ -65,6 +77,8 @@ const AppContext = createContext<AppContextType>({
   blogAPI: "",
   reportAPI: "",
   setShelters: () => [],
+  shelterId: null,
+  setShelterId: () => {},
   setShelterTemplates: () => [],
   setShelterForms: () => [],
 });
@@ -74,6 +88,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [shelters, setShelters] = useState<Shelter[]>([]);
+  const [shelterId, setShelterId] = useState<string | null>(null);
+
   const [shelterTemplates, setShelterTemplates] = useState<AdoptionTemplate[]>(
     []
   );
@@ -116,26 +132,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 
   // Check trạng thái login và access token mỗi khi chuyển trang trừ các trang public
 
-useEffect(() => {
-  const token = localStorage.getItem("accessToken");
-  if (token) {
-    authAxios
-      .get(`${coreAPI}/users/get-user`)
-      .then((res) => {
-        setUser(res.data);
-        setUserProfile(res.data);
-      })
-      .catch(() => {
-        setUser(null);
-        setUserProfile(null);
-        localStorage.removeItem("accessToken");
-      });
-  } else {
-    setUser(null);
-    setUserProfile(null); 
-  }
-}, [localStorage.getItem("accessToken")]); 
-
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      authAxios
+        .get(`${coreAPI}/users/get-user`)
+        .then((res) => {
+          setUser(res.data);
+          setUserProfile(res.data);
+        })
+        .catch(() => {
+          setUser(null);
+          setUserProfile(null);
+          localStorage.removeItem("accessToken");
+        });
+    } else {
+      setUser(null);
+      setUserProfile(null);
+    }
+  }, [localStorage.getItem("accessToken")]);
 
   // get pets list
   useEffect(() => {
@@ -184,6 +199,8 @@ useEffect(() => {
         blogAPI,
         reportAPI,
         setShelters,
+        shelterId,
+        setShelterId,
         shelterTemplates,
         setShelterTemplates,
         shelterForms,
