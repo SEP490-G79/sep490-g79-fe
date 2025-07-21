@@ -1,7 +1,7 @@
 import PetCard from "@/components/landing-page/PetCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Posts from "@/components/user/profile/Posts";
-import Blogs from "../shelter-blog/Blogs";
+import Blogs from "./shelter-blog/Blogs";
 
 function ShelterContent() {
   return (
