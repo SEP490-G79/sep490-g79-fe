@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAppContext } from "@/context/AppContext";
 import type { Pet } from "@/types/Pet";
 import useAuthAxios from "@/utils/authAxios";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, Link} from "react-router-dom";
 import { toast } from "sonner";
 import {
     Card,
@@ -17,9 +17,10 @@ import {
     PaginationNext,
     PaginationLink,
 } from "@/components/ui/pagination";
+
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
 import type { MissionForm } from "@/types/MissionForm";
+import { ArrowRight } from 'lucide-react';
 
 export default function SubmissionForms() {
     const { coreAPI, setSubmissionsByPetId } = useAppContext();
@@ -27,11 +28,14 @@ export default function SubmissionForms() {
     const { shelterId } = useParams();
     const [submissions, setSubmissions] = useState([]);
     const [availablePets, setAvailablePets] = useState<Pet[]>([]);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [submissionCountByPet, setSubmissionCountByPet] = useState<Record<string, number>>({});
     const [totalAvailablePets, setTotalAvailablePets] = useState(0);
     const petsPerPage = 6;
-    const [submissionCountByPet, setSubmissionCountByPet] = useState<Record<string, number>>({});
-const navigate = useNavigate();
+
+    const [currentPageAll, setCurrentPageAll] = useState(1);
+    const [currentPageWithSubmissions, setCurrentPageWithSubmissions] = useState(1);
+    const [activeTab, setActiveTab] = useState<"all" | "withSubmissions">("withSubmissions");
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (!shelterId) return;
@@ -40,8 +44,8 @@ const navigate = useNavigate();
             try {
                 const res = await authAxios.get(`${coreAPI}/pets/get-by-shelter-for-submission/${shelterId}`, {
                     params: {
-                        page: currentPage,
-                        limit: petsPerPage,
+                        page: 1,
+                        limit: 1000, // Lấy tất cả để phân trang client-side
                         status: "available",
                     },
                 });
@@ -54,7 +58,7 @@ const navigate = useNavigate();
         };
 
         fetchPets();
-    }, [shelterId, currentPage]);
+    }, [shelterId]);
 
     useEffect(() => {
         if (!availablePets.length) return;
@@ -67,18 +71,16 @@ const navigate = useNavigate();
                 const submissions = res.data || [];
                 setSubmissions(submissions);
 
-                // Tạo map đếm submission theo petId
                 const countMap: Record<string, number> = {};
                 const grouped: Record<string, MissionForm[]> = {};
+
                 for (const submission of submissions) {
                     const petId = submission?.adoptionForm?.pet?._id;
+                    if (!petId) continue;
 
-                    if (!petId) continue; // Bỏ qua nếu không có
-
-                    if (!countMap[petId]) countMap[petId] = 0;
-                    countMap[petId]++;
+                    countMap[petId] = (countMap[petId] || 0) + 1;
                     if (!grouped[petId]) grouped[petId] = [];
-  grouped[petId].push(submission);
+                    grouped[petId].push(submission);
                 }
 
                 setSubmissionCountByPet(countMap);
@@ -92,16 +94,23 @@ const navigate = useNavigate();
         fetchSubmissions();
     }, [availablePets]);
 
+    // Reset page khi đổi tab
+    useEffect(() => {
+        setCurrentPageAll(1);
+        setCurrentPageWithSubmissions(1);
+    }, [activeTab]);
+
+    const petsWithSubmissions = availablePets.filter(pet => submissionCountByPet[pet._id]);
+    const displayedPets = activeTab === "withSubmissions" ? petsWithSubmissions : availablePets;
+
+    const currentPage = activeTab === "withSubmissions" ? currentPageWithSubmissions : currentPageAll;
+    const setCurrentPage = activeTab === "withSubmissions" ? setCurrentPageWithSubmissions : setCurrentPageAll;
+
+    const totalPages = Math.ceil(displayedPets.length / petsPerPage);
+    const paginatedPets = displayedPets.slice((currentPage - 1) * petsPerPage, currentPage * petsPerPage);
 
 
-
-    const totalPages = Math.ceil(totalAvailablePets / petsPerPage);
-
-    if (!availablePets) return <div>Loading...</div>;
-    if (availablePets.length === 0) return <div>Không có thú cưng khả dụng</div>;
-
-
-    const renderPageNumbers = () => {
+   const renderPageNumbers = () => {
         const pages = [];
 
         if (totalPages <= 5) {
@@ -161,63 +170,83 @@ const navigate = useNavigate();
         return pages;
     };
 
-
     return (
         <div className="space-y-6">
-            {/* Danh sách thú cưng */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
-                {availablePets.map((pet) => (
-                    <Card key={pet._id}                
-  onClick={() => navigate(`/shelters/${shelterId}/management/submission-forms/${pet._id}`)}
-   className="relative  shadow-md hover:shadow-lg transition">
-                        <div className="absolute top-2 right-2 bg-primary text-white text-xs font-semibold px-2 py-1 rounded-full">
-  {submissionCountByPet[pet._id]
-    ? `${submissionCountByPet[pet._id]} yêu cầu`
-    : "Chưa có yêu cầu"}
-</div>
-                        <CardContent className="flex items-top gap-4 ">
-                            <div className="basis-1/3 flex justify-center">
-                                <img
-                                    src={pet.photos?.[0] || "/placeholder-avatar.png"}
-                                    alt={pet.name}
-                                    className="w-34 h-30 rounded-lg object-cover border"
-                                />
-                            </div>
-                            <div className="basis-2/3 space-y-1">
-                                <p className="text-lg ">
-                                    Mã thú cưng: {pet.petCode ?? "N/A"}
-                                </p>
-                                <h2 className="text-lg ">Tên: {pet.name}</h2>
-                                <h2 className="text-lg ">Ngày bắt đầu mở đơn: {pet.name}</h2>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+            {/* Tabs */}
+            <div className="flex gap-2 mb-4">
+                <Button
+                    variant={activeTab === "withSubmissions" ? "default" : "outline"}
+                    onClick={() => setActiveTab("withSubmissions")}
+                >
+                    Đang xử lý yêu cầu
+                </Button>
+                <Button
+                    variant={activeTab === "all" ? "default" : "outline"}
+                    onClick={() => setActiveTab("all")}
+                >
+                    Tất cả thú cưng
+                </Button>
             </div>
 
-            {/* Phân trang */}
+            {/* Pet list */}
+            {paginatedPets.length === 0 ? (
+                <div>Không có thú cưng phù hợp</div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
+                    {paginatedPets.map((pet) => (
+                        <Card key={pet._id}
+                            onClick={() => navigate(`/shelters/${shelterId}/management/submission-forms/${pet._id}`)}
+                            className="relative shadow-md hover:shadow-lg transition"
+                        >
+                            <div className="absolute top-2 right-2 bg-primary text-white text-xs font-semibold px-2 py-1 rounded-full">
+                                {submissionCountByPet[pet._id]
+                                    ? `${submissionCountByPet[pet._id]} yêu cầu`
+                                    : "Chưa có yêu cầu"}
+                            </div>
+                            <CardContent className="flex items-top gap-4">
+                                <div className="basis-1/3 flex justify-center">
+                                    <img
+                                        src={pet.photos?.[0] || "/placeholder-avatar.png"}
+                                        alt={pet.name}
+                                        className="w-34 h-30 rounded-lg object-cover border"
+                                    />
+                                </div>
+                                <div className="basis-2/3 space-y-1">
+                                    <p className="text-lg">Mã thú cưng: {pet.petCode ?? "N/A"}</p>
+                                    <h2 className="text-lg">Tên: {pet.name}</h2>
+                                    <h2 className="text-lg">Ngày bắt đầu mở đơn: {pet.name}</h2>
+                                </div>
+                                 
+                 
+                
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
 
-            <Pagination>
-                <PaginationContent>
-                    <PaginationItem>
-                        <PaginationPrevious
-                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                            className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                        />
-                    </PaginationItem>
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
+                                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                            />
+                        </PaginationItem>
 
-                    {renderPageNumbers()}
+                        {renderPageNumbers()}
 
-                    <PaginationItem>
-                        <PaginationNext
-                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                        />
-                    </PaginationItem>
-                </PaginationContent>
-            </Pagination>
-
-
+                        <PaginationItem>
+                            <PaginationNext
+                                onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
+                                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            )}
         </div>
     );
 }
