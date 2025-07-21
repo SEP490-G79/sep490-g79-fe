@@ -12,7 +12,7 @@ import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import type { PostType } from "@/types/Post";
 import type { CommentType } from "@/types/Comment";
-import { Globe, GlobeLock, Heart, Ellipsis, MessageSquare, Pencil, Trash2 } from "lucide-react";
+import { Globe, GlobeLock, Heart, Ellipsis, MessageSquare, Pencil, Trash2, MapPinIcon } from "lucide-react";
 import clsx from "clsx";
 import PhotoViewerDialog from "@/components/post/PhotoViewerDialog";
 import Comment from "@/components/post/Comment";
@@ -72,6 +72,7 @@ export default function PostDetailDialog({
                     typeof u === "string" ? u : u._id
                 ),
             });
+            console.log("Post detail response:", res.data);
         } catch {
             toast.error("Không thể tải bài viết");
         } finally {
@@ -157,7 +158,7 @@ export default function PostDetailDialog({
                         <ScrollArea className="h-[80vh] relative">
                             <DialogHeader className="border-b p-4 pt-4 items-center">
                                 <DialogTitle className="text-base font-semibold">
-                                    Bài viết của {post.createdBy.fullName}
+                                    Bài viết của {post.shelter ? post.shelter.name : post.createdBy.fullName}
                                 </DialogTitle>
                             </DialogHeader>
 
@@ -166,11 +167,11 @@ export default function PostDetailDialog({
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-center gap-3">
                                             <img
-                                                src={post.createdBy.avatar}
+                                                src={post.shelter?.avatar || post.createdBy.avatar}
                                                 className="w-10 h-10 rounded-full border"
                                             />
                                             <div>
-                                                <p className="font-semibold">{post.createdBy.fullName}</p>
+                                                <p className="font-semibold">{post.shelter?.name || post.createdBy.fullName}</p>
                                                 <div className="text-xs text-muted-foreground flex items-center gap-2">
                                                     <span>{new Date(post.createdAt).toLocaleString()}</span>
                                                     {post.privacy.includes("public") ? (
@@ -182,7 +183,7 @@ export default function PostDetailDialog({
                                             </div>
                                         </div>
 
-                                        {userProfile?._id === post.createdBy._id && (
+                                        {userProfile?._id === post.createdBy._id || userProfile?.shelter?._id === post.shelter?._id ? (
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <button className="p-2 hover:bg-muted rounded-full">
@@ -198,8 +199,15 @@ export default function PostDetailDialog({
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
-                                        )}
+                                        ) : null}
                                     </div>
+
+                                    {post.address && (
+                                            <div className="text-xs text-primary font-medium mb-1 bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
+                                                <MapPinIcon className="w-3 h-3 mr-1" />
+                                                {post.address}
+                                            </div>
+                                        )}
 
                                     {/* Nội dung bài viết */}
                                     <div className="relative">
@@ -258,6 +266,7 @@ export default function PostDetailDialog({
                                             </div>
                                         </div>
                                     )}
+                                    <hr />
                                     {/* Like & comment count */}
                                     <div className="flex items-center justify-between px-1 pt-2 text-sm">
                                         <button
