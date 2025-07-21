@@ -400,7 +400,9 @@ export function AdoptionTemplates() {
               className="rounded-none w-full h-2/3 cursor-pointer"
             >
               <AvatarFallback className="rounded-none">
-                <span className="text-6xl font-normal">o</span>
+                <span className="text-6xl font-normal">
+                  {template.title?.charAt(0).toUpperCase() ||"T"}
+                </span>
               </AvatarFallback>
             </Avatar>
 
