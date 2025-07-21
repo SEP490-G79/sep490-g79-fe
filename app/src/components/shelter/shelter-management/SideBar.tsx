@@ -32,8 +32,8 @@ function SideBar({ items }: SidebarNavProps) {
             className={cn(
               buttonVariants({ variant: "ghost" }),
               isActive
-                ? "bg-(--muted) text-(--primary) hover:bg-(--muted)"
-                : "dark:hover:bg-(--muted)/30 hover:text-(--primary)",
+                ? "font-medium  bg-(--secondary) "
+                : "font-medium  hover:bg-(--background)  hover:underline",
               "justify-start basis-1/4 lg:w-3/4"
             )}
           >

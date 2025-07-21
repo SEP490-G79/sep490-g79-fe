@@ -1,4 +1,3 @@
-"use client"
 
 import React, { useContext, useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
@@ -16,7 +15,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { type ShelterProfile } from "@/types/ShelterProfile"
 import useAuthAxios from "@/utils/authAxios"
 import AppContext from "@/context/AppContext"
 import { useParams } from "react-router-dom"

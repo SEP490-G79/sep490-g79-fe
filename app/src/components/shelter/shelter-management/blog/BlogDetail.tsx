@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import type { Blog } from "@/types/Blog";
 import { Calendar } from "lucide-react";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 
 const BlogDetail = ({blog}: {blog: Blog | undefined}) => {
 
@@ -12,6 +13,12 @@ const BlogDetail = ({blog}: {blog: Blog | undefined}) => {
           <h1 className="text-3xl md:text-4xl font-bold leading-tight text-gray-900 mb-4">
             {blog.title}
           </h1>
+          <div className='flex gap-2 mb-2'>
+            <Avatar>
+              <AvatarImage src={blog.createdBy.avatar} alt={`avatar cua ${blog.createdBy.fullName}`} />
+            </Avatar>
+            <p className='my-auto truncate max-w-[10vw]'>{blog.createdBy.fullName}</p>
+          </div>
           <p className="text-sm text-gray-500 mb-6 flex gap-2">
             <Calendar className="w-5 h-5"/> {format(new Date(blog.createdAt), "dd/MM/yyyy HH:mm")}
           </p>
