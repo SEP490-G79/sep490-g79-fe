@@ -33,24 +33,33 @@ const ShelterDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!shelterId) return;
+
     const findShelter = shelters?.find((s) => s._id === shelterId);
     if (findShelter) {
       setShelter(findShelter);
     } else {
-      getShelterProfile(shelterId!)
+      getShelterProfile(shelterId)
         .then((data) => setShelter(data))
         .catch(() => toast.error("Không tìm thấy shelter"));
     }
   }, [shelterId, shelters]);
 
   useEffect(() => {
-    if (!shelter) return;
+    if (!shelterId || !shelter) return;
+
     setLoading(true);
     getShelterDashboardStatistics(shelterId)
-      .then(setDashboardData)
-      .catch(() => toast.error("Không thể tải dữ liệu dashboard"))
+      .then((data) => {
+        console.log("Dashboard data:", data);
+        setDashboardData(data);
+      })
+      .catch((err) => {
+        console.error("Dashboard error:", err);
+        toast.error("Không thể tải dữ liệu dashboard");
+      })
       .finally(() => setLoading(false));
-  }, [shelter]);
+  }, [shelterId, shelter]);
 
   if (!shelter) {
     return (

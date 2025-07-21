@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/tooltip";
 import type { Species } from "@/types/Species";
 import axios from "axios";
+import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 
 type Props = {
   adoptionTemplate: AdoptionTemplate | undefined;
@@ -59,20 +60,21 @@ export default function EditDialog({
 }: Props) {
   const { coreAPI, shelterTemplates, setShelterTemplates } =
     useContext(AppContext);
-    const [speciesList, setSpeciesList] = useState<Species[]>([]);
+  const [speciesList, setSpeciesList] = useState<Species[]>([]);
   const { shelterId } = useParams();
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get(`${coreAPI}/species/get-all`)
-    .then((res) => {
-      setSpeciesList(res.data);
-    })
-    .catch((err) => { 
-      console.error("Error fetching species:", err);
-      toast.error("Không thể tải danh sách loài. Vui lòng thử lại sau.");
-    });
+    axios
+      .get(`${coreAPI}/species/get-all`)
+      .then((res) => {
+        setSpeciesList(res.data);
+      })
+      .catch((err) => {
+        console.error("Error fetching species:", err);
+        toast.error("Không thể tải danh sách loài. Vui lòng thử lại sau.");
+      });
   }, []);
   const FormSchema = z.object({
     title: z.string().min(5, "Tiêu đề không được để trống."),
@@ -100,11 +102,14 @@ export default function EditDialog({
 
   const onSubmit = async (values: FormValues) => {
     await authAxios
-      .put(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/${adoptionTemplate?._id}/edit`, {
-        title: values.title,
-        species: values.species,
-        description: values.description,
-      })
+      .put(
+        `${coreAPI}/shelters/${shelterId}/adoptionTemplates/${adoptionTemplate?._id}/edit`,
+        {
+          title: values.title,
+          species: values.species,
+          description: values.description,
+        }
+      )
       .then((res) => {
         const updatedTemplate: AdoptionTemplate = res.data;
         setAdoptionTemplate(updatedTemplate);
@@ -115,7 +120,6 @@ export default function EditDialog({
         document
           .querySelector<HTMLButtonElement>('[data-slot="dialog-close"]')
           ?.click();
-
       })
       .catch((err) => {
         console.error("Error creating adoption template:", err);
@@ -138,7 +142,7 @@ export default function EditDialog({
         </TooltipContent>
       </Tooltip>
 
-      <DialogContent>
+      <DialogContent className="sm: min-w-3xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
@@ -177,10 +181,10 @@ export default function EditDialog({
                         value={field.value}
                         defaultValue={field.value}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-1/3">
                           <SelectValue placeholder="Chọn loài" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="w-1/3">
                           {speciesList.map((s) => (
                             <SelectItem key={s._id} value={s._id}>
                               {s.name}
@@ -202,9 +206,17 @@ export default function EditDialog({
                   <FormItem>
                     <FormLabel>Mô tả</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Thêm mô tả (tùy chọn)"
-                        {...field}
+                      <MinimalTiptapEditor
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        className="w-full"
+                        editorContentClassName="p-5"
+                        output="html"
+                        placeholder="Enter your description..."
+                        autofocus={true}
+                        editable={true}
+                        hideToolbar={false}
+                        editorClassName="focus:outline-hidden"
                       />
                     </FormControl>
                     <FormMessage />

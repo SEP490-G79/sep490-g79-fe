@@ -27,15 +27,18 @@ import { AdoptionTemplates } from "@/components/shelter/shelter-management/adopt
 import ShelterRequestsList from "@/pages/Shelter/ShelterRequestsList";
 import ViewPetDetails from "@/pages/Pets/ViewPetDetails";
 import ShelterDashboard from "@/pages/Shelter/ShelterDashboard";
-import ShelterProfile from "@/components/shelter/shelter-management/profile/ShelterProfile";
+
 import AdoptionForm from "../components/shelter/shelter-management/adoption-form/AdoptionForm";
 import ShelterStaffManagement from "@/pages/Shelter/ShelterStaffManagement";
-import BlogDetail from "@/components/shelter/shelter-blog/BlogDetail";
+import BlogDetail from "@/components/shelter/shelter-page/shelter-blog/BlogDetail";
 import BlogManagement from "@/components/shelter/shelter-management/blog/BlogManagement";
 
 import DonationPage from "@/pages/Donation/DonationPage";
 import DonateSuccess from "@/pages/Donation/DonateSuccess";
 import DonateCancel from "@/pages/Donation/DonateCancel";
+import BlogsFeed from "@/pages/Blog/BlogsFeed";
+import ShelterRoute from "./ShelterRoute";
+import ShelterProfile from "@/components/shelter/shelter-management/profile/ShelterProfile";
 
 function AppRoutes() {
   return (
@@ -47,55 +50,58 @@ function AppRoutes() {
         <Route path="/active-account" element={<HandleVerify />} />
       </Route>
       <Route path="/faq" element={<FAQ />} />
-
       <Route path="/pets-list" element={<PetsListPage />} />
       <Route path="/pets/:id" element={<PetProfilePage />} />
-      <Route path="/adoption-form/:id/:submissionId?" element={<UserAdoptionFormPage />} />
+      <Route
+        path="/adoption-form/:id/:submissionId?"
+        element={<UserAdoptionFormPage />}
+      />
       <Route path="/shelters" element={<Shelters />} />
       <Route path="/shelters/:shelterId" element={<ShelterPage />} />
-      <Route path="/shelters/:shelterId/blog/:blogId" element={<BlogDetail />} />
-      <Route path="/pet/:petId" element={<ViewPetDetails />} />
-      <Route path="/shelter/pets" element={<PetManagement />} />
-      <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
-
-
-      <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
-        <Route index element={<ShelterDashboard />} />
-        <Route path="dashboard" element={<ShelterDashboard />}/>
-        <Route path="shelter-profile" element={<ShelterProfile />} />
-        <Route path="staffs-management" element={<ShelterStaffManagement />} />
-        <Route path="blogs-management" element={<BlogManagement />} />
-        <Route path="pet-profiles" element={<PetManagement />} />
-        <Route path="adoption-templates" element={<AdoptionTemplates/>} />
-        <Route path="adoption-templates/:templateId" element={<TemplateDialog/>} />
-        <Route path="adoption-forms" element={<AdoptionForms/>} />
-        <Route path="adoption-forms/:formId" element={<AdoptionForm/>} />
-      </Route>
+      <Route
+        path="/shelters/:shelterId/blog/:blogId"
+        element={<BlogDetail />}
+      />
 
       <Route element={<PrivateRoutes />}>
         <Route index element={<Navigate to="/home" replace={true} />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/profile/:userId" element={<ProfilePage />} />
-
-        
         <Route path="/profile-setting" element={<ProfileSettings />} />
         <Route
           path="/shelter-establishment"
           element={<ShelterEstablishmentPage />}
         />
+        <Route path="/shelter-request" element={<ShelterRequestsList />} />
         <Route
-          path="/shelter-request"
-          element={<ShelterRequestsList />}
-        />
+          path="/shelters/:shelterId/management"
+          element={
+            <ShelterRoute>
+              <ManageShelter />
+            </ShelterRoute>
+          }
+        >
+
+          <Route index element={<ShelterDashboard />} />
+          <Route path="dashboard" element={<ShelterDashboard />}/>
+          <Route path="shelter-profile" element={<ShelterProfile />} />
+          <Route path="staffs-management" element={<ShelterStaffManagement />} />
+          <Route path="blogs-management" element={<BlogManagement />} />
+          <Route path="pet-profiles" element={<PetManagement />} />
+          <Route path="adoption-templates" element={<AdoptionTemplates/>} />
+          <Route path="adoption-templates/:templateId" element={<TemplateDialog/>} />
+          <Route path="adoption-forms" element={<AdoptionForms/>} />
+          <Route path="adoption-forms/:formId" element={<AdoptionForm/>} />
+   
+        </Route>
       </Route>
 
       <Route path="/donation" element={<DonationPage />} />
       <Route path="/donation/success" element={<DonateSuccess />} />
       <Route path="/donation/cancel" element={<DonateCancel />} />
       <Route path="/newfeed" element={<Newfeed />}/>
-  
-      
+      <Route path="/blogfeed" element={<BlogsFeed />}/>
 
 
 

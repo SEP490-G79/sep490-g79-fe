@@ -105,6 +105,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
+
             <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -129,6 +130,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+
           </div>
         </CardTitle>
         <ReportPostDialog postId={post._id} key={post._id} />
@@ -205,26 +207,24 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
 
       <CardFooter className="text-sm text-gray-500 px-4">
         <div className="flex w-full justify-between">
-          {/* Nửa trái: Like */}
-          <div
-
-            onClick={() => onLike(post._id)}
-            className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${post.likedBy.includes(currentUserId) ? "text-red-500" : ""}`}
-
-          >
-            <Heart className="w-5 h-5" />
-            <span>{post.likedBy.length}</span>
+          <div className="flex justify-between gap-25">
+            <div
+              onClick={() => onLike(post._id)}
+              className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${post.likedBy.includes(currentUserId) ? "text-red-500" : ""}`}
+            >
+              <Heart className="w-5 h-5" />
+              <span>{post.likedBy.length}</span>
+            </div>
+            <div
+              className="flex gap-2 cursor-pointer"
+              onClick={() => { onViewDetail(post._id) }}>
+              <MessageSquare className="w-5 h-5" />
+              <p className="min-w-15"> Bình luận</p>
+            </div>
           </div>
-
-          {/* Nửa phải: Bình luận */}
-
-          <div
-            className="flex items-center gap-1 justify-start w-1/2 cursor-pointer"
-            onClick={() => { onViewDetail(post._id) }}>
-            <MessageSquare className="w-5 h-5" />
-            <span> Bình luận</span>
-          </div>
+          <ReportPostDialog postId={post._id} key={post._id} />
         </div>
+        
 
       </CardFooter>
 

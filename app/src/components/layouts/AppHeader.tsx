@@ -8,6 +8,8 @@ import UserNav from "../header/UserNav";
 import AppContext from "@/context/AppContext";
 import { Skeleton } from "../ui/skeleton";
 import useAuthAxios from "@/utils/authAxios";
+import logo from "../../assets/logo/bbkzwnb6hyyrmi8jhiwp.jpg"
+import { Avatar, AvatarImage } from "../ui/avatar";
 function AppHeader() {
   const { user, setUser, accessToken, coreAPI, loginLoading } = useContext(AppContext);
   const authAxios = useAuthAxios();
@@ -29,7 +31,9 @@ function AppHeader() {
       <div className="flex h-14 justify-between items-center px-4">
         <div className="basis-1/2">
           <a href="/" className="text-lg font-semibold">
-            Logo
+            <Avatar>
+              <AvatarImage src={logo} alt="pawShelter logo" />
+            </Avatar>
           </a>
         </div>
 

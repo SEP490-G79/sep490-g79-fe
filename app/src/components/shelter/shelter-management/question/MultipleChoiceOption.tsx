@@ -118,9 +118,9 @@ export default function MultipleChoiceOption({
         <div
           key={option.title}
           className={`
-            flex items-center gap-4 px-2 py-1 rounded-sm border transition-all duration-200
+            flex items-center gap-4 px-2 py-1 rounded-sm  transition-all duration-200
             border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground
-            dark:bg-input/30 dark:border-input dark:hover:bg-input/50
+            dark:bg-input/30 dark:border-input dark:hover:bg-input/50 
             ${option.isTrue ? "border-4 " : ""}
           `}
         >
@@ -170,7 +170,7 @@ export default function MultipleChoiceOption({
               // onBlur={(e) => {}}
               className="
               text-sm font-normal bg-transparent border-none outline-none shadow-none dark:bg-transparent
-              cursor-pointer hover:bg-[var(--secondary-foreground)]
+              cursor-pointer hover:bg-[var(--secondary-foreground)] dark:hover:bg-[var(--secondary-foreground)]/20
               focus:outline-1 focus:cursor-text flex-1 max-w-[40rem] overflow-hidden
             "
             />
