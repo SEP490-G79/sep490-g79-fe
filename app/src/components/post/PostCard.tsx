@@ -98,6 +98,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                     <Trash2 className="w-4 h-4 text-red-500 mr-2" />
                     Xóa bài đăng
                   </DropdownMenuItem>
+                  <ReportPostDialog postId={post._id} key={post._id} />
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
@@ -210,7 +211,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
               <p className="min-w-15"> Bình luận</p>
             </div>
           </div>
-          <ReportPostDialog postId={post._id} key={post._id} />
         </div>
         
 
