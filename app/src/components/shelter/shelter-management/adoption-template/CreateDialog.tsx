@@ -156,7 +156,7 @@ export default function CreateDialog() {
                         value={field.value}
                         defaultValue={field.value}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-1/2">
                           <SelectValue placeholder="Chọn loài" />
                         </SelectTrigger>
                         <SelectContent className="max-h-[10rem]">
@@ -194,6 +194,7 @@ export default function CreateDialog() {
                         placeholder="Enter your description..."
                         autofocus={true}
                         editable={true}
+                        hideToolbar={false}
                         editorClassName="focus:outline-hidden"
                       />
                     </FormControl>

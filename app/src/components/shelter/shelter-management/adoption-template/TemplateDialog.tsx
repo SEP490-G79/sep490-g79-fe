@@ -52,6 +52,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
+import { DndContext, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 export default function TemplateDialog() {
   const { shelterId, templateId } = useParams<{
@@ -160,6 +165,38 @@ export default function TemplateDialog() {
     }
   };
 
+  // DND
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 5,
+    },
+  });
+
+  const sensors = useSensors(mouseSensor);
+  const handleDragStart = (event: any) => {
+    const { active } = event;
+    const draggedId = active?.id;
+    const found = questionsList.find((q) => q._id === draggedId);
+  };
+
+  const handleDragEnd = (e: any) => {
+    const { active, over } = e;
+
+    // console.log("Drag Ended:", active.id, "over:", over?.id);
+    if (active.id != over?.id) {
+      setQuestionsList((prev) => {
+        const oldIndex = prev.findIndex((q) => q._id == active.id);
+        const newIndex = prev.findIndex((q) => q._id == over?.id);
+
+        const updatedQuestions = [...prev];
+        const [movedQuestion] = updatedQuestions.splice(oldIndex, 1);
+        updatedQuestions.splice(newIndex, 0, movedQuestion);
+
+        return updatedQuestions;
+      });
+    }
+  };
+
   //
   const DATA = {
     navbar: [
@@ -191,7 +228,11 @@ export default function TemplateDialog() {
   }
 
   return (
-    <DndContext>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <div className="w-full flex flex-wrap">
         {/* <Breadcrumb className="basis-full mb-3">
         <BreadcrumbList>
@@ -232,41 +273,11 @@ export default function TemplateDialog() {
                   Loài: {adoptionTemplate?.species?.name}
                 </h1> */}
               <div className=" flex gap-3 ml-10 mb-2 ">
-                {/* <p className="text-sm">Mô tả: </p> */}
-                {/* <p className="text-sm text-(--muted-foreground)">
-                    {adoptionTemplate?.description ||
-                      "Mô tả mẫu nhận nuôi chưa được cung cấp."}
-                  </p> */}
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="link" className="hover:underline">
-                      Xem chi tiết
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-4xl">
-                    <DialogHeader>
-                      <DialogTitle>Điều kiện nhận nuôi</DialogTitle>
-                    </DialogHeader>
-                    <div className="w-full h-[30rem] ">
-                      <MinimalTiptapEditor
-                        throttleDelay={2000}
-                        editorContentClassName="description"
-                        output="html"
-                        content={adoptionTemplate?.description}
-                        immediatelyRender={false}
-                        editable={false}
-                        injectCSS
-                        editorClassName="focus:outline-none"
-                        className="border-none w-full h-full"
-                      />
-                    </div>
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button variant="outline">Đóng</Button>
-                      </DialogClose>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+              <p className="text-sm">Loài vật: </p>
+                <p className="text-sm text-(--muted-foreground)">
+                    {adoptionTemplate?.species?.name || "Chưa chọn loài"}
+                  </p>
+                
               </div>
             </div>
             <div className="basis-full sm:basis-1/3 sm:text-right">
@@ -281,15 +292,21 @@ export default function TemplateDialog() {
           <Separator />
 
           <div className="basis-full flex flex-wrap ">
-            {questionsList?.map((question: Question) => {
-              return (
-                <QuestionCard
-                  key={question._id}
-                  question={question}
-                  setQuestionsList={setQuestionsList}
-                />
-              );
-            })}
+            <SortableContext
+              items={questionsList.map((q) => q._id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {questionsList?.map((question: Question) => {
+                return (
+                  <QuestionCard
+                    key={question._id}
+                    _id={question._id}
+                    question={question}
+                    setQuestionsList={setQuestionsList}
+                  />
+                );
+              })}
+            </SortableContext>
             <div className="flex basis-full justify-start my-3">
               {/* <Tooltip>
                   <TooltipTrigger asChild>

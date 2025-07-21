@@ -12,12 +12,14 @@ import AppContext from "@/context/AppContext";
 import { type Shelter } from "@/types/Shelter";
 import useAuthAxios from "@/utils/authAxios";
 import React, { useContext, useEffect, useMemo } from "react";
-import { Outlet, useParams } from "react-router-dom";
+import { Outlet, useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 function ManageShelter() {
   const { shelterId } = useParams();
-  const {shelters,coreAPI,setShelterTemplates} = useContext(AppContext);
+  const { shelters, coreAPI, setShelterTemplates, user } = useContext(AppContext);
   const authAxios = useAuthAxios();
+  const navigate = useNavigate();
   const shelter = useMemo<Shelter | undefined>(() => {
     return (shelters ?? [])?.find((s) => s._id == shelterId);
   }, [shelterId, shelters]);
@@ -41,7 +43,7 @@ function ManageShelter() {
     { title: "Quản lý mẫu nhận nuôi", href: "adoption-templates" },
     { title: "Quản lý form nhận nuôi", href: "adoption-forms" },
   ];
-  
+
   return (
     <div className="w-full min-h-full flex flex-wrap justify-around px-20 py-5">
       <Breadcrumb className="basis-full mb-5">
@@ -69,7 +71,7 @@ function ManageShelter() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="basis-full mb-5">
+      <div className="basis-full mb-5 mt-5">
         <h1 className="text-2xl font-medium text-(--primary) mb-3">
           Quản lý trung tâm
         </h1>
@@ -84,7 +86,7 @@ function ManageShelter() {
         </aside>
       </div>
       <div className="basis-full sm:basis-3/4 w-full">
-          <Outlet/>
+        <Outlet />
       </div>
     </div>
   );
