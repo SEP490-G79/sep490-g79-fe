@@ -55,9 +55,14 @@ type Props = {
   setAdoptionForm: React.Dispatch<
     React.SetStateAction<AdoptionForm | undefined>
   >;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export default function EditDialog({ adoptionForm, setAdoptionForm }: Props) {
+export default function EditDialog({
+  adoptionForm,
+  setAdoptionForm,
+  setIsLoading,
+}: Props) {
   const { coreAPI, shelterForms, setShelterForms, petsList } =
     useContext(AppContext);
   const [petList, setPetList] = useState<Pet[]>([]);
@@ -98,6 +103,7 @@ export default function EditDialog({ adoptionForm, setAdoptionForm }: Props) {
   }, [adoptionForm, form]);
 
   const onSubmit = async (values: FormValues) => {
+    setIsLoading(true);
     await authAxios
       .put(
         `${coreAPI}/shelters/${shelterId}/adoptionForms/${adoptionForm?._id}/edit`,
@@ -108,6 +114,7 @@ export default function EditDialog({ adoptionForm, setAdoptionForm }: Props) {
         }
       )
       .then((res) => {
+        toast.success("Chỉnh sửa form nhận nuôi thành công!");
         const updatedForm: AdoptionForm = res.data;
         setAdoptionForm(updatedForm);
         const updatedForms = shelterForms.map((form) =>
@@ -119,8 +126,16 @@ export default function EditDialog({ adoptionForm, setAdoptionForm }: Props) {
           ?.click();
       })
       .catch((err) => {
-        console.error("Error creating adoption form:", err);
-        toast.error("Tạo form nhận nuôi thất bại. Vui lòng thử lại.");
+        // console.error("Error creating adoption form:", err);
+        toast.error(
+          err?.response?.data?.message ||
+            "Chỉnh sửa form nhận nuôi thất bại. Vui lòng thử lại."
+        );
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
       });
   };
 
