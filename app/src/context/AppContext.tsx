@@ -52,6 +52,7 @@ interface AppContextType {
   setShelters: (shelter: Shelter[]) => void;
   setShelterTemplates: (shelterTemplates: AdoptionTemplate[]) => void;
   setShelterForms: (shelterForms: AdoptionForm[]) => void;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType>({
@@ -64,13 +65,13 @@ const AppContext = createContext<AppContextType>({
   authAPI: "",
   userAPI: "",
   shelterAPI: "",
-  login: () => {},
-  logout: () => {},
+  login: () => { },
+  logout: () => { },
   userProfile: null,
   loginLoading: false,
-  setLoginLoading: (loginLoading: boolean) => {},
-  setUserProfile: () => {},
-  setUser: () => {},
+  setLoginLoading: (loginLoading: boolean) => { },
+  setUserProfile: () => { },
+  setUser: () => { },
   petsList: [],
   petAPI: "",
   medicalRecordAPI: "",
@@ -78,9 +79,10 @@ const AppContext = createContext<AppContextType>({
   reportAPI: "",
   setShelters: () => [],
   shelterId: null,
-  setShelterId: () => {},
+  setShelterId: () => { },
   setShelterTemplates: () => [],
   setShelterForms: () => [],
+  refreshUserProfile: async () => { },
 });
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
@@ -176,6 +178,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       });
   }, []);
 
+  const refreshUserProfile = async () => {
+    try {
+      const res = await authAxios.get(`${coreAPI}/users/get-user`);
+      setUser(res.data);
+      setUserProfile(res.data);
+    } catch (err) {
+      console.error("Lỗi khi refresh user profile:", err);
+      toast.error("Không thể cập nhật thông tin người dùng");
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -205,6 +218,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         setShelterTemplates,
         shelterForms,
         setShelterForms,
+        refreshUserProfile,
       }}
     >
       {children}

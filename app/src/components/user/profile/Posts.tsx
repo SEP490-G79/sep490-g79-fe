@@ -16,10 +16,11 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Globe, GlobeLock, Heart, MessageSquare, Ellipsis, Trash2, Pencil, SmileIcon, ImageIcon, MapPinIcon, X, RefreshCcw } from "lucide-react";
+import { Globe, GlobeLock, Heart, MessageSquare, Ellipsis, Trash2, Pencil, SmileIcon, ImageIcon, MapPinIcon, X, RefreshCcw, LocateFixed } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import 'react-photo-view/dist/react-photo-view.css';
@@ -57,6 +58,10 @@ function Posts() {
   const [loading, setLoading] = useState(false);
   const [visiblePosts, setVisiblePosts] = useState(7);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [address, setAddress] = useState("");
+  const [location, setLocation] = useState<{ lat: number; lng: number }>({ lat: 0, lng: 0 });
+  const [suggestions, setSuggestions] = useState<{ place_id: string; description: string }[]>([]);
+  const [addressConfirmed, setAddressConfirmed] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
@@ -172,6 +177,10 @@ function Posts() {
       toast.error("Nội dung bài viết không được để trống");
       return;
     }
+    if ((address && !addressConfirmed)) {
+      toast.error("Vui lòng chọn địa chỉ hợp lệ từ gợi ý.");
+      return;
+    }
     try {
       if (selectedImages.length > 5) {
         toast.error("Bạn chỉ có thể đăng tối đa 5 ảnh");
@@ -181,6 +190,8 @@ function Posts() {
       const formData = new FormData();
       formData.append("title", postContent);
       formData.append("privacy", privacy);
+      formData.append("address", address);
+      formData.append("location", JSON.stringify(location));
       selectedImages.forEach((file) => formData.append("photos", file));
       await authAxios.post(`${coreAPI}/posts/create`, formData);
       toast.success("Đăng bài thành công");
@@ -247,6 +258,84 @@ function Posts() {
     return target.format("DD/MM/YYYY");
   };
 
+  //goong api
+  const fetchAddressSuggestions = async (query: string) => {
+    if (!query.trim()) return setSuggestions([]);
+    try {
+      const res = await axios.get("https://rsapi.goong.io/Place/AutoComplete", {
+        params: {
+          input: query,
+          api_key: import.meta.env.VITE_GOONG_API_KEY,
+        },
+      });
+      setSuggestions(res.data.predictions || []);
+    } catch (err) {
+      console.error("Autocomplete error:", err);
+    }
+  };
+
+  const fetchPlaceDetail = async (placeId: string) => {
+    try {
+      const res = await axios.get("https://rsapi.goong.io/Place/Detail", {
+        params: {
+          place_id: placeId,
+          api_key: import.meta.env.VITE_GOONG_API_KEY,
+        },
+      });
+      const result = res.data.result;
+      if (result?.formatted_address && result?.geometry?.location) {
+        setAddress(result.formatted_address);
+        setLocation({
+          lat: result.geometry.location.lat,
+          lng: result.geometry.location.lng,
+        });
+        setAddressConfirmed(true);
+      }
+    } catch (err) {
+      console.error("Place detail error:", err);
+    }
+  };
+
+  const detectCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Trình duyệt không hỗ trợ định vị.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setLocation({ lat, lng });
+
+        try {
+          const res = await axios.get("https://rsapi.goong.io/Geocode", {
+            params: {
+              latlng: `${lat},${lng}`,
+              api_key: import.meta.env.VITE_GOONG_API_KEY,
+            },
+          });
+
+          const firstResult = res.data.results?.[0];
+          if (firstResult) {
+            setAddress(firstResult.formatted_address);
+            setAddressConfirmed(true);
+            toast.success("Lấy địa chỉ thành công!");
+          } else {
+            toast.error("Không tìm thấy địa chỉ.");
+          }
+        } catch (err) {
+          toast.error("Lỗi khi lấy địa chỉ.");
+          console.error("Geocode error:", err);
+        }
+      },
+      (err) => {
+        toast.error("Không thể truy cập vị trí của bạn.");
+        console.error("Geolocation error:", err);
+      }
+    );
+  };
+
   return (
     <div className="space-y-6 max-w-2xl mx-auto py-10 px-4">
       {userProfile?._id && (
@@ -282,6 +371,13 @@ function Posts() {
                     </Select>
                   </div>
                 </div>
+
+                {address && (
+                  <div className="text-xs text-primary font-medium mb-1 bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
+                    <MapPinIcon className="w-3 h-3 mr-1" />
+                    {address}
+                  </div>
+                )}
 
                 <Textarea
                   value={postContent}
@@ -328,7 +424,46 @@ function Posts() {
                       </div>
                     )}
                   </div>
-                  <MapPinIcon className="w-5 h-5" />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <MapPinIcon className="w-5 h-5 cursor-pointer" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="p-3 space-y-2 w-[320px]">
+                      <div className="flex gap-2">
+                        <Input
+                          value={address}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setAddress(value);
+                            fetchAddressSuggestions(value);
+                            setAddressConfirmed(false);
+                          }}
+                          placeholder="Nhập địa chỉ..."
+                        />
+                        <Button variant="outline" onClick={detectCurrentLocation}>
+                          <LocateFixed className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      {suggestions.length > 0 && (
+                        <div className="border rounded-md shadow-sm bg-background max-h-60 overflow-y-auto">
+                          {suggestions.map((sug) => (
+                            <div
+                              key={sug.place_id}
+                              className="px-3 py-2 text-sm hover:bg-muted cursor-pointer"
+                              onClick={() => {
+                                fetchPlaceDetail(sug.place_id);
+                                setSuggestions([]);
+                                setAddressConfirmed(true);
+                              }}
+                            >
+                              {sug.description}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 <div className="flex justify-end gap-2 mt-4">
@@ -346,6 +481,14 @@ function Posts() {
                           setSelectedImages([]);
                           setPreviewUrls([]);
                           setOpenCreateDialog(false);
+                          setConfirmDialog({
+                            ...confirmDialog,
+                            open: false,
+                          });
+                          setAddress("");
+                          setLocation({ lat: 0, lng: 0 });
+                          setAddressConfirmed(false);
+                          setPrivacy("public");
                         },
                       });
 
@@ -354,7 +497,7 @@ function Posts() {
                     Hủy
                   </Button>
 
-                  <Button onClick={handleCreatePost} disabled={loading}>
+                  <Button onClick={handleCreatePost} disabled={loading || (!postContent.trim() && selectedImages.length === 0)} >
                     {loading ? "Đang đăng..." : "Đăng bài"}
                   </Button>
                 </div>
@@ -458,7 +601,7 @@ function Posts() {
               </CardHeader>
 
               <CardDescription className="px-6 pb-2 whitespace-pre-line text-sm text-foreground">
-                
+
                 {post.title.length > 300 && !expandedPosts[post._id] ? (
                   <>
                     {post.title.slice(0, 300)}...

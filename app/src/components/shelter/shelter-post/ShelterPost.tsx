@@ -39,7 +39,7 @@ import { Input } from "@/components/ui/input";
 import PostDetailDialog from "@/components/post/PostDetail";
 import EditPostDialog from "@/components/post/EditPostDialog";
 import ShelterPostCard from "@/components/shelter/shelter-post/ShelterPostCard";
-import { detectCurrentLocation, sortPostsByDistance } from "@/utils/sortByDistance";
+import {sortPostsByDistance } from "@/utils/sortByDistance";
 import type { LatLng } from "@/utils/sortByDistance";
 import axios from "axios";
 
@@ -73,6 +73,15 @@ function ShelterPosts() {
     const [location, setLocation] = useState<Location>({ lat: 0, lng: 0 });
     const [suggestions, setSuggestions] = useState<GoongSuggestion[]>([]);
     const [userLocation, setUserLocation] = useState<LatLng | null>(null);
+    const [addressConfirmed, setAddressConfirmed] = useState(false);
+    const [confirmDialog, setConfirmDialog] = useState({
+        open: false,
+        title: "",
+        description: "",
+        confirmText: "Xác nhận",
+        cancelText: "Hủy",
+        onConfirm: () => { },
+    });
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -160,7 +169,12 @@ function ShelterPosts() {
 
     const handleCreatePost = async () => {
         if (!postContent.trim()) return toast.error("Nội dung không được để trống");
+        if (address && !addressConfirmed) {
+            toast.error("Vui lòng chọn địa chỉ hợp lệ từ gợi ý.");
+            return;
+        }
         try {
+            setLoading(true);
             const formData = new FormData();
             formData.append("title", postContent);
             formData.append("privacy", privacy);
@@ -179,6 +193,8 @@ function ShelterPosts() {
             fetchPosts();
         } catch (err: any) {
             toast.error("Lỗi tạo bài viết: " + (err.response?.data?.message || ""));
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -216,12 +232,6 @@ function ShelterPosts() {
         }
     };
 
-    const formatCreatedAt = (date: string | Date): string => {
-        const now = dayjs();
-        const target = dayjs(date);
-        if (now.isSame(target, "day")) return target.fromNow();
-        return target.format("DD/MM/YYYY");
-    };
 
     function getSortedShelterPosts(posts: any[], userLocation: LatLng | null): any[] {
         const now = new Date();
@@ -278,6 +288,7 @@ function ShelterPosts() {
                     lat: result.geometry.location.lat,
                     lng: result.geometry.location.lng,
                 });
+                setAddressConfirmed(true);
             }
         } catch (error) {
             console.error("Place detail error:", error);
@@ -300,6 +311,7 @@ function ShelterPosts() {
                     if (place) {
                         setAddress(place.formatted_address);
                         setLocation({ lat: coords.latitude, lng: coords.longitude });
+                        setAddressConfirmed(true);
                     }
                 } catch (error) {
                     console.error("Reverse geocode error:", error);
@@ -355,6 +367,12 @@ function ShelterPosts() {
                                 </Select>
                             </div>
                         </div>
+                        {address && (
+                            <div className="text-xs text-primary font-medium mb-1 bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
+                                <MapPinIcon className="w-3 h-3 mr-1" />
+                                {address}
+                            </div>
+                        )}
                         <Textarea
                             value={postContent}
                             onChange={(e) => setPostContent(e.target.value)}
@@ -396,6 +414,7 @@ function ShelterPosts() {
                                                 const value = e.target.value;
                                                 setAddress(value);
                                                 fetchAddressSuggestions(value);
+                                                setAddressConfirmed(false);
                                             }}
                                             placeholder="Nhập địa chỉ..."
                                         />
@@ -413,6 +432,7 @@ function ShelterPosts() {
                                                     onClick={() => {
                                                         fetchPlaceDetail(sug.place_id);
                                                         setSuggestions([]);
+                                                        setAddressConfirmed(true);
                                                     }}
                                                 >
                                                     {sug.description}
@@ -439,7 +459,33 @@ function ShelterPosts() {
                             </div>
                         )}
                         <div className="flex justify-end">
-                            <Button onClick={handleCreatePost} disabled={loading}>
+                            <Button
+                                variant="ghost"
+                                onClick={() => {
+                                    setConfirmDialog({
+                                        open: true,
+                                        title: "Xác nhận huỷ bài viết",
+                                        description: "Bạn có chắc muốn huỷ bài viết? Nội dung và ảnh đã nhập sẽ bị xoá.",
+                                        confirmText: "Huỷ bài",
+                                        cancelText: "Quay lại",
+                                        onConfirm: () => {
+                                            setPostContent("");
+                                            setSelectedImages([]);
+                                            setPreviewUrls([]);
+                                            setAddress("");
+                                            setLocation({ lat: 0, lng: 0 });
+                                            setAddressConfirmed(false);
+                                            setPrivacy("public");
+                                            setShowPicker(false);
+                                            setSuggestions([]);
+                                            setOpenDialog(false);
+                                        },
+                                    });
+                                }}
+                            >
+                                Hủy
+                            </Button>
+                            <Button onClick={handleCreatePost} disabled={loading || (!postContent.trim() && selectedImages.length === 0)} className="flex items-center gap-2">
                                 {loading ? "Đang đăng..." : "Đăng bài"}
                             </Button>
                         </div>
@@ -586,6 +632,29 @@ function ShelterPosts() {
                     );
                 }}
             />
+
+            <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+                        <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>
+                            {confirmDialog.cancelText || "Hủy"}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                confirmDialog.onConfirm();
+                                setConfirmDialog({ ...confirmDialog, open: false });
+                            }}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            {confirmDialog.confirmText || "Xác nhận"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

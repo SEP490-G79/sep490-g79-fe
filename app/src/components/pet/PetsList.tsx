@@ -1,4 +1,5 @@
-import { ArrowRight, Dog, Heart, MapPin, TrainFrontTunnel } from "lucide-react";
+import { useState, useContext, useEffect } from "react";
+import { ArrowRight, Dog, Heart, TrainFrontTunnel, Cake, Weight, Cat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -7,11 +8,10 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Link, useNavigate } from "react-router-dom";
-import type { Pet } from "@/types/Pet";
-import type { User } from "@/types/User";
-import { Cake, Weight, Cat } from "lucide-react";
 import { toast } from "sonner";
-
+import type { Pet } from "@/types/Pet";
+import useAuthAxios from "@/utils/authAxios";
+import AppContext from "@/context/AppContext";
 interface PetCardProps {
     pet: Pet;
     user: {
@@ -21,8 +21,36 @@ interface PetCardProps {
 }
 
 function PetsList({ pet, user }: PetCardProps) {
-    const isWished = user?.wishList.includes(pet?._id);
+    const { coreAPI, refreshUserProfile } = useContext(AppContext);
     const navigate = useNavigate();
+    const authAxios = useAuthAxios();
+    const [isWished, setIsWished] = useState(user?.wishList.includes(pet._id) || false);
+
+    useEffect(() => {
+        if (user && user.wishList.includes(pet._id)) {
+            setIsWished(true);
+        } else {
+            setIsWished(false);
+        }
+    }, [user, pet._id]);
+
+    const handleToggleWishlist = async () => {
+        if (!user) {
+            toast.warning("Bạn cần đăng nhập để sử dụng tính năng này.");
+            setTimeout(() => navigate("/login"), 800);
+            return;
+        }
+
+        try {
+            const res = await authAxios.put(`${coreAPI}/users/wishlist/${pet._id}`);
+            setIsWished(res.data.isWished);
+            await refreshUserProfile();
+            toast.success(res.data.message);
+        } catch (err) {
+            console.error("Lỗi wishlist:", err);
+            toast.error("Không thể cập nhật wishlist. Vui lòng thử lại.");
+        }
+    };
 
     const ageDisplay =
         pet?.age != null
@@ -89,33 +117,13 @@ function PetsList({ pet, user }: PetCardProps) {
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <button
-                            className={`absolute top-2 right-2 z-10 p-1 hover:scale-130 transition-transform duration-200 ${isWished ? "text-red-600" : "text-gray-400"
-                                }`}
-                           onClick={() => {
-      if (!user) {
-        toast.warning("Bạn cần đăng nhập để sử dụng tính năng này.");
-        setTimeout(() => {
-      navigate("/login");
-    }, 800);
-        return;
-      }
-
-      // TODO: Xử lý thêm / xóa wishlist ở đây
-      console.log(
-        `${isWished ? "Remove from" : "Add to"} wishlist:`,
-        pet._id
-      );
-    }}
+                            className={`absolute top-2 right-2 z-10 p-1 hover:scale-130 transition-transform duration-200 ${isWished ? "text-red-600" : "text-gray-400"}`}
+                            onClick={handleToggleWishlist}
                         >
-                            <Heart
-                                className={`w-6 h-6 ${isWished ? "fill-red-600" : "fill-none"
-                                    }`}
-                            />
+                            <Heart className={`w-6 h-6 ${isWished ? "text-red-500" : ""}`} />
                         </button>
                     </TooltipTrigger>
-                    <TooltipContent >
-                        {isWished ? "Bỏ yêu thích" : "Yêu thích"}
-                    </TooltipContent>
+                    <TooltipContent>{isWished ? "Bỏ yêu thích" : "Yêu thích"}</TooltipContent>
                 </Tooltip>
             </div>
 
@@ -187,10 +195,10 @@ function PetsList({ pet, user }: PetCardProps) {
                         </div>
                         <div
                             className={`text-sm font-medium ${pet?.tokenMoney === 0
-                                    ? "text-lime-600"
-                                    : pet?.tokenMoney == null
-                                        ? "text-muted-foreground"
-                                        : "text-yellow-500"
+                                ? "text-lime-600"
+                                : pet?.tokenMoney == null
+                                    ? "text-muted-foreground"
+                                    : "text-yellow-500"
                                 }`}
                         >
                             {tokenMoneyDisplay}
@@ -200,7 +208,7 @@ function PetsList({ pet, user }: PetCardProps) {
 
                 <div className="mt-auto pt-4">
                     <Button variant="ghost" className="gap-2 pl-0" asChild>
-                       <Link to={`/pets/${pet._id}`}>Xem thêm <ArrowRight className="w-4 h-4" /></Link>
+                        <Link to={`/pets/${pet._id}`}>Xem thêm <ArrowRight className="w-4 h-4" /></Link>
                     </Button>
                 </div>
             </div>

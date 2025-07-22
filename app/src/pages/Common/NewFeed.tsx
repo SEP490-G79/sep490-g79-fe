@@ -13,6 +13,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import EmojiPicker from "emoji-picker-react";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
@@ -53,8 +57,17 @@ const Newfeed = () => {
   const [location, setLocation] = useState<Location>({ lat: 0, lng: 0 });
   const [suggestions, setSuggestions] = useState<GoongSuggestion[]>([]);
   const [userLocation, setUserLocation] = useState<LatLng | null>(null);
+  const [addressConfirmed, setAddressConfirmed] = useState(false);
   const [postAs, setPostAs] = useState<"user" | string>("user");
   const [myShelters, setMyShelters] = useState<{ _id: string; name: string; avatar: string }[]>([]);
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    description: "",
+    confirmText: "Xác nhận",
+    cancelText: "Hủy",
+    onConfirm: () => { },
+  });
   const navigate = useNavigate();
 
 
@@ -200,6 +213,10 @@ const Newfeed = () => {
 
   const handlePostSubmit = async () => {
     if (!postContent.trim() && selectedImages.length === 0) return;
+    if (address && !addressConfirmed) {
+      toast.error("Vui lòng chọn địa chỉ từ gợi ý.");
+      return;
+    }
     try {
       setLoading(true);
       const formData = new FormData();
@@ -311,6 +328,7 @@ const Newfeed = () => {
           lat: result.geometry.location.lat,
           lng: result.geometry.location.lng,
         });
+        setAddressConfirmed(true);
       }
     } catch (error) {
       console.error("Place detail error:", error);
@@ -334,6 +352,7 @@ const Newfeed = () => {
           if (place) {
             setAddress(place.formatted_address);
             setLocation({ lat: coords.latitude, lng: coords.longitude });
+            setAddressConfirmed(true);
           }
         } catch (error) {
           console.error("Reverse geocode error:", error);
@@ -360,7 +379,14 @@ const Newfeed = () => {
             </div>
           </div>
 
-          <Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
+          <Dialog open={openCreateDialog} onOpenChange={(open) => {
+            setOpenCreateDialog(open);
+            if (!open) {
+              setAddressConfirmed(false);
+              setAddress("");
+              setLocation({ lat: 0, lng: 0 });
+            }
+          }}>
             <DialogContent className="sm:max-w-[600px] bg-background rounded-xl overflow-hidden border border-border p-0">
               <DialogHeader className="bg-background px-6 pt-4 pb-2">
                 <DialogTitle className="text-lg font-semibold">Tạo bài viết</DialogTitle>
@@ -416,6 +442,13 @@ const Newfeed = () => {
                     </Select>
                   </div>
                 </div>
+
+                {address && (
+                  <div className="text-xs text-primary font-medium mb-1 bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
+                    <MapPinIcon className="w-3 h-3 mr-1" />
+                    {address}
+                  </div>
+                )}
 
                 <Textarea
                   value={postContent}
@@ -481,6 +514,7 @@ const Newfeed = () => {
                           onChange={(e) => {
                             const value = e.target.value;
                             setAddress(value);
+                            setAddressConfirmed(false);
                             fetchAddressSuggestions(value);
                           }}
                           placeholder="Nhập địa chỉ..."
@@ -499,6 +533,7 @@ const Newfeed = () => {
                               onClick={() => {
                                 fetchPlaceDetail(sug.place_id);
                                 setSuggestions([]);
+                                setAddressConfirmed(true);
                               }}
                             >
                               {sug.description}
@@ -511,7 +546,37 @@ const Newfeed = () => {
                 </div>
 
                 <div className="flex justify-end pt-2">
-                  <Button onClick={handlePostSubmit} disabled={loading}>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setConfirmDialog({
+                        open: true,
+                        title: "Xác nhận huỷ bài viết",
+                        description: "Bạn có chắc muốn huỷ bài viết? Nội dung và ảnh đã nhập sẽ bị xoá.",
+                        confirmText: "Huỷ bài",
+                        cancelText: "Quay lại",
+                        onConfirm: () => {
+                          setPostContent("");
+                          setSelectedImages([]);
+                          setPreviewUrls([]);
+                          setAddress("");
+                          setLocation({ lat: 0, lng: 0 });
+                          setAddressConfirmed(false);
+                          setPrivacy("public");
+                          setPostAs("user");
+                          setShowPicker(false);
+                          setSuggestions([]);
+                          setOpenCreateDialog(false);
+                        },
+                      });
+                    }}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    onClick={handlePostSubmit}
+                    disabled={loading || (!postContent.trim() && selectedImages.length === 0)}
+                  >
                     {loading ? "Đang đăng..." : "Đăng bài"}
                   </Button>
                 </div>
@@ -654,6 +719,31 @@ const Newfeed = () => {
         }}
       />
 
+      <AlertDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {confirmDialog.cancelText || "Hủy"}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                confirmDialog.onConfirm();
+                setConfirmDialog((prev) => ({ ...prev, open: false }));
+              }}
+            >
+              {confirmDialog.confirmText || "Xác nhận"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
 
     </div>

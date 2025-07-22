@@ -12,6 +12,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import pawBackground from "@/assets/pawBackground.jpg";
+import donateDog from "@/assets/donateDog.jpg";
 import axios from "axios";
 
 export default function DonationPage() {
@@ -19,17 +21,19 @@ export default function DonationPage() {
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState({ amount: "", message: "" });
   const [loading, setLoading] = useState(false);
+  const [amountRaw, setAmountRaw] = useState("");
 
   const handleAmountChange = (value: string) => {
-    setAmount(value);
+    // Xoá dấu chấm, khoảng trắng nếu có
+    const numericValue = value.replace(/\D/g, "");
+    setAmountRaw(numericValue);
+
     const newErrors = { ...errors };
 
-    if (!value || Number(value) < 5000) {
+    if (!numericValue || Number(numericValue) < 5000) {
       newErrors.amount = "Vui lòng nhập số tiền lớn hơn hoặc bằng 5000 VND";
-    } else if (Number(value) > 10000000000) {
+    } else if (Number(numericValue) > 10000000000) {
       newErrors.amount = "Số tiền không được vượt quá 10.000.000.000 VND";
-    } else if (!/^\d+$/.test(value)) {
-      newErrors.amount = "Số tiền chỉ được chứa các chữ số";
     } else {
       newErrors.amount = "";
     }
@@ -75,7 +79,7 @@ export default function DonationPage() {
     try {
       setLoading(true);
       const res = await axios.post("http://localhost:3030/create-payment-link", {
-        amount: Number(amount),
+        amount: Number(amountRaw),
         message,
       }, {
         headers: localStorage.getItem("accessToken")
@@ -108,11 +112,11 @@ export default function DonationPage() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      {/* Background Right (image) */}
+      {/* Background Right (image) https://media.istockphoto.com/id/1478563909/vi/vec-to/vector-c%E1%BB%A7a-d%E1%BA%A5u-ch%C3%A2n-%C4%91%E1%BB%99ng-v%E1%BA%ADt-puma-hoa-v%C4%83n-li%E1%BB%81n-m%E1%BA%A1ch.jpg?s=2048x2048&w=is&k=20&c=-HErBrAHj7NtXdW3QFxA28GqFQOEm6w71DlfnVVMLR8=*/}
       <div
         className="absolute right-0 top-0 w-1/2 h-full bg-cover bg-center"
         style={{
-          backgroundImage: "url('https://media.istockphoto.com/id/1478563909/vi/vec-to/vector-c%E1%BB%A7a-d%E1%BA%A5u-ch%C3%A2n-%C4%91%E1%BB%99ng-v%E1%BA%ADt-puma-hoa-v%C4%83n-li%E1%BB%81n-m%E1%BA%A1ch.jpg?s=2048x2048&w=is&k=20&c=-HErBrAHj7NtXdW3QFxA28GqFQOEm6w71DlfnVVMLR8=')",
+          backgroundImage: `url(${pawBackground})`,
         }}
       />
 
@@ -121,10 +125,10 @@ export default function DonationPage() {
 
       {/* Main container */}
       <div className="relative z-10 flex shadow-xl rounded-xl overflow-hidden max-w-6xl w-full">
-        {/* Image section (right) */}
+        {/* Image section (right) https://i.pinimg.com/736x/16/b6/31/16b631760774ae9f709248b942b18cb9.jpg */}
         <div className="w-1/2 relative">
           <img
-            src="https://i.pinimg.com/736x/16/b6/31/16b631760774ae9f709248b942b18cb9.jpg"
+            src={donateDog}
             alt="donate"
             className="w-full h-140 object-cover"
           />
@@ -150,9 +154,12 @@ export default function DonationPage() {
           <div className="mb-8">
             <Label className="text-[var(--primary)] dark:text-[var(--primary)]">Số tiền muốn donate:</Label>
             <Input
-              type="number"
-              min="1"
-              value={amount}
+              type="text"
+              value={
+                amountRaw
+                  ? Number(amountRaw).toLocaleString("vi-VN") // Format theo hàng nghìn
+                  : ""
+              }
               onChange={(e) => handleAmountChange(e.target.value)}
               placeholder="Nhập số tiền"
               className={`mt-3 w-full ${errors.amount ? "border-destructive ring-destructive focus-visible:ring-destructive" : ""}`}
@@ -172,7 +179,9 @@ export default function DonationPage() {
             {errors.message && <p className="text-red-500 text-sm mt-1">{errors.message}</p>}
           </div>
 
-          <p className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--primary)] mb-10">{Number(amount).toLocaleString("vi-VN")} VND</p>
+          <p className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--primary)] mb-10">
+            {amountRaw ? Number(amountRaw).toLocaleString("vi-VN") : "0"} VND
+          </p>
 
 
           <Button

@@ -82,11 +82,11 @@ export default function EditProfile() {
 
       setAvatar(null);
       setAvatarPreview("");
-      setOpenAvatarModal(false); // ✅ đóng modal avatar
+      setOpenAvatarModal(false); 
 
       setBackground(null);
       setBackgroundPreview("");
-      setOpenBackgroundModal(false); // ✅ đóng modal background
+      setOpenBackgroundModal(false);
     } catch (err: any) {
       toast.error("Lỗi cập nhật: " + (err?.response?.data?.message || err.message));
     } finally {
