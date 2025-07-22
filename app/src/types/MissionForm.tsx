@@ -13,6 +13,7 @@ total: number;
     address: string;
     warningCount: number;
     dob: string;
+    avatar: string;
   };
 
   adoptionForm: {
@@ -46,7 +47,7 @@ export interface Question {
   _id: string;
   title: string;
   priority: "none" | "low" | "medium" | "high";
-  type: "TEXT" | "SINGLECHOICE" | "MULTIPLECHOICE";
+  type: "TEXT" | "SINGLECHOICE" | "MULTIPLECHOICE" | "YESNO";
   status: "active" | "inactive";
   options: Option[];
   createdAt?: string;

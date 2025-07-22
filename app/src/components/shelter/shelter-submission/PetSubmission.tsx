@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Pet } from "@/types/Pet";
 import type { MissionForm } from "@/types/MissionForm";
 import { Separator } from "@/components/ui/separator";
+import { PhotoProvider, PhotoView } from 'react-photo-view';
 import {
   Dialog,
   DialogTrigger,
@@ -33,6 +34,8 @@ export default function PetSubmission() {
   const submissions = submissionsByPetId[petId ?? ""] || [];
   const [selectedSubmission, setSelectedSubmission] = useState<MissionForm | null>(null);
   const navigate = useNavigate();
+  const [showAnswers, setShowAnswers] = useState(true);
+
   useEffect(() => {
     if (!submissions.length && petId) fetchSubmissions();
   }, [petId]);
@@ -76,6 +79,8 @@ export default function PetSubmission() {
     };
     return statusMap[status] || status;
   };
+
+  console.log(selectedSubmission);
 
 
   return (
@@ -201,15 +206,41 @@ export default function PetSubmission() {
             );
           }))}
         <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
-          <DialogContent className="w-full !max-w-4xl">
+          <DialogContent className="w-full !max-w-4xl max-h-[90vh] overflow-hidden">
             <DialogHeader  >
-              <DialogTitle>Chi tiết đơn đăng ký</DialogTitle>
+              <DialogTitle className="text-center w-full " >Chi tiết đơn đăng ký</DialogTitle>
 
             </DialogHeader>
             <Separator />
             {selectedSubmission && (
-              <div className="flex gap-8 ">
+              <div className="flex gap-8 h-[calc(90vh-110px)] ">
                 <div className="w-1/3 space-y-2">
+
+                  <div className="flex items-center justify-center mb-6">
+                    <img
+                      src={selectedSubmission.performedBy?.avatar || "/placeholder.svg"}
+                      alt="Avatar"
+                      className="w-35 h-35 rounded-full border-1 border-gray-100 shadow-md object-cover object-center "
+                    />
+                  </div>
+                  <p><strong>Người yêu cầu:</strong> {selectedSubmission.performedBy?.fullName || "Ẩn danh"}</p>
+                  <p><strong>Ngày sinh:</strong>  {selectedSubmission.performedBy?.dob
+                    ? dayjs(selectedSubmission.performedBy?.dob).format("DD/MM/YYYY")
+                    : "Chưa có thông tin"}</p>
+                  <p><strong>Số điện thoại:</strong> {selectedSubmission.performedBy?.phoneNumber || "Không có"}</p>
+                  <p><strong>Email:</strong> {selectedSubmission.performedBy?.email || "Không có"}</p>
+                  <p><strong>Địa chỉ:</strong> {selectedSubmission.performedBy?.address || "Không có"}</p>
+                  <div className="pt-2">
+                    <Button
+                      className="w-full bg-primary text-white hover:bg-primary/90 transition rounded-md text-sm flex items-center justify-center gap-1"
+                      onClick={() => navigate(`/profile/${selectedSubmission.performedBy?._id}`)}
+                    >
+                      <span>🔍</span> Xem trang cá nhân
+                    </Button>
+                  </div>
+                </div>
+                <Separator orientation="vertical" />
+                <div className="w-2/3 space-y-2 overflow-y-auto">
                   {selectedSubmission?.performedBy?.warningCount === 1 && (
                     <div className="bg-yellow-100 text-yellow-800 border border-yellow-300 px-4 py-2 rounded flex items-center gap-2 text-sm">
                       <span className="text-xl">⚠️</span>
@@ -223,39 +254,77 @@ export default function PetSubmission() {
                       <span>Tài khoản bị cảnh báo do vi phạm nhiều lần quy định về nhận nuôi thú cưng – mức cảnh báo cao.</span>
                     </div>
                   )}
-                  <p><strong>Người yêu cầu:</strong> {selectedSubmission.performedBy?.fullName || "Ẩn danh"}</p>
-                  <p><strong>Ngày sinh:</strong>  {selectedSubmission.performedBy?.dob
-                    ? dayjs(selectedSubmission.performedBy?.dob).format("DD/MM/YYYY")
-                    : "Chưa có thông tin"}</p>
-                  <p><strong>Số điện thoại:</strong> {selectedSubmission.performedBy?.phoneNumber || "Không có"}</p>
-                  <p><strong>Email:</strong> {selectedSubmission.performedBy?.email || "Không có"}</p>
-                  <p><strong>Địa chỉ:</strong> {selectedSubmission.performedBy?.address || "Không có"}</p>
-                  <div className="pt-2">
-                    <Button
-                      className="w-full bg-primary text-white hover:bg-primary/90 transition rounded-md text-sm flex items-center justify-center gap-1"
-                      onClick={() => navigate(`/profile/${selectedSubmission.performedBy?._id}`)}
-                    >
-                      <span>🔍</span> Xem chi tiết hồ sơ
-                    </Button>
-                  </div>
-                </div>
-                <Separator orientation="vertical" />
-                <div className="w-2/3 space-y-2">
                   <p><strong>Trạng thái:</strong> {getStatusLabel(selectedSubmission.status)}</p>
-                  <p><strong>Điểm phù hợp:</strong> {selectedSubmission.total ?? 0}%</p>
-                  <p><strong>Thời gian nộp:</strong> {format(new Date(selectedSubmission.createdAt), "HH:mm dd/MM/yyyy")}</p>
+                  <div className="flex items-center gap-2">
+  <p className="font-semibold">Mức độ phù hợp:</p>
+  <Badge className={getColorBarClass(selectedSubmission.total)}>{selectedSubmission.total}%</Badge>
+</div>
+
+                  <p><strong>Thời gian gửi yêu cầu:</strong> {format(new Date(selectedSubmission.createdAt), "HH:mm dd/MM/yyyy")}</p>
+                  <p><strong>Số lượng thú cưng nhận nuôi trong 1 tháng:</strong> {selectedSubmission?.adoptionsLastMonth || "Không có"} </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAnswers((prev) => !prev)}
+                  >
+                    {showAnswers ? "Ẩn câu trả lời" : "Hiển thị câu trả lời"}
+                  </Button>
+
                   {/* Thêm các trường khác nếu có */}
-                  {selectedSubmission.answers && (
-                    <div className="space-y-1 pt-2">
-                      <strong>Câu trả lời:</strong>
-                      {selectedSubmission.answers.map((ans, i) => (
-                        <div key={i} className="p-2 rounded bg-muted">
-                          <p><strong>{ans.questionId._id}</strong></p>
-                          <p>{ans.questionId.title}</p>
-                        </div>
-                      ))}
+                  {showAnswers && selectedSubmission.answers && (
+                    <div className="space-y-4 pt-4">
+
+
+                      {selectedSubmission.answers.map((ans, i) => {
+                        const question = ans.questionId;
+                        const selections = ans.selections;
+
+                        return (
+                          <div
+                            key={i}
+                            className="rounded-lg border bg-muted/40 p-4 space-y-2"
+                          >
+                            <p className="font-medium text-sm text-foreground">{question.title}</p>
+
+                            {/* === TYPE HANDLING === */}
+                            {question.type === "TEXT" && (
+                              <p className="text-sm text-muted-foreground">{selections[0] || "Không có câu trả lời"}</p>
+                            )}
+
+                            {(question.type === "SINGLECHOICE" || question.type === "MULTIPLECHOICE" || question.type === "YESNO") && (
+                              <div className="space-y-1 pl-2">
+                                {question.options.map((option) => {
+                                  const isSelected = selections.includes(option.title);
+
+                                  return (
+                                    <div
+                                      key={option._id}
+                                      className={`flex items-center gap-2 text-sm
+                                      ${option.isTrue ? "text-green-600" : isSelected ? "text-red-600" : "text-muted-foreground"}
+                                     
+                                  `}
+                                    >
+                                      <div
+                                        className={`${question.type === "MULTIPLECHOICE" ? "w-4 h-4 rounded-sm" : "w-4 h-4 rounded-full"}
+                                        border
+                                        ${isSelected ? (option.isTrue ? "bg-green-500 border-green-500" : "bg-red-500 border-red-500") : "border-gray-400"}
+                                  `}
+                                      />
+                                      <span>
+                                        {option.title}
+                                      </span>
+                                    </div>
+
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
+
                 </div>
               </div>
 
