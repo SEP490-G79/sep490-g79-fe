@@ -9,6 +9,10 @@ total: number;
     _id: string;
     email: string;
     fullName: string;
+    phoneNumber: string;
+    address: string;
+    warningCount: number;
+    dob: string;
   };
 
   adoptionForm: {

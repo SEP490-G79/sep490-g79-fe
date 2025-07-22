@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAppContext } from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Pet } from "@/types/Pet";
 import type { MissionForm } from "@/types/MissionForm";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogTrigger,
@@ -14,7 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
+import dayjs from "dayjs";
+import { Button } from "@/components/ui/button";
 function getColorBarClass(total: number): string {
   if (total <= 29) return "bg-red-500";
   if (total >= 30 && total <= 59) return "bg-yellow-400";
@@ -27,11 +29,10 @@ export default function PetSubmission() {
   const { petsList, submissionsByPetId, setSubmissionsByPetId, coreAPI } = useAppContext();
   const authAxios = useAuthAxios();
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [showLegend, setShowLegend] = useState(false);
-
   const pet = petsList.find((p: Pet) => p._id === petId);
   const submissions = submissionsByPetId[petId ?? ""] || [];
-
+  const [selectedSubmission, setSelectedSubmission] = useState<MissionForm | null>(null);
+  const navigate = useNavigate();
   useEffect(() => {
     if (!submissions.length && petId) fetchSubmissions();
   }, [petId]);
@@ -93,28 +94,28 @@ export default function PetSubmission() {
 
       </div>
       <div className="flex items-center flex-wrap justify-between gap-2 mb-4">
-         <div className="flex items-center gap-2 flex-wrap">
-        <button
-          className={`px-3 py-1 rounded-full border text-sm ${statusFilter === "" ? "bg-primary text-white" : "bg-white"
-            }`}
-          onClick={() => setStatusFilter("")}
-        >
-          Tất cả ({submissions.length})
-        </button>
-        {statusOptions.map((status) => (
+        <div className="flex items-center gap-2 flex-wrap">
           <button
-            key={status}
-            className={`px-3 py-1 rounded-full border text-sm capitalize ${statusFilter === status ? "bg-primary text-white" : "bg-white"
+            className={`px-3 py-1  rounded-full border text-sm ${statusFilter === "" ? "bg-primary text-white" : "bg-white dark:bg-gray-800"
               }`}
-            onClick={() => setStatusFilter(status)}
+            onClick={() => setStatusFilter("")}
           >
-            {statusLabels[status]} ({statusCounts[status] || 0})
+            Tất cả ({submissions.length})
           </button>
-        ))}
-       </div>
+          {statusOptions.map((status) => (
+            <button
+              key={status}
+              className={`px-3 py-1 rounded-full border text-sm capitalize ${statusFilter === status ? "bg-primary text-white" : "bg-white dark:bg-gray-800"
+                }`}
+              onClick={() => setStatusFilter(status)}
+            >
+              {statusLabels[status]} ({statusCounts[status] || 0})
+            </button>
+          ))}
+        </div>
         <Dialog>
           <DialogTrigger asChild>
-            <button className="px-3 py-1 rounded-full border text-sm bg-white ">
+            <button className="px-3 py-1 rounded-full border text-sm bg-white dark:bg-gray-800 ">
               Chú thích
             </button>
           </DialogTrigger>
@@ -164,11 +165,19 @@ export default function PetSubmission() {
                   <Card className="shadow-none border-none">
                     <CardHeader>
                       <CardTitle className="text-base">
-                        Người nộp:{" "}
-                        <span className="text-primary">
-                          {submission.performedBy?.fullName || "Ẩn danh"}
-                        </span>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            Người nộp:{" "}
+                            <span className="text-primary font-medium">
+                              {submission.performedBy?.fullName || "Ẩn danh"}
+                            </span>
+                          </div>
+                          <Badge className="text-xs uppercase bg-primary text-white">
+                            {getStatusLabel(submission.status)}
+                          </Badge>
+                        </div>
                       </CardTitle>
+
                       <p className="text-xs text-muted-foreground">
                         Nộp lúc: {format(new Date(submission.createdAt), "HH:mm dd/MM/yyyy")}
                       </p>
@@ -177,14 +186,83 @@ export default function PetSubmission() {
                       {/* <Badge variant="outline" className="text-sm">
                         Tổng điểm: {total}
                       </Badge> */}
-                      <Badge className="text-xs uppercase bg-primary ml-auto">  {getStatusLabel(submission.status)}
-                      </Badge>
+
+                      <button
+                        onClick={() => setSelectedSubmission(submission)}
+                        className="text-sm underline text-primary ml-auto"
+                      >
+                        Xem chi tiết
+                      </button>
+
                     </CardContent>
                   </Card>
                 </div>
               </div>
             );
           }))}
+        <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
+          <DialogContent className="w-full !max-w-4xl">
+            <DialogHeader  >
+              <DialogTitle>Chi tiết đơn đăng ký</DialogTitle>
+
+            </DialogHeader>
+            <Separator />
+            {selectedSubmission && (
+              <div className="flex gap-8 ">
+                <div className="w-1/3 space-y-2">
+                  {selectedSubmission?.performedBy?.warningCount === 1 && (
+                    <div className="bg-yellow-100 text-yellow-800 border border-yellow-300 px-4 py-2 rounded flex items-center gap-2 text-sm">
+                      <span className="text-xl">⚠️</span>
+                      <span>Tài khoản bị cảnh báo do vi phạm quy định về nhận nuôi thú cưng – mức cảnh báo nhẹ.</span>
+                    </div>
+                  )}
+
+                  {selectedSubmission?.performedBy?.warningCount === 2 && (
+                    <div className="bg-red-100 text-red-800 border border-red-300 px-4 py-2 rounded flex items-center gap-2 text-sm">
+                      <span className="text-xl">🚫</span>
+                      <span>Tài khoản bị cảnh báo do vi phạm nhiều lần quy định về nhận nuôi thú cưng – mức cảnh báo cao.</span>
+                    </div>
+                  )}
+                  <p><strong>Người yêu cầu:</strong> {selectedSubmission.performedBy?.fullName || "Ẩn danh"}</p>
+                  <p><strong>Ngày sinh:</strong>  {selectedSubmission.performedBy?.dob
+                    ? dayjs(selectedSubmission.performedBy?.dob).format("DD/MM/YYYY")
+                    : "Chưa có thông tin"}</p>
+                  <p><strong>Số điện thoại:</strong> {selectedSubmission.performedBy?.phoneNumber || "Không có"}</p>
+                  <p><strong>Email:</strong> {selectedSubmission.performedBy?.email || "Không có"}</p>
+                  <p><strong>Địa chỉ:</strong> {selectedSubmission.performedBy?.address || "Không có"}</p>
+                  <div className="pt-2">
+                    <Button
+                      className="w-full bg-primary text-white hover:bg-primary/90 transition rounded-md text-sm flex items-center justify-center gap-1"
+                      onClick={() => navigate(`/profile/${selectedSubmission.performedBy?._id}`)}
+                    >
+                      <span>🔍</span> Xem chi tiết hồ sơ
+                    </Button>
+                  </div>
+                </div>
+                <Separator orientation="vertical" />
+                <div className="w-2/3 space-y-2">
+                  <p><strong>Trạng thái:</strong> {getStatusLabel(selectedSubmission.status)}</p>
+                  <p><strong>Điểm phù hợp:</strong> {selectedSubmission.total ?? 0}%</p>
+                  <p><strong>Thời gian nộp:</strong> {format(new Date(selectedSubmission.createdAt), "HH:mm dd/MM/yyyy")}</p>
+                  {/* Thêm các trường khác nếu có */}
+                  {selectedSubmission.answers && (
+                    <div className="space-y-1 pt-2">
+                      <strong>Câu trả lời:</strong>
+                      {selectedSubmission.answers.map((ans, i) => (
+                        <div key={i} className="p-2 rounded bg-muted">
+                          <p><strong>{ans.questionId._id}</strong></p>
+                          <p>{ans.questionId.title}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            )}
+          </DialogContent>
+        </Dialog>
+
       </div>
     </div>
   );
