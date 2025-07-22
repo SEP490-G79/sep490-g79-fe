@@ -22,6 +22,8 @@ import type { PostType } from "@/types/Post";
 import PostDetailDialog from "@/components/post/PostDetail";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
+import { sortPostsByDistance } from "@/utils/sortByDistance";
+import type { LatLng } from "@/utils/sortByDistance";
 type Location = { lat: number; lng: number };
 type GoongSuggestion = { place_id: string; description: string };
 
@@ -50,6 +52,9 @@ const Newfeed = () => {
   const [address, setAddress] = useState("");
   const [location, setLocation] = useState<Location>({ lat: 0, lng: 0 });
   const [suggestions, setSuggestions] = useState<GoongSuggestion[]>([]);
+  const [userLocation, setUserLocation] = useState<LatLng | null>(null);
+  const [postAs, setPostAs] = useState<"user" | string>("user");
+  const [myShelters, setMyShelters] = useState<{ _id: string; name: string; avatar: string }[]>([]);
   const navigate = useNavigate();
 
 
@@ -58,6 +63,35 @@ const Newfeed = () => {
       setDetailPostId(postId);
     }
   }, [postId]);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setUserLocation({
+          lat: coords.latitude,
+          lng: coords.longitude,
+        });
+      },
+      (err) => {
+        console.error("Không lấy được vị trí:", err);
+      },
+      { enableHighAccuracy: true }
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!userProfile?._id) return;
+
+    authAxios.get(`${coreAPI}/shelters/get-all`)
+      .then(res => {
+        const allShelters = res.data || [];
+        const filtered = allShelters.filter((shelter: any) =>
+          shelter.members?.some((member: any) => member._id === userProfile._id)
+        );
+        setMyShelters(filtered.map(({ _id, name, avatar }: any) => ({ _id, name, avatar })));
+      })
+      .catch(err => console.error("Lỗi lấy danh sách shelter:", err));
+  }, [userProfile?._id]);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -173,6 +207,9 @@ const Newfeed = () => {
       formData.append("privacy", privacy);
       formData.append("address", address);
       formData.append("location", JSON.stringify(location));
+      if (postAs !== "user") {
+        formData.append("shelter", postAs);
+      }
       selectedImages.forEach(file => formData.append("photos", file));
       await authAxios.post(`${coreAPI}/posts/create`, formData);
       toast.success("Đăng bài thành công");
@@ -222,6 +259,25 @@ const Newfeed = () => {
       console.error("Delete error:", err);
     }
   };
+
+  const sortedPosts = (() => {
+    const now = new Date();
+    const recentThreshold = 1000 * 60 * 60 * 24;
+    const recentPosts = posts.filter(post => new Date(now).getTime() - new Date(post.createdAt).getTime() < recentThreshold);
+    const otherPosts = posts.filter(post => !recentPosts.includes(post));
+
+    const sortedRecent = [...recentPosts].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const sortedOther = userLocation
+      ? sortPostsByDistance(otherPosts, userLocation)
+      : [...otherPosts].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+    return [...sortedRecent, ...sortedOther];
+  })();
 
 
   //goong
@@ -311,17 +367,51 @@ const Newfeed = () => {
               </DialogHeader>
 
               <div className="bg-background px-6 pb-6 pt-4 space-y-4">
-                <div className="flex items-start gap-3">
-                  <img src={userProfile.avatar || "/placeholder.svg"} className="w-12 h-12 rounded-full border" />
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm">{userProfile.fullName}</span>
-                    <Select value={privacy} onValueChange={setPrivacy}>
-                      <SelectTrigger className="w-[140px] h-7 text-xs mt-1">
+                <div className="flex items-start justify-between gap-3 w-full">
+                  <div className="flex gap-3">
+                    <img
+                      src={userProfile.avatar || "/placeholder.svg"}
+                      className="w-12 h-12 rounded-full border"
+                    />
+                    <div className="flex flex-col">
+                      <span className="font-medium text-sm">{userProfile.fullName}</span>
+                      <Select value={privacy} onValueChange={setPrivacy}>
+                        <SelectTrigger className="w-[140px] h-7 text-xs mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="public">
+                            <Globe className="mr-2 h-4 w-4" /> Công khai
+                          </SelectItem>
+                          <SelectItem value="private">
+                            <GlobeLock className="mr-2 h-4 w-4" /> Riêng tư
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end text-xs">
+                    <span className="mb-1 text-muted-foreground">Đăng bài với tư cách:</span>
+                    <Select value={postAs} onValueChange={setPostAs}>
+                      <SelectTrigger className="w-[200px] h-7 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="public"><Globe className="mr-2 h-4 w-4" />Công khai</SelectItem>
-                        <SelectItem value="private"><GlobeLock className="mr-2 h-4 w-4" />Riêng tư</SelectItem>
+                        <SelectItem value="user">
+                          <div className="flex items-center gap-2">
+                            <img src={userProfile.avatar} className="w-5 h-5 rounded-full" />
+                            <span>{userProfile.fullName} (Cá nhân)</span>
+                          </div>
+                        </SelectItem>
+                        {myShelters.map((shelter) => (
+                          <SelectItem key={shelter._id} value={shelter._id}>
+                            <div className="flex items-center gap-2">
+                              <img src={shelter.avatar} className="w-5 h-5 rounded-full" />
+                              <span>{shelter.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -484,9 +574,8 @@ const Newfeed = () => {
           ))}
         </div>
       ) : (
-        posts
+        sortedPosts
           .slice()
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, visiblePosts)
           .map((post) => (
             <PostCard
