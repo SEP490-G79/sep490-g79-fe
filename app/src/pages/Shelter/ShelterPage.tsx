@@ -35,7 +35,6 @@ function ShelterPage() {
     shelter.members.some((member) => member._id === user?._id)
   );
 
-
   if (!shelters || shelters.length == 0) {
     return (
       <div className="w-full h-full flex flex-wrap justify-around px-10 py-5">

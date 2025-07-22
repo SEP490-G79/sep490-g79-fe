@@ -114,3 +114,18 @@ export const getShelterRequestByUserId = async (): Promise<{
   });
   return response.data;
 };
+
+export interface WeeklyAdoptionStat {
+  week: string; // ví dụ: "Tuần 29/2025"
+  count: number; // số lượt nhận nuôi
+}
+
+export const getAdoptedPetsByWeek = async (
+  shelterId: string
+): Promise<WeeklyAdoptionStat[]> => {
+  const response = await axios.get(
+    `${BASE_URL}/shelters/${shelterId}/statistics/adopted-by-week`,
+    { headers: getAuthHeaders() }
+  );
+  return response.data;
+};

@@ -19,9 +19,19 @@ import AppContext from "@/context/AppContext";
 import {
   getShelterDashboardStatistics,
   getShelterProfile,
+  getAdoptedPetsByWeek,
   type ShelterDashboardStatistics,
   type ShelterProfile,
+  type WeeklyAdoptionStat,
 } from "@/apis/shelter.api";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from "recharts";
 
 const ShelterDashboard = () => {
   const { shelterId } = useParams();
@@ -30,6 +40,9 @@ const ShelterDashboard = () => {
   const [shelter, setShelter] = useState<ShelterProfile | null>(null);
   const [dashboardData, setDashboardData] =
     useState<ShelterDashboardStatistics | null>(null);
+  const [weeklyAdoptionData, setWeeklyAdoptionData] = useState<
+    WeeklyAdoptionStat[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,7 +64,6 @@ const ShelterDashboard = () => {
     setLoading(true);
     getShelterDashboardStatistics(shelterId)
       .then((data) => {
-        console.log("Dashboard data:", data);
         setDashboardData(data);
       })
       .catch((err) => {
@@ -59,6 +71,10 @@ const ShelterDashboard = () => {
         toast.error("Không thể tải dữ liệu dashboard");
       })
       .finally(() => setLoading(false));
+
+    getAdoptedPetsByWeek(shelterId)
+      .then((data) => setWeeklyAdoptionData(data))
+      .catch(() => toast.error("Không thể tải biểu đồ nhận nuôi theo tuần"));
   }, [shelterId, shelter]);
 
   if (!shelter) {
@@ -79,22 +95,6 @@ const ShelterDashboard = () => {
 
   return (
     <div className="flex flex-col min-h-screen px-4 py-4 md:px-8 md:py-6 bg-background">
-      {/* Breadcrumb */}
-      {/* <Breadcrumb className="mb-6">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/shelter" className="hover:underline">
-              Shelter
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Dashboard</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb> */}
-
-      {/* Stats Card Section */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <SectionCard
           icon={<PawPrint className="w-6 h-6 text-primary" />}
@@ -126,19 +126,34 @@ const ShelterDashboard = () => {
         />
       </div>
 
-      {/* Chart Section */}
+      {/* Chart tuần */}
       <div className="mt-10 rounded-xl border bg-card shadow-sm p-6">
-        <h3 className="text-lg font-semibold mb-4 text-primary">
-          Biểu đồ phát triển thú cưng theo tháng
+        <h3 className="text-lg font-semibold mb-4 text-green-600">
+          Biểu đồ số lượt nhận nuôi theo tuần
         </h3>
-        <ChartAreaInteractive
-          data={
-            dashboardData.petGrowth.map((item) => ({
-              name: item.month,
-              pets: item.count,
-            })) ?? []
-          }
-        />
+        <LineChart
+          width={800}
+          height={300}
+          data={weeklyAdoptionData}
+          margin={{ left: 12, right: 12 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="week"
+            angle={-30}
+            textAnchor="end"
+            height={60}
+            interval={0}
+          />
+          <YAxis allowDecimals={false} />
+          <Tooltip />
+          <Line
+            type="monotone"
+            dataKey="count"
+            stroke="#38bdf8"
+            strokeWidth={2}
+          />
+        </LineChart>
       </div>
     </div>
   );
