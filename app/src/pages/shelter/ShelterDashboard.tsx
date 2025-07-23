@@ -32,6 +32,8 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
+import { ChartBarMultiple } from "@/components/shelter/shelter-management/dashboard/ChartBarMultiple";
+import { AdoptionLineChart } from "@/components/shelter/shelter-management/dashboard/AdoptionLineChart";
 
 const ShelterDashboard = () => {
   const { shelterId } = useParams();
@@ -127,33 +129,10 @@ const ShelterDashboard = () => {
       </div>
 
       {/* Chart tuần */}
-      <div className="mt-10 rounded-xl border bg-card shadow-sm p-6">
-        <h3 className="text-lg font-semibold mb-4 text-green-600">
-          Biểu đồ số lượt nhận nuôi theo tuần
-        </h3>
-        <LineChart
-          width={800}
-          height={300}
-          data={weeklyAdoptionData}
-          margin={{ left: 12, right: 12 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            dataKey="week"
-            angle={-30}
-            textAnchor="end"
-            height={60}
-            interval={0}
-          />
-          <YAxis allowDecimals={false} />
-          <Tooltip />
-          <Line
-            type="monotone"
-            dataKey="count"
-            stroke="#38bdf8"
-            strokeWidth={2}
-          />
-        </LineChart>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
+        <AdoptionLineChart data={weeklyAdoptionData} />
+
+        <ChartBarMultiple />
       </div>
     </div>
   );
