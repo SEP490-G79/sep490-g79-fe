@@ -6,7 +6,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
 import { Textarea, } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { SmileIcon, ImageIcon, MapPinIcon, Globe, GlobeLock, X, RefreshCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { SmileIcon, ImageIcon, MapPinIcon, Globe, GlobeLock, X, RefreshCcw, LocateFixed } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+} from "@/components/ui/dropdown-menu";
 import EmojiPicker from "emoji-picker-react";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
@@ -16,6 +22,9 @@ import type { PostType } from "@/types/Post";
 import PostDetailDialog from "@/components/post/PostDetail";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
+type Location = { lat: number; lng: number };
+type GoongSuggestion = { place_id: string; description: string };
+
 
 const Newfeed = () => {
   const { userProfile, coreAPI, accessToken, setUserProfile } = useContext(AppContext);
@@ -36,6 +45,11 @@ const Newfeed = () => {
   const [detailPostId, setDetailPostId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const postId = searchParams.get("postId");
+  const [visiblePosts, setVisiblePosts] = useState(7);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [address, setAddress] = useState("");
+  const [location, setLocation] = useState<Location>({ lat: 0, lng: 0 });
+  const [suggestions, setSuggestions] = useState<GoongSuggestion[]>([]);
   const navigate = useNavigate();
 
 
@@ -57,6 +71,8 @@ const Newfeed = () => {
         title: post.title,
         photos: post.photos,
         privacy: post.privacy || "public",
+        address: post.address || "",
+        location: post.location,
         status: post.status,
         createdAt: post.createdAt,
         updatedAt: post.updatedAt,
@@ -65,6 +81,14 @@ const Newfeed = () => {
           avatar: post.createdBy.avatar,
           fullName: post.createdBy.fullName,
         },
+        shelter: post.shelter
+          ? {
+            _id: post.shelter._id,
+            name: post.shelter.name,
+            avatar: post.shelter.avatar,
+            members: post.shelter.members || [],
+          }
+          : null,
         likedBy: post.likedBy.map((u: any) => u._id),
         latestComment: post.latestComment ? {
           _id: post.latestComment._id,
@@ -98,6 +122,24 @@ const Newfeed = () => {
     fetchPosts();
   }, [accessToken, userProfile, coreAPI, fetchPosts]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = window.scrollY;
+      const clientHeight = window.innerHeight;
+
+      if (scrollTop + clientHeight >= scrollHeight - 200 && !loadingMore && visiblePosts < posts.length) {
+        setLoadingMore(true);
+        setTimeout(() => {
+          setVisiblePosts(prev => Math.min(prev + 7, posts.length));
+          setLoadingMore(false);
+        }, 1000);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loadingMore, visiblePosts, posts.length]);
 
 
   useEffect(() => {
@@ -129,6 +171,8 @@ const Newfeed = () => {
       const formData = new FormData();
       formData.append("title", postContent);
       formData.append("privacy", privacy);
+      formData.append("address", address);
+      formData.append("location", JSON.stringify(location));
       selectedImages.forEach(file => formData.append("photos", file));
       await authAxios.post(`${coreAPI}/posts/create`, formData);
       toast.success("Đăng bài thành công");
@@ -177,6 +221,71 @@ const Newfeed = () => {
       toast.error("Không thể xoá bài viết");
       console.error("Delete error:", err);
     }
+  };
+
+
+  //goong
+  const fetchAddressSuggestions = async (query: string) => {
+    if (!query.trim()) return setSuggestions([]);
+    try {
+      const res = await axios.get("https://rsapi.goong.io/Place/AutoComplete", {
+        params: {
+          input: query,
+          api_key: import.meta.env.VITE_GOONG_API_KEY,
+        },
+      });
+      setSuggestions(res.data.predictions || []);
+    } catch (error) {
+      console.error("Autocomplete error:", error);
+    }
+  };
+
+  const fetchPlaceDetail = async (placeId: string) => {
+    try {
+      const res = await axios.get("https://rsapi.goong.io/Place/Detail", {
+        params: {
+          place_id: placeId,
+          api_key: import.meta.env.VITE_GOONG_API_KEY,
+        },
+      });
+      const result = res.data.result;
+      if (result?.formatted_address && result?.geometry?.location) {
+        setAddress(result.formatted_address);
+        setLocation({
+          lat: result.geometry.location.lat,
+          lng: result.geometry.location.lng,
+        });
+      }
+    } catch (error) {
+      console.error("Place detail error:", error);
+    }
+  };
+
+  const detectCurrentLocation = () => {
+    if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ định vị");
+
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const res = await axios.get("https://rsapi.goong.io/Geocode", {
+            params: {
+              latlng: `${coords.latitude},${coords.longitude}`,
+              api_key: import.meta.env.VITE_GOONG_API_KEY,
+              has_deprecated_administrative_unit: true,
+            },
+          });
+          const place = res.data.results?.[0];
+          if (place) {
+            setAddress(place.formatted_address);
+            setLocation({ lat: coords.latitude, lng: coords.longitude });
+          }
+        } catch (error) {
+          console.error("Reverse geocode error:", error);
+        }
+      },
+      (err) => console.error("Lỗi định vị:", err),
+      { enableHighAccuracy: true }
+    );
   };
 
   return (
@@ -270,7 +379,45 @@ const Newfeed = () => {
                     )}
                   </div>
 
-                  <MapPinIcon className="w-5 h-5 cursor-pointer" />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <MapPinIcon className="w-5 h-5 cursor-pointer" />
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent className="p-3 space-y-2 w-[320px]">
+                      <div className="flex gap-2">
+                        <Input
+                          value={address}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setAddress(value);
+                            fetchAddressSuggestions(value);
+                          }}
+                          placeholder="Nhập địa chỉ..."
+                        />
+                        <Button variant="outline" onClick={detectCurrentLocation}>
+                          <LocateFixed className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      {suggestions.length > 0 && (
+                        <div className="border rounded-md shadow-sm bg-background max-h-60 overflow-y-auto">
+                          {suggestions.map((sug) => (
+                            <div
+                              key={sug.place_id}
+                              className="px-3 py-2 text-sm hover:bg-muted cursor-pointer"
+                              onClick={() => {
+                                fetchPlaceDetail(sug.place_id);
+                                setSuggestions([]);
+                              }}
+                            >
+                              {sug.description}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 <div className="flex justify-end pt-2">
@@ -340,6 +487,7 @@ const Newfeed = () => {
         posts
           .slice()
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, visiblePosts)
           .map((post) => (
             <PostCard
               key={post._id}
@@ -356,6 +504,31 @@ const Newfeed = () => {
               onViewDetail={(postId) => setDetailPostId(postId)}
             />
           ))
+      )}
+      {loadingMore && (
+        <div className="space-y-6 mt-4">
+          {[...Array(3)].map((_, idx) => (
+            <div key={idx} className="p-4 border rounded-xl bg-background shadow space-y-4">
+              <div className="flex gap-4 items-center">
+                <Skeleton className="w-12 h-12 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-1/4" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+              <Skeleton className="h-40 w-full rounded" />
+              <div className="flex justify-between mt-4">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {editingPost && (
@@ -391,6 +564,8 @@ const Newfeed = () => {
           );
         }}
       />
+
+
 
     </div>
   );

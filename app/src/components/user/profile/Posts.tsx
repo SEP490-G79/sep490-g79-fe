@@ -55,6 +55,8 @@ function Posts() {
   const [detailPostId, setDetailPostId] = useState<string | null>(null);
   const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
+  const [visiblePosts, setVisiblePosts] = useState(7);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
@@ -90,6 +92,11 @@ function Posts() {
         title: post.title,
         photos: post.photos,
         privacy: post.privacy || "public",
+        address: post.address || "",
+        location: post.location ? {
+          lat: post.location.lat,
+          lng: post.location.lng,
+        } : undefined,
         status: post.status,
         createdAt: post.createdAt,
         updatedAt: post.updatedAt,
@@ -98,6 +105,11 @@ function Posts() {
           avatar: post.createdBy.avatar,
           fullName: post.createdBy.fullName,
         },
+        shelter: post.shelter ? {
+          _id: post.shelter._id,
+          name: post.shelter.name,
+          avatar: post.shelter.avatar,
+        } : null,
         likedBy: post.likedBy.map((u: any) => u._id),
         latestComment: post.latestComment ? {
           _id: post.latestComment._id,
@@ -126,6 +138,22 @@ function Posts() {
     fetchPosts();
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const bottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
+
+      if (bottom && !loadingMore) {
+        setLoadingMore(true);
+        setTimeout(() => {
+          setVisiblePosts((prev) => prev + 7);
+          setLoadingMore(false);
+        }, 800);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loadingMore]);
 
 
 
@@ -375,7 +403,9 @@ function Posts() {
       ) : (
         [...postsData]
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .filter(post => String(post.createdBy) === currentUserId).map(post => (
+          .filter(post => String(post.createdBy) === currentUserId && !post.shelter)
+          .slice(0, visiblePosts)
+          .map(post => (
             <Card key={post._id} className="shadow-md dark:bg-gray-800">
               <CardHeader className="pt-4 pb-2 relative">
                 <CardTitle className="text-lg font-semibold">
@@ -419,9 +449,16 @@ function Posts() {
                     )}
                   </div>
                 </CardTitle>
+                {post.address && (
+                  <div className="text-xs text-primary font-medium mb-1 bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
+                    <MapPinIcon className="w-3 h-3 mr-1" />
+                    {post.address}
+                  </div>
+                )}
               </CardHeader>
 
               <CardDescription className="px-6 pb-2 whitespace-pre-line text-sm text-foreground">
+                
                 {post.title.length > 300 && !expandedPosts[post._id] ? (
                   <>
                     {post.title.slice(0, 300)}...
@@ -486,14 +523,15 @@ function Posts() {
                 </CardContent>
               )}
 
+              <hr />
 
               <CardFooter className="text-sm text-gray-500 px-4">
                 <div className="flex w-full justify-between">
-                  <div onClick={() => handleLike(post._id)} className={`flex items-center gap-1 cursor-pointer ${post.likedBy.includes(currentUserId) ? "text-red-500" : ""}`}>
+                  <div onClick={() => handleLike(post._id)} className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${post.likedBy.includes(currentUserId) ? "text-red-500" : ""}`}>
                     <Heart className="w-5 h-5" />
                     <span>{post.likedBy.length}</span>
                   </div>
-                  <div className="flex items-center gap-1 cursor-pointer" onClick={() => setDetailPostId(post._id)}>
+                  <div className="flex items-center gap-1 justify-start w-1/2 cursor-pointer" onClick={() => setDetailPostId(post._id)}>
                     <MessageSquare className="w-5 h-5" />
                     <span>Bình luận</span>
                   </div>
@@ -514,11 +552,36 @@ function Posts() {
 
               <div className="px-4 pb-3">
                 <button onClick={() => setDetailPostId(post._id)} className="text-gray-600 hover:underline text-sm cursor-pointer">
-                  Xem thêm
+                  Xem chi tiết
                 </button>
               </div>
             </Card>
           )))}
+      {loadingMore && (
+        <div className="space-y-6 mt-6">
+          {[...Array(3)].map((_, idx) => (
+            <div key={idx} className="p-4 border rounded-xl bg-background shadow space-y-4">
+              <div className="flex gap-4 items-center">
+                <Skeleton className="w-12 h-12 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-1/4" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+              <Skeleton className="h-40 w-full rounded" />
+              <div className="flex justify-between mt-4">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}>
         <AlertDialogContent>

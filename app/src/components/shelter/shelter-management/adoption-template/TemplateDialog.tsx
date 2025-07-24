@@ -264,6 +264,7 @@ export default function TemplateDialog() {
             <div className="basis-full sm:basis-2/3 sm:text-left">
               <h1 className="text-xl font-medium mb-2 hover:text-(--primary)">
                 <EditDialog
+                  setIsLoading={setIsLoading}
                   adoptionTemplate={adoptionTemplate}
                   setAdoptionTemplate={setAdoptionTemplate}
                 />
@@ -273,11 +274,10 @@ export default function TemplateDialog() {
                   Loài: {adoptionTemplate?.species?.name}
                 </h1> */}
               <div className=" flex gap-3 ml-10 mb-2 ">
-              <p className="text-sm">Loài vật: </p>
+                <p className="text-sm">Loài vật: </p>
                 <p className="text-sm text-(--muted-foreground)">
-                    {adoptionTemplate?.species?.name || "Chưa chọn loài"}
-                  </p>
-                
+                  {adoptionTemplate?.species?.name || "Chưa chọn loài"}
+                </p>
               </div>
             </div>
             <div className="basis-full sm:basis-1/3 sm:text-right">

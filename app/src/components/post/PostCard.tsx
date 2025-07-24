@@ -8,7 +8,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 
-import { Heart, MessageSquare, Globe, GlobeLock } from "lucide-react";
+import { Heart, MessageSquare, Globe, GlobeLock, MapPinIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -69,14 +69,12 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
           <div className="flex items-start justify-between">
             <div className="flex gap-x-3">
               <img
-                src={
-                  post.user?.avatar ||
-                  "https://cdn.pixabay.com/photo/2021/07/02/04/48/user-6380868_960_720.png"
-                }
-                className="w-14 h-14 rounded-full border"
+                src={post.shelter?.avatar || post.user.avatar}
+                className="w-10 h-10 rounded-full"
+
               />
               <div className="flex flex-col justify-top">
-                <span>{post.user?.fullName || "Người dùng"}</span>
+                <span>{post.shelter?.name || post.user.fullName}</span>
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
                   <span>{formatCreatedAt(post.createdAt)}</span>
                   {post.privacy.includes("public") ? (
@@ -86,6 +84,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                   )}
                 </div>
               </div>
+
             </div>
 
             {/* Chỉ hiển thị khi là chủ bài viết */}
@@ -154,6 +153,14 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
             </AlertDialog>
           </div>
         </CardTitle>
+
+        <ReportPostDialog postId={post._id} key={post._id} />
+        {post.address && (
+          <div className="text-xs text-primary font-medium mb-1 bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
+            <MapPinIcon className="w-3 h-3 mr-1" />
+            {post.address}
+          </div>
+        )}
       </CardHeader>
 
       <CardDescription className="px-6 pb-2 text-sm text-foreground dark:text-gray-300 whitespace-pre-line">
@@ -212,6 +219,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
         </CardContent>
       )}
 
+      <hr />
+
       <CardFooter className="text-sm text-gray-500 px-4">
         <div className="flex w-full justify-between">
           <div className="flex justify-between gap-25">
@@ -236,7 +245,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
           </div>
         </div>
       </CardFooter>
-      <div className="border-t border-border mx-4 " />
+
+      <hr />
+
       {latestComment && (
         <div className="flex items-start gap-2 px-4  mt-1 hover:bg-muted/60 rounded-md">
           <img
@@ -257,7 +268,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
           className="text-gray-600 hover:underline text-sm flex items-center gap-1 cursor-pointer"
           onClick={() => onViewDetail(post._id)}
         >
-          Xem thêm
+          Xem chi tiết
         </button>
       </div>
     </Card>
