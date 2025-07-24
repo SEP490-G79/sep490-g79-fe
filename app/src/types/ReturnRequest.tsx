@@ -14,12 +14,12 @@ export interface ReturnRequest {
   };
   requestedBy: {
     _id: string;
-    name: string;
+    fullName: string;
     avatar?: string;
   };
   approvedBy?: {
     _id: string;
-    name: string;
+    fullName: string;
     avatar?: string;
   };
   photos?: string[];
