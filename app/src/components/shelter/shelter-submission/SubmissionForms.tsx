@@ -212,9 +212,9 @@ export default function SubmissionForms() {
                                     />
                                 </div>
                                 <div className="basis-2/3 space-y-1">
-                                    <p className="text-lg">Mã thú cưng: {pet.petCode ?? "N/A"}</p>
-                                    <h2 className="text-lg">Tên: {pet.name}</h2>
-                                    <h2 className="text-lg">Ngày bắt đầu mở đơn: {pet.name}</h2>
+                                    <p >Mã thú cưng: {pet.petCode ?? "N/A"}</p>
+                                    <h2 >Tên: {pet.name}</h2>
+                                    <h2 >Ngày bắt đầu mở đơn: {pet.name}</h2>
                                 </div>
                                  
                  

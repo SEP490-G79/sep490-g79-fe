@@ -254,11 +254,25 @@ export default function PetSubmission() {
                       <span>Tài khoản bị cảnh báo do vi phạm nhiều lần quy định về nhận nuôi thú cưng – mức cảnh báo cao.</span>
                     </div>
                   )}
-                  <p><strong>Trạng thái:</strong> {getStatusLabel(selectedSubmission.status)}</p>
+                  <p>
+                    <strong>Trạng thái:</strong>{" "}
+                    <select
+                      className="text-sm border rounded px-2 py-1 bg-primary text-white  transition-colors duration-150"
+
+
+                    >
+                      {statusOptions.map((status) => (
+                        <option key={status} value={status}>
+                          {statusLabels[status]}
+                        </option>
+                      ))}
+                    </select>
+                  </p>
+
                   <div className="flex items-center gap-2">
-  <p className="font-semibold">Mức độ phù hợp:</p>
-  <Badge className={getColorBarClass(selectedSubmission.total)}>{selectedSubmission.total}%</Badge>
-</div>
+                    <p ><strong>Mức độ phù hợp:</strong></p>
+                    <Badge className={getColorBarClass(selectedSubmission.total)}>{selectedSubmission.total}%</Badge>
+                  </div>
 
                   <p><strong>Thời gian gửi yêu cầu:</strong> {format(new Date(selectedSubmission.createdAt), "HH:mm dd/MM/yyyy")}</p>
                   <p><strong>Số lượng thú cưng nhận nuôi trong 1 tháng:</strong> {selectedSubmission?.adoptionsLastMonth || "Không có"} </p>
