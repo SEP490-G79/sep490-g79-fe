@@ -42,6 +42,9 @@ function ManageShelter() {
     { title: "Quản lý hồ sơ thú nuôi", href: "pet-profiles" },
     { title: "Quản lý mẫu nhận nuôi", href: "adoption-templates" },
     { title: "Quản lý form nhận nuôi", href: "adoption-forms" },
+    { title: "Quản lý đơn đăng kí nhận nuôi", href: "submission-forms" },
+    { title: "Quản lý yêu cầu trả thú nuôi", href: "return-requests" },
+
   ];
 
   return (

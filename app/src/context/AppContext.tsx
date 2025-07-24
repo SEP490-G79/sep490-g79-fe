@@ -12,6 +12,7 @@ import useAuthAxios from "@/utils/authAxios";
 import type { Shelter } from "@/types/Shelter";
 import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import type { AdoptionForm } from "@/types/AdoptionForm";
+import type { MissionForm } from "@/types/MissionForm";
 
 const excludedURLs = [
   "/",
@@ -53,6 +54,8 @@ interface AppContextType {
   setShelterTemplates: (shelterTemplates: AdoptionTemplate[]) => void;
   setShelterForms: (shelterForms: AdoptionForm[]) => void;
   refreshUserProfile: () => Promise<void>;
+    submissionsByPetId: Record<string, MissionForm[]>;
+  setSubmissionsByPetId: (data: Record<string, MissionForm[]>) => void;
 }
 
 const AppContext = createContext<AppContextType>({
@@ -83,6 +86,8 @@ const AppContext = createContext<AppContextType>({
   setShelterTemplates: () => [],
   setShelterForms: () => [],
   refreshUserProfile: async () => { },
+  submissionsByPetId: {},
+  setSubmissionsByPetId: () => {},
 });
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
@@ -101,6 +106,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [petsList, setPetsList] = useState([]);
   const authAxios = useAuthAxios();
+  const [submissionsByPetId, setSubmissionsByPetId] = useState<Record<string, MissionForm[]>>({});
+
 
   // APIs
   const coreAPI = "http://localhost:9999";
@@ -219,6 +226,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         shelterForms,
         setShelterForms,
         refreshUserProfile,
+         submissionsByPetId,
+    setSubmissionsByPetId,
       }}
     >
       {children}

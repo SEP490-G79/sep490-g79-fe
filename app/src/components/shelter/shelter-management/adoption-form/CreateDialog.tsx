@@ -136,7 +136,7 @@ export default function CreateDialog() {
     (pet: Pet) => pet._id == form.watch("pet")
   )?.species.name;
 
-  console.log("Pet Specialization:", petSpecialization);
+  // console.log("Pet Specialization:", petSpecialization);
 
   const templates = shelterTemplates
     .filter(

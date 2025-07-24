@@ -3,22 +3,27 @@ import { ArrowRight, Dog, Heart, TrainFrontTunnel, Cake, Weight, Cat } from "luc
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import type { Pet } from "@/types/Pet";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
+import React from "react";
+import { Skeleton } from "../ui/skeleton";
 interface PetCardProps {
-    pet: Pet;
-    user: {
-        _id: string;
-        wishList: string[];
-    } | null;
+  pet: Pet;
+  user: {
+    _id: string;
+    wishList: string[];
+  } | null;
+    isLoading: boolean;
+    setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
+
 
 function PetsList({ pet, user }: PetCardProps) {
     const { coreAPI, refreshUserProfile } = useContext(AppContext);
@@ -52,54 +57,98 @@ function PetsList({ pet, user }: PetCardProps) {
         }
     };
 
-    const ageDisplay =
-        pet?.age != null
-            ? pet.age >= 12
-                ? `${Math.floor(pet.age / 12)} tuổi`
-                : `${pet.age} tháng`
-            : "Chưa xác định";
 
-    const weightDisplay =
-        pet?.weight != null ? `${pet.weight} kg` : "Chưa xác định";
+  const ageDisplay =
+    pet?.age != null
+      ? pet.age >= 12
+        ? `${Math.floor(pet.age / 12)} tuổi`
+        : `${pet.age} tháng`
+      : "Chưa xác định";
 
-    const genderDisplay =
-        pet?.isMale === true
-            ? "Đực"
-            : pet?.isMale === false
-                ? "Cái"
-                : "Chưa xác định";
+  const weightDisplay =
+    pet?.weight != null ? `${pet.weight} kg` : "Chưa xác định";
 
-    const breedsDisplay = pet?.breeds?.length
-        ? pet.breeds.length > 1
-            ? `Con lai giữa ${pet.breeds.map((b) => b.name).join(" và ")}`
-            : pet.breeds[0].name
-        : "Chưa xác định";
+  const genderDisplay =
+    pet?.isMale === true
+      ? "Đực"
+      : pet?.isMale === false
+      ? "Cái"
+      : "Chưa xác định";
 
-    const shelterName = pet?.shelter?.name || "Chưa xác định";
-    const shelterAddress = pet?.shelter?.address || "Chưa xác định";
+  const breedsDisplay = pet?.breeds?.length
+    ? pet.breeds.length > 1
+      ? `Con lai giữa ${pet.breeds.map((b) => b.name).join(" và ")}`
+      : pet.breeds[0].name
+    : "Chưa xác định";
 
-    const tokenMoneyDisplay =
-        pet?.tokenMoney === 0
-            ? "Miễn phí"
-            : pet?.tokenMoney == null
-                ? "Chưa xác định"
-                : new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                    maximumFractionDigits: 0,
-                }).format(pet.tokenMoney);
+  const shelterName = pet?.shelter?.name || "Chưa xác định";
+  const shelterAddress = pet?.shelter?.address || "Chưa xác định";
 
-    const speciesName = pet?.species?.name?.toLowerCase();
-    const SpeciesIcon =
-        speciesName === "chó"
-            ? Dog
-            : speciesName === "mèo"
-                ? Cat
-                : TrainFrontTunnel;
+  const tokenMoneyDisplay =
+    pet?.tokenMoney === 0
+      ? "Miễn phí"
+      : pet?.tokenMoney == null
+      ? "Chưa xác định"
+      : new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+          maximumFractionDigits: 0,
+        }).format(pet.tokenMoney);
 
+  const speciesName = pet?.species?.name?.toLowerCase();
+  const SpeciesIcon =
+    speciesName === "chó"
+      ? Dog
+      : speciesName === "mèo"
+      ? Cat
+      : TrainFrontTunnel;
+
+  if (isLoading) {
     return (
-        <div
-            className="max-w-sm h-full flex flex-col justify-between rounded-xl bg-(--card) shadow-sm border border-border overflow-hidden 
+      <div
+        className="max-w-sm h-full flex flex-col justify-between rounded-xl bg-(--card)
+                         shadow-sm border border-border overflow-hidden
+                         transform transition-all duration-300
+                         hover:shadow-lg hover:-translate-y-1 hover:scale-[1.005] cursor-pointer"
+      >
+        {/* Image section */}
+        <div className="relative h-64">
+          <Skeleton className="w-full h-full" />
+          {/* Heart icon placeholder */}
+          <Skeleton className="absolute top-2 right-2 w-6 h-6" />
+        </div>
+
+        {/* Content section */}
+        <div className="flex flex-col flex-grow justify-between p-3 relative">
+          {/* Badges row */}
+          <div className="flex flex-wrap gap-2 pb-3">
+            <Skeleton className="w-16 h-6" />
+            <Skeleton className="w-16 h-6" />
+            <Skeleton className="w-16 h-6" />
+          </div>
+
+          {/* Text lines */}
+          <div className="space-y-2">
+            {/* Title */}
+            <Skeleton className="w-3/4 h-6" />
+            {/* Four lines of details */}
+            <Skeleton className="w-full h-4" />
+            <Skeleton className="w-full h-4" />
+            <Skeleton className="w-full h-4" />
+            <Skeleton className="w-2/3 h-4" />
+          </div>
+
+          {/* Button placeholder */}
+          <div className="mt-auto pt-4">
+            <Skeleton className="w-20 h-8 rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div
+      className="max-w-sm h-full flex flex-col justify-between rounded-xl bg-(--card) shadow-sm border border-border overflow-hidden 
       transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.005] cursor-pointer"
         >
             {/* Image section */}
@@ -125,7 +174,7 @@ function PetsList({ pet, user }: PetCardProps) {
                     </TooltipTrigger>
                     <TooltipContent>{isWished ? "Bỏ yêu thích" : "Yêu thích"}</TooltipContent>
                 </Tooltip>
-            </div>
+
 
             {/* Content section */}
             <div className="flex flex-col flex-grow justify-between p-3 relative">
@@ -205,7 +254,7 @@ function PetsList({ pet, user }: PetCardProps) {
                         </div>
                     </div>
                 </div>
-
+              
                 <div className="mt-auto pt-4">
                     <Button variant="ghost" className="gap-2 pl-0" asChild>
                         <Link to={`/pets/${pet._id}`}>Xem thêm <ArrowRight className="w-4 h-4" /></Link>
@@ -214,9 +263,10 @@ function PetsList({ pet, user }: PetCardProps) {
                         Yêu cầu trả thú cưng
                     </Button>
                 </div>
-            </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
 export default PetsList;
