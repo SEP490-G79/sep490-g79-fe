@@ -3,7 +3,7 @@ import axios from "axios";
 import { toast } from "sonner";
 const GOONG_API_KEY = import.meta.env.VITE_GOONG_API_KEY;
 
-interface LatLng {
+export interface LatLng {
   lat: number;
   lng: number;
 }
@@ -62,4 +62,12 @@ function sortSheltersByProximity(
   });
 }
 
-export { sortSheltersByProximity, detectCurrentLocation };
+function sortPostsByDistance(posts: any[], userLocation: LatLng): any[] {
+  return [...posts].sort((a, b) => {
+    const d1 = a.location ? getDistanceKm(a.location, userLocation) : Infinity;
+    const d2 = b.location ? getDistanceKm(b.location, userLocation) : Infinity;
+    return d1 - d2;
+  });
+}
+
+export { sortSheltersByProximity, detectCurrentLocation, getDistanceKm, sortPostsByDistance };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { useParams } from "react-router-dom";
 import {
     Globe,
@@ -8,22 +8,14 @@ import {
     MapPinIcon,
     RefreshCcw,
     X,
-    Heart,
-    MessageSquare,
-    Ellipsis,
-    Trash2,
-    Pencil,
     LocateFixed,
 } from "lucide-react";
-import {
-    Card, CardHeader, CardFooter, CardContent, CardDescription, CardTitle,
-} from "@/components/ui/card";
-import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 import {
     AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
     AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
@@ -43,11 +35,13 @@ import {
     DropdownMenu,
     DropdownMenuTrigger,
     DropdownMenuContent,
-    DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import PostDetailDialog from "@/components/post/PostDetail";
 import EditPostDialog from "@/components/post/EditPostDialog";
+import ShelterPostCard from "@/components/shelter/shelter-post/ShelterPostCard";
+import { sortPostsByDistance } from "@/utils/sortByDistance";
+import type { LatLng } from "@/utils/sortByDistance";
 import axios from "axios";
 
 type Location = { lat: number; lng: number };
@@ -79,6 +73,17 @@ function ShelterPosts() {
     const [address, setAddress] = useState("");
     const [location, setLocation] = useState<Location>({ lat: 0, lng: 0 });
     const [suggestions, setSuggestions] = useState<GoongSuggestion[]>([]);
+    const [userLocation, setUserLocation] = useState<LatLng | null>(null);
+    const [addressConfirmed, setAddressConfirmed] = useState(false);
+    const [shelterInfo, setShelterInfo] = useState<any>(null);
+    const [confirmDialog, setConfirmDialog] = useState({
+        open: false,
+        title: "",
+        description: "",
+        confirmText: "Xác nhận",
+        cancelText: "Hủy",
+        onConfirm: () => { },
+    });
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -90,6 +95,22 @@ function ShelterPosts() {
         return () => document.removeEventListener("mousedown", handler);
     }, []);
 
+    useEffect(() => {
+        navigator.geolocation.getCurrentPosition(
+            ({ coords }) => {
+                setUserLocation({
+                    lat: coords.latitude,
+                    lng: coords.longitude,
+                });
+            },
+            (err) => {
+                console.error("Không lấy được vị trí:", err);
+            },
+            { enableHighAccuracy: true }
+        );
+    }, []);
+
+
     const fetchPosts = async () => {
         setLoadingPosts(true);
         try {
@@ -97,6 +118,9 @@ function ShelterPosts() {
                 headers: { Authorization: `Bearer ${accessToken}` }
             } : {});
             setPostsData(res.data);
+            if (res.data.length > 0 && res.data[0].shelter) {
+                setShelterInfo(res.data[0].shelter);
+            }
         } catch {
             toast.error("Không thể tải bài viết từ shelter");
         } finally {
@@ -150,12 +174,20 @@ function ShelterPosts() {
 
     const handleCreatePost = async () => {
         if (!postContent.trim()) return toast.error("Nội dung không được để trống");
+        if (address && !addressConfirmed) {
+            toast.error("Vui lòng chọn địa chỉ hợp lệ từ gợi ý.");
+            return;
+        }
         try {
+            setLoading(true);
             const formData = new FormData();
             formData.append("title", postContent);
             formData.append("privacy", privacy);
             formData.append("address", address);
             formData.append("location", JSON.stringify(location));
+            if (shelterId) {
+                formData.append("shelter", shelterId);
+            }
             selectedImages.forEach((img) => formData.append("photos", img));
             await authAxios.post(`${coreAPI}/shelters/${shelterId}/posts/create`, formData);
             toast.success("Đăng bài thành công");
@@ -166,6 +198,8 @@ function ShelterPosts() {
             fetchPosts();
         } catch (err: any) {
             toast.error("Lỗi tạo bài viết: " + (err.response?.data?.message || ""));
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -203,12 +237,29 @@ function ShelterPosts() {
         }
     };
 
-    const formatCreatedAt = (date: string | Date): string => {
-        const now = dayjs();
-        const target = dayjs(date);
-        if (now.isSame(target, "day")) return target.fromNow();
-        return target.format("DD/MM/YYYY");
-    };
+
+    function getSortedShelterPosts(posts: any[], userLocation: LatLng | null): any[] {
+        const now = new Date();
+        const recentThreshold = 1000 * 60 * 60 * 24; // 24 giờ
+
+        const recentPosts = posts.filter(
+            (post) => new Date(now).getTime() - new Date(post.createdAt).getTime() < recentThreshold
+        );
+
+        const otherPosts = posts.filter((post) => !recentPosts.includes(post));
+
+        const sortedRecent = [...recentPosts].sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        const sortedOther = userLocation
+            ? sortPostsByDistance(otherPosts, userLocation)
+            : [...otherPosts].sort(
+                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+
+        return [...sortedRecent, ...sortedOther];
+    }
 
 
     //goong api
@@ -242,6 +293,7 @@ function ShelterPosts() {
                     lat: result.geometry.location.lat,
                     lng: result.geometry.location.lng,
                 });
+                setAddressConfirmed(true);
             }
         } catch (error) {
             console.error("Place detail error:", error);
@@ -264,6 +316,7 @@ function ShelterPosts() {
                     if (place) {
                         setAddress(place.formatted_address);
                         setLocation({ lat: coords.latitude, lng: coords.longitude });
+                        setAddressConfirmed(true);
                     }
                 } catch (error) {
                     console.error("Reverse geocode error:", error);
@@ -281,7 +334,11 @@ function ShelterPosts() {
                     className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
                     onClick={() => setOpenDialog(true)}
                 >
-                    <img src={userProfile?.avatar || "/placeholder.svg"} className="w-10 h-10 rounded-full border" />
+                    <Avatar className="w-10 h-10">
+                        {/* shelter avatar */}
+                        <AvatarImage src={shelterInfo?.avatar || "/placeholder.svg"} />
+                        <AvatarFallback>{shelterInfo?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                    </Avatar>
                     <div className="flex-1 bg-gray-100 dark:bg-gray-700 text-muted-foreground px-4 py-2 rounded-full text-sm">
                         Bạn đang nghĩ gì?
                     </div>
@@ -305,9 +362,9 @@ function ShelterPosts() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div className="flex gap-3 items-start">
-                            <img src={userProfile?.avatar || "/placeholder.svg"} className="w-10 h-10 rounded-full" />
+                            <img src={shelterInfo?.avatar || "/placeholder.svg"} className="w-10 h-10 rounded-full" />
                             <div>
-                                <p className="font-medium text-sm">{userProfile?.fullName}</p>
+                                <p className="font-medium text-sm">{shelterInfo?.name}</p>
                                 <Select value={privacy} onValueChange={setPrivacy}>
                                     <SelectTrigger className="w-[140px] h-7 text-xs mt-1 cursor-pointer">
                                         <SelectValue />
@@ -319,6 +376,12 @@ function ShelterPosts() {
                                 </Select>
                             </div>
                         </div>
+                        {address && (
+                            <div className="text-xs text-primary font-medium mb-1 bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
+                                <MapPinIcon className="w-3 h-3 mr-1" />
+                                {address}
+                            </div>
+                        )}
                         <Textarea
                             value={postContent}
                             onChange={(e) => setPostContent(e.target.value)}
@@ -360,10 +423,11 @@ function ShelterPosts() {
                                                 const value = e.target.value;
                                                 setAddress(value);
                                                 fetchAddressSuggestions(value);
+                                                setAddressConfirmed(false);
                                             }}
                                             placeholder="Nhập địa chỉ..."
                                         />
-                                        <Button size="sm" variant="outline" onClick={detectCurrentLocation}>
+                                        <Button variant="outline" onClick={detectCurrentLocation}>
                                             <LocateFixed className="w-4 h-4" />
                                         </Button>
                                     </div>
@@ -377,6 +441,7 @@ function ShelterPosts() {
                                                     onClick={() => {
                                                         fetchPlaceDetail(sug.place_id);
                                                         setSuggestions([]);
+                                                        setAddressConfirmed(true);
                                                     }}
                                                 >
                                                     {sug.description}
@@ -403,7 +468,33 @@ function ShelterPosts() {
                             </div>
                         )}
                         <div className="flex justify-end">
-                            <Button onClick={handleCreatePost} disabled={loading}>
+                            <Button
+                                variant="ghost"
+                                onClick={() => {
+                                    setConfirmDialog({
+                                        open: true,
+                                        title: "Xác nhận huỷ bài viết",
+                                        description: "Bạn có chắc muốn huỷ bài viết? Nội dung và ảnh đã nhập sẽ bị xoá.",
+                                        confirmText: "Huỷ bài",
+                                        cancelText: "Quay lại",
+                                        onConfirm: () => {
+                                            setPostContent("");
+                                            setSelectedImages([]);
+                                            setPreviewUrls([]);
+                                            setAddress("");
+                                            setLocation({ lat: 0, lng: 0 });
+                                            setAddressConfirmed(false);
+                                            setPrivacy("public");
+                                            setShowPicker(false);
+                                            setSuggestions([]);
+                                            setOpenDialog(false);
+                                        },
+                                    });
+                                }}
+                            >
+                                Hủy
+                            </Button>
+                            <Button onClick={handleCreatePost} disabled={loading || (!postContent.trim() && selectedImages.length === 0)} className="flex items-center gap-2">
                                 {loading ? "Đang đăng..." : "Đăng bài"}
                             </Button>
                         </div>
@@ -447,192 +538,23 @@ function ShelterPosts() {
                         ))}
                     </div>
                 ) : (
-                    [...postsData]
-                        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    getSortedShelterPosts(postsData, userLocation)
                         .slice(0, visiblePosts)
-                        .map((post) => {
-                            const currentUserId = userProfile?._id;
-                            const members = post.shelter?.members || [];
-
-                            const currentMember = members.find(
-                                (m: any) => m._id?._id === currentUserId || m._id === currentUserId
-                            );
-                            const roles = currentMember?.roles || [];
-
-                            const isManager = roles.includes("manager");
-                            const isOwner = post.createdBy?._id === currentUserId;
-
-                            return (
-                                <Card key={post._id} className="shadow-md dark:bg-gray-800">
-                                    <CardHeader className="pt-4 pb-2 relative">
-                                        <CardTitle className="text-lg font-semibold">
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex gap-x-3">
-                                                    <img
-                                                        src={post.shelter?.avatar || "/placeholder.svg"}
-                                                        className="w-14 h-14 rounded-full border"
-                                                    />
-                                                    <div className="flex flex-col">
-                                                        <span>{post.shelter?.name}</span>
-                                                        <div className="text-xs text-muted-foreground flex items-center gap-2">
-                                                            <span>{formatCreatedAt(post.createdAt)}</span>
-                                                            {post.privacy === "public" ? (
-                                                                <Globe className="w-4 h-4" />
-                                                            ) : (
-                                                                <GlobeLock className="w-4 h-4" />
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {(isManager || isOwner) && (
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <button className="p-2 hover:bg-muted rounded-md">
-                                                                <Ellipsis className="w-5 h-5" />
-                                                            </button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem
-                                                                onClick={() => {
-                                                                    setEditingPost(post);
-                                                                    setIsEditOpen(true);
-                                                                }}
-                                                            >
-                                                                <Pencil className="w-4 h-4 text-blue-500 mr-2" /> Chỉnh sửa
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => setConfirmDeletePostId(post._id)}>
-                                                                <Trash2 className="w-4 h-4 text-red-500 mr-2" /> Xóa
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                )}
-                                            </div>
-                                        </CardTitle>
-                                        {post.address && (
-                                            <div className="text-xs text-primary font-medium mb-1 bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
-                                                <MapPinIcon className="w-3 h-3 mr-1" />
-                                                {post.address}
-                                            </div>
-                                        )}
-                                    </CardHeader>
-
-                                    <CardDescription className="px-6 pb-2 whitespace-pre-line text-sm text-foreground">
-                                        {post.title.length > 300 && !expandedPosts[post._id] ? (
-                                            <>
-                                                {post.title.slice(0, 300)}...
-                                                <button
-                                                    onClick={() =>
-                                                        setExpandedPosts((prev) => ({ ...prev, [post._id]: true }))
-                                                    }
-                                                    className="text-blue-500 underline ml-1 text-xs cursor-pointer"
-                                                >
-                                                    Xem thêm
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                {post.title}
-                                                {post.title.length > 300 && (
-                                                    <button
-                                                        onClick={() =>
-                                                            setExpandedPosts((prev) => ({ ...prev, [post._id]: false }))
-                                                        }
-                                                        className="text-blue-500 underline ml-1 text-xs"
-                                                    >
-                                                        Ẩn bớt
-                                                    </button>
-                                                )}
-                                            </>
-                                        )}
-                                    </CardDescription>
-
-                                    {post.photos?.length > 0 && (
-                                        <CardContent>
-                                            <PhotoProvider>
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    {post.photos.map((url: string, idx: number) => {
-                                                        const isHidden = idx > 3;
-                                                        const isOverlay = idx === 3 && post.photos.length > 4;
-                                                        const extraCount = post.photos.length - 4;
-
-                                                        return (
-                                                            <PhotoView key={idx} src={url}>
-                                                                <div
-                                                                    className={`relative cursor-pointer ${isHidden ? "hidden" : ""
-                                                                        }`}
-                                                                >
-                                                                    <img
-                                                                        src={url}
-                                                                        alt={`Ảnh ${idx + 1}`}
-                                                                        className={`w-full h-40 object-cover rounded-lg ${isOverlay ? "brightness-50" : ""
-                                                                            }`}
-                                                                    />
-                                                                    {isOverlay && (
-                                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                                            <span className="text-white bg-black/50 text-sm font-semibold px-3 py-1 rounded-lg">
-                                                                                +{extraCount}
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </PhotoView>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </PhotoProvider>
-                                        </CardContent>
-                                    )}
-
-                                    <hr />
-
-                                    <CardFooter className="text-sm text-gray-500 px-4">
-                                        <div className="flex w-full justify-between">
-                                            <div
-                                                onClick={() => handleLike(post._id)}
-                                                className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${post.likedBy.includes(userProfile?._id) ? "text-red-500" : ""}`}
-                                            >
-                                                <Heart className="w-5 h-5" />
-                                                <span>{post.likedBy.length}</span>
-                                            </div>
-                                            <div
-                                                className="flex items-center gap-1 justify-start w-1/2 cursor-pointer"
-                                                onClick={() => setDetailPostId(post._id)}
-                                            >
-                                                <MessageSquare className="w-5 h-5" />
-                                                <span>Bình luận</span>
-                                            </div>
-                                        </div>
-                                    </CardFooter>
-
-                                    <hr />
-
-                                    {post.latestComment && (
-                                        <div className="flex items-start gap-2 px-4 mt-1 hover:bg-muted/60 rounded-md">
-                                            <img
-                                                src={post.latestComment.commenter?.avatar}
-                                                className="w-8 h-8 rounded-full"
-                                            />
-                                            <div className="bg-muted px-3 py-2 rounded-xl max-w-[80%]">
-                                                <p className="text-xs font-semibold">
-                                                    {post.latestComment.commenter?.fullName}
-                                                </p>
-                                                <p className="text-sm">{post.latestComment.message}</p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="px-4 pb-3">
-                                        <button
-                                            onClick={() => setDetailPostId(post._id)}
-                                            className="text-gray-600 hover:underline text-sm cursor-pointer"
-                                        >
-                                            Xem chi tiết
-                                        </button>
-                                    </div>
-                                </Card>
-                            );
-                        })
+                        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                        .map((post) => (
+                            <ShelterPostCard
+                                key={post._id}
+                                post={post}
+                                currentUserId={userProfile?._id || ""}
+                                onLike={handleLike}
+                                onEdit={(p) => {
+                                    setEditingPost(p);
+                                    setIsEditOpen(true);
+                                }}
+                                onDelete={(id) => setConfirmDeletePostId(id)}
+                                onViewDetail={(id) => setDetailPostId(id)}
+                            />
+                        ))
                 )}
                 {loadingMore && (
                     <div className="space-y-6 mt-4">
@@ -719,6 +641,29 @@ function ShelterPosts() {
                     );
                 }}
             />
+
+            <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+                        <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>
+                            {confirmDialog.cancelText || "Hủy"}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                confirmDialog.onConfirm();
+                                setConfirmDialog({ ...confirmDialog, open: false });
+                            }}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            {confirmDialog.confirmText || "Xác nhận"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

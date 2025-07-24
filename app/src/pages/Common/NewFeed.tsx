@@ -8,11 +8,16 @@ import { Textarea, } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SmileIcon, ImageIcon, MapPinIcon, Globe, GlobeLock, X, RefreshCcw, LocateFixed } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import EmojiPicker from "emoji-picker-react";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
@@ -22,6 +27,8 @@ import type { PostType } from "@/types/Post";
 import PostDetailDialog from "@/components/post/PostDetail";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
+import { sortPostsByDistance } from "@/utils/sortByDistance";
+import type { LatLng } from "@/utils/sortByDistance";
 type Location = { lat: number; lng: number };
 type GoongSuggestion = { place_id: string; description: string };
 
@@ -50,6 +57,18 @@ const Newfeed = () => {
   const [address, setAddress] = useState("");
   const [location, setLocation] = useState<Location>({ lat: 0, lng: 0 });
   const [suggestions, setSuggestions] = useState<GoongSuggestion[]>([]);
+  const [userLocation, setUserLocation] = useState<LatLng | null>(null);
+  const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [postAs, setPostAs] = useState<"user" | string>("user");
+  const [myShelters, setMyShelters] = useState<{ _id: string; name: string; avatar: string }[]>([]);
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    description: "",
+    confirmText: "Xác nhận",
+    cancelText: "Hủy",
+    onConfirm: () => { },
+  });
   const navigate = useNavigate();
 
 
@@ -58,6 +77,35 @@ const Newfeed = () => {
       setDetailPostId(postId);
     }
   }, [postId]);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setUserLocation({
+          lat: coords.latitude,
+          lng: coords.longitude,
+        });
+      },
+      (err) => {
+        console.error("Không lấy được vị trí:", err);
+      },
+      { enableHighAccuracy: true }
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!userProfile?._id) return;
+
+    authAxios.get(`${coreAPI}/shelters/get-all`)
+      .then(res => {
+        const allShelters = res.data || [];
+        const filtered = allShelters.filter((shelter: any) =>
+          shelter.members?.some((member: any) => member._id === userProfile._id)
+        );
+        setMyShelters(filtered.map(({ _id, name, avatar }: any) => ({ _id, name, avatar })));
+      })
+      .catch(err => console.error("Lỗi lấy danh sách shelter:", err));
+  }, [userProfile?._id]);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -166,6 +214,10 @@ const Newfeed = () => {
 
   const handlePostSubmit = async () => {
     if (!postContent.trim() && selectedImages.length === 0) return;
+    if (address && !addressConfirmed) {
+      toast.error("Vui lòng chọn địa chỉ từ gợi ý.");
+      return;
+    }
     try {
       setLoading(true);
       const formData = new FormData();
@@ -173,6 +225,9 @@ const Newfeed = () => {
       formData.append("privacy", privacy);
       formData.append("address", address);
       formData.append("location", JSON.stringify(location));
+      if (postAs !== "user") {
+        formData.append("shelter", postAs);
+      }
       selectedImages.forEach(file => formData.append("photos", file));
       await authAxios.post(`${coreAPI}/posts/create`, formData);
       toast.success("Đăng bài thành công");
@@ -223,6 +278,25 @@ const Newfeed = () => {
     }
   };
 
+  const sortedPosts = (() => {
+    const now = new Date();
+    const recentThreshold = 1000 * 60 * 60 * 24;
+    const recentPosts = posts.filter(post => new Date(now).getTime() - new Date(post.createdAt).getTime() < recentThreshold);
+    const otherPosts = posts.filter(post => !recentPosts.includes(post));
+
+    const sortedRecent = [...recentPosts].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const sortedOther = userLocation
+      ? sortPostsByDistance(otherPosts, userLocation)
+      : [...otherPosts].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+    return [...sortedRecent, ...sortedOther];
+  })();
+
 
   //goong
   const fetchAddressSuggestions = async (query: string) => {
@@ -255,6 +329,7 @@ const Newfeed = () => {
           lat: result.geometry.location.lat,
           lng: result.geometry.location.lng,
         });
+        setAddressConfirmed(true);
       }
     } catch (error) {
       console.error("Place detail error:", error);
@@ -278,6 +353,7 @@ const Newfeed = () => {
           if (place) {
             setAddress(place.formatted_address);
             setLocation({ lat: coords.latitude, lng: coords.longitude });
+            setAddressConfirmed(true);
           }
         } catch (error) {
           console.error("Reverse geocode error:", error);
@@ -298,34 +374,85 @@ const Newfeed = () => {
             className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
             onClick={() => setOpenCreateDialog(true)}
           >
-            <img src={userProfile.avatar || "/placeholder.svg"} className="w-10 h-10 rounded-full border" />
+            <Avatar className="w-10 h-10">
+              <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
+              <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+            </Avatar>
             <div className="flex-1 bg-gray-100 dark:bg-gray-700 text-muted-foreground px-4 py-2 rounded-full text-sm">
               Bạn đang nghĩ gì?
             </div>
           </div>
 
-          <Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
+          <Dialog open={openCreateDialog} onOpenChange={(open) => {
+            setOpenCreateDialog(open);
+            if (!open) {
+              setAddressConfirmed(false);
+              setAddress("");
+              setLocation({ lat: 0, lng: 0 });
+            }
+          }}>
             <DialogContent className="sm:max-w-[600px] bg-background rounded-xl overflow-hidden border border-border p-0">
               <DialogHeader className="bg-background px-6 pt-4 pb-2">
                 <DialogTitle className="text-lg font-semibold">Tạo bài viết</DialogTitle>
               </DialogHeader>
 
               <div className="bg-background px-6 pb-6 pt-4 space-y-4">
-                <div className="flex items-start gap-3">
-                  <img src={userProfile.avatar || "/placeholder.svg"} className="w-12 h-12 rounded-full border" />
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm">{userProfile.fullName}</span>
-                    <Select value={privacy} onValueChange={setPrivacy}>
-                      <SelectTrigger className="w-[140px] h-7 text-xs mt-1">
+                <div className="flex items-start justify-between gap-3 w-full">
+                  <div className="flex gap-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
+                      <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-sm">{userProfile.fullName}</span>
+                      <Select value={privacy} onValueChange={setPrivacy}>
+                        <SelectTrigger className="w-[140px] h-7 text-xs mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="public">
+                            <Globe className="mr-2 h-4 w-4" /> Công khai
+                          </SelectItem>
+                          <SelectItem value="private">
+                            <GlobeLock className="mr-2 h-4 w-4" /> Riêng tư
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end text-xs">
+                    <span className="mb-1 text-muted-foreground">Đăng bài với tư cách:</span>
+                    <Select value={postAs} onValueChange={setPostAs}>
+                      <SelectTrigger className="w-[200px] h-7 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="public"><Globe className="mr-2 h-4 w-4" />Công khai</SelectItem>
-                        <SelectItem value="private"><GlobeLock className="mr-2 h-4 w-4" />Riêng tư</SelectItem>
+                        <SelectItem value="user">
+                          <div className="flex items-center gap-2">
+                            <img src={userProfile.avatar} className="w-5 h-5 rounded-full" />
+                            <span>{userProfile.fullName} (Cá nhân)</span>
+                          </div>
+                        </SelectItem>
+                        {myShelters.map((shelter) => (
+                          <SelectItem key={shelter._id} value={shelter._id}>
+                            <div className="flex items-center gap-2">
+                              <img src={shelter.avatar} className="w-5 h-5 rounded-full" />
+                              <span>{shelter.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+
+                {address && (
+                  <div className="text-xs text-primary font-medium mb-1 bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
+                    <MapPinIcon className="w-3 h-3 mr-1" />
+                    {address}
+                  </div>
+                )}
 
                 <Textarea
                   value={postContent}
@@ -391,6 +518,7 @@ const Newfeed = () => {
                           onChange={(e) => {
                             const value = e.target.value;
                             setAddress(value);
+                            setAddressConfirmed(false);
                             fetchAddressSuggestions(value);
                           }}
                           placeholder="Nhập địa chỉ..."
@@ -409,6 +537,7 @@ const Newfeed = () => {
                               onClick={() => {
                                 fetchPlaceDetail(sug.place_id);
                                 setSuggestions([]);
+                                setAddressConfirmed(true);
                               }}
                             >
                               {sug.description}
@@ -421,7 +550,37 @@ const Newfeed = () => {
                 </div>
 
                 <div className="flex justify-end pt-2">
-                  <Button onClick={handlePostSubmit} disabled={loading}>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setConfirmDialog({
+                        open: true,
+                        title: "Xác nhận huỷ bài viết",
+                        description: "Bạn có chắc muốn huỷ bài viết? Nội dung và ảnh đã nhập sẽ bị xoá.",
+                        confirmText: "Huỷ bài",
+                        cancelText: "Quay lại",
+                        onConfirm: () => {
+                          setPostContent("");
+                          setSelectedImages([]);
+                          setPreviewUrls([]);
+                          setAddress("");
+                          setLocation({ lat: 0, lng: 0 });
+                          setAddressConfirmed(false);
+                          setPrivacy("public");
+                          setPostAs("user");
+                          setShowPicker(false);
+                          setSuggestions([]);
+                          setOpenCreateDialog(false);
+                        },
+                      });
+                    }}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    onClick={handlePostSubmit}
+                    disabled={loading || (!postContent.trim() && selectedImages.length === 0)}
+                  >
                     {loading ? "Đang đăng..." : "Đăng bài"}
                   </Button>
                 </div>
@@ -484,9 +643,8 @@ const Newfeed = () => {
           ))}
         </div>
       ) : (
-        posts
+        sortedPosts
           .slice()
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, visiblePosts)
           .map((post) => (
             <PostCard
@@ -565,6 +723,31 @@ const Newfeed = () => {
         }}
       />
 
+      <AlertDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {confirmDialog.cancelText || "Hủy"}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                confirmDialog.onConfirm();
+                setConfirmDialog((prev) => ({ ...prev, open: false }));
+              }}
+            >
+              {confirmDialog.confirmText || "Xác nhận"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
 
     </div>
