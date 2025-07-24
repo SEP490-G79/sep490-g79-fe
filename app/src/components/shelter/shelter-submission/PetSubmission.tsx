@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import dayjs from "dayjs";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 function getColorBarClass(total: number): string {
   if (total <= 29) return "bg-red-500";
   if (total >= 30 && total <= 59) return "bg-yellow-400";
@@ -26,7 +27,7 @@ function getColorBarClass(total: number): string {
 }
 
 export default function PetSubmission() {
-  const { petId } = useParams();
+  const { shelterId, petId } = useParams();
   const { petsList, submissionsByPetId, setSubmissionsByPetId, coreAPI } = useAppContext();
   const authAxios = useAuthAxios();
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -51,6 +52,19 @@ export default function PetSubmission() {
       console.error("Lỗi khi fetch submissions:", err);
     }
   };
+
+const updateSubmissionStatus = async (submissionId : string, status: string) =>{
+  try{
+    const updateStatus = await authAxios.patch(`${coreAPI}/adoption-submissions/update-submission-status/${shelterId}`,({submissionId, status}));
+    toast.success("Cập nhật trạng thái thành công");
+    fetchSubmissions();
+  }catch(error){
+    toast.error("Không thể cập nhật trạng thái");
+  }
+  
+  
+}
+
   const statusOptions = ["pending", "interviewing", "reviewed", "approved", "rejected"];
   const statusLabels: Record<string, string> = {
     pending: "Chờ duyệt",
@@ -80,7 +94,15 @@ export default function PetSubmission() {
     return statusMap[status] || status;
   };
 
-  console.log(selectedSubmission);
+  const statusOptionsMap: { [key: string]: string[] } = {
+    pending: ["pending", "interviewing", "rejected"],
+    interviewing: ["interviewing", "pending", "reviewed"],
+    reviewed: ["reviewed", "approved", "rejected"],
+  };
+
+  const currentStatus = selectedSubmission?.status || "";
+  const options = statusOptionsMap[currentStatus] || statusOptions;
+
 
 
   return (
@@ -256,17 +278,25 @@ export default function PetSubmission() {
                   )}
                   <p>
                     <strong>Trạng thái:</strong>{" "}
-                    <select
-                      className="text-sm border rounded px-2 py-1 bg-primary text-white  transition-colors duration-150"
-
-
-                    >
-                      {statusOptions.map((status) => (
-                        <option key={status} value={status}>
-                          {statusLabels[status]}
-                        </option>
-                      ))}
-                    </select>
+                    {currentStatus === "approved" ? (
+                      <Badge className="text-sm px-2 py-1 font-medium text-foreground bg-green-400 rounded">
+                        {statusLabels["approved"]}
+                      </Badge>
+                    ) : (
+                      <select
+                        className="text-sm border rounded px-2 py-1 transition-colors duration-150 bg-primary text-white"
+                        value={currentStatus}
+                      onChange={(e) =>
+                        updateSubmissionStatus(selectedSubmission._id, e.target.value)
+                      }
+                      >
+                        {(options || []).map((status) => (
+                          <option key={status} value={status}>
+                            {statusLabels[status]}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </p>
 
                   <div className="flex items-center gap-2">
