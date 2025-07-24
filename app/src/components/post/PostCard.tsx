@@ -154,7 +154,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
           </div>
         </CardTitle>
 
-        <ReportPostDialog postId={post._id} key={post._id} />
         {post.address && (
           <div className="text-xs text-primary font-medium mb-1 bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
             <MapPinIcon className="w-3 h-3 mr-1" />
