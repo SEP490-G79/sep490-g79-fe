@@ -161,7 +161,7 @@ function AdoptionActivities() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {currentAdoptedPets.map((pet: Pet) => (
-                <PetsList key={pet?._id} pet={pet} user={userProfile} />
+                <PetsList key={pet?._id} pet={pet} user={userProfile} isLoading={false} />
               ))}
             </div>
 

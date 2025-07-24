@@ -286,7 +286,6 @@ function PetsListPage() {
             {currentPets?.map((pet) => (
               <PetsList
                 isLoading={isLoading}
-                setIsLoading={setIsLoading}
                 key={pet?._id}
                 pet={pet}
                 user={userProfile}
