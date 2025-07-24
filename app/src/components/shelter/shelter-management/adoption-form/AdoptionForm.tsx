@@ -41,13 +41,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Pet } from "@/types/Pet";
 import EditDialog from "./EditDialog";
 
-
 export default function AdoptionForm() {
   const { shelterId, formId } = useParams<{
     shelterId: string;
     formId: string;
   }>();
-  const { coreAPI, shelterForms, setShelterForms, petsList } = useContext(AppContext);
+  const { coreAPI, shelterForms, setShelterForms, petsList } =
+    useContext(AppContext);
   const [adoptionForm, setAdoptionForm] = useState<AdoptionForm>();
   const [questionsList, setQuestionsList] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -75,8 +75,10 @@ export default function AdoptionForm() {
         }
       })
       .catch((err) => {
-        console.error(err);
-        toast.error("Lỗi khi tải dữ liệu form nhận nuôi");
+        // console.error(err);
+        toast.error(
+          err?.response?.data?.message || "Lỗi khi tải dữ liệu form nhận nuôi"
+        );
       })
       .finally(() => {
         setTimeout(() => {
@@ -139,9 +141,9 @@ export default function AdoptionForm() {
       );
       handleFetchAdoptionForm();
       toast.success("Lưu form nhận nuôi thành công!");
-    } catch (error) {
-      console.error("Error saving adoption form:", error);
-      toast.error("Lỗi khi lưu form nhận nuôi. Vui lòng thử lại sau.");
+    } catch (error: any) {
+      // console.error("Error saving adoption form:", error);
+      toast.error(error?.response?.data?.message ||"Lỗi khi lưu form nhận nuôi. Vui lòng thử lại sau.");
     }
   };
 
@@ -244,9 +246,10 @@ export default function AdoptionForm() {
                 <div className="basis-full sm:basis-2/3 sm:text-left">
                   <h1 className="text-xl font-medium mb-2 hover:text-(--primary)">
                     <EditDialog
-                    adoptionForm={adoptionForm}
-                    setAdoptionForm={setAdoptionForm}
-                  />
+                      setIsLoading={setIsLoading}
+                      adoptionForm={adoptionForm}
+                      setAdoptionForm={setAdoptionForm}
+                    />
                     {/* <Button variant={"link"}>
                       <PenBox strokeWidth={2} />
                     </Button> */}
@@ -264,7 +267,11 @@ export default function AdoptionForm() {
                     <div className="flex items-center w-full mx-2 py-1">
                       <Avatar className="rounded-none w-8 h-8">
                         <AvatarImage
-                          src={petsList?.find((p:Pet) => p._id == adoptionForm?.pet._id)?.photos[0]}
+                          src={
+                            petsList?.find(
+                              (p: Pet) => p._id == adoptionForm?.pet._id
+                            )?.photos[0]
+                          }
                           alt={adoptionForm?.pet?.name}
                           className="w-8 h-8 object-center object-cover"
                         />

@@ -22,25 +22,25 @@ import { toast } from "sonner";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { Flag } from "lucide-react";
-import { Input } from "../ui/input";
-import { DropdownMenuItem } from "../ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 
 const predefinedReasons = [
-  "Thông tin thú cưng sai sự thật",
-  "Bài viết chứa hình ảnh bạo hành động vật",
-  "Rao bán thú cưng trái phép",
-  "Vi phạm hợp đồng nhận nuôi",
+  "Blog đăng thông tin sai lệch về thú cưng",
+  "Chứa hình ảnh hoặc nội dung bạo hành động vật",
+  "Quảng cáo mua bán thú cưng trái phép",
+  "Xúi giục hoặc vi phạm quy định nhận nuôi thú cưng",
   "Nội dung vi phạm pháp luật Việt Nam",
-  "Spam hoặc quảng cáo không liên quan",
-  "Ngôn từ kích động hoặc thiếu tôn trọng",
-  "Nội dung không phù hợp với cộng đồng yêu thú cưng",
-  "Khác",
+  "Spam, quảng cáo sản phẩm/dịch vụ không liên quan",
+  "Sử dụng ngôn từ thô tục, kích động hoặc thiếu tôn trọng",
+  "Không phù hợp với cộng đồng yêu động vật và thú cưng",
+  "Khác (vui lòng nêu rõ)",
 ];
 
-export default function ReportPostDialog({
-  postId,
+export default function ReportBlogDialog({
+  blogId,
 }: {
-  postId: string;
+  blogId: string;
 }) {
   const authAxios = useAuthAxios();
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -81,8 +81,8 @@ export default function ReportPostDialog({
       }
 
       const formData = new FormData();
-      formData.append("reportType", "post");
-      formData.append("postId", postId);
+      formData.append("reportType", "blog");
+      formData.append("blogId", blogId);
       formData.append("reason", reason);
 
       photos &&
@@ -90,7 +90,7 @@ export default function ReportPostDialog({
           formData.append("photos", file);
         });
 
-      await authAxios.post(`${reportAPI}/report-post`, formData);
+      await authAxios.post(`${reportAPI}/report-blog`, formData);
 
       toast.success("Đã gửi báo cáo thành công.");
       closeRef.current?.click();
@@ -113,13 +113,13 @@ export default function ReportPostDialog({
       }
     }}>
       <DialogTrigger asChild>
-        <DropdownMenuItem onSelect={e => e.preventDefault()}>
+        <p className="flex text-sm underline text-destructive hover:text-amber-500 cursor-pointer">
           <Flag className="w-4 h-4 mr-2 text-destructive" /> Báo cáo
-        </DropdownMenuItem>
+        </p>
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Báo cáo bài viết</DialogTitle>
+          <DialogTitle>Báo cáo bài viết blog</DialogTitle>
           <DialogDescription>
             Vui lòng chọn lý do báo cáo phù hợp
           </DialogDescription>

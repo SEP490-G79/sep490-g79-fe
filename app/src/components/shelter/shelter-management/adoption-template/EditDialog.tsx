@@ -52,11 +52,13 @@ type Props = {
   setAdoptionTemplate: React.Dispatch<
     React.SetStateAction<AdoptionTemplate | undefined>
   >;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export default function EditDialog({
   adoptionTemplate,
   setAdoptionTemplate,
+  setIsLoading
 }: Props) {
   const { coreAPI, shelterTemplates, setShelterTemplates } =
     useContext(AppContext);
@@ -101,6 +103,7 @@ export default function EditDialog({
   }, [adoptionTemplate, form]);
 
   const onSubmit = async (values: FormValues) => {
+    setIsLoading(true);
     await authAxios
       .put(
         `${coreAPI}/shelters/${shelterId}/adoptionTemplates/${adoptionTemplate?._id}/edit`,
@@ -112,6 +115,7 @@ export default function EditDialog({
       )
       .then((res) => {
         const updatedTemplate: AdoptionTemplate = res.data;
+        toast.success("Chỉnh sửa mẫu nhận nuôi thành công!");
         setAdoptionTemplate(updatedTemplate);
         const updatedTemplates = shelterTemplates.map((template) =>
           template._id == updatedTemplate._id ? updatedTemplate : template
@@ -124,7 +128,13 @@ export default function EditDialog({
       .catch((err) => {
         console.error("Error creating adoption template:", err);
         toast.error("Tạo mẫu nhận nuôi thất bại. Vui lòng thử lại.");
-      });
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
+      })
+      ;
   };
 
   return (

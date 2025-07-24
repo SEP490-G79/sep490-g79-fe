@@ -41,6 +41,8 @@ import ShelterRoute from "./ShelterRoute";
 import ShelterProfile from "@/components/shelter/shelter-management/profile/ShelterProfile";
 import SubmissionForms from "@/components/shelter/shelter-submission/SubmissionForms";
 import PetSubmission from "@/components/shelter/shelter-submission/PetSubmission";
+import ReturnRequestManagement from "@/components/shelter/shelter-management/return-request/ReturnRequestManagement";
+
 
 function AppRoutes() {
   return (
@@ -96,9 +98,10 @@ function AppRoutes() {
           <Route path="adoption-templates/:templateId" element={<TemplateDialog/>} />
           <Route path="adoption-forms" element={<AdoptionForms/>} />
           <Route path="adoption-forms/:formId" element={<AdoptionForm/>} />
-    <Route path="submission-forms" element={<SubmissionForms/>} />
-        <Route path="submission-forms/:petId" element={<PetSubmission />} />
-        </Route>
+         <Route path="submission-forms" element={<SubmissionForms/>} />
+              <Route path="submission-forms/:petId" element={<PetSubmission />} />
+                 <Route path="return-requests" element={<ReturnRequestManagement/>} />
+              </Route>
       </Route>
 
       <Route path="/donation" element={<DonationPage />} />

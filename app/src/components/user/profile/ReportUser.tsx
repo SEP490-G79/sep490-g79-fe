@@ -23,6 +23,7 @@ import useAuthAxios from "@/utils/authAxios";
 import { Input } from "@/components/ui/input";
 import { Flag } from "lucide-react";
 import AppContext from "@/context/AppContext";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 const predefinedReasons = [
   "Người dùng đăng thông tin sai sự thật",
@@ -39,37 +40,38 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
   const [selectedReason, setSelectedReason] = useState<string>("");
   const [customReason, setCustomReason] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [photos, setPhotos] = useState<File[]>();
+  const [photos, setPhotos] = useState<File[]>([]);
   const {reportAPI} = useContext(AppContext)
 
   const handleUploadPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      if (e.target.files !== null) {
-        const selectedPhotos: FileList = e.target.files;
-        if (!selectedPhotos) {
+      if (e.target.files) {
+        const selectedPhotos = Array.from(e.target.files);
+
+        // Tính tổng số ảnh hiện tại + mới chọn
+        if (photos.length + selectedPhotos.length > 5) {
+          toast.error("Chỉ được chọn tối đa 5 ảnh.");
           return;
         }
-        const photosArray = Array.from(selectedPhotos);
-        setPhotos(photosArray);
-      }
-      
 
+        setPhotos((prev) => [...prev, ...selectedPhotos]);
+      }
     } catch (error) {
-      console.log(error)
+      console.error("Lỗi khi upload ảnh:", error);
     }
-  }
+  };
 
   const handleSubmit = async () => {
-    const reason =
-      selectedReason === "Khác" ? customReason.trim() : selectedReason;
-
-    if (!reason) {
-      toast.error("Vui lòng chọn hoặc nhập lý do báo cáo.");
-      return;
-    }
-
     try {
       setLoading(true);
+      const reason =
+        selectedReason === "Khác" ? customReason.trim() : selectedReason;
+
+      if (!reason) {
+        toast.error("Vui lòng chọn hoặc nhập lý do báo cáo.");
+        return;
+      }
+
       const formData = new FormData();
       formData.append("reportType", "user");
       formData.append("userId", userId);
@@ -82,17 +84,11 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
 
       await authAxios.post(`${reportAPI}/report-user`, formData);
 
-      console.log({
-        reportType: "user",
-        userId: userId,
-        reason,
-        photos,
-      });
-      toast.success("Đã gửi báo cáo người dùng thành công.");
+      toast.success("Đã gửi báo cáo thành công.");
       closeRef.current?.click();
+      setPhotos([]);
       setSelectedReason("");
       setCustomReason("");
-      setPhotos([]);
     } catch (err : any) {
       toast.error(err?.response.data.message);
     } finally {
@@ -103,15 +99,15 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
   return (
     <Dialog onOpenChange={(open) => {
       if(!open){
-              setSelectedReason("");
-              setCustomReason("");
-              setPhotos([]);
+        setSelectedReason("");
+        setCustomReason("");
+        setPhotos([]);
       }
     }}>
       <DialogTrigger asChild>
-        <p className="text-xs text-destructive cursor-pointer hover:underline font-semibold flex">
-          <Flag className="w-4 h-4"/> Báo cáo
-        </p>
+        <DropdownMenuItem onSelect={e => e.preventDefault()}>
+          <Flag className="w-4 h-4 mr-2 text-destructive" /> Báo cáo
+        </DropdownMenuItem>
       </DialogTrigger>
 
       <DialogContent className="max-w-md">
@@ -151,13 +147,30 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
           {/* upload photo */}
           <label className="block text-sm font-medium">Ảnh bằng chứng</label>
           <Input type="file" accept="image/*" multiple  onChange={handleUploadPhoto}/>
-          {photos !== undefined && photos.length > 0 && 
-          <div className="flex gap-2">
-            {photos.map((photo: File, index: number) => {
-              return <img src={URL.createObjectURL(photo)} alt={index +" photo"} key={index} className="max-h-15 max-w-20"/>
-            })}
+          <div className="flex gap-2 flex-wrap mt-2">
+            {photos.map((photo: File, index: number) => (
+              <div key={index} className="relative group">
+                <img
+                  src={URL.createObjectURL(photo)}
+                  alt={`${index} photo`}
+                  className="h-24 w-24 object-cover rounded border"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    setPhotos(
+                      (prev) => prev?.filter((_, i) => i !== index) || []
+                    )
+                  }
+                  className="absolute top-1 right-1 h-5 cursor-pointer px-2 py-0 "
+                  title="Xoá ảnh"
+                >
+                  <span className="text-destructive mb-1">x</span>
+                </Button>
+              </div>
+            ))}
           </div>
-          }
         </div>
 
         <DialogFooter>
