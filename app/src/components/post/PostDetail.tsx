@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { useEffect, useState, useContext } from "react";
 import AppContext from "@/context/AppContext";
@@ -166,11 +167,11 @@ export default function PostDetailDialog({
                                 <div className="relative bg-white dark:bg-gray-800  shadow-md p-4 space-y-3">
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-center gap-3">
-                                            <img
-                                                src={post.shelter?.avatar || post.createdBy.avatar}
-                                                className="w-10 h-10 rounded-full border"
-                                            />
-                                            <div>
+                                            <Avatar className="w-10 h-10">
+                                                <AvatarImage src={post.shelter?.avatar || post.createdBy.avatar || "/placeholder.svg"} alt="avatar" />
+                                                <AvatarFallback>{post.shelter?.name?.charAt(0).toUpperCase() || post.createdBy.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex flex-col text-sm">
                                                 <p className="font-semibold">{post.shelter?.name || post.createdBy.fullName}</p>
                                                 <div className="text-xs text-muted-foreground flex items-center gap-2">
                                                     <span>{new Date(post.createdAt).toLocaleString()}</span>

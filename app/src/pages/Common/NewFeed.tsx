@@ -8,6 +8,7 @@ import { Textarea, } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SmileIcon, ImageIcon, MapPinIcon, Globe, GlobeLock, X, RefreshCcw, LocateFixed } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -373,7 +374,10 @@ const Newfeed = () => {
             className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
             onClick={() => setOpenCreateDialog(true)}
           >
-            <img src={userProfile.avatar || "/placeholder.svg"} className="w-10 h-10 rounded-full border" />
+            <Avatar className="w-10 h-10">
+              <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
+              <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+            </Avatar>
             <div className="flex-1 bg-gray-100 dark:bg-gray-700 text-muted-foreground px-4 py-2 rounded-full text-sm">
               Bạn đang nghĩ gì?
             </div>
@@ -395,10 +399,10 @@ const Newfeed = () => {
               <div className="bg-background px-6 pb-6 pt-4 space-y-4">
                 <div className="flex items-start justify-between gap-3 w-full">
                   <div className="flex gap-3">
-                    <img
-                      src={userProfile.avatar || "/placeholder.svg"}
-                      className="w-12 h-12 rounded-full border"
-                    />
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
+                      <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                    </Avatar>
                     <div className="flex flex-col">
                       <span className="font-medium text-sm">{userProfile.fullName}</span>
                       <Select value={privacy} onValueChange={setPrivacy}>

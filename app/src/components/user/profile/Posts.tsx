@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
+import React, { useState, useEffect, useContext, useRef} from "react";
 import {
-  Card, CardAction, CardContent, CardDescription,
+  Card, CardContent, CardDescription,
   CardFooter, CardHeader, CardTitle,
 } from "@/components/ui/card";
 import {
@@ -16,6 +16,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
@@ -343,7 +344,10 @@ function Posts() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
             onClick={() => setOpenCreateDialog(true)}
           >
-            <img src={userProfile.avatar || "/placeholder.svg"} className="w-10 h-10 rounded-full border" />
+            <Avatar className="w-10 h-10">
+              <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
+              <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+            </Avatar>
             <div className="flex-1 bg-gray-100 dark:bg-gray-700 text-muted-foreground px-4 py-2 rounded-full text-sm">
               Bạn đang nghĩ gì?
             </div>
@@ -357,7 +361,10 @@ function Posts() {
 
               <div className="px-6 pb-6 pt-4 space-y-4 bg-background">
                 <div className="flex items-start gap-3">
-                  <img src={userProfile.avatar || "/placeholder.svg"} className="w-12 h-12 rounded-full border" />
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
+                    <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                  </Avatar>
                   <div className="flex flex-col">
                     <span className="font-medium text-sm">{userProfile.fullName}</span>
                     <Select value={privacy} onValueChange={setPrivacy}>
@@ -554,8 +561,11 @@ function Posts() {
                 <CardTitle className="text-lg font-semibold">
                   <div className="flex items-start justify-between">
                     <div className="flex gap-x-3">
-                      <img src={post.user.avatar || "/placeholder.svg"} className="w-14 h-14 rounded-full border" />
-                      <div className="flex flex-col">
+                      <Avatar className="w-10 h-10">
+                        <AvatarImage src={post.user.avatar || "/placeholder.svg"} alt="avatar" />
+                        <AvatarFallback>{post.user.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col text-sm">
                         <span>{post.user.fullName}</span>
                         <div className="text-xs text-muted-foreground flex items-center gap-2">
                           <span>{formatCreatedAt(post.createdAt)}</span>

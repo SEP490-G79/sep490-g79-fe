@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { ImageIcon, LocateFixed } from "lucide-react";
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react";
@@ -198,6 +198,9 @@ export default function EditProfile() {
               alt="avatar"
               className="rounded-full w-full h-full object-cover"
             />
+            <AvatarFallback className="bg-gray-200 text-gray-500">
+              {fullName ? fullName.charAt(0).toUpperCase() : "?"}
+            </AvatarFallback>
           </Avatar>
           <div className="space-y-2">
             <Label htmlFor="avatar">Ảnh đại diện</Label>

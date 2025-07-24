@@ -149,6 +149,7 @@ function AdoptionActivities() {
       <TabsList className="ml-auto mb-4">
         <TabsTrigger value="adopted">Thú đã nhận nuôi</TabsTrigger>
         <TabsTrigger value="activities">Hoạt động nhận nuôi</TabsTrigger>
+        <TabsTrigger value="return-request">Yêu cầu trả lại</TabsTrigger>
       </TabsList>
 
       <TabsContent value="adopted">
@@ -297,6 +298,12 @@ function AdoptionActivities() {
         )}
 
 
+      </TabsContent>
+
+      <TabsContent value="return-request">
+        <div className="text-center text-muted-foreground py-10">
+          Tính năng này hiện đang được phát triển.
+        </div>
       </TabsContent>
     </Tabs>
   );

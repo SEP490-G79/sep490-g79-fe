@@ -210,6 +210,9 @@ function PetsList({ pet, user }: PetCardProps) {
                     <Button variant="ghost" className="gap-2 pl-0" asChild>
                         <Link to={`/pets/${pet._id}`}>Xem thêm <ArrowRight className="w-4 h-4" /></Link>
                     </Button>
+                    <Button  className="w-full mt-2" onClick={() => {}}>
+                        Yêu cầu trả thú cưng
+                    </Button>
                 </div>
             </div>
         </div>

@@ -12,6 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { Globe, GlobeLock, Ellipsis, Pencil, Trash2, MapPinIcon, Heart, MessageSquare } from "lucide-react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import dayjs from "dayjs";
@@ -53,11 +54,11 @@ export default function ShelterPostCard({
         <CardTitle className="text-lg font-semibold">
           <div className="flex items-start justify-between">
             <div className="flex gap-x-3">
-              <img
-                src={post.shelter?.avatar || "/placeholder.svg"}
-                className="w-14 h-14 rounded-full border"
-              />
-              <div className="flex flex-col">
+              <Avatar className="w-10 h-10">
+                <AvatarImage src={post.shelter?.avatar || "/placeholder.svg"} alt="shelter avatar" />
+                <AvatarFallback>{post.shelter?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col text-sm">
                 <span>{post.shelter?.name}</span>
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
                   <span>{formatCreatedAt(post.createdAt)}</span>

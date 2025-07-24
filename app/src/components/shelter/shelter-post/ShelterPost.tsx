@@ -15,6 +15,7 @@ import {
     AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
     AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
@@ -39,7 +40,7 @@ import { Input } from "@/components/ui/input";
 import PostDetailDialog from "@/components/post/PostDetail";
 import EditPostDialog from "@/components/post/EditPostDialog";
 import ShelterPostCard from "@/components/shelter/shelter-post/ShelterPostCard";
-import {sortPostsByDistance } from "@/utils/sortByDistance";
+import { sortPostsByDistance } from "@/utils/sortByDistance";
 import type { LatLng } from "@/utils/sortByDistance";
 import axios from "axios";
 
@@ -74,6 +75,7 @@ function ShelterPosts() {
     const [suggestions, setSuggestions] = useState<GoongSuggestion[]>([]);
     const [userLocation, setUserLocation] = useState<LatLng | null>(null);
     const [addressConfirmed, setAddressConfirmed] = useState(false);
+    const [shelterInfo, setShelterInfo] = useState<any>(null);
     const [confirmDialog, setConfirmDialog] = useState({
         open: false,
         title: "",
@@ -116,6 +118,9 @@ function ShelterPosts() {
                 headers: { Authorization: `Bearer ${accessToken}` }
             } : {});
             setPostsData(res.data);
+            if (res.data.length > 0 && res.data[0].shelter) {
+                setShelterInfo(res.data[0].shelter);
+            }
         } catch {
             toast.error("Không thể tải bài viết từ shelter");
         } finally {
@@ -329,7 +334,11 @@ function ShelterPosts() {
                     className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
                     onClick={() => setOpenDialog(true)}
                 >
-                    <img src={userProfile?.avatar || "/placeholder.svg"} className="w-10 h-10 rounded-full border" />
+                    <Avatar className="w-10 h-10">
+                        {/* shelter avatar */}
+                        <AvatarImage src={shelterInfo?.avatar || "/placeholder.svg"} />
+                        <AvatarFallback>{shelterInfo?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                    </Avatar>
                     <div className="flex-1 bg-gray-100 dark:bg-gray-700 text-muted-foreground px-4 py-2 rounded-full text-sm">
                         Bạn đang nghĩ gì?
                     </div>
@@ -353,9 +362,9 @@ function ShelterPosts() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div className="flex gap-3 items-start">
-                            <img src={userProfile?.avatar || "/placeholder.svg"} className="w-10 h-10 rounded-full" />
+                            <img src={shelterInfo?.avatar || "/placeholder.svg"} className="w-10 h-10 rounded-full" />
                             <div>
-                                <p className="font-medium text-sm">{userProfile?.fullName}</p>
+                                <p className="font-medium text-sm">{shelterInfo?.name}</p>
                                 <Select value={privacy} onValueChange={setPrivacy}>
                                     <SelectTrigger className="w-[140px] h-7 text-xs mt-1 cursor-pointer">
                                         <SelectValue />

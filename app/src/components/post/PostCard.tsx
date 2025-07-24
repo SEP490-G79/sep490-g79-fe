@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 
 import { Heart, MessageSquare, Globe, GlobeLock, MapPinIcon } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -71,11 +72,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
         <CardTitle className="text-lg font-semibold">
           <div className="flex items-start justify-between">
             <div className="flex gap-x-3">
-              <img
-                src={post.shelter?.avatar || post.user.avatar}
-                className="w-10 h-10 rounded-full"
-              />
-              <div className="flex flex-col justify-top">
+              <Avatar className="w-10 h-10">
+                <AvatarImage src={post.user.avatar || "/placeholder.svg"} alt="user avatar" />
+                <AvatarFallback>{post.user.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col justify-top text-sm">
                 <span>{post.shelter?.name || post.user.fullName}</span>
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
                   <span>{formatCreatedAt(post.createdAt)}</span>
