@@ -4,7 +4,7 @@ import Posts from "@/components/user/profile/Posts";
 import AdoptionActivities from "@/components/user/profile/AdoptionActivities";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { MoreHorizontal, Pencil } from "lucide-react";
+import { Ellipsis, MoreHorizontal, Pencil } from "lucide-react";
 import AppContext from "@/context/AppContext";
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import 'react-photo-view/dist/react-photo-view.css';
@@ -40,17 +40,23 @@ function ProfilePage() {
 
       <div className="w-full mx-auto h-[300px] sm:h-[350px] md:h-[400px] px-4 sm:px-6">
         <PhotoProvider>
-          <PhotoView src={profile?.background || "https://i.pinimg.com/736x/39/8c/28/398c2833aad3c95c80ced32b23e17eb8.jpg"}>
+          <PhotoView
+            src={
+              profile?.background ||
+              "https://i.pinimg.com/736x/39/8c/28/398c2833aad3c95c80ced32b23e17eb8.jpg"
+            }
+          >
             <img
-              src={profile?.background || "https://i.pinimg.com/736x/39/8c/28/398c2833aad3c95c80ced32b23e17eb8.jpg"}
+              src={
+                profile?.background ||
+                "https://i.pinimg.com/736x/39/8c/28/398c2833aad3c95c80ced32b23e17eb8.jpg"
+              }
               alt="Background"
               className="w-full h-full object-cover object-center rounded-lg shadow-md"
             />
           </PhotoView>
         </PhotoProvider>
-
       </div>
-
 
       {/* Main layout: 2 cột */}
       <div className="flex flex-col lg:flex-row gap-0 px-4 sm:px-6 mt-[10px] min-h-screen relative z-10">
@@ -67,19 +73,21 @@ function ProfilePage() {
             <div className="flex gap-6">
               <button
                 onClick={() => setShowActivities(false)}
-                className={`text-sm font-medium pb-[15px] ${!showActivities
-                  ? "border-b-[2px] border-blue-500 text-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
-                  }`}
+                className={`text-sm font-medium pb-[15px] ${
+                  !showActivities
+                    ? "border-b-[2px] border-blue-500 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
               >
                 Bài đăng
               </button>
               <button
                 onClick={() => setShowActivities(true)}
-                className={`text-sm font-medium pb-[15px] ${showActivities
-                  ? "border-b-[2px] border-blue-500 text-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
-                  }`}
+                className={`text-sm font-medium pb-[15px] ${
+                  showActivities
+                    ? "border-b-[2px] border-blue-500 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
               >
                 Thú nuôi của bạn
               </button>
@@ -91,11 +99,19 @@ function ProfilePage() {
                   <Pencil /> Chỉnh sửa thông tin
                 </Button>
               </Link>
-            ): 
-            <ReportUserDialog userId={userId} key={userId} />
-            }
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="p-2 hover:bg-muted rounded-md">
+                    <Ellipsis className="w-5 h-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-10 p-1">
+                  <ReportUserDialog userId={userId} key={userId} />
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
-
 
           {/* Nội dung */}
           <div className="mt-6">
@@ -103,7 +119,6 @@ function ProfilePage() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

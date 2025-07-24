@@ -7,6 +7,7 @@ import axios from "axios";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { getTimeAgo } from "@/utils/dateUtils";
 import BlogRecommendation from "./BlogRecommendation";
+import ReportBlogDialog from "./ReportBlog";
 
 
 const BlogDetail = () => {
@@ -110,9 +111,10 @@ const BlogDetail = () => {
             className="prose prose-lg max-w-none text-justify [&>*]:mb-4"
             dangerouslySetInnerHTML={{ __html: blog.content }}
           />
-          {/* <div className="mt-10 text-sm text-right text-gray-500 italic">
-            Cập nhật lần cuối: {getTimeAgo(new Date(blog.updatedAt))}
-          </div> */}
+          <div className="flex justify-end px-2">
+            <ReportBlogDialog blogId={blog?._id} key={blog?._id} />
+          </div>
+          
         </div>
     </div>
   );

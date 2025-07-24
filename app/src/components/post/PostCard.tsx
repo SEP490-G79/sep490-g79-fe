@@ -30,9 +30,7 @@ import { PhotoProvider, PhotoView } from "react-photo-view";
 import dayjs from "dayjs";
 import type { PostType } from "@/types/Post";
 import type { CommentType } from "@/types/Comment";
-import { toast } from "sonner";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import ReportPostDialog from "./ReportPost";
 
 interface PostCardProps {
@@ -66,7 +64,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
     : post.title;
   return (
     <Card className="shadow-md dark:bg-gray-800">
-
       <CardHeader className="pt-4 pb-2 relative">
         <CardTitle className="text-lg font-semibold">
           <div className="flex items-start justify-between">
@@ -74,19 +71,28 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
               <img
                 src={post.shelter?.avatar || post.user.avatar}
                 className="w-10 h-10 rounded-full"
+
               />
               <div className="flex flex-col justify-top">
                 <span>{post.shelter?.name || post.user.fullName}</span>
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
                   <span>{formatCreatedAt(post.createdAt)}</span>
-                  {post.privacy.includes("public") ? <Globe className="w-4 h-4" /> : <GlobeLock className="w-4 h-4" />}
+                  {post.privacy.includes("public") ? (
+                    <Globe className="w-4 h-4" />
+                  ) : (
+                    <GlobeLock className="w-4 h-4" />
+                  )}
                 </div>
               </div>
 
             </div>
 
             {/* Chỉ hiển thị khi là chủ bài viết */}
-            {String(typeof post.createdBy === "object" ? post.createdBy._id : post.createdBy) === String(currentUserId) && (
+            {String(
+              typeof post.createdBy === "object"
+                ? post.createdBy._id
+                : post.createdBy
+            ) === String(currentUserId) ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="p-2 hover:bg-muted rounded-md">
@@ -104,14 +110,29 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="p-2 hover:bg-muted rounded-md">
+                    <Ellipsis className="w-5 h-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40 p-1 z-50">
+                  <ReportPostDialog postId={post._id} key={post._id} />
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
-            <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+            <AlertDialog
+              open={openDeleteDialog}
+              onOpenChange={setOpenDeleteDialog}
+            >
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Xác nhận xóa bài viết</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Bạn có chắc chắn muốn xóa bài viết này? Thao tác này không thể hoàn tác.
+                    Bạn có chắc chắn muốn xóa bài viết này? Thao tác này không
+                    thể hoàn tác.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -130,9 +151,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-
           </div>
         </CardTitle>
+
         <ReportPostDialog postId={post._id} key={post._id} />
         {post.address && (
           <div className="text-xs text-primary font-medium mb-1 bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
@@ -156,7 +177,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
 
       {post?.photos.length > 0 && (
         <CardContent>
-
           <PhotoProvider>
             <div className="grid grid-cols-2 gap-2">
               {/* Hiển thị 3 ảnh đầu */}
@@ -172,7 +192,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
 
               {/* Ảnh thứ 4 có overlay nếu còn ảnh nữa */}
               {post.photos.length > 3 && (
-
                 <PhotoView src={post.photos[3]}>
                   <div className="relative cursor-pointer">
                     <img
@@ -181,15 +200,12 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                       className="w-full h-40 object-cover rounded-lg brightness-75"
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
-
                       <span className="text-white bg-secondary/30 text-base font-medium px-2 py-1 rounded-md">
                         +{post.photos.length - 3}
-
                       </span>
                     </div>
                   </div>
                 </PhotoView>
-
               )}
 
               {/* Các ảnh còn lại để PhotoProvider nhận */}
@@ -210,33 +226,38 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
           <div className="flex justify-between gap-25">
             <div
               onClick={() => onLike(post._id)}
-              className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${post.likedBy.includes(currentUserId) ? "text-red-500" : ""}`}
+              className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${
+                post.likedBy.includes(currentUserId) ? "text-red-500" : ""
+              }`}
             >
               <Heart className="w-5 h-5" />
               <span>{post.likedBy.length}</span>
             </div>
             <div
               className="flex gap-2 cursor-pointer"
-              onClick={() => { onViewDetail(post._id) }}>
+              onClick={() => {
+                onViewDetail(post._id);
+              }}
+            >
               <MessageSquare className="w-5 h-5" />
               <p className="min-w-15"> Bình luận</p>
             </div>
           </div>
-          <ReportPostDialog postId={post._id} key={post._id} />
         </div>
-        
-
       </CardFooter>
 
       <hr />
 
       {latestComment && (
-        <div
-          className="flex items-start gap-2 px-4  mt-1 hover:bg-muted/60 rounded-md"
-        >
-          <img src={latestComment.commenter.avatar} className="w-8 h-8 rounded-full" />
+        <div className="flex items-start gap-2 px-4  mt-1 hover:bg-muted/60 rounded-md">
+          <img
+            src={latestComment.commenter.avatar}
+            className="w-8 h-8 rounded-full"
+          />
           <div className="bg-muted px-3 py-2 rounded-xl max-w-[80%]">
-            <p className="text-xs font-semibold">{latestComment.commenter.fullName}</p>
+            <p className="text-xs font-semibold">
+              {latestComment.commenter.fullName}
+            </p>
             <p className="text-sm text-foreground">{latestComment.message}</p>
           </div>
         </div>
@@ -250,7 +271,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
           Xem chi tiết
         </button>
       </div>
-
     </Card>
   );
 };

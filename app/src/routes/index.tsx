@@ -39,6 +39,7 @@ import DonateCancel from "@/pages/Donation/DonateCancel";
 import BlogsFeed from "@/pages/Blog/BlogsFeed";
 import ShelterRoute from "./ShelterRoute";
 import ShelterProfile from "@/components/shelter/shelter-management/profile/ShelterProfile";
+import ReturnRequestManagement from "@/components/shelter/shelter-management/return-request/ReturnRequestManagement";
 
 function AppRoutes() {
   return (
@@ -93,6 +94,7 @@ function AppRoutes() {
           <Route path="adoption-templates/:templateId" element={<TemplateDialog/>} />
           <Route path="adoption-forms" element={<AdoptionForms/>} />
           <Route path="adoption-forms/:formId" element={<AdoptionForm/>} />
+          <Route path="return-requests" element={<ReturnRequestManagement/>} />
    
         </Route>
       </Route>
