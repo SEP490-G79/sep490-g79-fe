@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Pet } from "@/types/Pet";
 import type { MissionForm } from "@/types/MissionForm";
 import { Separator } from "@/components/ui/separator";
-import { PhotoProvider, PhotoView } from 'react-photo-view';
+
 import {
   Dialog,
   DialogTrigger,
@@ -16,6 +16,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import dayjs from "dayjs";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -36,7 +53,7 @@ export default function PetSubmission() {
   const [selectedSubmission, setSelectedSubmission] = useState<MissionForm | null>(null);
   const navigate = useNavigate();
   const [showAnswers, setShowAnswers] = useState(true);
-
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   useEffect(() => {
     if (!submissions.length && petId) fetchSubmissions();
   }, [petId]);
@@ -53,17 +70,23 @@ export default function PetSubmission() {
     }
   };
 
-const updateSubmissionStatus = async (submissionId : string, status: string) =>{
-  try{
-    const updateStatus = await authAxios.patch(`${coreAPI}/adoption-submissions/update-submission-status/${shelterId}`,({submissionId, status}));
-    toast.success("Cập nhật trạng thái thành công");
-    fetchSubmissions();
-  }catch(error){
-    toast.error("Không thể cập nhật trạng thái");
+  const updateSubmissionStatus = async (submissionId: string, status: string) => {
+    try {
+      const updateStatus = await authAxios.patch(`${coreAPI}/adoption-submissions/update-submission-status/${shelterId}`, ({ submissionId, status }));
+      toast.success("Cập nhật trạng thái thành công");
+      fetchSubmissions();
+      return updateStatus.data.status;
+
+    } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.error ||
+      error.response?.data?.message || 
+      "Không thể cập nhật trạng thái"; 
+    toast.error(errorMessage);
+    }
+
+
   }
-  
-  
-}
 
   const statusOptions = ["pending", "interviewing", "reviewed", "approved", "rejected"];
   const statusLabels: Record<string, string> = {
@@ -276,28 +299,69 @@ const updateSubmissionStatus = async (submissionId : string, status: string) =>{
                       <span>Tài khoản bị cảnh báo do vi phạm nhiều lần quy định về nhận nuôi thú cưng – mức cảnh báo cao.</span>
                     </div>
                   )}
-                  <p>
-                    <strong>Trạng thái:</strong>{" "}
-                    {currentStatus === "approved" ? (
-                      <Badge className="text-sm px-2 py-1 font-medium text-foreground bg-green-400 rounded">
-                        {statusLabels["approved"]}
-                      </Badge>
-                    ) : (
-                      <select
-                        className="text-sm border rounded px-2 py-1 transition-colors duration-150 bg-primary text-white"
-                        value={currentStatus}
-                      onChange={(e) =>
-                        updateSubmissionStatus(selectedSubmission._id, e.target.value)
-                      }
-                      >
-                        {(options || []).map((status) => (
-                          <option key={status} value={status}>
-                            {statusLabels[status]}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <strong>Trang thái: </strong>
+                    <AlertDialog open={!!pendingStatus} onOpenChange={(open) => !open && setPendingStatus(null)}>
+                      {currentStatus === "approved" ? (
+                        <Badge className="text-sm px-2 py-1 font-medium text-foreground bg-green-400 rounded">
+                          {statusLabels["approved"]}
+                        </Badge>
+                      ) : (
+                        <Select
+                          value={currentStatus}
+                          onValueChange={(nextStatus) => {
+                            if (nextStatus !== currentStatus) {
+                              setPendingStatus(nextStatus);
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-[180px] bg-primary text-white border-none dark:bg-primary ">
+                            <SelectValue placeholder="Chọn trạng thái" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {options.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {statusLabels[status]}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      <AlertDialog open={!!pendingStatus} onOpenChange={(open) => !open && setPendingStatus(null)}>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              {pendingStatus
+                                ? `Xác nhận chuyển trạng thái thành "${statusLabels[pendingStatus]}"`
+                                : "Không có trạng thái để cập nhật"}
+                            </AlertDialogTitle>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Hủy</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={async () => {
+                                if (pendingStatus) {
+                                  const updatedStatus = await updateSubmissionStatus(selectedSubmission._id, pendingStatus);
+                                  if (updatedStatus) {
+                                    setSelectedSubmission({
+                                      ...selectedSubmission,
+                                      status: updatedStatus,
+                                    });
+                                    setPendingStatus(null);
+                                  }
+                                }
+                              }}
+                            >
+                              Đồng ý
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
+
+                    </AlertDialog>
+                  </div>
+
 
                   <div className="flex items-center gap-2">
                     <p ><strong>Mức độ phù hợp:</strong></p>
