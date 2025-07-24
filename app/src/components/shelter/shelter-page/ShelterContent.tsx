@@ -2,8 +2,11 @@ import PetCard from "@/components/landing-page/PetCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ShelterPosts from "../shelter-post/ShelterPost";
 import Blogs from "./shelter-blog/Blogs";
+import AppContext from "@/context/AppContext";
+import { useContext } from "react";
 
 function ShelterContent() {
+  const { petsList } = useContext(AppContext);
   return (
     <>
       <div className="min-h-screen">
@@ -33,11 +36,9 @@ function ShelterContent() {
           {/* Tab contents */}
           <TabsContent value="pets" className="pt-4">
             <div className="grid grid-cols-3 gap-3">
-              <PetCard />
-              <PetCard />
-              <PetCard />
-              <PetCard />
-              <PetCard />
+              {petsList?.map((pet: any) => (
+                <PetCard key={pet?._id} pet={pet} />
+              ))}
             </div>
           </TabsContent>
           <TabsContent value="posts" className="pt-4">
