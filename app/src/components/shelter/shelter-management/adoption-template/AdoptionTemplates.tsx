@@ -286,6 +286,7 @@ export function AdoptionTemplates() {
     });
     return arr;
   }, [filtered, sortOption]);
+
   if (isLoading) {
     return (
       <div className="w-full">
@@ -332,6 +333,78 @@ export function AdoptionTemplates() {
   //     pagination,
   //   },
   // });
+
+  if (!shelterTemplates || shelterTemplates.length == 0) {
+    return (
+      <div className="w-full">
+        <div className="flex justify-between items-center py-4">
+          <div className="flex justify-around basis-1/3 gap-5">
+            <Input
+              placeholder="Tìm kiếm ..."
+              className="max-w-sm"
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+              }}
+            />
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant={"outline"}>
+                  <SlidersHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel className="text-sm text-(--muted-foreground)">
+                  Sắp xếp theo
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  <Checkbox
+                    id="terms"
+                    checked={sortOption.species}
+                    onCheckedChange={(checked: boolean) =>
+                      setSortOption({ ...sortOption, species: checked })
+                    }
+                  />
+                  <span className="text-sm">Loài vật</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  <Checkbox
+                    id="terms"
+                    checked={sortOption.alphabetical}
+                    onCheckedChange={(checked: boolean) =>
+                      setSortOption({ ...sortOption, alphabetical: checked })
+                    }
+                  />
+                  <span className="text-sm">A-Z</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div className=" basis-1/3 flex justify-end">
+            <CreateDialog />
+          </div>
+        </div>
+        <div className="flex flex-col items-center flex-wrap mt-30">
+          <h2 className="basis-1 text-xl font-semibold text-(--primary)">
+            Không có mẫu đơn nào
+          </h2>
+          <p className="basis-1 text-sm text-(--muted-foreground) mb-4">
+            Hãy tạo mẫu đơn nhận nuôi thú cưng đầu tiên của bạn!
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -401,7 +474,7 @@ export function AdoptionTemplates() {
             >
               <AvatarFallback className="rounded-none">
                 <span className="text-6xl font-normal">
-                  {template.title?.charAt(0).toUpperCase() ||"T"}
+                  {template.title?.charAt(0).toUpperCase() || "T"}
                 </span>
               </AvatarFallback>
             </Avatar>
