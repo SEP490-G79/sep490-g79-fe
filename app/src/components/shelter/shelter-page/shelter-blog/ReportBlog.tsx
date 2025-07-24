@@ -20,21 +20,28 @@ import { Button } from "@/components/ui/button";
 import { useContext, useRef, useState } from "react";
 import { toast } from "sonner";
 import useAuthAxios from "@/utils/authAxios";
-import { Input } from "@/components/ui/input";
-import { Flag } from "lucide-react";
 import AppContext from "@/context/AppContext";
+import { Flag } from "lucide-react";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 
 const predefinedReasons = [
-  "Người dùng đăng thông tin sai sự thật",
-  "Người dùng có hành vi lừa đảo",
-  "Lời nói kích động hoặc quấy rối",
-  "Vi phạm quy định cộng đồng",
-  "Sử dụng tài khoản sai mục đích",
-  "Khác",
+  "Blog đăng thông tin sai lệch về thú cưng",
+  "Chứa hình ảnh hoặc nội dung bạo hành động vật",
+  "Quảng cáo mua bán thú cưng trái phép",
+  "Xúi giục hoặc vi phạm quy định nhận nuôi thú cưng",
+  "Nội dung vi phạm pháp luật Việt Nam",
+  "Spam, quảng cáo sản phẩm/dịch vụ không liên quan",
+  "Sử dụng ngôn từ thô tục, kích động hoặc thiếu tôn trọng",
+  "Không phù hợp với cộng đồng yêu động vật và thú cưng",
+  "Khác (vui lòng nêu rõ)",
 ];
 
-export default function ReportUserDialog({ userId }: { userId: string }) {
+export default function ReportBlogDialog({
+  blogId,
+}: {
+  blogId: string;
+}) {
   const authAxios = useAuthAxios();
   const closeRef = useRef<HTMLButtonElement>(null);
   const [selectedReason, setSelectedReason] = useState<string>("");
@@ -61,6 +68,7 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
     }
   };
 
+
   const handleSubmit = async () => {
     try {
       setLoading(true);
@@ -73,8 +81,8 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
       }
 
       const formData = new FormData();
-      formData.append("reportType", "user");
-      formData.append("userId", userId);
+      formData.append("reportType", "blog");
+      formData.append("blogId", blogId);
       formData.append("reason", reason);
 
       photos &&
@@ -82,7 +90,7 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
           formData.append("photos", file);
         });
 
-      await authAxios.post(`${reportAPI}/report-user`, formData);
+      await authAxios.post(`${reportAPI}/report-blog`, formData);
 
       toast.success("Đã gửi báo cáo thành công.");
       closeRef.current?.click();
@@ -99,22 +107,21 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
   return (
     <Dialog onOpenChange={(open) => {
       if(!open){
+        setPhotos([]);
         setSelectedReason("");
         setCustomReason("");
-        setPhotos([]);
       }
     }}>
       <DialogTrigger asChild>
-        <DropdownMenuItem onSelect={e => e.preventDefault()}>
+        <p className="flex text-sm underline text-destructive hover:text-amber-500 cursor-pointer">
           <Flag className="w-4 h-4 mr-2 text-destructive" /> Báo cáo
-        </DropdownMenuItem>
+        </p>
       </DialogTrigger>
-
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Báo cáo người dùng</DialogTitle>
+          <DialogTitle>Báo cáo bài viết blog</DialogTitle>
           <DialogDescription>
-            Vui lòng chọn lý do báo cáo người dùng này
+            Vui lòng chọn lý do báo cáo phù hợp
           </DialogDescription>
         </DialogHeader>
 
@@ -124,7 +131,7 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
             value={selectedReason}
             onValueChange={(value) => setSelectedReason(value)}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-[30vw]">
               <SelectValue placeholder="Chọn lý do" />
             </SelectTrigger>
             <SelectContent>
@@ -146,7 +153,12 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
 
           {/* upload photo */}
           <label className="block text-sm font-medium">Ảnh bằng chứng</label>
-          <Input type="file" accept="image/*" multiple  onChange={handleUploadPhoto}/>
+          <Input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleUploadPhoto}
+          />
           <div className="flex gap-2 flex-wrap mt-2">
             {photos.map((photo: File, index: number) => (
               <div key={index} className="relative group">
@@ -175,11 +187,16 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button ref={closeRef} variant="outline">
+            <Button ref={closeRef} variant="outline" hidden={loading}>
               Hủy
             </Button>
           </DialogClose>
-          <Button type="submit" variant="default" onClick={handleSubmit} disabled={loading}>
+          <Button
+            type="submit"
+            variant="default"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
             {loading ? "Đang gửi..." : "Gửi báo cáo"}
           </Button>
         </DialogFooter>
