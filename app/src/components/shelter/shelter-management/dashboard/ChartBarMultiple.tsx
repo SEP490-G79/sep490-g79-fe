@@ -8,7 +8,6 @@ import {
   XAxis,
   CartesianGrid,
   ResponsiveContainer,
-  LabelList,
   Tooltip,
 } from "recharts";
 import { TrendingUp } from "lucide-react";
@@ -60,7 +59,7 @@ export function ChartBarMultiple() {
   }, [shelterId]);
 
   return (
-    <Card className="shadow-xl border-none">
+    <Card className="h-full w-full shadow-xl border-none">
       <CardHeader>
         <CardTitle className="text-lg font-bold text-gray-800">
           Biểu đồ mẫu đơn nhận nuôi

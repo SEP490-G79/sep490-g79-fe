@@ -7,11 +7,40 @@ import imageCompression from "browser-image-compression";
 
 interface Props {
   imageUrl: string;
-  setForm: React.Dispatch<React.SetStateAction<any>>;
-  speciesList: any[];
-  breedList: any[];
+  setForm: React.Dispatch<React.SetStateAction<unknown>>;
+  speciesList: unknown[];
+  breedList: unknown[];
+}
+interface Species {
+  _id: string;
+  name: string;
+  [key: string]: unknown;
 }
 
+interface Breed {
+  _id: string;
+  name: string;
+  [key: string]: unknown;
+}
+
+interface AnalyzeResult {
+  age?: number;
+  weight?: number;
+  color?: string;
+  identificationFeature?: string;
+  species?: string;
+  breed?: string;
+  description?: string;
+}
+
+interface FormState {
+  age?: number;
+  weight?: number;
+  color?: string;
+  identificationFeature?: string;
+  species?: string;
+  breeds?: string[];
+}
 export default function PetImageAIButton({
   imageUrl,
   setForm,
@@ -100,19 +129,22 @@ export default function PetImageAIButton({
 
   const getMatchedSpecies = (speciesRaw: string | undefined) => {
     const normalized = speciesRaw?.toLowerCase().trim();
-    return speciesList.find((s) => s.name.toLowerCase().trim() === normalized);
+    return (speciesList as Species[]).find(
+      (s) => s.name.toLowerCase().trim() === normalized
+    );
   };
 
   const getMatchedBreed = (
     breedRaw: string | undefined,
     description: string | undefined
   ) => {
-    return breedList.find(
+    return (breedList as Breed[]).find(
       (b) =>
         b.name.toLowerCase() === breedRaw?.toLowerCase() ||
         description?.toLowerCase().includes(b.name.toLowerCase())
     );
   };
+
   const getMatchedColors = (rawColor: string | undefined) => {
     if (!rawColor) return [];
     const extractedColors = rawColor
@@ -125,23 +157,26 @@ export default function PetImageAIButton({
       )
     );
   };
-
   const mapResultToForm = (
-    result: any,
-    matchedSpecies: any,
-    matchedBreed: any
+    result: unknown,
+    matchedSpecies: unknown,
+    matchedBreed: unknown
   ) => {
-    const colorArray = getMatchedColors(result.color);
+    const r = result as AnalyzeResult;
+    const species = matchedSpecies as Species;
+    const breed = matchedBreed as Breed;
 
-    setForm((prev: any) => ({
+    const colorArray = getMatchedColors(r.color);
+
+    setForm((prev: FormState) => ({
       ...prev,
-      age: result.age || prev.age,
-      weight: result.weight || prev.weight,
+      age: r.age ?? prev.age,
+      weight: r.weight ?? prev.weight,
       color: colorArray.join(", ") || prev.color,
       identificationFeature:
-        result.identificationFeature || prev.identificationFeature,
-      species: matchedSpecies?._id || prev.species,
-      breeds: matchedBreed ? [matchedBreed._id] : prev.breeds,
+        r.identificationFeature ?? prev.identificationFeature,
+      species: species?._id ?? prev.species,
+      breeds: breed ? [breed._id] : prev.breeds,
     }));
   };
 

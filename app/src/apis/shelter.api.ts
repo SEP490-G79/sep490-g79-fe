@@ -143,3 +143,21 @@ export const getAdoptionFormsByWeek = async (
   );
   return response.data;
 };
+
+export interface SubmissionPieData {
+  approved: number;
+  rejected: number;
+  pending: number;
+}
+
+export const getSubmissionStatistics = async (
+  shelterId: string
+): Promise<SubmissionPieData> => {
+  const response = await axios.get(
+    `${BASE_URL}/shelters/${shelterId}/statistics/submission`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  return response.data;
+};

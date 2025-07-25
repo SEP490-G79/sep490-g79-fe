@@ -3,37 +3,23 @@
 import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { SectionCard } from "@/components/ui/section-card";
-import { SectionCardContainer } from "@/components/ui/section-card-container";
-import { ChartAreaInteractive } from "@/components/ui/chart-area-interactive";
-import { PawPrint, Check, BookOpenTextIcon, UsersIcon } from "lucide-react";
-import { toast } from "sonner";
-import AppContext from "@/context/AppContext";
-import {
+  getAdoptedPetsByWeek,
   getShelterDashboardStatistics,
   getShelterProfile,
-  getAdoptedPetsByWeek,
+  getSubmissionStatistics,
   type ShelterDashboardStatistics,
   type ShelterProfile,
+  type SubmissionPieData,
   type WeeklyAdoptionStat,
 } from "@/apis/shelter.api";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
+import AppContext from "@/context/AppContext";
+import { toast } from "sonner";
+import { PawPrint, Check, BookOpenTextIcon, UsersIcon } from "lucide-react";
+
+import { SectionCard } from "@/components/ui/section-card";
 import { ChartBarMultiple } from "@/components/shelter/shelter-management/dashboard/ChartBarMultiple";
 import { AdoptionLineChart } from "@/components/shelter/shelter-management/dashboard/AdoptionLineChart";
+import { SubmissionPieChart } from "@/components/shelter/shelter-management/dashboard/SubmissionPieChart";
 
 const ShelterDashboard = () => {
   const { shelterId } = useParams();
@@ -45,14 +31,22 @@ const ShelterDashboard = () => {
   const [weeklyAdoptionData, setWeeklyAdoptionData] = useState<
     WeeklyAdoptionStat[]
   >([]);
+  const [submissionStats, setSubmissionStats] =
+    useState<SubmissionPieData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!shelterId) return;
 
-    const findShelter = shelters?.find((s) => s._id === shelterId);
-    if (findShelter) {
-      setShelter(findShelter);
+    const found = shelters?.find((s) => s._id === shelterId);
+    if (found) {
+      const transformedShelter = {
+        ...(found as unknown as Partial<ShelterProfile>),
+        shelterCode: "",
+        hotline: String((found as any).hotline),
+      } as ShelterProfile;
+
+      setShelter(transformedShelter);
     } else {
       getShelterProfile(shelterId)
         .then((data) => setShelter(data))
@@ -65,18 +59,17 @@ const ShelterDashboard = () => {
 
     setLoading(true);
     getShelterDashboardStatistics(shelterId)
-      .then((data) => {
-        setDashboardData(data);
-      })
-      .catch((err) => {
-        console.error("Dashboard error:", err);
-        toast.error("Không thể tải dữ liệu dashboard");
-      })
+      .then(setDashboardData)
+      .catch(() => toast.error("Không thể tải dữ liệu dashboard"))
       .finally(() => setLoading(false));
 
     getAdoptedPetsByWeek(shelterId)
-      .then((data) => setWeeklyAdoptionData(data))
-      .catch(() => toast.error("Không thể tải biểu đồ nhận nuôi theo tuần"));
+      .then(setWeeklyAdoptionData)
+      .catch(() => toast.error("Không thể tải biểu đồ nhận nuôi"));
+
+    getSubmissionStatistics(shelterId)
+      .then(setSubmissionStats)
+      .catch(() => toast.error("Không thể tải dữ liệu đơn nhận nuôi"));
   }, [shelterId, shelter]);
 
   if (!shelter) {
@@ -127,12 +120,24 @@ const ShelterDashboard = () => {
           isHigher={false}
         />
       </div>
-
-      {/* Chart tuần */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
-        <AdoptionLineChart data={weeklyAdoptionData} />
-
-        <ChartBarMultiple />
+      <div>
+        <div className="mt-8">
+          <AdoptionLineChart data={weeklyAdoptionData} />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10 h-[380px] mb-16">
+          {submissionStats && (
+            <div className="h-full">
+              <SubmissionPieChart
+                approved={submissionStats.approved}
+                rejected={submissionStats.rejected}
+                pending={submissionStats.pending}
+              />
+            </div>
+          )}
+          <div className="h-full">
+            <ChartBarMultiple />
+          </div>
+        </div>
       </div>
     </div>
   );

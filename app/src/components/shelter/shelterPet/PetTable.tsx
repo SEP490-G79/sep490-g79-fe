@@ -26,15 +26,38 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 
+interface Pet {
+  bio: string;
+  sterilizationStatus: unknown;
+  identificationFeature: string;
+  color: string;
+  isMale: unknown;
+  age: string;
+  weight: string;
+  species: unknown;
+  petCode: string;
+  photos?: string[];
+  name: string;
+  status: string;
+  breeds?: Array<
+    | string
+    | {
+        _id: unknown;
+        name: string;
+      }
+  >;
+  _id?: string;
+}
+
 interface PetTableProps {
-  data: any[];
+  data: Pet[];
   total: number;
   page: number;
   limit: number;
   onPageChange: (newPage: number) => void;
-  onEdit: (pet: any) => void;
+  onEdit: (pet: Pet) => void;
   onDelete: (petId: string) => void;
-  onView: (pet: any) => void;
+  onView: (pet: Pet) => void;
 }
 const statusMap = Object.fromEntries(
   PET_STATUSES.map(({ value, label }) => [value, label])
@@ -50,7 +73,7 @@ export default function PetTable({
   onDelete,
   onView,
 }: PetTableProps) {
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<Pet>[] = [
     {
       accessorKey: "petCode",
       header: "#Mã thú nuôi",
@@ -83,7 +106,13 @@ export default function PetTable({
       cell: ({ row }) => (
         <span>
           {(row.original.breeds || [])
-            .map((b: any) => (typeof b === "string" ? b : b.name))
+            .map((b: unknown) =>
+              typeof b === "string"
+                ? b
+                : typeof b === "object" && b !== null && "name" in b
+                ? (b as { name: string }).name
+                : ""
+            )
             .join(", ")}
         </span>
       ),
@@ -146,15 +175,23 @@ export default function PetTable({
           ))}
         </TableHeader>
         <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
+          {table.getRowModel().rows.length > 0 ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="text-center py-6">
+                Không có thú cưng nào.
+              </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
 
