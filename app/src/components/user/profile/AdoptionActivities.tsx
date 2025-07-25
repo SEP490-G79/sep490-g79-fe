@@ -6,6 +6,7 @@ import {
   TabsContent,
 } from "@/components/ui/tabs";
 import PetCard from "@/components/landing-page/PetCard";
+import ReturnRequestList from "@/components/user/return-request/ReturnRequestList";
 import {
   Pagination,
   PaginationContent,
@@ -63,8 +64,14 @@ function PaginationSection({
   );
 }
 
-function AdoptionActivities() {
-  const [activeTab, setActiveTab] = useState("adopted");
+type Props = {
+  userId: string;
+};
+
+export default function AdoptionActivities({ userId }: Props) {
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem("adoptionActivitiesTab") || "adopted";
+  });
   const [adoptedPage, setAdoptedPage] = useState(1);
   const [activityPage, setActivityPage] = useState(1);
   const [selectedShelter, setSelectedShelter] = useState("Tất cả");
@@ -77,17 +84,18 @@ function AdoptionActivities() {
 
 
   useEffect(() => {
-    authAxios.get(`${coreAPI}/adoption-submissions/get-adoption-request-list`)
+    if (!userId) return;
+    authAxios.get(`${coreAPI}/adoption-submissions/user/${userId}`)
       .then((res) => {
         setSubmissions(res.data);
-
-      }).catch((error) => {
-        toast.error("Không thể lấy thông tin thú cưng");
       })
-  }, [activeTab])
+      .catch(() => {
+        toast.error("Không thể lấy thông tin hoạt động nhận nuôi");
+      });
+  }, [activeTab, userId]);
 
   const adoptedPets = petsList.filter((pet: any) => {
-    return pet.adopter?._id === userProfile?._id;
+    return pet.adopter?._id === userId;
   });
 
 
@@ -143,9 +151,22 @@ function AdoptionActivities() {
     navigate(`/adoption-form/${petId}/${submissionId}`);
   };
 
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem("adoptionActivitiesTab");
+    };
+  }, []);
+
 
   return (
-    <Tabs defaultValue="adopted" onValueChange={setActiveTab} className="space-y-4 mb-10">
+    <Tabs
+      value={activeTab}
+      onValueChange={(value) => {
+        setActiveTab(value);
+        localStorage.setItem("adoptionActivitiesTab", value);
+      }}
+      className="space-y-4 mb-10"
+    >
       <TabsList className="ml-auto mb-4">
         <TabsTrigger value="adopted">Thú đã nhận nuôi</TabsTrigger>
         <TabsTrigger value="activities">Hoạt động nhận nuôi</TabsTrigger>
@@ -301,12 +322,10 @@ function AdoptionActivities() {
       </TabsContent>
 
       <TabsContent value="return-request">
-        <div className="text-center text-muted-foreground py-10">
-          Tính năng này hiện đang được phát triển.
-        </div>
+        <ReturnRequestList userId={userId} />
       </TabsContent>
     </Tabs>
   );
 }
 
-export default AdoptionActivities;
+

@@ -18,8 +18,9 @@ export default function ChangePassword() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
-    const { userAPI } = useContext(AppContext);
+    const { user, userAPI } = useContext(AppContext);
     const authAxios = useAuthAxios();
+    const isGoogleUser = !!user?.googleId;
 
     const handleChangePassword = async () => {
         if (!oldPassword || !newPassword || !confirmPassword) {
@@ -54,6 +55,18 @@ export default function ChangePassword() {
             setLoading(false);
         }
     };
+    if (isGoogleUser) {
+        return (
+            <Card className="shadow-none border shadow-sm">
+                <CardHeader>
+                    <CardTitle className="text-xl font-semibold mb-1">Đổi mật khẩu</CardTitle>
+                    <p className="text-muted-foreground text-sm">
+                        Bạn đã đăng nhập bằng Google. Tính năng đổi mật khẩu không khả dụng.
+                    </p>
+                </CardHeader>
+            </Card>
+        );
+    }
     return (
         <Card className="shadow-none border shadow-sm">
             <CardHeader>

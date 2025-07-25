@@ -391,7 +391,7 @@ const Newfeed = () => {
               setLocation({ lat: 0, lng: 0 });
             }
           }}>
-            <DialogContent className="sm:max-w-[600px] bg-background rounded-xl overflow-hidden border border-border p-0">
+            <DialogContent className="sm:max-w-[600px] bg-background rounded-xl overflow-visible border border-border p-0">
               <DialogHeader className="bg-background px-6 pt-4 pb-2">
                 <DialogTitle className="text-lg font-semibold">Tạo bài viết</DialogTitle>
               </DialogHeader>

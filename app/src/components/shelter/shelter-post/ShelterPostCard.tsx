@@ -17,6 +17,7 @@ import { Globe, GlobeLock, Ellipsis, Pencil, Trash2, MapPinIcon, Heart, MessageS
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import dayjs from "dayjs";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 type ShelterPostCardProps = {
   post: any;
@@ -54,17 +55,28 @@ export default function ShelterPostCard({
         <CardTitle className="text-lg font-semibold">
           <div className="flex items-start justify-between">
             <div className="flex gap-x-3">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={post.shelter?.avatar || "/placeholder.svg"} alt="shelter avatar" />
-                <AvatarFallback>{post.shelter?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-              </Avatar>
+              <Link
+                to={`/shelters  /${post.shelter?._id}`}
+                className="flex gap-x-3 items-start hover:underline"
+              >
+                <Avatar className="w-10 h-10">
+                  <AvatarImage src={post.shelter?.avatar || "/placeholder.svg"} alt="shelter avatar" />
+                  <AvatarFallback>{post.shelter?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                </Avatar>
+              </Link>
               <div className="flex flex-col text-sm">
-                <span>{post.shelter?.name}</span>
+                <Link
+                  to={`/shelters/${post.shelter?._id}`}
+                  className="hover:underline"
+                >
+                  <span className="font-medium">{post.shelter?.name}</span>
+                </Link>
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
                   <span>{formatCreatedAt(post.createdAt)}</span>
                   {post.privacy === "public" ? <Globe className="w-4 h-4" /> : <GlobeLock className="w-4 h-4" />}
                 </div>
               </div>
+
             </div>
 
             {(isManager || isOwner) && (

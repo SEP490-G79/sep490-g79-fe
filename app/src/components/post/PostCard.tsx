@@ -33,6 +33,7 @@ import type { PostType } from "@/types/Post";
 import type { CommentType } from "@/types/Comment";
 import { useState } from "react";
 import ReportPostDialog from "./ReportPost";
+import { Link } from "react-router-dom";
 
 interface PostCardProps {
   post: PostType;
@@ -69,12 +70,38 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
         <CardTitle className="text-lg font-semibold">
           <div className="flex items-start justify-between">
             <div className="flex gap-x-3">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={post.user.avatar || "/placeholder.svg"} alt="user avatar" />
-                <AvatarFallback>{post.user.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-              </Avatar>
+              <Link
+                to={
+                  post.shelter
+                    ? `/shelters/${post.shelter._id}`
+                    : `/profile/${post.createdBy}`
+                }
+                className="flex gap-x-3 items-start hover:underline"
+              >
+                <Avatar className="w-10 h-10">
+                  <AvatarImage
+                    src={post.shelter?.avatar || post.user.avatar || "/placeholder.svg"}
+                    alt="avatar"
+                  />
+                  <AvatarFallback>
+                    {(post.shelter?.name || post.user.fullName)?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+
               <div className="flex flex-col justify-top text-sm">
-                <span>{post.shelter?.name || post.user.fullName}</span>
+                <Link
+                  to={
+                    post.shelter
+                      ? `/shelters/${post.shelter._id}`
+                      : `/profile/${post.createdBy}`
+                  }
+                  className="hover:underline"
+                >
+                  <span className="font-medium">
+                    {post.shelter?.name || post.user.fullName}
+                  </span>
+                </Link>
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
                   <span>{formatCreatedAt(post.createdAt)}</span>
                   {post.privacy.includes("public") ? (
@@ -225,9 +252,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
           <div className="flex justify-between gap-25">
             <div
               onClick={() => onLike(post._id)}
-              className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${
-                post.likedBy.includes(currentUserId) ? "text-red-500" : ""
-              }`}
+              className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${post.likedBy.includes(currentUserId) ? "text-red-500" : ""
+                }`}
             >
               <Heart className="w-5 h-5" />
               <span>{post.likedBy.length}</span>
