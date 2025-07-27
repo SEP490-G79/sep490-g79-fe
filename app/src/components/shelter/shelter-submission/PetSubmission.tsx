@@ -47,7 +47,7 @@ export default function PetSubmission() {
   const { shelterId, petId } = useParams();
   const { petsList, submissionsByPetId, setSubmissionsByPetId, coreAPI } = useAppContext();
   const authAxios = useAuthAxios();
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("pending");
   const pet = petsList.find((p: Pet) => p._id === petId);
   const submissions = submissionsByPetId[petId ?? ""] || [];
   const [selectedSubmission, setSelectedSubmission] = useState<MissionForm | null>(null);
@@ -88,9 +88,10 @@ export default function PetSubmission() {
 
   }
 
-  const statusOptions = ["pending", "interviewing", "reviewed", "approved", "rejected"];
+  const statusOptions = ["pending","scheduling", "interviewing", "reviewed", "approved", "rejected"];
   const statusLabels: Record<string, string> = {
     pending: "Chờ duyệt",
+    scheduling: "Lên lịch phỏng vấn",
     interviewing: "Chờ phỏng vấn",
     reviewed: "Đã phỏng vấn",
     approved: "Đồng ý",
@@ -109,6 +110,7 @@ export default function PetSubmission() {
   const getStatusLabel = (status: string) => {
     const statusMap: Record<string, string> = {
       pending: "Chờ duyệt",
+      scheduling: "Lên lịch phỏng vấn",
       interviewing: "Chờ phỏng vấn",
       reviewed: "Đã phỏng vấn",
       approved: "Đồng ý",
@@ -117,9 +119,11 @@ export default function PetSubmission() {
     return statusMap[status] || status;
   };
 
+
   const statusOptionsMap: { [key: string]: string[] } = {
-    pending: ["pending", "interviewing", "rejected"],
-    interviewing: ["interviewing", "pending", "reviewed"],
+    pending: ["pending", "scheduling", "rejected"],
+    scheduling: ["scheduling", "pending", "interviewing", "rejected"],
+    interviewing: ["interviewing", "rejected", "reviewed"],
     reviewed: ["reviewed", "approved", "rejected"],
     rejected: ["rejected", "pending", "interviewing"],
   };
@@ -146,13 +150,7 @@ export default function PetSubmission() {
       </div>
       <div className="flex items-center flex-wrap justify-between gap-2 mb-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <button
-            className={`px-3 py-1  rounded-full border text-sm ${statusFilter === "" ? "bg-primary text-white" : "bg-white dark:bg-gray-800"
-              }`}
-            onClick={() => setStatusFilter("")}
-          >
-            Tất cả ({submissions.length})
-          </button>
+          
           {statusOptions.map((status) => (
             <button
               key={status}
