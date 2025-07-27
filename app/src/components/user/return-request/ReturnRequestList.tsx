@@ -201,7 +201,7 @@ export default function ReturnRequestList({ userId }: Props) {
                     }}
                 />
             )}
-            {editingRequest && !isUser && (
+            {deletingRequest && !isUser && (
                 <AlertDialog open={true} onOpenChange={(open) => !open && setDeletingRequest(null)}>
                     <AlertDialogContent>
                         <AlertDialogHeader>

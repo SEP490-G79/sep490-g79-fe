@@ -705,9 +705,16 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
 
             {post.latestComment && (
               <div className="flex items-start gap-2 px-4 mt-1 hover:bg-muted/60 rounded-md">
-                <img src={post.latestComment.commenter.avatar} className="w-8 h-8 rounded-full" />
+                <Link to={`/profile/${post.latestComment.commenter._id}`} className="flex-shrink-0">
+                  <Avatar>
+                    <AvatarImage src={post.latestComment.commenter.avatar || "/placeholder.svg"} />
+                    <AvatarFallback>{post.latestComment.commenter.fullName?.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                </Link>
                 <div className="bg-muted px-3 py-2 rounded-xl max-w-[80%]">
-                  <p className="text-xs font-semibold">{post.latestComment.commenter.fullName}</p>
+                  <Link to={`/profile/${post.latestComment.commenter._id}`} className="text-sm font-medium hover:underline">
+                    {post.latestComment.commenter.fullName}
+                  </Link>
                   <p className="text-sm">{post.latestComment.message}</p>
                 </div>
               </div>
@@ -715,7 +722,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
 
             <div className="px-4 pb-3">
               <button onClick={() => setDetailPostId(post._id)} className="text-gray-600 hover:underline text-sm cursor-pointer">
-                Xem chi tiết
+                Xem thêm bình luận
               </button>
             </div>
           </Card>

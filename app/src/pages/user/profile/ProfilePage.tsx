@@ -23,6 +23,9 @@ function ProfilePage() {
   const [profile, setProfile] = useState<User | null>(null);
   const { userProfile, userAPI, } = useContext(AppContext);
   const isOwnProfile = !userId || userId === userProfile?._id;
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
 
   useEffect(() => {
     const idToFetch = userId || userProfile?._id;

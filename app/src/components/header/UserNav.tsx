@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect } from "react";
 import useAuthAxios from "@/utils/authAxios";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
@@ -128,11 +128,14 @@ function UserNav() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-            <Avatar>
+            <Avatar className="border border-primary">
               <AvatarImage
                 src={user?.avatar}
                 className="w-full h-full object-cover"
               />
+              <AvatarFallback className="text-sm">
+                {user?.fullName?.charAt(0).toUpperCase() || "?"}
+              </AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
@@ -184,7 +187,7 @@ function UserNav() {
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
-              <Link to="/">Lịch sử ủng hộ</Link>
+              <Link to="/donation-history">Lịch sử ủng hộ</Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />

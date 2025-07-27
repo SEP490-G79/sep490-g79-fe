@@ -202,7 +202,7 @@ export default function ShelterPostCard({
           onClick={() => onViewDetail(post._id)}
           className="text-gray-600 hover:underline text-sm cursor-pointer"
         >
-          Xem chi tiết
+          Xem thêm bình luận
         </button>
       </div>
     </Card>

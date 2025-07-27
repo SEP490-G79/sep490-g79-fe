@@ -4,11 +4,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
-import { useEffect, useState, useContext } from "react";
+import { useState, useContext } from "react";
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react";
 import AppContext from "@/context/AppContext";
-import axios from "axios"
 import useAuthAxios from "@/utils/authAxios";
 
 export default function ChangePassword() {
