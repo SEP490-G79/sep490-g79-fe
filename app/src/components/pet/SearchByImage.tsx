@@ -94,8 +94,8 @@ export function SearchByImage({ setFilters, setIsLoading }: Props) {
         setFilters((prev) => ({
           ...prev,
           species: res.data.species,
-          breeds: res.data.breeds,
-          colors: res.data.colors,
+          breed: res.data.breeds,
+          // colors: res.data.colors,
         }));
       })
       .catch((err) => {

@@ -121,6 +121,7 @@ export default function PetSubmission() {
     pending: ["pending", "interviewing", "rejected"],
     interviewing: ["interviewing", "pending", "reviewed"],
     reviewed: ["reviewed", "approved", "rejected"],
+    rejected: ["rejected", "pending", "interviewing"],
   };
 
   const currentStatus = selectedSubmission?.status || "";
