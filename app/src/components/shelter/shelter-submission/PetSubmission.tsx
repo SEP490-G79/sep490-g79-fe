@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import type { Pet } from "@/types/Pet";
 import type { MissionForm } from "@/types/MissionForm";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
 
 import {
   Dialog,
@@ -36,6 +39,7 @@ import {
 import dayjs from "dayjs";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { DateTimePicker } from "./DateTimePicker";
 function getColorBarClass(total: number): string {
   if (total <= 29) return "bg-red-500";
   if (total >= 30 && total <= 59) return "bg-yellow-400";
@@ -45,7 +49,7 @@ function getColorBarClass(total: number): string {
 
 export default function PetSubmission() {
   const { shelterId, petId } = useParams();
-  const { petsList, submissionsByPetId, setSubmissionsByPetId, coreAPI } = useAppContext();
+  const { petsList, submissionsByPetId, setSubmissionsByPetId, coreAPI, userProfile, shelters } = useAppContext();
   const authAxios = useAuthAxios();
   const [statusFilter, setStatusFilter] = useState<string>("pending");
   const pet = petsList.find((p: Pet) => p._id === petId);
@@ -54,6 +58,26 @@ export default function PetSubmission() {
   const navigate = useNavigate();
   const [showAnswers, setShowAnswers] = useState(true);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [scheduleData, setScheduleData] = useState({
+    availableFrom: new Date(),
+    availableTo: new Date(),
+    method: "",
+  });
+
+  const isShelterManager = shelters?.some((shelter) => {
+    if (shelter._id !== shelterId) return false;
+
+    return shelter.members?.some((member: any) => {
+      const roles = member.roles;
+      return (
+        member._id === userProfile?._id &&
+        (roles === "manager" || (Array.isArray(roles) && roles.includes("manager")))
+      );
+    });
+  });
+
+
   useEffect(() => {
     if (!submissions.length && petId) fetchSubmissions();
   }, [petId]);
@@ -78,17 +102,41 @@ export default function PetSubmission() {
       return updateStatus.data.status;
 
     } catch (error: any) {
-    const errorMessage =
-      error.response?.data?.error ||
-      error.response?.data?.message || 
-      "Không thể cập nhật trạng thái"; 
-    toast.error(errorMessage);
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        "Không thể cập nhật trạng thái";
+      toast.error(errorMessage);
     }
-
-
   }
 
-  const statusOptions = ["pending","scheduling", "interviewing", "reviewed", "approved", "rejected"];
+  const createInterviewSchedule = async () => {
+    try {
+      const res = await authAxios.post(
+        `${coreAPI}/adoption-submissions/schedule-interview/${shelterId}`,
+        {
+          submissionId: selectedSubmission?._id,
+          availableFrom: scheduleData.availableFrom,
+          availableTo: scheduleData.availableTo,
+          method: scheduleData.method,
+          performedBy: selectedSubmission?.performedBy?._id,
+        }
+      );
+
+      toast.success("Tạo lịch phỏng vấn thành công");
+      setShowScheduleDialog(false);
+      fetchSubmissions();
+      setSelectedSubmission({
+        ...selectedSubmission!,
+        status: "interviewing",
+      });
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Lỗi tạo lịch phỏng vấn");
+    }
+  };
+
+
+  const statusOptions = ["pending", "scheduling", "interviewing", "reviewed", "approved", "rejected"];
   const statusLabels: Record<string, string> = {
     pending: "Chờ duyệt",
     scheduling: "Lên lịch phỏng vấn",
@@ -150,7 +198,7 @@ export default function PetSubmission() {
       </div>
       <div className="flex items-center flex-wrap justify-between gap-2 mb-4">
         <div className="flex items-center gap-2 flex-wrap">
-          
+
           {statusOptions.map((status) => (
             <button
               key={status}
@@ -356,9 +404,90 @@ export default function PetSubmission() {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-
-
                     </AlertDialog>
+
+
+                    {selectedSubmission?.status === "scheduling" && isShelterManager && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="ml-2"
+                        onClick={() => setShowScheduleDialog(true)}
+                      >
+                        Tạo lịch phỏng vấn
+                      </Button>
+                    )}
+
+                    <Dialog open={showScheduleDialog} onOpenChange={setShowScheduleDialog}>
+                      <DialogContent className="max-w-lg">
+                        <DialogHeader>
+                          <DialogTitle>Tạo lịch phỏng vấn</DialogTitle>
+                        </DialogHeader>
+
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <DateTimePicker
+                            label="Thời gian bắt đầu"
+                            date={scheduleData.availableFrom}
+                            onChange={(d) => setScheduleData({ ...scheduleData, availableFrom: d })}
+                          />
+
+                          <DateTimePicker
+                            label="Thời gian kết thúc"
+                            date={scheduleData.availableTo}
+                            onChange={(d) => setScheduleData({ ...scheduleData, availableTo: d })}
+                          />
+                          </div>
+                         
+                          <div>
+                            <label className="text-sm font-medium">Hình thức phỏng vấn</label>
+                            <Textarea
+                              placeholder="Nhập hình thức: Trực tiếp / Google Meet / Zoom..."
+                              value={scheduleData.method}
+                              onChange={(e) =>
+                                setScheduleData({ ...scheduleData, method: e.target.value })
+                              }
+                            />
+                          </div>
+                           <div>
+                            <label className="text-sm font-medium">Hình thức phỏng vấn</label>
+                            <Textarea
+                              placeholder="Nhập hình thức: Trực tiếp / Google Meet / Zoom..."
+                              value={scheduleData.method}
+                              onChange={(e) =>
+                                setScheduleData({ ...scheduleData, method: e.target.value })
+                              }
+                            />
+                          </div>
+                           <div>
+                            <label className="text-sm font-medium">Hình thức phỏng vấn</label>
+                            <Textarea
+                              placeholder="Nhập hình thức: Trực tiếp / Google Meet / Zoom..."
+                              value={scheduleData.method}
+                              onChange={(e) =>
+                                setScheduleData({ ...scheduleData, method: e.target.value })
+                              }
+                            />
+                          </div>
+
+                          <div className="flex justify-end">
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={createInterviewSchedule}
+                              disabled={
+                                !scheduleData.availableFrom ||
+                                !scheduleData.availableTo ||
+                                !scheduleData.method
+                              }
+                            >
+                              Xác nhận tạo lịch
+                            </Button>
+
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
 
 

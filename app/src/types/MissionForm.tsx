@@ -1,7 +1,7 @@
 export interface MissionForm {
   _id: string;
   createdAt: string;
-  status: "pending" | "interviewing" | "approved" | "rejected" | "reviewed";
+  status: "pending" | "interviewing" | "approved" | "rejected" | "reviewed" | "scheduling";
   transportMethod: string;
 adoptionsLastMonth: number;
 total: number;
