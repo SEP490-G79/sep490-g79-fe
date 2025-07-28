@@ -10,6 +10,15 @@ import type { MissionForm } from "@/types/MissionForm";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { Command, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { CalendarCheck2, Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
 
 import {
@@ -63,7 +72,22 @@ export default function PetSubmission() {
     availableFrom: new Date(),
     availableTo: new Date(),
     method: "",
+    performedBy: "",
   });
+  const resetForm = () => {
+    setScheduleData({
+      availableFrom: new Date(),
+      availableTo: new Date(),
+      method: "",
+      performedBy: "",
+    });
+    setSelectedStaff(null);
+  };
+
+  const [interviewers, setInterviewers] = useState<any[]>([]);
+  const [open, setOpen] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<any>(null);
+
 
   const isShelterManager = shelters?.some((shelter) => {
     if (shelter._id !== shelterId) return false;
@@ -119,7 +143,7 @@ export default function PetSubmission() {
           availableFrom: scheduleData.availableFrom,
           availableTo: scheduleData.availableTo,
           method: scheduleData.method,
-          performedBy: selectedSubmission?.performedBy?._id,
+          performedBy: scheduleData.performedBy,
         }
       );
 
@@ -130,8 +154,29 @@ export default function PetSubmission() {
         ...selectedSubmission!,
         status: "interviewing",
       });
+      resetForm();
+
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Lỗi tạo lịch phỏng vấn");
+    }
+  };
+
+
+  useEffect(() => {
+    if (showScheduleDialog && scheduleData.availableFrom && scheduleData.availableTo) {
+      fetchInterviewers(scheduleData.availableFrom, scheduleData.availableTo);
+    }
+  }, [showScheduleDialog, scheduleData.availableFrom, scheduleData.availableTo]);
+
+  const fetchInterviewers = async (from: Date, to: Date) => {
+    try {
+      const res = await authAxios.get(
+        `${coreAPI}/adoption-submissions/staff-schedule-count/${shelterId}?from=${from.toISOString()}&to=${to.toISOString()}`
+      );
+      setInterviewers(res.data);
+    } catch (err) {
+      console.error("Lỗi lấy danh sách nhân viên:", err);
+      toast.error("Không thể lấy danh sách nhân viên");
     }
   };
 
@@ -170,7 +215,7 @@ export default function PetSubmission() {
 
   const statusOptionsMap: { [key: string]: string[] } = {
     pending: ["pending", "scheduling", "rejected"],
-    scheduling: ["scheduling", "pending", "interviewing", "rejected"],
+    scheduling: ["scheduling", "pending",  "rejected"],
     interviewing: ["interviewing", "rejected", "reviewed"],
     reviewed: ["reviewed", "approved", "rejected"],
     rejected: ["rejected", "pending", "interviewing"],
@@ -410,10 +455,11 @@ export default function PetSubmission() {
                     {selectedSubmission?.status === "scheduling" && isShelterManager && (
                       <Button
                         variant="outline"
-                        size="sm"
-                        className="ml-2"
+                        size="lg"
+                        className="ml-2 bg-primary dark:bg-primary text-white hover:bg-primary/90 transition rounded-md text-sm flex items-center justify-center gap-1  "
                         onClick={() => setShowScheduleDialog(true)}
                       >
+                          <CalendarCheck2 />
                         Tạo lịch phỏng vấn
                       </Button>
                     )}
@@ -427,20 +473,97 @@ export default function PetSubmission() {
                         <div className="space-y-4">
                           <div className="grid grid-cols-2 gap-4">
                             <DateTimePicker
-                            label="Thời gian bắt đầu"
-                            date={scheduleData.availableFrom}
-                            onChange={(d) => setScheduleData({ ...scheduleData, availableFrom: d })}
-                          />
+                              label={
+                                <span>
+                                  Thời gian bắt đầu <span className="text-red-500">*</span>
+                                </span>
+                              }
+                              date={scheduleData.availableFrom}
+                              onChange={(d) => setScheduleData({ ...scheduleData, availableFrom: d })}
+                              minDate={new Date()}
+                            />
 
-                          <DateTimePicker
-                            label="Thời gian kết thúc"
-                            date={scheduleData.availableTo}
-                            onChange={(d) => setScheduleData({ ...scheduleData, availableTo: d })}
-                          />
+
+                            <DateTimePicker
+                              label={
+                                <span>
+                                  Thời gian kết thúc <span className="text-red-500">*</span>
+                                </span>
+                              }
+                              date={scheduleData.availableTo}
+                              onChange={(d) => setScheduleData({ ...scheduleData, availableTo: d })}
+                              minDate={new Date()}
+                            />
                           </div>
-                         
+                          <div className="w-full">
+                            <label><span className="text-sm font-medium mb-1 block">
+                              Chọn người thực hiện <span className="text-red-500">*</span>
+                            </span></label>
+                            <p className="text-sm text-muted-foreground italic mb-2">
+                              Danh sách được sắp xếp theo số lịch phỏng vấn (ít → nhiều)
+                            </p>
+
+                            <Popover open={open} onOpenChange={setOpen}>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={open}
+                                  className="w-full justify-between"
+                                >
+                                  {selectedStaff ? (
+                                    <div className="flex items-center gap-2">
+                                      <img src={selectedStaff.avatar || "/placeholder-avatar.png"} alt="" className="w-5 h-5 rounded-full" />
+                                      <span>{selectedStaff.fullName} ({selectedStaff.interviewCount} lịch)</span>
+                                    </div>
+                                  ) : (
+                                    "Chọn nhân viên thực hiện phỏng vấn"
+                                  )}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-full p-0 left-0 " side="bottom" align="start">
+                                <Command>
+                                  <CommandInput placeholder="Tìm nhân viên..." />
+                                  <CommandList>
+                                    {interviewers.map((staff) => (
+                                      <CommandItem
+                                        key={staff.staffId}
+                                        value={staff.fullName.toLowerCase()}
+                                        onSelect={() => {
+                                          if (selectedStaff?.staffId === staff.staffId) {
+                                            // Nếu đang chọn staff này → bỏ chọn
+                                            setSelectedStaff(null);
+                                            setScheduleData({ ...scheduleData, performedBy: "" });
+                                          } else {
+                                            // Chọn staff mới
+                                            setSelectedStaff(staff);
+                                            setScheduleData({ ...scheduleData, performedBy: staff.staffId });
+                                          }
+                                          setOpen(false);
+                                        }}
+
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <img
+                                            src={staff.avatar || "/placeholder-avatar.png"}
+                                            alt=""
+                                            className="w-5 h-5 rounded-full"
+                                          />
+                                          <span className="truncate">{staff.fullName} ({staff.interviewCount} lịch)</span>
+                                        </div>
+                                        {selectedStaff?.staffId === staff.staffId && (
+                                          <Check className="ml-auto h-4 w-4 text-green-500" />
+                                        )}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
                           <div>
-                            <label className="text-sm font-medium">Hình thức phỏng vấn</label>
+                            <label className="text-sm font-medium">Hình thức phỏng vấn <span className="text-red-500">*</span></label>
                             <Textarea
                               placeholder="Nhập hình thức: Trực tiếp / Google Meet / Zoom..."
                               value={scheduleData.method}
@@ -449,26 +572,7 @@ export default function PetSubmission() {
                               }
                             />
                           </div>
-                           <div>
-                            <label className="text-sm font-medium">Hình thức phỏng vấn</label>
-                            <Textarea
-                              placeholder="Nhập hình thức: Trực tiếp / Google Meet / Zoom..."
-                              value={scheduleData.method}
-                              onChange={(e) =>
-                                setScheduleData({ ...scheduleData, method: e.target.value })
-                              }
-                            />
-                          </div>
-                           <div>
-                            <label className="text-sm font-medium">Hình thức phỏng vấn</label>
-                            <Textarea
-                              placeholder="Nhập hình thức: Trực tiếp / Google Meet / Zoom..."
-                              value={scheduleData.method}
-                              onChange={(e) =>
-                                setScheduleData({ ...scheduleData, method: e.target.value })
-                              }
-                            />
-                          </div>
+
 
                           <div className="flex justify-end">
                             <Button
@@ -478,7 +582,8 @@ export default function PetSubmission() {
                               disabled={
                                 !scheduleData.availableFrom ||
                                 !scheduleData.availableTo ||
-                                !scheduleData.method
+                                !scheduleData.method ||
+                                !scheduleData.performedBy
                               }
                             >
                               Xác nhận tạo lịch

@@ -47,6 +47,7 @@ const Step3_SubmissionForm = ({ submissionId, onNext, onBack, onLoadedSubmission
 
   const statusList: Record<string, string> = {
     pending: "Đang chờ xét duyệt",
+    scheduling: "Đang lên lịch phỏng vấn",
     interviewing: "Đang chờ phỏng vấn",
     approved: "Đã được chấp nhận",
     rejected: "Bị từ chối",
@@ -58,8 +59,7 @@ const Step3_SubmissionForm = ({ submissionId, onNext, onBack, onLoadedSubmission
     return <div className="text-center mt-10">Đang tải thông tin đơn nhận nuôi...</div>;
   }
 
-  console.log("submission", submission);
-  
+
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">

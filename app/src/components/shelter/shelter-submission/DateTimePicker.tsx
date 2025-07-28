@@ -1,5 +1,5 @@
 import * as React from "react";
-import { format, isBefore, startOfDay } from "date-fns";
+import { format, isBefore, isAfter, startOfDay } from "date-fns";
 import { CalendarIcon, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -10,15 +10,19 @@ import {
 } from "@/components/ui/popover";
 
 interface DateTimePickerProps {
-  label: string;
+  label?: React.ReactNode;
   date: Date;
   onChange: (date: Date) => void;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
 export function DateTimePicker({
   label,
   date,
   onChange,
+  minDate,
+  maxDate,
 }: DateTimePickerProps) {
   const [open, setOpen] = React.useState(false);
   const [tempDate, setTempDate] = React.useState(date);
@@ -40,9 +44,16 @@ export function DateTimePicker({
     onChange(now);
   };
 
+  const isDateDisabled = (date: Date) => {
+    const day = startOfDay(date);
+    if (minDate && isBefore(day, startOfDay(minDate))) return true;
+    if (maxDate && isAfter(day, startOfDay(maxDate))) return true;
+    return false;
+  };
+
   return (
     <div className="space-y-1">
-      <label className="text-sm font-medium">{label}</label>
+      {label && <label className="text-sm font-medium">{label}</label>}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -66,7 +77,7 @@ export function DateTimePicker({
                 onChange(newDate);
               }
             }}
-            disabled={(date) => isBefore(startOfDay(date), startOfDay(new Date()))}
+            disabled={isDateDisabled}
             initialFocus
           />
           <div className="flex items-center gap-4 border-t pt-2 ml-4">

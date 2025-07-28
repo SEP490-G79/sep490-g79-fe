@@ -7,7 +7,7 @@ import useAuthAxios from "@/utils/authAxios";
 import Step1_Introduction from "@/components/user/AdoptionForm/Step1_Introduction";
 import Step2_AdoptionForm from "@/components/user/AdoptionForm/Step2_AdoptionForm";
 import Step3_SubmissionForm from "@/components/user/AdoptionForm/Step3_SubmissionForm";
-import Step4_ConsentForm from "@/components/user/AdoptionForm/Step4_ConsentForm";
+import Step4_ScheduleConfirm from "@/components/user/AdoptionForm/Step4_ScheduleConfirm";
 import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { Question } from "@/types/Question";
 import {
@@ -16,6 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Step5_ConsentForm from "@/components/user/AdoptionForm/Step5_ConsentForm";
 
 const UserAdoptionFormPage = () => {
   const getInitialAnswers = (): Record<string, string | string[]> => {
@@ -94,7 +95,7 @@ const UserAdoptionFormPage = () => {
         toast.error("Không thể lấy thông tin đơn xin nhận nuôi");
       } finally {
         setLoading(false);
-        setHasCheckedSubmitted(true); // ✅ Đánh dấu đã check xong
+        setHasCheckedSubmitted(true); //  Đánh dấu đã check xong
       }
     };
 
@@ -129,7 +130,7 @@ const UserAdoptionFormPage = () => {
   }
 
 
-  const steps = ["Quy định chung", "Đăng ký nhận nuôi", "Chờ phản hồi", "Đơn cam kết"];
+  const steps = ["Quy định chung", "Đăng ký nhận nuôi", "Chờ phản hồi", "Xác nhận lịch phỏng vấn","Đơn cam kết"];
 const renderStepIndicator = () => (
   <TooltipProvider>
     <div className="flex items-center justify-between w-full max-w-4xl mx-auto px-4 py-4 relative">
@@ -139,7 +140,7 @@ const renderStepIndicator = () => (
         const isLineCompleted = submissionId ? index < 2 : index < step - 1;
         const isLast = index === steps.length - 1;
 
-        const canNavigate = submissionId ? index <= 2 : index <= step - 1;
+        const canNavigate = submissionId ? index <= 4 : index <= step - 1;
 
         const tooltipMessage = isCompleted
           ? "Bước đã hoàn thành"
@@ -168,6 +169,12 @@ const renderStepIndicator = () => (
             }`}
             onClick={() => {
               if (canNavigate) {
+                  if (index + 1 === 4) {
+    if (submission?.status === "pending" || submission?.status === "scheduling") {
+      toast.error("Bạn chưa thể xác nhận lịch phỏng vấn. Đơn đang chờ xử lý.");
+      return;
+    }
+  }
                 setStep(index + 1);
               }
             }}
@@ -245,7 +252,13 @@ const renderStepIndicator = () => (
       case 3:
         return <Step3_SubmissionForm
           submissionId={submissionId}
-          onNext={next}
+         onNext={() => {
+  if (submission?.status === "pending" || submission?.status === "scheduling") {
+    toast.error("Bạn chưa thể xác nhận lịch phỏng vấn. Đơn đang chờ xử lý.");
+    return;
+  }
+  next();
+}}
           onBack={back}
           onLoadedSubmission={(submission) => {
             setSubmission(submission);
@@ -265,7 +278,26 @@ const renderStepIndicator = () => (
 
 
       case 4:
-        return <Step4_ConsentForm onNext={next} onBack={back} />;
+        return <Step4_ScheduleConfirm 
+         submissionId={submissionId}
+        onNext={next} onBack={back} 
+        onLoadedSubmission={(submission) => {
+            setSubmission(submission);
+            const parsed: Record<string, string | string[]> = {};
+            submission.answers.forEach((item: any) => {
+              const qid = typeof item.questionId === "string"
+                ? item.questionId
+                : item.questionId?._id;
+
+              if (!qid) return;
+              parsed[qid] = item.selections.length === 1 ? item.selections[0] : item.selections;
+            });
+
+            setAnswers(parsed);
+          }}/>;
+
+      case 5:
+        return <Step5_ConsentForm onNext={next} onBack={back} />    
       default:
         return null;
     }
