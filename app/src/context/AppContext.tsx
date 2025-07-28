@@ -13,6 +13,7 @@ import type { Shelter } from "@/types/Shelter";
 import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { MissionForm } from "@/types/MissionForm";
+import type { ConsentForm } from "@/types/ConsentForm";
 
 const excludedURLs = [
   "/",
@@ -31,6 +32,7 @@ interface AppContextType {
   shelters: Shelter[] | null;
   shelterTemplates: AdoptionTemplate[];
   shelterForms: AdoptionForm[];
+  shelterConsentForms: ConsentForm[];
   accessToken: string | null;
   coreAPI: string;
   authAPI: string;
@@ -54,8 +56,9 @@ interface AppContextType {
   setShelterTemplates: (shelterTemplates: AdoptionTemplate[]) => void;
   setShelterForms: (shelterForms: AdoptionForm[]) => void;
   refreshUserProfile: () => Promise<void>;
-    submissionsByPetId: Record<string, MissionForm[]>;
+  submissionsByPetId: Record<string, MissionForm[]>;
   setSubmissionsByPetId: (data: Record<string, MissionForm[]>) => void;
+  setShelterConsentForms: (shelterConsentForms: ConsentForm[]) => void;
 }
 
 const AppContext = createContext<AppContextType>({
@@ -63,18 +66,19 @@ const AppContext = createContext<AppContextType>({
   shelters: [],
   shelterTemplates: [],
   shelterForms: [],
+  shelterConsentForms: [],
   accessToken: null,
   coreAPI: "",
   authAPI: "",
   userAPI: "",
   shelterAPI: "",
-  login: () => { },
-  logout: () => { },
+  login: () => {},
+  logout: () => {},
   userProfile: null,
   loginLoading: false,
-  setLoginLoading: (loginLoading: boolean) => { },
-  setUserProfile: () => { },
-  setUser: () => { },
+  setLoginLoading: (loginLoading: boolean) => {},
+  setUserProfile: () => {},
+  setUser: () => {},
   petsList: [],
   petAPI: "",
   medicalRecordAPI: "",
@@ -82,12 +86,13 @@ const AppContext = createContext<AppContextType>({
   reportAPI: "",
   setShelters: () => [],
   shelterId: null,
-  setShelterId: () => { },
+  setShelterId: () => {},
   setShelterTemplates: () => [],
   setShelterForms: () => [],
-  refreshUserProfile: async () => { },
+  refreshUserProfile: async () => {},
   submissionsByPetId: {},
   setSubmissionsByPetId: () => {},
+  setShelterConsentForms: () => [],
 });
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
@@ -106,8 +111,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [petsList, setPetsList] = useState([]);
   const authAxios = useAuthAxios();
-  const [submissionsByPetId, setSubmissionsByPetId] = useState<Record<string, MissionForm[]>>({});
-
+  const [submissionsByPetId, setSubmissionsByPetId] = useState<
+    Record<string, MissionForm[]>
+  >({});
+  const [shelterConsentForms, setShelterConsentForms] = useState<ConsentForm[]>(
+    []
+  );
 
   // APIs
   const coreAPI = "http://localhost:9999";
@@ -226,8 +235,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         shelterForms,
         setShelterForms,
         refreshUserProfile,
-         submissionsByPetId,
-    setSubmissionsByPetId,
+        submissionsByPetId,
+        setSubmissionsByPetId,
+        shelterConsentForms,
+        setShelterConsentForms,
       }}
     >
       {children}

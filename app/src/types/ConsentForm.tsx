@@ -12,10 +12,12 @@ export interface Attachment {
   }
   
 export interface ConsentForm {
+    _id: string;
+    title: string;
     adopter:User;
     shelter:Shelter;
     createdBy:User;
-    pet:Pet;
+    pet?: Pet;
     commitments: string;
     tokenMoney: number;
     deliveryMethod: string;
@@ -26,3 +28,40 @@ export interface ConsentForm {
     createdAt: Date;
     updatedAt: Date;
   }
+
+  export const mockDeliveryMethods = [
+    {
+      value: "pickup",
+      label: "Tự đến nhận",
+    },
+    {
+      value: "delivery",
+      label: "Nhân viên giao hàng",
+    },
+  ];
+  export const mockStatus = [
+    {
+      value: "draft",
+      label: "Nháp",
+    },
+    {
+      value: "send",
+      label: "Đã gửi",
+    },
+    {
+      value: "accepted",
+      label: "Đã chấp nhận",
+    },
+    {
+      value: "cancelled",
+      label: "Đã hủy",
+    },
+    {
+      value: "approved",
+      label: "Đã duyệt",
+    },
+    {
+      value: "rejected",
+      label: "Đã từ chối",
+    },
+  ];

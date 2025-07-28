@@ -510,7 +510,7 @@ export function AdoptionTemplates() {
                     <EllipsisVertical className="h-4 w-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuLabel>Hành động</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>
                       <Link to={`${template._id}`} className="flex gap-1">

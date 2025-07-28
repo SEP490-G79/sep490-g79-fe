@@ -43,6 +43,7 @@ import SubmissionForms from "@/components/shelter/shelter-submission/SubmissionF
 import PetSubmission from "@/components/shelter/shelter-submission/PetSubmission";
 import ReturnRequestManagement from "@/components/shelter/shelter-management/return-request/ReturnRequestManagement";
 import { ConsentForms } from "@/components/shelter/shelter-management/consent-form/ConsentForms";
+import ConsentForm from "@/components/shelter/shelter-management/consent-form/ConsentForm";
 
 function AppRoutes() {
   return (
@@ -106,6 +107,8 @@ function AppRoutes() {
           <Route path="submission-forms/:petId" element={<PetSubmission />} />
           <Route path="return-requests" element={<ReturnRequestManagement />} />
           <Route path="consent-forms" element={<ConsentForms />} />
+          <Route path="consent-forms/:consentFormId" element={<ConsentForm />} />
+
         </Route>
       </Route>
 
