@@ -17,6 +17,7 @@ const BlogRecommendation = ({ blog} : {blog: Blog}) => {
           alt={`thumbnail-${blog.title}`}
           className="object-cover h-25 w-full cursor-pointer"
           onClick={() => {
+            window.scrollTo({ top: 0, left: 0, behavior: "instant" });
             navigate(`/shelters/${blog.shelter._id}/blog/${blog._id}`);
           }}
         />
@@ -34,7 +35,10 @@ const BlogRecommendation = ({ blog} : {blog: Blog}) => {
                   className="cursor-pointer"
                   src={blog.createdBy.avatar}
                   alt={`avatar cua ${blog.createdBy.fullName}`}
-                  onClick={() => navigate(`/profile/${blog.createdBy._id}`)}
+                  onClick={() => {
+                    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+                    navigate(`/profile/${blog.createdBy._id}`)
+                  }}
                 />
               </Avatar>
               <p>{blog.createdBy.fullName}</p>

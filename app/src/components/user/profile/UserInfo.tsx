@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Button } from "@/components/ui/button";
-import { Plus, Mail, Cake, MapPinHouse } from 'lucide-react';
-import AppContext from "@/context/AppContext";
+import { Mail, Cake, MapPinHouse } from 'lucide-react';
 import dayjs from "dayjs";
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import 'react-photo-view/dist/react-photo-view.css';
 import type { User } from "@/types/User";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function UserInfo({ profile }: { profile: User }) {
 
@@ -26,11 +23,15 @@ function UserInfo({ profile }: { profile: User }) {
                             <div className="mb-4">
                                 <PhotoProvider>
                                  <PhotoView src={profile?.avatar}>
-                                <img
-                                    src={profile?.avatar || "/placeholder.svg"}
-                                    alt="Avatar"
-                                    className="w-35 h-35 rounded-full border-1 border-gray-100 shadow-md object-cover object-center"
-                                />
+                                    <Avatar className="w-24 h-24">
+                                        <AvatarImage
+                                            src={profile?.avatar || "/placeholder.svg"}
+                                            alt="User Avatar"
+                                        />
+                                        <AvatarFallback>
+                                            {profile?.fullName?.charAt(0) || "?"}
+                                        </AvatarFallback>
+                                    </Avatar>
                                 </PhotoView>
                                 </PhotoProvider>
                             </div>

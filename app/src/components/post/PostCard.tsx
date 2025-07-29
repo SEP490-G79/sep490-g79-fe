@@ -33,6 +33,7 @@ import type { PostType } from "@/types/Post";
 import type { CommentType } from "@/types/Comment";
 import { useState } from "react";
 import ReportPostDialog from "./ReportPost";
+import { Link } from "react-router-dom";
 
 interface PostCardProps {
   post: PostType;
@@ -69,12 +70,38 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
         <CardTitle className="text-lg font-semibold">
           <div className="flex items-start justify-between">
             <div className="flex gap-x-3">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={post.user.avatar || "/placeholder.svg"} alt="user avatar" />
-                <AvatarFallback>{post.user.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-              </Avatar>
+              <Link
+                to={
+                  post.shelter
+                    ? `/shelters/${post.shelter._id}`
+                    : `/profile/${post.createdBy}`
+                }
+                className="flex gap-x-3 items-start hover:underline"
+              >
+                <Avatar className="w-10 h-10">
+                  <AvatarImage
+                    src={post.shelter?.avatar || post.user.avatar || "/placeholder.svg"}
+                    alt="avatar"
+                  />
+                  <AvatarFallback>
+                    {(post.shelter?.name || post.user.fullName)?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+
               <div className="flex flex-col justify-top text-sm">
-                <span>{post.shelter?.name || post.user.fullName}</span>
+                <Link
+                  to={
+                    post.shelter
+                      ? `/shelters/${post.shelter._id}`
+                      : `/profile/${post.createdBy}`
+                  }
+                  className="hover:underline"
+                >
+                  <span className="font-medium">
+                    {post.shelter?.name || post.user.fullName}
+                  </span>
+                </Link>
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
                   <span>{formatCreatedAt(post.createdAt)}</span>
                   {post.privacy.includes("public") ? (
@@ -95,7 +122,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
             ) === String(currentUserId) ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="p-2 hover:bg-muted rounded-md">
+                  <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
                     <Ellipsis className="w-5 h-5" />
                   </button>
                 </DropdownMenuTrigger>
@@ -113,7 +140,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="p-2 hover:bg-muted rounded-md">
+                  <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
                     <Ellipsis className="w-5 h-5" />
                   </button>
                 </DropdownMenuTrigger>
@@ -222,25 +249,22 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
 
       <CardFooter className="text-sm text-gray-500 px-4">
         <div className="flex w-full justify-between">
-          <div className="flex justify-between gap-25">
-            <div
-              onClick={() => onLike(post._id)}
-              className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${
-                post.likedBy.includes(currentUserId) ? "text-red-500" : ""
+          <div
+            onClick={() => onLike(post._id)}
+            className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${post.likedBy.includes(currentUserId) ? "text-red-500" : ""
               }`}
-            >
-              <Heart className="w-5 h-5" />
-              <span>{post.likedBy.length}</span>
-            </div>
-            <div
-              className="flex gap-2 cursor-pointer"
-              onClick={() => {
-                onViewDetail(post._id);
-              }}
-            >
-              <MessageSquare className="w-5 h-5" />
-              <p className="min-w-15"> Bình luận</p>
-            </div>
+          >
+            <Heart className="w-5 h-5" />
+            <span>{post.likedBy.length}</span>
+          </div>
+          <div
+            className="flex items-center gap-1 justify-start w-1/2 cursor-pointer"
+            onClick={() => {
+              onViewDetail(post._id);
+            }}
+          >
+            <MessageSquare className="w-5 h-5" />
+            <p className="min-w-15"> Bình luận</p>
           </div>
         </div>
       </CardFooter>
@@ -249,15 +273,25 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
 
       {latestComment && (
         <div className="flex items-start gap-2 px-4  mt-1 hover:bg-muted/60 rounded-md">
-          <img
-            src={latestComment.commenter.avatar}
-            className="w-8 h-8 rounded-full"
-          />
+          <Link
+            to={`/profile/${latestComment.commenter._id}`}
+          >
+            <Avatar className="w-8 h-8">
+              <AvatarImage src={latestComment.commenter.avatar || "/placeholder.svg"} />
+              <AvatarFallback>{latestComment.commenter.fullName?.charAt(0)}</AvatarFallback>
+            </Avatar>
+          </Link>
           <div className="bg-muted px-3 py-2 rounded-xl max-w-[80%]">
-            <p className="text-xs font-semibold">
-              {latestComment.commenter.fullName}
-            </p>
+            <Link
+              to={`/profile/${latestComment.commenter._id}`}
+              className="text-foreground hover:underline flex flex-col gap-1"
+            >
+              <p className="text-xs font-semibold">
+                {latestComment.commenter.fullName}
+              </p>
+            </Link>
             <p className="text-sm text-foreground">{latestComment.message}</p>
+
           </div>
         </div>
       )}
@@ -267,7 +301,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
           className="text-gray-600 hover:underline text-sm flex items-center gap-1 cursor-pointer"
           onClick={() => onViewDetail(post._id)}
         >
-          Xem chi tiết
+          Xem thêm bình luận
         </button>
       </div>
     </Card>

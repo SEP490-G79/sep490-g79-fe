@@ -19,7 +19,7 @@ export interface Pet {
   foundLocation?: string;
   tokenMoney?: number;
   shelter?: Shelter;
-  adopter?: string;
+  adopter?: string | { _id: string; fullName?: string };
   status: "unavailable" | "available" | "adopted" | "disabled" | "booking" | "delivered";
   createdAt?: string;
   updatedAt?: string;

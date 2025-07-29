@@ -1,10 +1,11 @@
-import React, { useState, useRef, useContext } from "react";
+import { useState, useContext } from "react";
 import type { CommentType } from "@/types/Comment";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Ellipsis, Pencil, Trash2, Check, X, Smile } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import useAuthAxios from "@/utils/authAxios";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
     DropdownMenu,
@@ -25,7 +26,6 @@ import {
 import EmojiPicker from "emoji-picker-react";
 import dayjs from "dayjs";
 import AppContext from "@/context/AppContext";
-import axios from "axios";
 
 interface Props {
     comments: CommentType[];
@@ -43,7 +43,6 @@ export default function Comment({ comments, postId, fetchComments }: Props) {
     const [showPicker, setShowPicker] = useState(false);
     const [showEditPicker, setShowEditPicker] = useState(false);
     const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
-    const navigate = useNavigate();
 
     const handleAddComment = async () => {
         if (!newComment.trim()) return;
@@ -89,7 +88,10 @@ export default function Comment({ comments, postId, fetchComments }: Props) {
             {userProfile?._id ? (
                 // Nếu đã đăng nhập thì hiển thị ô nhập bình luận
                 <div className="flex gap-3 items-start mt-4 relative">
-                    <img src={userProfile?.avatar || "/placeholder.svg"} className="w-9 h-9 rounded-full border" />
+                    <Avatar>
+                        <AvatarImage src={userProfile?.avatar || "/placeholder.svg"} />
+                        <AvatarFallback />
+                    </Avatar>
                     <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-3xl px-4 py-2">
                         <Textarea
                             value={newComment}
@@ -138,10 +140,17 @@ export default function Comment({ comments, postId, fetchComments }: Props) {
             <div className="space-y-4 mt-4">
                 {comments.map((cmt) => (
                     <div key={cmt._id} className="flex items-start gap-3 relative group">
-                        <img src={cmt.commenter.avatar} className="w-9 h-9 rounded-full" />
+                        <Link to={`/profile/${cmt.commenter._id}`} className="flex-shrink-0">
+                            <Avatar>
+                                <AvatarImage src={cmt.commenter.avatar || "/placeholder.svg"} />
+                                <AvatarFallback>{cmt.commenter.fullName?.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                        </Link>
                         <div className="flex-1 space-y-1">
                             <div className="bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-2xl inline-block">
-                                <div className="font-medium text-sm">{cmt.commenter.fullName}</div>
+                                <Link to={`/profile/${cmt.commenter._id}`} className=" hover:underline font-medium text-sm">
+                                    {cmt.commenter.fullName}
+                                </Link>
                                 {editingId === cmt._id ? (
                                     <>
                                         <Textarea

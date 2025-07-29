@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect } from "react";
-import { ArrowRight, Dog, Heart, TrainFrontTunnel, Cake, Weight, Cat } from "lucide-react";
+import { ArrowRight, Dog, Heart, TrainFrontTunnel, Cake, Weight, Cat, Ellipsis } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -7,12 +7,19 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import type { Pet } from "@/types/Pet";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { Skeleton } from "../ui/skeleton";
+import ReturnRequestDialog from "@/components/user/return-request/ReturnRequestDialog";
 interface PetCardProps {
     pet: Pet;
     user: {
@@ -28,6 +35,9 @@ function PetsList({ pet, user, isLoading, }: PetCardProps) {
     const navigate = useNavigate();
     const authAxios = useAuthAxios();
     const [isWished, setIsWished] = useState(user?.wishList.includes(pet._id) || false);
+    const [ReturnDialog, setReturnDialog] = useState(false);
+    const isAdoptedByUser = typeof pet.adopter === "object" && pet.adopter?._id === user?._id;
+
 
     useEffect(() => {
         if (user && user.wishList.includes(pet._id)) {
@@ -161,108 +171,139 @@ function PetsList({ pet, user, isLoading, }: PetCardProps) {
                 />
 
                 {/* Heart icon wishlist */}
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <button
-                            className={`absolute top-2 right-2 z-10 p-1 hover:scale-130 transition-transform duration-200 ${isWished ? "text-red-600" : "text-gray-400"}`}
-                            onClick={handleToggleWishlist}
-                        >
-                            <Heart className={`w-6 h-6 ${isWished ? "text-red-500" : ""}`} />
-                        </button>
-                    </TooltipTrigger>
-                    <TooltipContent>{isWished ? "Bỏ yêu thích" : "Yêu thích"}</TooltipContent>
-                </Tooltip>
+                {isAdoptedByUser ? (
+                    <div className="absolute top-2 right-2 z-10">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="p-1 rounded-full bg-black/40 hover:bg-black/60 text-white transition hover:text-primary cursor-pointer">
+                                    <Ellipsis className="w-6 h-6" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem onClick={() => setReturnDialog(true)}>
+                                    Yêu cầu trả thú cưng
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                ) : (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button
+                                className={`absolute top-2 right-2 z-10 p-1 hover:scale-130 transition-transform duration-200 ${isWished ? "text-red-600" : "text-gray-400"}`}
+                                onClick={handleToggleWishlist}
+                            >
+                                <Heart className={`w-6 h-6 ${isWished ? "text-red-500" : ""}`} />
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent>{isWished ? "Bỏ yêu thích" : "Yêu thích"}</TooltipContent>
+                    </Tooltip>
+                )}
+            </div>
+
+            {/* Content section */}
+            <div className="flex flex-col flex-grow justify-between p-3 relative">
+                <div className="flex flex-wrap gap-2 pb-3">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div>
+                                <Badge className="cursor-pointer">
+                                    <Cake className="w-4 h-4" />
+                                    <span>{ageDisplay}</span>
+                                </Badge>
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[200px] break-words">Tuổi: {ageDisplay}</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div>
+                                <Badge className="cursor-pointer">
+                                    <Weight className="w-4 h-4" />
+                                    <span>{weightDisplay}</span>
+                                </Badge>
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[200px] break-words">Cân nặng: {weightDisplay}</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div>
+                                <Badge className="cursor-pointer">
+                                    <SpeciesIcon className="w-4 h-4" />
+                                    <span>{genderDisplay}</span>
+                                </Badge>
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[200px] break-words">Giới tính: {genderDisplay}</TooltipContent>
+                    </Tooltip>
                 </div>
 
-                {/* Content section */}
-                <div className="flex flex-col flex-grow justify-between p-3 relative">
-                    <div className="flex flex-wrap gap-2 pb-3">
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div>
-                                    <Badge className="cursor-pointer">
-                                        <Cake className="w-4 h-4" />
-                                        <span>{ageDisplay}</span>
-                                    </Badge>
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-[200px] break-words">Tuổi: {ageDisplay}</TooltipContent>
-                        </Tooltip>
 
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div>
-                                    <Badge className="cursor-pointer">
-                                        <Weight className="w-4 h-4" />
-                                        <span>{weightDisplay}</span>
-                                    </Badge>
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-[200px] break-words">Cân nặng: {weightDisplay}</TooltipContent>
-                        </Tooltip>
+                <div className="space-y-2">
+                    <h3 className="text-xl font-bold text-foreground mb-2">
+                        {pet?.name || "Chưa xác định"}
+                    </h3>
 
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div>
-                                    <Badge className="cursor-pointer">
-                                        <SpeciesIcon className="w-4 h-4" />
-                                        <span>{genderDisplay}</span>
-                                    </Badge>
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-[200px] break-words">Giới tính: {genderDisplay}</TooltipContent>
-                        </Tooltip>
+                    <div className="flex">
+                        <div className="min-w-[100px] text-sm font-medium text-foreground">
+                            Huyết thống:
+                        </div>
+                        <div className="text-sm text-muted-foreground">{breedsDisplay}</div>
                     </div>
 
-
-                    <div className="space-y-2">
-                        <h3 className="text-xl font-bold text-foreground mb-2">
-                            {pet?.name || "Chưa xác định"}
-                        </h3>
-
-                        <div className="flex">
-                            <div className="min-w-[100px] text-sm font-medium text-foreground">
-                                Huyết thống:
-                            </div>
-                            <div className="text-sm text-muted-foreground">{breedsDisplay}</div>
+                    <div className="flex">
+                        <div className="min-w-[100px] text-sm font-medium text-foreground">
+                            Nơi ở hiện tại:
                         </div>
-
-                        <div className="flex">
-                            <div className="min-w-[100px] text-sm font-medium text-foreground">
-                                Nơi ở hiện tại:
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                                {shelterName}, {shelterAddress}
-                            </div>
-                        </div>
-
-                        <div className="flex">
-                            <div className="min-w-[100px] text-sm font-medium text-foreground">
-                                Phí nhận nuôi:
-                            </div>
-                            <div
-                                className={`text-sm font-medium ${pet?.tokenMoney === 0
-                                    ? "text-lime-600"
-                                    : pet?.tokenMoney == null
-                                        ? "text-muted-foreground"
-                                        : "text-yellow-500"
-                                    }`}
-                            >
-                                {tokenMoneyDisplay}
-                            </div>
+                        <div className="text-sm text-muted-foreground">
+                            {shelterName}, {shelterAddress}
                         </div>
                     </div>
 
-                    <div className="mt-auto pt-4">
-                        <Button variant="ghost" className="gap-2 pl-0" asChild>
-                            <Link to={`/pets/${pet._id}`}>Xem thêm <ArrowRight className="w-4 h-4" /></Link>
-                        </Button>
-                        <Button className="w-full mt-2" onClick={() => { }}>
-                            Yêu cầu trả thú cưng
-                        </Button>
+                    <div className="flex">
+                        <div className="min-w-[100px] text-sm font-medium text-foreground">
+                            Phí nhận nuôi:
+                        </div>
+                        <div
+                            className={`text-sm font-medium ${pet?.tokenMoney === 0
+                                ? "text-lime-600"
+                                : pet?.tokenMoney == null
+                                    ? "text-muted-foreground"
+                                    : "text-yellow-500"
+                                }`}
+                        >
+                            {tokenMoneyDisplay}
+                        </div>
                     </div>
+                </div>
+
+                <div className="mt-auto pt-4">
+                    <Button variant="ghost" className="gap-2 pl-0" asChild>
+                        <Link to={`/pets/${pet._id}`}>Xem thêm <ArrowRight className="w-4 h-4" /></Link>
+                    </Button>
                 </div>
             </div>
+            {pet.petCode && pet.shelter && (
+                <ReturnRequestDialog
+                    open={ReturnDialog}
+                    onOpenChange={setReturnDialog}
+                    pet={{
+                        _id: pet._id,
+                        name: pet.name,
+                        petCode: pet.petCode, 
+                        photos: pet.photos || [],
+                    }}
+                    shelter={{
+                        _id: pet.shelter._id,
+                        name: pet.shelter.name,
+                        avatar: pet.shelter.avatar,
+                    }}
+                />
+            )}
+        </div>
     );
 }
 
