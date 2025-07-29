@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import { Separator } from "@/components/ui/separator";
 import AppContext from "@/context/AppContext";
 import type { AdoptionForm } from "@/types/AdoptionForm";
@@ -83,9 +84,9 @@ function PreviewForm() {
                   <span className="font-semibold">{adoptionForm?.shelter}</span>
                   {", "}
                   xin chân thành cảm ơn bạn đã quan tâm đến việc nhận nuôi các
-                  bé chó/mèo ở sân. Trước khi điền vào biểu mẫu đăng ký, bạn vui
+                  bé chó/mèo ở sân. Trước khi điền vào biểu form đăng ký, bạn vui
                   lòng đọc kỹ các điều kiện nhận nuôi dưới đây. Nếu đồng ý, hãy
-                  cung cấp đầy đủ thông tin theo biểu mẫu. Những thông tin bạn
+                  cung cấp đầy đủ thông tin theo biểu form. Những thông tin bạn
                   cung cấp sẽ giúp sân hiểu rõ hơn về nhu cầu và khả năng chăm
                   sóc thú cưng, từ đó hỗ trợ bạn tốt hơn trong quá trình nhận
                   nuôi.
@@ -111,11 +112,25 @@ function PreviewForm() {
                         <DialogHeader>
                           <DialogTitle>Điều kiện nhận nuôi</DialogTitle>
                           <DialogDescription>
-                            Điều kiện nhận nuôi các bạn thú cưng tại: <span className="underline">{adoptionForm?.shelter}</span>
+                            Điều kiện nhận nuôi các bạn thú cưng tại:{" "}
+                            <span className="underline">
+                              {adoptionForm?.shelter}
+                            </span>
                           </DialogDescription>
                         </DialogHeader>
-                        <div className="w-full h-[30rem] ">
-
+                        <div className="w-full h-[30rem] overflow-x-auto">
+                          <MinimalTiptapEditor
+                            throttleDelay={2000}
+                            editorContentClassName="description"
+                            output="html"
+                            content={adoptionForm?.description}
+                            immediatelyRender={false}
+                            editable={false}
+                            hideToolbar={true}
+                            injectCSS
+                            editorClassName="focus:outline-none"
+                            className="border-none w-full h-full px-5"
+                          />
                         </div>
                         <DialogFooter>
                           <DialogClose asChild>
@@ -227,8 +242,6 @@ function PreviewForm() {
                       placeholder="Hãy nhập câu trả lời"
                     />
                   )}
-
-
                 </CardContent>
               </Card>
             ))}

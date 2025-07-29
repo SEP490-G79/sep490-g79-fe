@@ -12,6 +12,7 @@ import useAuthAxios from "@/utils/authAxios";
 import type { Shelter } from "@/types/Shelter";
 import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import type { AdoptionForm } from "@/types/AdoptionForm";
+import type { MissionForm } from "@/types/MissionForm";
 
 const excludedURLs = [
   "/",
@@ -47,11 +48,15 @@ interface AppContextType {
   medicalRecordAPI: string;
   blogAPI: string;
   reportAPI: string;
+  returnRequestAPI: string;
   shelterId: string | null;
   setShelterId: (id: string | null) => void;
   setShelters: (shelter: Shelter[]) => void;
   setShelterTemplates: (shelterTemplates: AdoptionTemplate[]) => void;
   setShelterForms: (shelterForms: AdoptionForm[]) => void;
+  refreshUserProfile: () => Promise<void>;
+    submissionsByPetId: Record<string, MissionForm[]>;
+  setSubmissionsByPetId: (data: Record<string, MissionForm[]>) => void;
 }
 
 const AppContext = createContext<AppContextType>({
@@ -64,23 +69,27 @@ const AppContext = createContext<AppContextType>({
   authAPI: "",
   userAPI: "",
   shelterAPI: "",
-  login: () => {},
-  logout: () => {},
+  login: () => { },
+  logout: () => { },
   userProfile: null,
   loginLoading: false,
-  setLoginLoading: (loginLoading: boolean) => {},
-  setUserProfile: () => {},
-  setUser: () => {},
+  setLoginLoading: (loginLoading: boolean) => { },
+  setUserProfile: () => { },
+  setUser: () => { },
   petsList: [],
   petAPI: "",
   medicalRecordAPI: "",
   blogAPI: "",
   reportAPI: "",
+  returnRequestAPI: "",
   setShelters: () => [],
   shelterId: null,
-  setShelterId: () => {},
+  setShelterId: () => { },
   setShelterTemplates: () => [],
   setShelterForms: () => [],
+  refreshUserProfile: async () => { },
+  submissionsByPetId: {},
+  setSubmissionsByPetId: () => {},
 });
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
@@ -99,6 +108,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [petsList, setPetsList] = useState([]);
   const authAxios = useAuthAxios();
+  const [submissionsByPetId, setSubmissionsByPetId] = useState<Record<string, MissionForm[]>>({});
+
 
   // APIs
   const coreAPI = "http://localhost:9999";
@@ -109,6 +120,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const medicalRecordAPI = "http://localhost:9999/medical-records";
   const blogAPI = "http://localhost:9999/blogs";
   const reportAPI = "http://localhost:9999/reports";
+  const returnRequestAPI = "http://localhost:9999/return-requests";
 
   const login = (accessToken: string, userData: User) => {
     setUser(userData);
@@ -176,6 +188,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       });
   }, []);
 
+  const refreshUserProfile = async () => {
+    try {
+      const res = await authAxios.get(`${coreAPI}/users/get-user`);
+      setUser(res.data);
+      setUserProfile(res.data);
+    } catch (err) {
+      console.error("Lỗi khi refresh user profile:", err);
+      toast.error("Không thể cập nhật thông tin người dùng");
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -198,6 +221,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         medicalRecordAPI,
         blogAPI,
         reportAPI,
+        returnRequestAPI,
         setShelters,
         shelterId,
         setShelterId,
@@ -205,6 +229,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         setShelterTemplates,
         shelterForms,
         setShelterForms,
+        refreshUserProfile,
+         submissionsByPetId,
+    setSubmissionsByPetId,
       }}
     >
       {children}

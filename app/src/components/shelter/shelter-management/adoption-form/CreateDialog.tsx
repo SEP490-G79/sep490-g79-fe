@@ -55,6 +55,9 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import type { Pet } from "@/types/Pet";
+import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
+import { AvatarFallback } from "@/components/ui/avatar";
+import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 
 export default function CreateDialog() {
   const { coreAPI, shelterForms, shelterTemplates, setShelterForms, petsList } =
@@ -96,19 +99,19 @@ export default function CreateDialog() {
       );
       if (selectedTemplate) {
         values.description = selectedTemplate.description || "";
-        
+      const newQuestions = selectedTemplate.questions.map(({_id,...question})=>question) || [];
         await authAxios
           .post(
-            `${coreAPI}/shelters/${shelterId}/adoptionForms/create/${values.pet}`,
+            `${coreAPI}/shelters/${shelterId}/adoptionForms/create-by-template/${values.pet}`,
             {
               title: values.title,
               description: values.description,
-              questions:selectedTemplate.questions || []
+              questions: newQuestions || [],
             }
           )
           .then((res) => {
             toast.success(
-              "Tạo mẫu nhận nuôi thành công! Đang chuyển hướng ..."
+              "Tạo form nhận nuôi thành công! Đang chuyển hướng ..."
             );
             setShelterForms([...shelterForms, res.data]);
             form.reset();
@@ -123,7 +126,7 @@ export default function CreateDialog() {
           })
           .catch((err) => {
             console.error("Error creating adoption form:", err);
-            toast.error("Tạo mẫu nhận nuôi thất bại. Vui lòng thử lại.");
+            toast.error("Tạo form nhận nuôi thất bại. Vui lòng thử lại.");
           });
       }
     }
@@ -133,7 +136,7 @@ export default function CreateDialog() {
     (pet: Pet) => pet._id == form.watch("pet")
   )?.species.name;
 
-  console.log("Pet Specialization:", petSpecialization);
+  // console.log("Pet Specialization:", petSpecialization);
 
   const templates = shelterTemplates
     .filter(
@@ -150,17 +153,17 @@ export default function CreateDialog() {
       <DialogTrigger asChild>
         <Button variant="default">
           <Plus />
-          Tạo mẫu
+          Tạo form
         </Button>
       </DialogTrigger>
 
-      <DialogContent>
+      <DialogContent className="sm:min-w-2xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
               <DialogTitle>Tạo form nhận nuôi</DialogTitle>
               <DialogDescription>
-                Nhập thông tin cần thiết để tạo mẫu nhận nuôi mới. Bạn có thể
+                Nhập thông tin cần thiết để tạo form nhận nuôi mới. Bạn có thể
                 chỉnh sửa sau.
               </DialogDescription>
             </DialogHeader>
@@ -198,16 +201,46 @@ export default function CreateDialog() {
                         value={field.value}
                         defaultValue={field.value}
                       >
-                        <SelectTrigger className="w-2/3">
-                          <SelectValue placeholder="Chọn thú nuôi" />
+                        <SelectTrigger className="w-full">
+                          {availablePets.some(
+                            (p: any) => p._id == field.value
+                          ) ? (
+                            <SelectValue>
+                              {availablePets.find(
+                                (p: any) => p._id == field.value
+                              )?.name}
+                            </SelectValue>  
+                          ) : (
+                            <SelectValue placeholder="Chọn thú nuôi" />
+                          )}
                         </SelectTrigger>
 
                         <SelectContent className="max-h-[10rem]">
                           <SelectGroup>
                             <SelectLabel>Mã thú nuôi</SelectLabel>
                             {availablePets.map((s: any) => (
-                              <SelectItem key={s._id} value={s._id}>
-                                {s.petCode}
+                              <SelectItem
+                                key={s._id}
+                                value={s._id}
+                                className="flex items-center w-full mx-2 py-1"
+                              >
+                                <Avatar className="rounded-none w-8 h-8">
+                                  <AvatarImage src={s?.photos[0]} alt={s?.name} className="w-8 h-8 object-center object-cover"/>
+                                  <AvatarFallback className="rounded-none">
+                                    <span className="font-medium">
+                                      {s.name.charAt(0).toUpperCase()}
+                                    </span>
+                                  </AvatarFallback>
+                                </Avatar>
+
+                                <div className="ml-2 flex flex-col overflow-hidden ">
+                                  <span className="text-sm font-medium truncate">
+                                    {s.name}
+                                  </span>
+                                  <span className="text-xs text-(--muted-foreground) truncate">
+                                    #{s.petCode}
+                                  </span>
+                                </div>
                               </SelectItem>
                             ))}
                           </SelectGroup>
@@ -224,7 +257,7 @@ export default function CreateDialog() {
                 name="adoptionTemplate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mẫu nhận nuôi</FormLabel>
+                    <FormLabel>Form nhận nuôi</FormLabel>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild>
@@ -232,20 +265,20 @@ export default function CreateDialog() {
                             variant="outline"
                             role="combobox"
                             // aria-expanded={open}
-                            className="w-[200px] justify-between"
+                            className="w-full justify-between font-normal"
                           >
                             {field.value
                               ? templates.find(
                                   (template) => template.value == field.value
                                 )?.label
-                              : "Chọn mẫu..."}
+                              : "Chọn form..."}
                             <ChevronsUpDown className="opacity-50" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[200px] p-0">
-                          <Command>
+                        <PopoverContent className="w-[300px] p-0">
+                          <Command className="w-full">
                             <Input
-                              placeholder={`Tìm mẫu...`}
+                              placeholder={`Tìm form...`}
                               className="
                               placeholder:text-muted-foreground flex h-10 w-full rounded-none
                               bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50 border-0
@@ -255,7 +288,7 @@ export default function CreateDialog() {
                               }}
                             />
                             <CommandList>
-                              <CommandEmpty>Không tìm thấy mẫu.</CommandEmpty>
+                              <CommandEmpty>Không tìm thấy form.</CommandEmpty>
                               <CommandGroup>
                                 {templates
                                   .filter((template) => {
@@ -299,9 +332,17 @@ export default function CreateDialog() {
                   <FormItem className="sm:col-span-2">
                     <FormLabel>Mô tả</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Thêm mô tả (tùy chọn)"
-                        {...field}
+                      <MinimalTiptapEditor
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        className="w-full"
+                        editorContentClassName="p-5"
+                        output="html"
+                        placeholder="Enter your description..."
+                        autofocus={true}
+                        hideToolbar={false}
+                        editable={true}
+                        editorClassName="focus:outline-hidden"
                       />
                     </FormControl>
                     <FormMessage />

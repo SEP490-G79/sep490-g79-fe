@@ -32,13 +32,22 @@ import type { Question } from "@/types/Question";
 import { Dock, DockIcon } from "@/components/ui/magicui/dock";
 import { Skeleton } from "@/components/ui/skeleton";
 import PreviewForm from "./PreviewForm";
+import { DndContext, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { Pet } from "@/types/Pet";
+import EditDialog from "./EditDialog";
 
 export default function AdoptionForm() {
   const { shelterId, formId } = useParams<{
     shelterId: string;
     formId: string;
   }>();
-  const { coreAPI, shelterForms, setShelterForms } = useContext(AppContext);
+  const { coreAPI, shelterForms, setShelterForms, petsList } =
+    useContext(AppContext);
   const [adoptionForm, setAdoptionForm] = useState<AdoptionForm>();
   const [questionsList, setQuestionsList] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -66,13 +75,15 @@ export default function AdoptionForm() {
         }
       })
       .catch((err) => {
-        console.error(err);
-        toast.error("Lỗi khi tải dữ liệu form nhận nuôi");
+        // console.error(err);
+        toast.error(
+          err?.response?.data?.message || "Lỗi khi tải dữ liệu form nhận nuôi"
+        );
       })
       .finally(() => {
         setTimeout(() => {
           setIsLoading(false);
-        }, 500);  
+        }, 500);
       });
   };
   const handleCreateQuestion = () => {
@@ -129,13 +140,44 @@ export default function AdoptionForm() {
         updatedForm
       );
       handleFetchAdoptionForm();
-      toast.success("Lưu mẫu nhận nuôi thành công!");
-    } catch (error) {
-      console.error("Error saving adoption form:", error);
-      toast.error("Lỗi khi lưu mẫu nhận nuôi. Vui lòng thử lại sau.");
+      toast.success("Lưu form nhận nuôi thành công!");
+    } catch (error: any) {
+      // console.error("Error saving adoption form:", error);
+      toast.error(error?.response?.data?.message ||"Lỗi khi lưu form nhận nuôi. Vui lòng thử lại sau.");
     }
   };
 
+  //DND
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 5,
+    },
+  });
+
+  const sensors = useSensors(mouseSensor);
+  const handleDragStart = (event: any) => {
+    const { active } = event;
+    const draggedId = active?.id;
+    const found = questionsList.find((q) => q._id === draggedId);
+  };
+
+  const handleDragEnd = (e: any) => {
+    const { active, over } = e;
+
+    // console.log("Drag Ended:", active.id, "over:", over?.id);
+    if (active.id != over?.id) {
+      setQuestionsList((prev) => {
+        const oldIndex = prev.findIndex((q) => q._id == active.id);
+        const newIndex = prev.findIndex((q) => q._id == over?.id);
+
+        const updatedQuestions = [...prev];
+        const [movedQuestion] = updatedQuestions.splice(oldIndex, 1);
+        updatedQuestions.splice(newIndex, 0, movedQuestion);
+
+        return updatedQuestions;
+      });
+    }
+  };
   // console.log(questionsList);
 
   const DATA = {
@@ -168,8 +210,13 @@ export default function AdoptionForm() {
   }
 
   return (
-    <div className="w-full flex flex-wrap">
-      {/* <Breadcrumb className="basis-full mb-3">
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="w-full flex flex-wrap">
+        {/* <Breadcrumb className="basis-full mb-3">
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink
@@ -183,62 +230,97 @@ export default function AdoptionForm() {
         </BreadcrumbList>
       </Breadcrumb> */}
 
-      <div className="basis-full">
-        <Tabs defaultValue="edit" className="w-full">
-          <TabsList>
-            <TabsTrigger value="edit">
-              <PenLine /> Chỉnh sửa
-            </TabsTrigger>
-            <TabsTrigger value="preview">
-              <Eye /> Xem trước
-            </TabsTrigger>
-          </TabsList>
+        <div className="basis-full">
+          <Tabs defaultValue="edit" className="w-full">
+            <TabsList>
+              <TabsTrigger value="edit">
+                <PenLine /> Chỉnh sửa
+              </TabsTrigger>
+              <TabsTrigger value="preview">
+                <Eye /> Xem trước
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="edit">
-            <div className="basis-full flex mb-3 ">
-              <div className="basis-full sm:basis-2/3 sm:text-left">
-                <h1 className="text-xl font-medium mb-2 hover:text-(--primary)">
-                  {/* <EditDialog
-                    adoptionTemplate={adoptionTemplate}
-                    setAdoptionTemplate={setAdoptionTemplate}
-                  /> */}
-                  <Button variant={"link"}>
-                    <PenBox strokeWidth={2} />
-                  </Button>
-                  Tiêu đề: {adoptionForm?.title}
-                </h1>
-                {/* <h1 className="text-md font-medium ml-10 mb-2">
+            <TabsContent value="edit">
+              <div className="basis-full flex mb-3 ">
+                <div className="basis-full sm:basis-2/3 sm:text-left">
+                  <h1 className="text-xl font-medium mb-2 hover:text-(--primary)">
+                    <EditDialog
+                      setIsLoading={setIsLoading}
+                      adoptionForm={adoptionForm}
+                      setAdoptionForm={setAdoptionForm}
+                    />
+                    {/* <Button variant={"link"}>
+                      <PenBox strokeWidth={2} />
+                    </Button> */}
+                    Tiêu đề: {adoptionForm?.title}
+                  </h1>
+                  {/* <h1 className="text-md font-medium ml-10 mb-2">
                   Loài: {adoptionTemplate?.species?.name}
                 </h1> */}
-                <div className=" flex gap-3 ml-10 mb-2 ">
-                  {/* <p className="text-sm">Mô tả: </p> */}
-                  <p className="text-sm text-(--muted-foreground)">
-                    {adoptionForm?.description ||
-                      "Mô tả mẫu nhận nuôi chưa được cung cấp."}
-                  </p>
+                  <div className=" flex gap-3 ml-10 mb-2 ">
+                    {/* <p className="text-sm">Mô tả: </p> */}
+                    {/* <p className="text-sm text-(--muted-foreground)">
+                      {adoptionForm?.description ||
+                        "Mô tả form nhận nuôi chưa được cung cấp."}
+                    </p> */}
+                    <div className="flex items-center w-full mx-2 py-1">
+                      <Avatar className="rounded-none w-8 h-8">
+                        <AvatarImage
+                          src={
+                            petsList?.find(
+                              (p: Pet) => p._id == adoptionForm?.pet._id
+                            )?.photos[0]
+                          }
+                          alt={adoptionForm?.pet?.name}
+                          className="w-8 h-8 object-center object-cover"
+                        />
+                        <AvatarFallback className="rounded-none">
+                          <span className="font-medium">
+                            {adoptionForm?.pet.name.charAt(0).toUpperCase()}
+                          </span>
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div className="ml-2 flex flex-col overflow-hidden ">
+                        <span className="text-sm font-medium truncate">
+                          {adoptionForm?.pet.name}
+                        </span>
+                        <span className="text-xs text-(--muted-foreground) truncate">
+                          #{adoptionForm?.pet.petCode}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="basis-full sm:basis-1/3 sm:text-right">
+                  <Button variant={"default"} onClick={handleSave}>
+                    <SaveAllIcon /> Lưu
+                  </Button>
                 </div>
               </div>
-              <div className="basis-full sm:basis-1/3 sm:text-right">
-                <Button variant={"default"} onClick={handleSave}>
-                  <SaveAllIcon /> Lưu
-                </Button>
+
+              <Separator />
+
+              <div className="basis-full flex flex-wrap ">
+                <SortableContext
+                  items={questionsList.map((q) => q._id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {questionsList?.map((question: Question) => {
+                    return (
+                      <QuestionCard
+                        key={question._id}
+                        _id={question._id}
+                        question={question}
+                        setQuestionsList={setQuestionsList}
+                      />
+                    );
+                  })}
+                </SortableContext>
               </div>
-            </div>
-
-            <Separator />
-
-            <div className="basis-full flex flex-wrap ">
-              {questionsList?.map((question: Question) => {
-                return (
-                  <QuestionCard
-                    question={question}
-                    setQuestionsList={setQuestionsList}
-                  />
-                );
-              })}
-            </div>
-            <div className="flex basis-full justify-start my-3">
-              {/* <Tooltip>
+              <div className="flex basis-full justify-start my-3">
+                {/* <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant={"ghost"}
@@ -252,49 +334,50 @@ export default function AdoptionForm() {
                     <span className="text-sm">Thêm câu hỏi</span>
                   </TooltipContent>
                 </Tooltip> */}
-              <Button
-                variant={"outline"}
-                size={"sm"}
-                onClick={handleCreateQuestion}
-              >
-                <Plus /> Thêm câu hỏi
-              </Button>
-            </div>
-            <div className="flex flex-col items-center justify-center sticky bottom-4 left-0 right-0 mx-auto">
-              <TooltipProvider>
-                <Dock
-                  direction="middle"
-                  className="bg-(--background) border-2 border-(--border)"
+                <Button
+                  variant={"outline"}
+                  size={"sm"}
+                  onClick={handleCreateQuestion}
                 >
-                  {DATA.navbar.map((item) => (
-                    <DockIcon key={item.label}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            onClick={item.function}
-                            variant="ghost"
-                            className="hover:text-(--primary)"
-                          >
-                            {item.icon}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{item.label}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </DockIcon>
-                  ))}
-                </Dock>
-              </TooltipProvider>
-            </div>
-          </TabsContent>
+                  <Plus /> Thêm câu hỏi
+                </Button>
+              </div>
+              <div className="flex flex-col items-center justify-center sticky bottom-4 left-0 right-0 mx-auto">
+                <TooltipProvider>
+                  <Dock
+                    direction="middle"
+                    className="bg-(--background) border-2 border-(--border)"
+                  >
+                    {DATA.navbar.map((item) => (
+                      <DockIcon key={item.label}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={item.function}
+                              variant="ghost"
+                              className="hover:text-(--primary)"
+                            >
+                              {item.icon}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{item.label}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </DockIcon>
+                    ))}
+                  </Dock>
+                </TooltipProvider>
+              </div>
+            </TabsContent>
 
-          <TabsContent value="preview">
-            {/* <p>Preview: {adoptionForm?.title}</p> */}
-            <PreviewForm/>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="preview">
+              {/* <p>Preview: {adoptionForm?.title}</p> */}
+              <PreviewForm />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-    </div>
+    </DndContext>
   );
 }
