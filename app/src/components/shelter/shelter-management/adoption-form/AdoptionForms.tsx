@@ -12,7 +12,16 @@ import {
   type VisibilityState,
   type PaginationState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import {
+  ArrowLeftRight,
+  ArrowUpDown,
+  ChevronDown,
+  List,
+  MoreHorizontal,
+  Pen,
+  SwitchCamera,
+  Trash,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,121 +43,283 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mockAdoptionForms, type AdoptionForm } from "@/types/AdoptionForm";
+import { type AdoptionForm } from "@/types/AdoptionForm";
 import { Badge } from "@/components/ui/badge";
-
-const removeDiacritics = (str: string) =>
-  str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d") 
-    .replace(/Đ/g, "D");
-
-export const columns: ColumnDef<AdoptionForm>[] = [
-  {
-    accessorKey: "stt",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        STT
-        <ArrowUpDown className="ml-1" />
-      </Button>
-    ),
-    cell: ({ row }) => <span className="pl-5">{row.index + 1}</span>,
-  },
-  {
-    accessorKey: "title",
-    header: ({ column }) => <Button variant="ghost">Tiêu đề</Button>,
-    filterFn: (row, columnId, filterValue) => {
-      const cell = String(row.getValue<string>(columnId) ?? "");
-      const keyword = removeDiacritics(filterValue ?? "").toLowerCase();
-      return removeDiacritics(cell).toLowerCase().includes(keyword);
-    },
-    cell: ({ row }) => <span>{row.getValue("title")}</span>,
-  },
-  {
-    accessorKey: "shelter",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Mã số thú
-        <ArrowUpDown className="ml-1" />
-      </Button>
-    ),
-    cell: ({ row }) => <span>{row.getValue("shelter")}</span>,
-  },
-  {
-    accessorKey: "createdAt",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Ngày tạo
-        <ArrowUpDown className="ml-1" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const iso = row.getValue<string>("createdAt");
-      return (
-        <span className="pl-3">
-          {new Date(iso).toLocaleDateString("vi-VN", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "status",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Trạng thái
-        <ArrowUpDown className="ml-1" />
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <div className="w-full text-center">
-        <Badge variant="default">{row.getValue("status")}</Badge>
-      </div>
-    ),
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const adoptionForms = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Edit adoption form</DropdownMenuItem>
-            <DropdownMenuItem>View adoption submissions</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
+import AppContext from "@/context/AppContext";
+import useAuthAxios from "@/utils/authAxios";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import CreateDialog from "./CreateDialog";
+import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { Pet } from "@/types/Pet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { DialogDescription } from "@radix-ui/react-dialog";
+import {
+  Select,
+  SelectGroup,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectLabel,
+  SelectItem,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { set } from "date-fns";
 
 export function AdoptionForms() {
+  const { shelterId } = useParams();
+  const { coreAPI, shelterForms, setShelterForms, petsList } =
+    React.useContext(AppContext);
+  const authAxios = useAuthAxios();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const removeDiacritics = (str: string) =>
+    str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D");
+
+  const handleDelete = (formId: string) => {
+    authAxios
+      .delete(`${coreAPI}/shelters/${shelterId}/adoptionForms/${formId}/delete`)
+      .then(() => {
+        setShelterForms([...shelterForms].filter((form) => form._id != formId));
+
+        toast.success("Xóa form nhận nuôi thành công");
+      })
+      .catch((err) => {
+        toast.error(err.data.response.message);
+      });
+  };
+  const handleChangeStatus = (formId: string, status: string) => {
+    setIsLoading(true);
+    authAxios
+      .put(
+        `${coreAPI}/shelters/${shelterId}/adoptionForms/${formId}/change-status`,
+        {
+          status,
+        }
+      )
+      .then((res) => {
+        setShelterForms(
+          shelterForms.map((form) =>
+            form._id == formId ? { ...form, status: res.data.status } : form
+          )
+        );
+        toast.success("Cập nhật trạng thái thành công");
+      })
+      .catch((err) => {
+        // console.log(err);
+        toast.error(err?.data?.response?.message || "Cập nhật trạng thái thất bại");
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
+      });
+  };
+  React.useEffect(() => {
+    authAxios
+      .get(`${coreAPI}/shelters/${shelterId}/adoptionForms/get-by-shelter`)
+      .then((res) => {
+        setShelterForms(res.data);
+      })
+      .catch((err) => {
+        console.log(err.data.response.message);
+      });
+  }, [shelterId]);
+  const columns: ColumnDef<AdoptionForm>[] = [
+    {
+      accessorKey: "stt",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          STT
+          <ArrowUpDown className="ml-1" />
+        </Button>
+      ),
+      cell: ({ row }) => <span className="pl-5">{row.index + 1}</span>,
+    },
+    {
+      accessorKey: "title",
+      header: ({ column }) => <Button variant="ghost">Tiêu đề</Button>,
+      filterFn: (row, columnId, filterValue) => {
+        const cell = String(row.getValue<string>(columnId) ?? "");
+        const keyword = removeDiacritics(filterValue ?? "").toLowerCase();
+        return removeDiacritics(cell).toLowerCase().includes(keyword);
+      },
+      cell: ({ row }) => <span>{row.getValue("title")}</span>,
+    },
+    {
+      accessorKey: "pet",
+      accessorFn: (s) => s.pet,
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Thú nuôi
+          <ArrowUpDown className="ml-1" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const pet = row.getValue<Pet>("pet");
+        return (
+          <div className="flex items-center">
+            <Avatar className=" w-8 h-8 ring-1 ring-primary">
+              <AvatarImage
+                src={petsList.find((p: Pet) => p._id == pet._id)?.photos[0]}
+                alt={pet.name}
+                className="object-center object-cover"
+              />
+              <AvatarFallback>
+                {pet.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="ml-2 flex flex-col overflow-hidden">
+              <span className="text-sm truncate font-medium">{pet.name}</span>
+              <span className="text-sm truncate">#{pet.petCode}</span>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Ngày tạo
+          <ArrowUpDown className="ml-1" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const iso = row.getValue<string>("createdAt");
+        return (
+          <span className="pl-3">
+            {new Date(iso).toLocaleDateString("vi-VN", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "status",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Trạng thái
+          <ArrowUpDown className="ml-1" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <div className="w-full ml-3 text-start">
+          <Badge variant="outline" className="">
+            {row.getValue("status")}
+          </Badge>
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const adoptionForm = row.original;
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <Link to={`${adoptionForm._id}`} className="flex gap-1">
+                  <Pen /> Chỉnh sửa
+                </Link>
+              </DropdownMenuItem>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <DropdownMenuItem
+                    onSelect={(event) => event.preventDefault()}
+                  >
+                    <ArrowLeftRight /> Chuyển đổi trạng thái
+                  </DropdownMenuItem>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="text-lg font-semibold">
+                      Chuyển đổi trạng thái
+                    </DialogTitle>
+                  </DialogHeader>
+                  <DialogDescription>
+                    <p className="text-sm">
+                      Khi chuyển đổi trạng thái của form thì bạn thú nuôi sẽ
+                      được chuyển sang trạng thái tương ứng với form này.
+                    </p>
+                  </DialogDescription>
+                  <div className="flex flex-col space-y-4 mt-4">
+                    <Select
+                      onValueChange={(value) => {
+                        handleChangeStatus(adoptionForm._id, value);
+                      }}
+                      defaultValue={adoptionForm.status}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Chọn trạng thái" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Trạng thái</SelectLabel>
+                          {["draft", "active"].map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status.toUpperCase()}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <DropdownMenuItem>
+                <List /> Xem dánh sách yêu cầu
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                disabled={adoptionForm.status.toUpperCase() != "DRAFT"}
+                onClick={() => handleDelete(adoptionForm._id)}
+              >
+                <Trash /> Xóa form
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -159,7 +330,10 @@ export function AdoptionForms() {
     pageSize: 5,
   });
   const table = useReactTable({
-    data: mockAdoptionForms,
+    data: shelterForms.sort(
+      (a: any, b: any) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    ),
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -177,18 +351,65 @@ export function AdoptionForms() {
       pagination,
     },
   });
+  if (isLoading) {
+    return (
+      <div className="w-full">
 
+        <div className="flex justify-between items-center py-4">
+          <Skeleton className="h-10 w-1/3 rounded" />
+          <Skeleton className="h-10 w-24 rounded" />
+        </div>
+
+
+        <div className="rounded-md border">
+
+          <div className="flex px-4 py-2 border-b">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <Skeleton key={idx} className="h-6 w-24 mr-4 last:mr-0 rounded" />
+            ))}
+          </div>
+
+     
+          <div>
+            {Array.from({ length: 5 }).map((_, rowIdx) => (
+              <div
+                key={rowIdx}
+                className="flex px-4 py-3 items-center border-b last:border-0"
+              >
+                {Array.from({ length: 6 }).map((__, cellIdx) => (
+                  <Skeleton
+                    key={cellIdx}
+                    className="h-4 w-20 mr-4 last:mr-0 rounded"
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+
+        <div className="flex items-center justify-between py-4">
+          <div className="flex space-x-2">
+            <Skeleton className="h-8 w-16 rounded" />
+            <Skeleton className="h-8 w-16 rounded" />
+          </div>
+          <Skeleton className="h-6 w-32 rounded" />
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <div className="flex justify-between items-center py-4">
         <Input
-          placeholder="Filter title..."
-          value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+          placeholder="Tìm kiếm..."
+          value={(table.getColumn("pet")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("title")?.setFilterValue(event.target.value)
+            table.getColumn("pet")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
+        <CreateDialog />
       </div>
       <div className="rounded-md border">
         <Table>
@@ -231,7 +452,7 @@ export function AdoptionForms() {
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className=" min-h-[200px] text-center"
                 >
                   No results.
                 </TableCell>

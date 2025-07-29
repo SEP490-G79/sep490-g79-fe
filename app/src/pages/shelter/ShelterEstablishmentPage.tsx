@@ -35,6 +35,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import generateCodename from "@/utils/shelterCodeGenerator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DataTableReverse } from "@/components/data-table-reverse";
+import AddressInputWithGoong from "@/utils/AddressInputWithGoong";
 
 
 const shelterEstablishmentSchema = z.object({
@@ -43,12 +45,14 @@ const shelterEstablishmentSchema = z.object({
     .trim()
     .min(3, "Tên trạm không được để trống")
     .regex(/^[^\d]*$/, "Tên trạm không được chứa số"),
-  shelterCode: z.string().min(1),
+  shelterCode: z.string().min(3, "Mã trạm phải có ít nhất 3 kí tự"),
   hotline: z
-    .string()
-    .trim()
-    .min(3, "Vui lòng nhập số hotline đầy đủ")
-    .regex(/^\d+$/, "Hotline chỉ được chứa số"),
+  .string()
+  .trim()
+  .regex(
+    /^((\+84)|0)(3|5|7|8|9)\d{8}$/,
+    "Hotline không đúng định dạng số điện thoại Việt Nam"
+  ),
   email: z.string().email("Email không hợp lệ"),
   address: z.string().min(3, "Vui lòng nhập địa chỉ đầy đủ"),
   aspiration: z.string().min(10, "Vui lòng nhập nguyện vọng rõ ràng"),
@@ -72,7 +76,7 @@ type detailDialogData = {
   detail: {
     name: string;
     shelterCode: string;
-    hotline: number;
+    hotline: string;
     email: string;
     address: string;
     aspiration: string;
@@ -97,7 +101,7 @@ const ShelterEstablishmentPage: React.FC = () => {
       detail: {
         name: "",
         shelterCode: "",
-        hotline: 123,
+        hotline: "",
         email: "",
         address: "",
         aspiration: "",
@@ -108,6 +112,7 @@ const ShelterEstablishmentPage: React.FC = () => {
         updatedAt: new Date(),
       },
     });
+    const [location, setLocation] = useState({ lat: 0, lng: 0 });
 
   const form = useForm<z.infer<typeof shelterEstablishmentSchema>>({
     resolver: zodResolver(shelterEstablishmentSchema),
@@ -122,6 +127,8 @@ const ShelterEstablishmentPage: React.FC = () => {
       commitment: false,
     },
   });
+
+  const { handleSubmit, reset, setValue, watch } = form
 
   useEffect(() => {
     authAxios
@@ -169,7 +176,7 @@ useEffect(() => {
         );
       },
       cell: ({ row }) => {
-        return <span className="px-2">{row.original.name}</span>;
+        return <span className="px-2 block max-w-[9vw] truncate">{row.original.name}</span>;
       },
     },
     {
@@ -187,7 +194,7 @@ useEffect(() => {
         );
       },
       cell: ({ row }) => {
-        return <span className="px-2">{row.original.email}</span>;
+        return <span className="px-2 block max-w-[9vw] truncate">{row.original.email}</span>;
       },
     },
     {
@@ -205,7 +212,7 @@ useEffect(() => {
         );
       },
       cell: ({ row }) => {
-        return <span className="px-2">{row.original.hotline}</span>;
+        return <span className="px-2 block max-w-[9vw] truncate">{row.original.hotline}</span>;
       },
     },
     {
@@ -223,7 +230,14 @@ useEffect(() => {
         );
       },
       cell: ({ row }) => {
-        return <span className="px-2">{row.original.address}</span>;
+        return (
+          <span
+            className="px-2 block max-w-[9vw] truncate"
+            title={row.original.address}
+          >
+            {row.original.address}
+          </span>
+        );
       },
     },
     {
@@ -242,6 +256,7 @@ useEffect(() => {
       },
       cell: ({ row }) => {
         const status = row.original.status;
+        console.log(status);
         let statusTiengViet = "";
         if (status === "active") {
           statusTiengViet = "Chấp thuận";
@@ -259,6 +274,13 @@ useEffect(() => {
           );
         } else if (status === "banned") {
           statusTiengViet = "Bị cấm";
+          return (
+            <Badge variant="destructive" className="mx-2">
+              {statusTiengViet}
+            </Badge>
+          );
+        } else if (status === "cancelled") {
+          statusTiengViet = "Hủy bỏ";
           return (
             <Badge variant="destructive" className="mx-2">
               {statusTiengViet}
@@ -330,29 +352,37 @@ useEffect(() => {
           >
             <DropdownMenuLabel>Hành động</DropdownMenuLabel>
             <DropdownMenuGroup>
-              <DropdownMenuItem 
-              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
-              onClick={() => {
-                setDetailDialog({
-                  isOpen: true,
-                  detail: {
-                    name: row.original.name,
-                    shelterCode: row.original.shelterCode,
-                    hotline: row.original.hotline,
-                    email: row.original.email,
-                    address: row.original.address,
-                    aspiration: row.original.aspiration,
-                    shelterLicenseURL: row.original.shelterLicenseURL,
-                    status: row.original.status,
-                    rejectReason: row.original.rejectReason,
-                    createdAt: row.original.createdAt,
-                    updatedAt: row.original.updatedAt,
-                  },
-                });
-              }}
+              <DropdownMenuItem
+                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
+                onClick={() => {
+                  setDetailDialog({
+                    isOpen: true,
+                    detail: {
+                      name: row.original.name,
+                      shelterCode: row.original.shelterCode,
+                      hotline: row.original.hotline,
+                      email: row.original.email,
+                      address: row.original.address,
+                      aspiration: row.original.aspiration,
+                      shelterLicenseURL: row.original.shelterLicenseURL,
+                      status: row.original.status,
+                      rejectReason: row.original.rejectReason,
+                      createdAt: row.original.createdAt,
+                      updatedAt: row.original.updatedAt,
+                    },
+                  });
+                }}
               >
                 Xem thông tin chi tiết
               </DropdownMenuItem>
+              {row.original.status === "verifying" && (
+                <DropdownMenuItem
+                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
+                  onClick={() => handleCancelRequest(row.original.id)}
+                >
+                  Hủy yêu cầu
+                </DropdownMenuItem>
+              )}
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -392,6 +422,7 @@ useEffect(() => {
     formData.append("address", values.address);
     formData.append("shelterLicense", values.shelterLicense);
     formData.append("aspiration", values.aspiration);
+    formData.append("location", JSON.stringify(location)); 
 
     try {
         // formData.forEach((value, key) => {
@@ -429,37 +460,29 @@ useEffect(() => {
     }
   };
 
-  // if (existingRequest) {
-  //   let trangThaiYeuCau = '';
-  //   let styleYeuCau = "";
-  //   if(existingRequest.status === "verifying"){
-  //       trangThaiYeuCau = "Đang chờ duyệt"
-  //       styleYeuCau = "font-semibold uppercase text-primary"
-  //   }else if(existingRequest.status === "cancelled"){
-  //       trangThaiYeuCau = "Từ chối"
-  //       styleYeuCau = "font-semibold uppercase text-destructive"
-  //   }else if(existingRequest.status === "banned"){
-  //       trangThaiYeuCau = "Bị cấm"
-  //       styleYeuCau = "font-semibold uppercase text-destructive"
-  //   }else{
-  //       trangThaiYeuCau = "Đã được phê duyệt"
-  //       styleYeuCau = "font-semibold uppercase text-green-500"
-  //   }
-  //   return (
-  //     <Card className="max-w-xl mx-auto mt-8">
-  //       <CardHeader>
-  //         <CardTitle className="font-bold text-lg text-center">Theo dõi trạng thái yêu cầu thành lập trạm cứu hộ</CardTitle>
-  //       </CardHeader>
-  //       <CardContent className="space-y-2 flex flex-col gap-2">
-  //         <p><strong className="border border-2 rounded-sm px-2 py-1">Tên trạm:</strong> {existingRequest.name}</p>
-  //         <p><strong className="border border-2 rounded-sm px-2 py-1">Hotline:</strong> {existingRequest.hotline}</p>
-  //         <p><strong className="border border-2 rounded-sm px-2 py-1">Email:</strong> {existingRequest.email}</p>
-  //         <p><strong className="border border-2 rounded-sm px-2 py-1">Địa chỉ:</strong> {existingRequest.address}</p>
-  //         <p><strong className="border border-2 rounded-sm px-2 py-1">Trạng thái:</strong> <span className={styleYeuCau}>{trangThaiYeuCau}</span></p>
-  //       </CardContent>
-  //     </Card>
-  //   );
-  // }
+  const handleCancelRequest = async (shelterId : string) => {
+    try {
+        await authAxios.put(`${shelterAPI}/cancel-shelter-request/${shelterId}`);
+        setTimeout(() => {
+          toast.success("Hủy yêu cầu thành công")
+          authAxios
+                  .get(`${shelterAPI}/get-shelter-request`)
+                  .then(({ data }) => {
+                    setRequestList(data?.shelterRequest);
+                    setEligibleToRequest({
+                      isEligible: data?.isEligible,
+                      reason: data?.reason,
+                    });
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                  });
+        }, 2000)
+        
+    } catch (error: any) {
+      console.log(error?.response.data.message)
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col py-6 px-40">
@@ -598,16 +621,15 @@ useEffect(() => {
                               control={form.control}
                               name="address"
                               render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Địa chỉ trạm cứu hộ</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      placeholder="Địa chỉ cụ thể"
-                                      {...field}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
+                                <AddressInputWithGoong
+                                  value={field.value}
+                                  onChange={(val) => {
+                                    field.onChange(val);
+                                    setValue("address", val);
+                                  }}
+                                  onLocationChange={(loc) => setLocation(loc)}
+                                  error={form.formState.errors.address?.message}
+                                />
                               )}
                             />
 
@@ -815,12 +837,20 @@ useEffect(() => {
           </div>
         </div>
         <div className="col-span-12 px-5">
-          <DataTable columns={columns} data={filteredRequestList ?? []} />
+          <DataTableReverse
+            columns={columns}
+            data={filteredRequestList ?? []}
+          />
         </div>
       </div>
 
       {/* Dialog chi tiet */}
-      <Dialog open={detailDialog.isOpen}>
+      <Dialog
+        open={detailDialog.isOpen}
+        onOpenChange={(open) =>
+          setDetailDialog((prev) => ({ ...prev, isOpen: open }))
+        }
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-center">
@@ -896,7 +926,9 @@ useEffect(() => {
               {(detailDialog?.detail.status && (
                 <Badge
                   variant={
-                    ["verifying", "active"].includes(detailDialog?.detail.status)
+                    ["verifying", "active"].includes(
+                      detailDialog?.detail.status
+                    )
                       ? "default"
                       : "destructive"
                   }
@@ -922,9 +954,13 @@ useEffect(() => {
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="secondary" className="cursor-pointer" 
-               onClick={() => setDetailDialog({...detailDialog, isOpen: false})}
-               >
+              <Button
+                variant="secondary"
+                className="cursor-pointer"
+                onClick={() =>
+                  setDetailDialog({ ...detailDialog, isOpen: false })
+                }
+              >
                 Đóng
               </Button>
             </DialogClose>

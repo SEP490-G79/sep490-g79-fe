@@ -37,7 +37,7 @@ const adoptions: { title: string; href: string; description: string }[] = [
   },
   {
     title: "Danh sách trung tâm cứu hộ",
-    href: "#",
+    href: "/shelters",
     description:
       "Xem các trung tâm cứu trợ đang chăm sóc thú cưng và sẵn sàng kết nối với bạn.",
   },
@@ -53,7 +53,7 @@ const adoptions: { title: string; href: string; description: string }[] = [
 const supports: { title: string; href: string; description: string }[] = [
   {
     title: "Ủng hộ",
-    href: "#",
+    href: "/donation",
     description:
       "Chung tay hỗ trợ PawShelter bằng hiện vật, tài chính hoặc thời gian của bạn.",
   },
@@ -65,7 +65,7 @@ const supports: { title: string; href: string; description: string }[] = [
   },
   {
     title: "Danh sách bài viết",
-    href: "#",
+    href: "/blogfeed",
     description:
       "Đọc các câu chuyện, hướng dẫn chăm sóc và thông tin hữu ích về thế giới thú cưng.",
   },

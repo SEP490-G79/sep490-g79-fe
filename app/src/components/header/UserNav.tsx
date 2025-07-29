@@ -1,8 +1,7 @@
-import React, { useContext, useState } from "react";
-
+import { useContext, useState, useEffect } from "react";
+import useAuthAxios from "@/utils/authAxios";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
-import Image from "@/assets/card.jpg";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,90 +15,112 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import AppContext from "@/context/AppContext";
 import { Bell, Dot } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
-import { mockNotifications, type Notification } from "@/types/Notification";
-
+import { type Notification } from "@/types/Notification";
 function UserNav() {
-  const { user, logout } = useContext(AppContext);
-  const [notifications, setNotifications] =
-    useState<Notification[]>(mockNotifications);
-
+  const { user, logout, shelters, coreAPI } = useContext(AppContext);
+  const authAxios = useAuthAxios();
   const navigate = useNavigate();
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unseenCount, setUnseenCount] = useState(0);
+
+  const hasShelter = shelters?.filter(shelter =>
+    shelter.members.some(member => member._id === user?._id)
+  );
+
+  useEffect(() => {
+    if (user?._id) {
+      fetchNotifications();
+    }
+  }, [user?._id]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await authAxios.get(`${coreAPI}/notifications/get-all`);
+      const mapped = res.data.notifications
+        .map((n: any) => ({
+          ...n,
+          createdAt: new Date(n.createdAt),
+        }))
+        .sort((a: any, b: any) => b.createdAt.getTime() - a.createdAt.getTime());
+
+      setNotifications(mapped);
+      setUnseenCount(mapped.filter((n: any) => !n.seen).length);
+      // console.log("Notifications fetched:", mapped);
+    } catch (err) {
+      console.error("Lỗi khi lấy thông báo:", err);
+    }
+  };
+
+  const handleNotificationClick = async (notificationId: string, redirectUrl: string) => {
+    try {
+      await authAxios.put(`${coreAPI}/notifications/${notificationId}/mark-seen`);
+      fetchNotifications();
+      navigate(redirectUrl);
+    } catch (err) {
+      console.error("Lỗi khi đánh dấu đã đọc:", err);
+    }
+  };
+
+
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <div className="flex items-center space-x-4 cursor-pointer">
-            <div className="relative">
-              <button className="focus:outline-none flex items-center">
-                <Bell className="w-5 h-5 hover:text-primary mx-8 cursor-pointer" />
-              </button>
-              {/* {unseenCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
-                {unseenCount > 9 ? '9+' : unseenCount}
+          <div className="relative cursor-pointer">
+            <Bell className="w-5 h-5 hover:text-primary mx-8" />
+            {unseenCount > 0 && (
+              <span className="absolute top-0 right-5 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                {unseenCount > 99 ? "99+" : unseenCount}
               </span>
-            )} */}
-            </div>
+            )}
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-[20rem]" align="end" forceMount>
           <DropdownMenuLabel>Thông báo</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <ScrollArea className="w-full h-72 rounded-md">
-            {notifications?.length > 0 ? (
+            {notifications.length > 0 ? (
               notifications.map((notification) => (
-                <Link
-                  key={notification?.id}
-                  to={notification?.content.redirectUrl}
-                  // onClick={() => handleSeenNotification(notification?.id)}
+                <div
+                  key={notification._id}
+                  onClick={() =>
+                    handleNotificationClick(notification._id, notification.redirectUrl)
+                  }
+                  className="cursor-pointer"
                 >
                   <DropdownMenuGroup>
-                    <DropdownMenuItem className="pl-0 cursor-pointer">
-                      <div className="flex justify-start items-center">
-                        <Dot
-                          size={40}
-                          strokeWidth={4}
-                          className={` ${
-                            !notification?.seen ? "text-primary" : "text-background"
-                          }`}
-                        />
+                    <DropdownMenuItem className="pl-0">
+                      <div className="flex justify-start items-center w-full gap-2">
+                        {!notification.seen && (
+                          <Dot size={40} strokeWidth={4} className="text-primary" />
+                        )}
+                        <Avatar className="w-[40px] h-[40px] border border-primary">
+                          <AvatarImage src={notification.from.avatar} alt="avatar" />
+                          <AvatarFallback>
+                            {notification.from.fullName?.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
                         <div
-                          className={`flex flex-col ${
-                            notification?.seen ? "text-slate-600 dark:text-slate-400" : ""
-                          }`}
+                          className={`flex flex-col text-sm ${notification.seen ? "text-muted-foreground" : ""
+                            }`}
                         >
-                          <div className="flex gap-2">
-                            <Avatar className="border-solid border-primary border-2 w-[40px] h-[40px]">
-                              <AvatarImage
-                                src={notification?.content.from.avatar}
-                                alt="picture"
-                              />
-                              <AvatarFallback>
-                                {notification?.content.from.name?.slice(0, 1)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="text-xs">
-                              <span className="font-bold">
-                                {notification?.content.from.name}
-                              </span>
-                              <span className="ml-1">
-                                {notification?.content.description}
-                              </span>
-                            </div>
+                          <div>
+                            <span className="font-bold">{notification.from.fullName}</span>
+                            <span className="ml-1">{notification.content}</span>
                           </div>
-                          <div className="text-xs text-slate-400 mt-2">
-                            {notification?.created_at}
+                          <div className="text-xs text-gray-400">
+                            {notification.createdAt.toLocaleString("vi-VN")}
                           </div>
                         </div>
                       </div>
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
-                </Link>
+                </div>
               ))
             ) : (
-              <div className="flex items-center justify-center h-[17rem]">
-                Không có thông báo
-              </div>
+              <div className="flex items-center justify-center h-[17rem]">Không có thông báo</div>
             )}
           </ScrollArea>
         </DropdownMenuContent>
@@ -107,11 +128,14 @@ function UserNav() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-            <Avatar>
+            <Avatar className="border border-primary">
               <AvatarImage
                 src={user?.avatar}
                 className="w-full h-full object-cover"
               />
+              <AvatarFallback className="text-sm">
+                {user?.fullName?.charAt(0).toUpperCase() || "?"}
+              </AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
@@ -126,28 +150,44 @@ function UserNav() {
               </p>
             </div>
           </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem asChild className="cursor-pointer">
-              <Link to={"#"}>Trung tâm cứu hộ</Link>
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem asChild className="cursor-pointer">
-              <Link to={"/shelter-establishment"}>Thành lập trạm cứu hộ</Link>
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
+          {hasShelter !== undefined && hasShelter?.length >= 1 &&
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to={`/shelters/${hasShelter[0]?._id}`}>Trung tâm cứu hộ</Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </>
+          }
+          {hasShelter !== undefined && hasShelter?.length < 1 &&
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link to={"/shelter-establishment"}>Thành lập trạm cứu hộ</Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild className="cursor-pointer">
+
+                  <Link to={"/shelter-request"}>Danh sách yêu cầu gia nhập và lời mời</Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </>
+          }
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
               <Link to={`/profile`}>Hồ sơ cá nhân</Link>
+
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
-              <Link to="/">Lịch sử ủng hộ</Link>
+              <Link to="/donation-history">Lịch sử ủng hộ</Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />

@@ -44,15 +44,14 @@
 :root {
   --radius: 0.625rem;
 
-
   --primary: oklch(75% 0.183 55.934);
   --primary-foreground: oklch(98.5% 0 0);
   --secondary: oklch(87.2% 0.01 258.338);
   --secondary-foreground: oklch(96.7% 0.001 286.375);
   --background: oklch(98.5% 0 0);
   --foreground: oklch(27.4% 0.006 286.033);
-  --card: oklch(98.5% 0 0);
-  --card-foreground: oklch(27.4% 0.006 286.033);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
   --popover: oklch(98.5% 0 0);
   --popover-foreground: oklch(27.4% 0.006 286.033);
   --muted: oklch(96.7% 0.001 286.375);
@@ -89,8 +88,8 @@
   --secondary-foreground: oklch(21% 0.006 285.885);
   --background: oklch(27.4% 0.006 286.033);
   --foreground: oklch(98.5% 0 0);
-  --card: oklch(27.4% 0.006 286.033);
-  --card-foreground: oklch(98.5% 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
   --popover: oklch(27.4% 0.006 286.033);
   --popover-foreground: oklch(98.5% 0 0);
   --muted: oklch(44.2% 0.017 285.786);
@@ -103,7 +102,6 @@
   --input: oklch(44.6% 0.043 257.281);
   --notification: oklch(66.6% 0.179 58.318);
   --hover: oklch(70.5% 0.213 47.604);
-
 
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
@@ -132,7 +130,7 @@
 @theme inline {
   --animate-marquee: marquee var(--duration) infinite linear;
   --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
- 
+
   @keyframes marquee {
     from {
       transform: translateX(0);
@@ -150,3 +148,4 @@
     }
   }
 }
+

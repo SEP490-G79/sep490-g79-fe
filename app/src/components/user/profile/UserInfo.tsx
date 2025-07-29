@@ -1,15 +1,12 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Button } from "@/components/ui/button";
-import { Plus, Mail, Cake, MapPinHouse } from 'lucide-react';
-import AppContext from "@/context/AppContext";
+import { Mail, Cake, MapPinHouse } from 'lucide-react';
 import dayjs from "dayjs";
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import 'react-photo-view/dist/react-photo-view.css';
+import type { User } from "@/types/User";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+function UserInfo({ profile }: { profile: User }) {
 
-function UserInfo() {
-    const { userProfile } = useContext(AppContext);
 
 
     return (
@@ -25,12 +22,16 @@ function UserInfo() {
                             {/* Avatar */}
                             <div className="mb-4">
                                 <PhotoProvider>
-                                 <PhotoView src={userProfile?.avatar}>
-                                <img
-                                    src={userProfile?.avatar || "/placeholder.svg"}
-                                    alt="Avatar"
-                                    className="w-35 h-35 rounded-full border-1 border-gray-100 shadow-md object-cover object-center"
-                                />
+                                 <PhotoView src={profile?.avatar}>
+                                    <Avatar className="w-24 h-24">
+                                        <AvatarImage
+                                            src={profile?.avatar || "/placeholder.svg"}
+                                            alt="User Avatar"
+                                        />
+                                        <AvatarFallback>
+                                            {profile?.fullName?.charAt(0) || "?"}
+                                        </AvatarFallback>
+                                    </Avatar>
                                 </PhotoView>
                                 </PhotoProvider>
                             </div>
@@ -38,27 +39,27 @@ function UserInfo() {
                             <div className="text-center mb-2">
                                 <div className="flex items-center justify-center gap-1">
                                     <h2 className="text-xl font-bold text-black dark:text-white">
-                                        {userProfile?.fullName}
+                                        {profile?.fullName}
                                     </h2>
                                 </div>
                             </div>
-                            <p className="text-gray-700 dark:text-gray-300 text-sm mb-3 ">{userProfile?.bio}</p>
+                            <p className="text-gray-700 dark:text-gray-300 text-sm mb-3 ">{profile?.bio}</p>
                             <div className="w-full space-y-2 mt-4">
                                 <div className="flex items-center gap-2 text-black dark:text-gray-400 text-sm">
                                     <Mail className="w-4 h-4" />
-                                    <span>{userProfile?.email}</span>
+                                    <span>{profile?.email}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-black dark:text-gray-400 text-sm">
                                     <Cake className="w-4 h-4" />
                                     <span>
-                                        {userProfile?.dob
-                                            ? dayjs(userProfile?.dob).format("DD/MM/YYYY")
+                                        {profile?.dob
+                                            ? dayjs(profile?.dob).format("DD/MM/YYYY")
                                             : "Chưa có thông tin"}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2 text-black dark:text-gray-400 text-sm">
                                     <MapPinHouse className="w-4 h-4" />
-                                    <span>{userProfile?.address || "Chưa có thông tin"}</span>
+                                    <span>{profile?.address || "Chưa có thông tin"}</span>
 
                                 </div>
                             </div>
