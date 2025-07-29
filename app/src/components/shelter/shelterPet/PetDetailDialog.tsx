@@ -6,11 +6,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import MedicalRecordList from "./MedicalRecordList";
+import type { Pet } from "@/types/Pet";
+import type { Breed } from "@/types/pet.types";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  pet: any;
+  pet: Pet | null;
 }
 
 export default function PetDetailDialog({ open, onClose, pet }: Props) {
@@ -54,7 +56,7 @@ export default function PetDetailDialog({ open, onClose, pet }: Props) {
           <p>
             <strong>Giống:</strong>{" "}
             {(pet.breeds || [])
-              .map((b: any) => (typeof b === "string" ? b : b.name))
+              .map((b: string | Breed) => (typeof b === "string" ? b : b.name))
               .join(", ")}
           </p>
 
@@ -62,7 +64,7 @@ export default function PetDetailDialog({ open, onClose, pet }: Props) {
             <strong>Mô tả:</strong> {pet.bio || "Không có"}
           </p>
         </div>
-        {pet.photos?.length > 0 && (
+        {Array.isArray(pet.photos) && pet.photos.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
             {pet.photos.map((url: string, idx: number) => (
               <img
@@ -74,6 +76,7 @@ export default function PetDetailDialog({ open, onClose, pet }: Props) {
             ))}
           </div>
         )}
+
         {pet._id && (
           <div className="mt-6">
             <MedicalRecordList petId={pet._id} />

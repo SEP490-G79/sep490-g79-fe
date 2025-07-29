@@ -3,25 +3,23 @@
 import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { SectionCard } from "@/components/ui/section-card";
-import { SectionCardContainer } from "@/components/ui/section-card-container";
-import { ChartAreaInteractive } from "@/components/ui/chart-area-interactive";
-import { PawPrint, Check, BookOpenTextIcon, UsersIcon } from "lucide-react";
-import { toast } from "sonner";
-import AppContext from "@/context/AppContext";
-import {
+  getAdoptedPetsByWeek,
   getShelterDashboardStatistics,
   getShelterProfile,
+  getSubmissionStatistics,
   type ShelterDashboardStatistics,
   type ShelterProfile,
+  type SubmissionPieData,
+  type WeeklyAdoptionStat,
 } from "@/apis/shelter.api";
+import AppContext from "@/context/AppContext";
+import { toast } from "sonner";
+import { PawPrint, Check, BookOpenTextIcon, UsersIcon } from "lucide-react";
+
+import { SectionCard } from "@/components/ui/section-card";
+import { ChartBarMultiple } from "@/components/shelter/shelter-management/dashboard/ChartBarMultiple";
+import { AdoptionLineChart } from "@/components/shelter/shelter-management/dashboard/AdoptionLineChart";
+import { SubmissionPieChart } from "@/components/shelter/shelter-management/dashboard/SubmissionPieChart";
 
 const ShelterDashboard = () => {
   const { shelterId } = useParams();
@@ -30,14 +28,33 @@ const ShelterDashboard = () => {
   const [shelter, setShelter] = useState<ShelterProfile | null>(null);
   const [dashboardData, setDashboardData] =
     useState<ShelterDashboardStatistics | null>(null);
+  const [weeklyAdoptionData, setWeeklyAdoptionData] = useState<
+    WeeklyAdoptionStat[]
+  >([]);
+  const [submissionStats, setSubmissionStats] =
+    useState<SubmissionPieData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!shelterId) return;
 
-    const findShelter = shelters?.find((s) => s._id === shelterId);
-    if (findShelter) {
-      setShelter(findShelter);
+    const found = shelters?.find((s) => s._id === shelterId);
+    if (found) {
+      const transformedShelter: ShelterProfile = {
+        _id: found._id,
+        name: found.name,
+        avatar: found.avatar || "",
+        background: found.background || "",
+        email: found.email || "",
+        hotline: typeof found.hotline === "string" ? found.hotline : "",
+        address: found.address || "",
+        shelterCode: "", // điền tạm nếu cần
+        aspiration: "", // điền trống hoặc fetch thêm
+        status: found.status || "verifying",
+        members: [], // nếu cần, có thể bỏ qua hoặc fetch riêng
+      };
+
+      setShelter(transformedShelter);
     } else {
       getShelterProfile(shelterId)
         .then((data) => setShelter(data))
@@ -50,15 +67,17 @@ const ShelterDashboard = () => {
 
     setLoading(true);
     getShelterDashboardStatistics(shelterId)
-      .then((data) => {
-        console.log("Dashboard data:", data);
-        setDashboardData(data);
-      })
-      .catch((err) => {
-        console.error("Dashboard error:", err);
-        toast.error("Không thể tải dữ liệu dashboard");
-      })
+      .then(setDashboardData)
+      .catch(() => toast.error("Không thể tải dữ liệu dashboard"))
       .finally(() => setLoading(false));
+
+    getAdoptedPetsByWeek(shelterId)
+      .then(setWeeklyAdoptionData)
+      .catch(() => toast.error("Không thể tải biểu đồ nhận nuôi"));
+
+    getSubmissionStatistics(shelterId)
+      .then(setSubmissionStats)
+      .catch(() => toast.error("Không thể tải dữ liệu đơn nhận nuôi"));
   }, [shelterId, shelter]);
 
   if (!shelter) {
@@ -79,22 +98,6 @@ const ShelterDashboard = () => {
 
   return (
     <div className="flex flex-col min-h-screen px-4 py-4 md:px-8 md:py-6 bg-background">
-      {/* Breadcrumb */}
-      {/* <Breadcrumb className="mb-6">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/shelter" className="hover:underline">
-              Shelter
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Dashboard</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb> */}
-
-      {/* Stats Card Section */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <SectionCard
           icon={<PawPrint className="w-6 h-6 text-primary" />}
@@ -125,20 +128,26 @@ const ShelterDashboard = () => {
           isHigher={false}
         />
       </div>
-
-      {/* Chart Section */}
-      <div className="mt-10 rounded-xl border bg-card shadow-sm p-6">
-        <h3 className="text-lg font-semibold mb-4 text-primary">
-          Biểu đồ phát triển thú cưng theo tháng
-        </h3>
-        <ChartAreaInteractive
-          data={
-            dashboardData.petGrowth.map((item) => ({
-              name: item.month,
-              pets: item.count,
-            })) ?? []
-          }
-        />
+      <div>
+        <div className="mt-8">
+          <AdoptionLineChart data={weeklyAdoptionData} />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10 h-[380px] mb-16">
+          {submissionStats && (
+            <div className="h-full">
+              <SubmissionPieChart
+                approved={submissionStats.approved}
+                rejected={submissionStats.rejected}
+                pending={submissionStats.pending}
+              />
+            </div>
+          )}
+          <div className="h-full">
+            <ChartBarMultiple />
+          </div>
+        </div>
+        <br />
+        <br />
       </div>
     </div>
   );

@@ -67,6 +67,18 @@ function AppRoutes() {
         path="/shelters/:shelterId/blog/:blogId"
         element={<BlogDetail />}
       />
+      <Route path="/pet/:petId" element={<ViewPetDetails />} />
+      <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
+
+      <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
+        <Route index element={<ShelterProfile />} />
+        <Route path="profile" element={<ShelterProfile />} />
+        <Route path="staffs-management" element={<ShelterStaffManagement />} />
+        <Route path="pet-profiles" element={<PetManagement />} />
+
+        <Route path="adoption-templates" element={<AdoptionTemplates />} />
+        <Route path="adoption-forms" element={<AdoptionForms />} />
+      </Route>
 
       <Route element={<PrivateRoutes />}>
         <Route index element={<Navigate to="/home" replace={true} />} />
@@ -107,8 +119,10 @@ function AppRoutes() {
           <Route path="submission-forms/:petId" element={<PetSubmission />} />
           <Route path="return-requests" element={<ReturnRequestManagement />} />
           <Route path="consent-forms" element={<ConsentForms />} />
-          <Route path="consent-forms/:consentFormId" element={<ConsentForm />} />
-
+          <Route
+            path="consent-forms/:consentFormId"
+            element={<ConsentForm />}
+          />
         </Route>
       </Route>
 
