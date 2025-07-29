@@ -18,7 +18,14 @@ import type { Breed, PetFormState, Species } from "@/types/pet.types";
 import axios from "axios";
 
 export default function PetManagement() {
-  const { getAllPets, createPet, updatePet, disablePet } = usePetApi();
+  const {
+    getAllPets,
+    createPet,
+    updatePet,
+    disablePet,
+    getAllSpecies,
+    getAllBreeds,
+  } = usePetApi();
 
   const [pagination, setPagination] = React.useState({
     total: 0,
@@ -106,18 +113,22 @@ export default function PetManagement() {
   }, [shelterId, pagination.page]);
 
   React.useEffect(() => {
-    fetch("http://localhost:9999/species/getAll")
-      .then((res) => res.json())
-      .then((data) => {
-        setSpeciesList(data);
-      })
-      .catch(() => toast.error("Không thể lấy danh sách loài"));
+    const fetchSpeciesAndBreeds = async () => {
+      try {
+        const [speciesRes, breedRes] = await Promise.all([
+          getAllSpecies(),
+          getAllBreeds(),
+        ]);
+        setSpeciesList(speciesRes.data);
+        setBreedList(breedRes.data);
+      } catch {
+        toast.error("Không thể lấy danh sách loài hoặc giống");
+      }
+    };
 
-    fetch("http://localhost:9999/breeds/getAll")
-      .then((res) => res.json())
-      .then(setBreedList)
-      .catch(() => toast.error("Không thể lấy danh sách giống"));
+    fetchSpeciesAndBreeds();
   }, []);
+
   const filteredData = data.filter((pet) => {
     const keyword = searchKeyword.toLowerCase();
     return (
