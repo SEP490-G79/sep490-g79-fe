@@ -62,11 +62,26 @@ function AppRoutes() {
       />
       <Route path="/shelters" element={<Shelters />} />
       <Route path="/shelters/:shelterId" element={<ShelterPage />} />
+<<<<<<< HEAD
       <Route
         path="/shelters/:shelterId/blog/:blogId"
         element={<BlogDetail />}
        
       />
+=======
+      <Route path="/pet/:petId" element={<ViewPetDetails />} />
+      <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
+
+      <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
+        <Route index element={<ShelterProfile />} />
+        <Route path="profile" element={<ShelterProfile />} />
+        <Route path="staffs-management" element={<ShelterStaffManagement />} />
+        <Route path="pet-profiles" element={<PetManagement />} />
+
+        <Route path="adoption-templates" element={<AdoptionTemplates />} />
+        <Route path="adoption-forms" element={<AdoptionForms />} />
+      </Route>
+>>>>>>> 6746586 (fix: add, edit form)
 
       <Route element={<PrivateRoutes />}>
         <Route index element={<Navigate to="/home" replace={true} />} />
