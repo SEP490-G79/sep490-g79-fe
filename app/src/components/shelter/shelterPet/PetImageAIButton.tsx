@@ -1,46 +1,21 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { usePetApi } from "@/apis/pet.api";
+import type { PetFormState } from "@/types/pet.types";
 import { Copy } from "lucide-react";
 import imageCompression from "browser-image-compression";
+import { usePetApi } from "@/apis/pet.api";
+import type { Species, Breed, AnalyzeResult } from "@/types/pet.types";
 
 interface Props {
   imageUrl: string;
-  setForm: React.Dispatch<React.SetStateAction<unknown>>;
-  speciesList: unknown[];
-  breedList: unknown[];
-}
-interface Species {
-  _id: string;
-  name: string;
-  [key: string]: unknown;
+  setForm: React.Dispatch<React.SetStateAction<PetFormState>>;
+  speciesList: Species[];
+  setSpeciesList: React.Dispatch<React.SetStateAction<Species[]>>;
+  breedList: Breed[];
+  setBreedList: React.Dispatch<React.SetStateAction<Breed[]>>;
 }
 
-interface Breed {
-  _id: string;
-  name: string;
-  [key: string]: unknown;
-}
-
-interface AnalyzeResult {
-  age?: number;
-  weight?: number;
-  color?: string;
-  identificationFeature?: string;
-  species?: string;
-  breed?: string;
-  description?: string;
-}
-
-interface FormState {
-  age?: number;
-  weight?: number;
-  color?: string;
-  identificationFeature?: string;
-  species?: string;
-  breeds?: string[];
-}
 export default function PetImageAIButton({
   imageUrl,
   setForm,
@@ -168,10 +143,10 @@ export default function PetImageAIButton({
 
     const colorArray = getMatchedColors(r.color);
 
-    setForm((prev: FormState) => ({
+    setForm((prev: PetFormState) => ({
       ...prev,
-      age: r.age ?? prev.age,
-      weight: r.weight ?? prev.weight,
+      age: r.age !== undefined ? String(r.age) : prev.age,
+      weight: r.weight !== undefined ? String(r.weight) : prev.weight,
       color: colorArray.join(", ") || prev.color,
       identificationFeature:
         r.identificationFeature ?? prev.identificationFeature,

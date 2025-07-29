@@ -25,29 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
-
-interface Pet {
-  bio: string;
-  sterilizationStatus: unknown;
-  identificationFeature: string;
-  color: string;
-  isMale: unknown;
-  age: string;
-  weight: string;
-  species: unknown;
-  petCode: string;
-  photos?: string[];
-  name: string;
-  status: string;
-  breeds?: Array<
-    | string
-    | {
-        _id: unknown;
-        name: string;
-      }
-  >;
-  _id?: string;
-}
+import type { Pet } from "@/types/Pet";
 
 interface PetTableProps {
   data: Pet[];

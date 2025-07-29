@@ -33,10 +33,10 @@ export const AdoptionLineChart = ({ data }: AdoptionLineChartProps) => {
         </p>
       </CardHeader>
       <CardContent className="pt-2">
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={360}>
           <LineChart
             data={data}
-            margin={{ top: 20, right: 30, left: 0, bottom: 30 }}
+            margin={{ top: 20, right: 30, left: 50, bottom: 60 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis
@@ -54,7 +54,7 @@ export const AdoptionLineChart = ({ data }: AdoptionLineChartProps) => {
             <Tooltip
               contentStyle={{ backgroundColor: "white", borderRadius: 8 }}
               labelStyle={{ fontWeight: "bold" }}
-              formatter={(value: any) => [`${value} lượt`, "Số lượng"]}
+              formatter={(value: number) => [`${value} lượt`, "Số lượng"]}
             />
             <Line
               type="monotone"

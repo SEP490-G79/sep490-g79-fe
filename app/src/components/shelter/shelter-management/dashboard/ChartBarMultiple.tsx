@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import dayjs from "dayjs";
-import isoWeek from "dayjs/plugin/isoWeek";
 import {
   BarChart,
   Bar,
@@ -11,7 +9,6 @@ import {
   Tooltip,
 } from "recharts";
 import { TrendingUp } from "lucide-react";
-
 import {
   Card,
   CardContent,
@@ -22,10 +19,7 @@ import {
 } from "@/components/ui/card";
 import { getAdoptionFormsByWeek } from "@/apis/shelter.api";
 import { toast } from "sonner";
-
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
-
-// Extend dayjs to use ISO week
 
 const chartConfig = {
   forms: {
@@ -33,8 +27,6 @@ const chartConfig = {
     color: "var(--chart-1)",
   },
 } as const;
-
-dayjs.extend(isoWeek);
 
 export function ChartBarMultiple() {
   const { shelterId } = useParams();
@@ -48,7 +40,7 @@ export function ChartBarMultiple() {
     getAdoptionFormsByWeek(shelterId)
       .then((data) => {
         const formatted = data.map((item: { week: string; count: number }) => ({
-          week: item.week,
+          week: item.week, // đã là dạng "DD/MM - DD/MM"
           forms: item.count,
         }));
         setChartData(formatted);

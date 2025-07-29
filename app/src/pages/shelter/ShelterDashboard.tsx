@@ -40,11 +40,19 @@ const ShelterDashboard = () => {
 
     const found = shelters?.find((s) => s._id === shelterId);
     if (found) {
-      const transformedShelter = {
-        ...(found as unknown as Partial<ShelterProfile>),
-        shelterCode: "",
-        hotline: String((found as any).hotline),
-      } as ShelterProfile;
+      const transformedShelter: ShelterProfile = {
+        _id: found._id,
+        name: found.name,
+        avatar: found.avatar || "",
+        background: found.background || "",
+        email: found.email || "",
+        hotline: typeof found.hotline === "string" ? found.hotline : "",
+        address: found.address || "",
+        shelterCode: "", // điền tạm nếu cần
+        aspiration: "", // điền trống hoặc fetch thêm
+        status: found.status || "verifying",
+        members: [], // nếu cần, có thể bỏ qua hoặc fetch riêng
+      };
 
       setShelter(transformedShelter);
     } else {
@@ -138,6 +146,8 @@ const ShelterDashboard = () => {
             <ChartBarMultiple />
           </div>
         </div>
+        <br />
+        <br />
       </div>
     </div>
   );

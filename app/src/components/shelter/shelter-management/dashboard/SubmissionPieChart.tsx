@@ -23,16 +23,16 @@ export const SubmissionPieChart = ({
   pending,
 }: SubmissionPieChartProps) => {
   const data = [
-    { name: "Đã duyệt", value: approved },
+    { name: "Thành công", value: approved },
     { name: "Từ chối", value: rejected },
-    { name: "Chờ xử lý", value: pending },
+    { name: "Đang xử lý", value: pending },
   ];
 
   const total = approved + rejected + pending;
 
   const legendItems = [
     {
-      name: "Chờ xử lý",
+      name: "Đang xử lý",
       value: pending,
       color: "#facc15",
       percentage: total ? ((pending / total) * 100).toFixed(0) : "0",
@@ -44,7 +44,7 @@ export const SubmissionPieChart = ({
       percentage: total ? ((rejected / total) * 100).toFixed(0) : "0",
     },
     {
-      name: "Đã duyệt",
+      name: "Thành công",
       value: approved,
       color: "#4ade80",
       percentage: total ? ((approved / total) * 100).toFixed(0) : "0",
@@ -58,7 +58,7 @@ export const SubmissionPieChart = ({
           Tỷ lệ đơn nhận nuôi
         </CardTitle>
         <CardDescription>
-          Phân bố số lượng đơn duyệt, từ chối và chờ xử lý
+          Phân bố số lượng đơn duyệt, từ chối và Đang xử lý
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col justify-center items-center h-[360px]">
