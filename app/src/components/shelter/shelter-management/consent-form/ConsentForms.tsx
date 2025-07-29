@@ -287,7 +287,7 @@ export function ConsentForms() {
                     <span className="inline-flex w-full items-center text-xs">
                       <MapPin strokeWidth={3} size={"12px"} className=" mr-1" />{" "}
                       <span className="w-full truncate">
-                        {consentForm.shelter?.address ||
+                        {consentForm.address ||
                           "Địa chỉ chưa xác định"}
                       </span>
                     </span>

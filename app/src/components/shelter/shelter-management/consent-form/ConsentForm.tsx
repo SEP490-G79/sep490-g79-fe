@@ -77,6 +77,8 @@ function ConsentForm() {
 
   type FormValues = z.infer<typeof FormSchema>;
 
+
+
   const FormSchema = z.object({
     title: z.string().min(1, "Tiêu đề không được để trống"),
     tokenMoney: z.coerce
@@ -501,11 +503,10 @@ function ConsentForm() {
                               <MinimalTiptapEditor
                                 value={field.value || ""}
                                 onChange={field.onChange}
-                                className="w-full"
-                                editorContentClassName="p-5 "
+                                className="w-full h-full"
+                                editorContentClassName="p-5 overflow-y-none "
                                 output="html"
                                 placeholder="Enter your description..."
-                                autofocus={true}
                                 editable={true}
                                 hideToolbar={false}
                                 editorClassName="focus:outline-hidden"
