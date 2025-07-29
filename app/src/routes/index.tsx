@@ -32,7 +32,7 @@ import AdoptionForm from "../components/shelter/shelter-management/adoption-form
 import ShelterStaffManagement from "@/pages/Shelter/ShelterStaffManagement";
 import BlogDetail from "@/components/shelter/shelter-page/shelter-blog/BlogDetail";
 import BlogManagement from "@/components/shelter/shelter-management/blog/BlogManagement";
-
+import DonationHistory from "@/components/user/user-setting/DonationHistory";
 import DonationPage from "@/pages/Donation/DonationPage";
 import DonateSuccess from "@/pages/Donation/DonateSuccess";
 import DonateCancel from "@/pages/Donation/DonateCancel";
@@ -104,6 +104,7 @@ function AppRoutes() {
               </Route>
       </Route>
 
+      <Route path="/donation-history" element={<DonationHistory />} />
       <Route path="/donation" element={<DonationPage />} />
       <Route path="/donation/success" element={<DonateSuccess />} />
       <Route path="/donation/cancel" element={<DonateCancel />} />

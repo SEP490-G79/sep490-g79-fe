@@ -85,6 +85,26 @@ function ShelterPosts() {
         onConfirm: () => { },
     });
 
+    const fetchShelterInfo = async () => {
+        try {
+            const res = await axios.get(`${coreAPI}/shelters/get-by-id/${shelterId}`);
+            setShelterInfo(res.data);
+
+            // Kiểm tra role nếu user là thành viên
+            const member = res.data.members.find(
+                (m: any) =>
+                    m._id?._id === userProfile?._id || m._id === userProfile?._id
+            );
+
+            const roles = member?.roles || [];
+
+            setIsShelterMember(!!member);
+            setIsManagerOrStaff(roles.includes("manager") || roles.includes("staff"));
+        } catch {
+            console.error("Không lấy được thông tin shelter");
+        }
+    };
+
     useEffect(() => {
         const handler = (e: MouseEvent) => {
             if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
@@ -133,23 +153,10 @@ function ShelterPosts() {
     }, [shelterId]);
 
     useEffect(() => {
-        if (userProfile && postsData.length > 0) {
-            const members = postsData[0]?.shelter?.members || [];
-
-            const member = members.find(
-                (m: any) =>
-                    m._id?._id === userProfile._id || m._id === userProfile._id
-            );
-
-            const roles = member?.roles || [];
-
-            setIsShelterMember(!!member);
-            setIsManagerOrStaff(roles.includes("manager") || roles.includes("staff"));
-        } else {
-            setIsShelterMember(false);
-            setIsManagerOrStaff(false);
+        if (shelterId && userProfile) {
+            fetchShelterInfo();
         }
-    }, [userProfile, postsData]);
+    }, [shelterId, userProfile]);
 
     //scroll to load more posts
     useEffect(() => {
@@ -356,7 +363,7 @@ function ShelterPosts() {
                 </div>
             )}
             <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                <DialogContent className="sm:max-w-[600px]">
+                <DialogContent className="sm:max-w-[600px] bg-background rounded-xl overflow-visible border border-border">
                     <DialogHeader>
                         <DialogTitle>Tạo bài viết</DialogTitle>
                     </DialogHeader>
@@ -406,7 +413,7 @@ function ShelterPosts() {
                             <div className="relative">
                                 <SmileIcon className="w-5 h-5 cursor-pointer" onClick={() => setShowPicker(!showPicker)} />
                                 {showPicker && (
-                                    <div ref={emojiPickerRef} className="absolute left-8 z-50">
+                                    <div ref={emojiPickerRef} className="absolute left-15 bottom-[-200px] z-50 ">
                                         <EmojiPicker onEmojiClick={(e) => setPostContent(prev => prev + e.emoji)} />
                                     </div>
                                 )}

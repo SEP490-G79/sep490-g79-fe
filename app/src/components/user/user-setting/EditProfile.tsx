@@ -41,18 +41,39 @@ export default function EditProfile() {
   const [placeId, setPlaceId] = useState("");
   const { userAPI } = useContext(AppContext);
   const authAxios = useAuthAxios();
+  const [rawProfile, setOriginalProfile] = useState({
+    fullName: "",
+    bio: "",
+    dob: "",
+    phoneNumber: "",
+    address: "",
+    avatar: "",
+    background: "",
+  });
 
 
 
   useEffect(() => {
     if (userProfile) {
+      const dobValue = userProfile.dob ? userProfile.dob.split("T")[0] : "";
+
       setFullName(userProfile.fullName || "");
       setBio(userProfile.bio || "");
-      setDob(userProfile.dob ? userProfile.dob.split("T")[0] : "");
+      setDob(dobValue);
       setPhoneNumber(userProfile.phoneNumber || "");
       setAddress(userProfile.address || "");
       setAvatarPreview(userProfile.avatar || "");
       setBackgroundPreview(userProfile.background || "");
+
+      setOriginalProfile({
+        fullName: userProfile.fullName || "",
+        bio: userProfile.bio || "",
+        dob: dobValue,
+        phoneNumber: userProfile.phoneNumber || "",
+        address: userProfile.address || "",
+        avatar: userProfile.avatar || "",
+        background: userProfile.background || "",
+      });
     }
   }, [userProfile]);
 
@@ -60,6 +81,17 @@ export default function EditProfile() {
   const handleProfileSubmit = async () => {
     try {
       setLoading(true);
+      const isUnchanged =
+        fullName === rawProfile.fullName &&
+        bio === rawProfile.bio &&
+        dob === rawProfile.dob &&
+        phoneNumber === rawProfile.phoneNumber &&
+        address === rawProfile.address &&
+        !avatar && !background;
+      if (isUnchanged) {
+        toast.warning("Vui lòng thay đổi thông tin trước khi cập nhật.");
+        return;
+      }
       const formData = new FormData();
       formData.append("fullName", fullName);
       formData.append("bio", bio);
@@ -82,7 +114,7 @@ export default function EditProfile() {
 
       setAvatar(null);
       setAvatarPreview("");
-      setOpenAvatarModal(false); 
+      setOpenAvatarModal(false);
 
       setBackground(null);
       setBackgroundPreview("");
@@ -269,7 +301,7 @@ export default function EditProfile() {
               onClick={detectCurrentLocation}
               className="flex items-center gap-1 px-3 h-9 rounded-md cursor-pointer"
             >
-              <LocateFixed/>
+              <LocateFixed />
               Lấy vị trí hiện tại
             </Button>
           </div>

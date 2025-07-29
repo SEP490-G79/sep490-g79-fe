@@ -16,20 +16,31 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import ReportUserDialog from "@/components/user/profile/ReportUser";
 
 function ProfilePage() {
-  const [showActivities, setShowActivities] = useState(false);
+  const [showActivities, setShowActivities] = useState(() => {
+    return localStorage.getItem("profileTab") === "activities";
+  });
   const { userId } = useParams();
   const [profile, setProfile] = useState<User | null>(null);
-  const { userProfile, userAPI,  } = useContext(AppContext);
+  const { userProfile, userAPI, } = useContext(AppContext);
   const isOwnProfile = !userId || userId === userProfile?._id;
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
 
   useEffect(() => {
-     const idToFetch = userId || userProfile?._id;   
+    const idToFetch = userId || userProfile?._id;
     if (!idToFetch) return;
     axios.get(`${userAPI}/user-profile/${idToFetch}`)
       .then((res) => setProfile(res.data))
-      .catch(() =>toast.error("Không thể tải thông tin người dùng", { id: "user-load-error" }));
+      .catch(() => toast.error("Không thể tải thông tin người dùng", { id: "user-load-error" }));
 
-  }, [userId,userProfile]);
+  }, [userId, userProfile]);
+
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem("profileTab");
+    };
+  }, []);
 
   if (!profile) return <div className="p-40  text-center">Người dùng không tồn tại</div>;
 
@@ -72,22 +83,26 @@ function ProfilePage() {
             {/* Tabs */}
             <div className="flex gap-6">
               <button
-                onClick={() => setShowActivities(false)}
-                className={`text-sm font-medium pb-[15px] ${
-                  !showActivities
-                    ? "border-b-[2px] border-blue-500 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
+                onClick={() => {
+                  setShowActivities(false);
+                  localStorage.setItem("profileTab", "posts");
+                }}
+                className={`text-sm font-medium pb-[15px] ${!showActivities
+                  ? "border-b-[2px] border-blue-500 text-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+                  }`}
               >
                 Bài đăng
               </button>
               <button
-                onClick={() => setShowActivities(true)}
-                className={`text-sm font-medium pb-[15px] ${
-                  showActivities
-                    ? "border-b-[2px] border-blue-500 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
+                onClick={() => {
+                  setShowActivities(true);
+                  localStorage.setItem("profileTab", "activities");
+                }}
+                className={`text-sm font-medium pb-[15px] ${showActivities
+                  ? "border-b-[2px] border-blue-500 text-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+                  }`}
               >
                 Thú nuôi của bạn
               </button>
@@ -115,7 +130,7 @@ function ProfilePage() {
 
           {/* Nội dung */}
           <div className="mt-6">
-            {showActivities ? <AdoptionActivities /> : <Posts />}
+            {showActivities ? <AdoptionActivities userId={profile?._id} /> : <Posts profileUserId={profile?._id} />}
           </div>
         </div>
       </div>

@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState, useContext } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -67,9 +65,12 @@ export default function DonationHistory() {
     const columns: ColumnDef<Donation>[] = [
         {
             header: "STT",
-            cell: ({ row, table }) =>
-                table.getState().pagination.pageIndex * table.getState().pagination.pageSize +
-                row.index + 1,
+            cell: ({ table, row }) =>
+                table
+                    .getSortedRowModel()
+                    .rows.findIndex(r => r.id === row.id) +
+                1 +
+                table.getState().pagination.pageIndex * table.getState().pagination.pageSize,
             enableSorting: false,
         },
         {

@@ -4,11 +4,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
-import { useEffect, useState, useContext } from "react";
+import { useState, useContext } from "react";
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react";
 import AppContext from "@/context/AppContext";
-import axios from "axios"
 import useAuthAxios from "@/utils/authAxios";
 
 export default function ChangePassword() {
@@ -18,8 +17,9 @@ export default function ChangePassword() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
-    const { userAPI } = useContext(AppContext);
+    const { user, userAPI } = useContext(AppContext);
     const authAxios = useAuthAxios();
+    const isGoogleUser = !!user?.googleId;
 
     const handleChangePassword = async () => {
         if (!oldPassword || !newPassword || !confirmPassword) {
@@ -54,6 +54,18 @@ export default function ChangePassword() {
             setLoading(false);
         }
     };
+    if (isGoogleUser) {
+        return (
+            <Card className="shadow-none border shadow-sm">
+                <CardHeader>
+                    <CardTitle className="text-xl font-semibold mb-1">Đổi mật khẩu</CardTitle>
+                    <p className="text-muted-foreground text-sm">
+                        Bạn đã đăng nhập bằng Google. Tính năng đổi mật khẩu không khả dụng.
+                    </p>
+                </CardHeader>
+            </Card>
+        );
+    }
     return (
         <Card className="shadow-none border shadow-sm">
             <CardHeader>
