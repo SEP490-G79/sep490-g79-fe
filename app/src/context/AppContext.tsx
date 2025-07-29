@@ -50,6 +50,7 @@ interface AppContextType {
   medicalRecordAPI: string;
   blogAPI: string;
   reportAPI: string;
+  returnRequestAPI: string;
   shelterId: string | null;
   setShelterId: (id: string | null) => void;
   setShelters: (shelter: Shelter[]) => void;
@@ -84,6 +85,7 @@ const AppContext = createContext<AppContextType>({
   medicalRecordAPI: "",
   blogAPI: "",
   reportAPI: "",
+  returnRequestAPI: "",
   setShelters: () => [],
   shelterId: null,
   setShelterId: () => {},
@@ -127,6 +129,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const medicalRecordAPI = "http://localhost:9999/medical-records";
   const blogAPI = "http://localhost:9999/blogs";
   const reportAPI = "http://localhost:9999/reports";
+  const returnRequestAPI = "http://localhost:9999/return-requests";
 
   const login = (accessToken: string, userData: User) => {
     setUser(userData);
@@ -227,6 +230,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         medicalRecordAPI,
         blogAPI,
         reportAPI,
+        returnRequestAPI,
         setShelters,
         shelterId,
         setShelterId,
