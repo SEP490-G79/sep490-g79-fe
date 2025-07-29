@@ -15,7 +15,7 @@ export interface Pet {
   color?: string;
   bio?: string;
   intakeTime?: string;
-  photos?: string[];
+  photos: string[];
   foundLocation?: string;
   tokenMoney?: number;
   shelter?: Shelter;

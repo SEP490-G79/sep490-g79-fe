@@ -42,7 +42,8 @@ import ShelterProfile from "@/components/shelter/shelter-management/profile/Shel
 import SubmissionForms from "@/components/shelter/shelter-submission/SubmissionForms";
 import PetSubmission from "@/components/shelter/shelter-submission/PetSubmission";
 import ReturnRequestManagement from "@/components/shelter/shelter-management/return-request/ReturnRequestManagement";
-
+import { ConsentForms } from "@/components/shelter/shelter-management/consent-form/ConsentForms";
+import ConsentForm from "@/components/shelter/shelter-management/consent-form/ConsentForm";
 
 function AppRoutes() {
   return (
@@ -65,7 +66,6 @@ function AppRoutes() {
       <Route
         path="/shelters/:shelterId/blog/:blogId"
         element={<BlogDetail />}
-       
       />
 
       <Route element={<PrivateRoutes />}>
@@ -87,31 +87,37 @@ function AppRoutes() {
             </ShelterRoute>
           }
         >
-
           <Route index element={<ShelterDashboard />} />
-          <Route path="dashboard" element={<ShelterDashboard />}/>
+          <Route path="dashboard" element={<ShelterDashboard />} />
           <Route path="shelter-profile" element={<ShelterProfile />} />
-          <Route path="staffs-management" element={<ShelterStaffManagement />} />
+          <Route
+            path="staffs-management"
+            element={<ShelterStaffManagement />}
+          />
           <Route path="blogs-management" element={<BlogManagement />} />
           <Route path="pet-profiles" element={<PetManagement />} />
-          <Route path="adoption-templates" element={<AdoptionTemplates/>} />
-          <Route path="adoption-templates/:templateId" element={<TemplateDialog/>} />
-          <Route path="adoption-forms" element={<AdoptionForms/>} />
-          <Route path="adoption-forms/:formId" element={<AdoptionForm/>} />
-         <Route path="submission-forms" element={<SubmissionForms/>} />
-              <Route path="submission-forms/:petId" element={<PetSubmission />} />
-                 <Route path="return-requests" element={<ReturnRequestManagement/>} />
-              </Route>
+          <Route path="adoption-templates" element={<AdoptionTemplates />} />
+          <Route
+            path="adoption-templates/:templateId"
+            element={<TemplateDialog />}
+          />
+          <Route path="adoption-forms" element={<AdoptionForms />} />
+          <Route path="adoption-forms/:formId" element={<AdoptionForm />} />
+          <Route path="submission-forms" element={<SubmissionForms />} />
+          <Route path="submission-forms/:petId" element={<PetSubmission />} />
+          <Route path="return-requests" element={<ReturnRequestManagement />} />
+          <Route path="consent-forms" element={<ConsentForms />} />
+          <Route path="consent-forms/:consentFormId" element={<ConsentForm />} />
+
+        </Route>
       </Route>
 
       <Route path="/donation-history" element={<DonationHistory />} />
       <Route path="/donation" element={<DonationPage />} />
       <Route path="/donation/success" element={<DonateSuccess />} />
       <Route path="/donation/cancel" element={<DonateCancel />} />
-      <Route path="/newfeed" element={<Newfeed />}/>
-      <Route path="/blogfeed" element={<BlogsFeed />}/>
-
-
+      <Route path="/newfeed" element={<Newfeed />} />
+      <Route path="/blogfeed" element={<BlogsFeed />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

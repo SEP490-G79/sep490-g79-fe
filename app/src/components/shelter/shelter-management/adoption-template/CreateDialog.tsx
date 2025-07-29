@@ -78,7 +78,7 @@ export default function CreateDialog() {
   });
 
   const onSubmit = async (values: FormValues) => {
-    console.log("Form submitted:", values);
+    // console.log("Form submitted:", values);
     await authAxios
       .post(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/create`, {
         title: values.title,

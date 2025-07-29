@@ -1,7 +1,6 @@
 import * as React from "react"
 import type { Editor } from "@tiptap/react"
 import type { FormatAction } from "../../types"
-import type { toggleVariants } from "/components/ui/toggle"
 import type { VariantProps } from "class-variance-authority"
 import {
   CodeIcon,
@@ -13,6 +12,7 @@ import {
   UnderlineIcon,
 } from "@radix-ui/react-icons"
 import { ToolbarSection } from "../toolbar-section"
+import type { toggleVariants } from "@/components/ui/toggle"
 
 type TextStyleAction =
   | "bold"
