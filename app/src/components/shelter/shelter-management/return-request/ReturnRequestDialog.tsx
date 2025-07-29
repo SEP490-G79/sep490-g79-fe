@@ -6,6 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,8 @@ import { Loader2Icon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ReturnRequest } from "@/types/ReturnRequest";
 import { useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { PhotoView } from "react-photo-view";
 
 const ReturnRequestDialog = ({
   dialogDetail,
@@ -21,15 +24,18 @@ const ReturnRequestDialog = ({
   handleReject,
   loading,
   setCurrentIndex,
+  setIsPreview,
 }: {
   dialogDetail: ReturnRequest | null;
   setDialogDetail: Function;
   handleApprove: (requestId: string) => Promise<void>;
-  handleReject: (requestId: string) => Promise<void>;
+  handleReject: (requestId: string, rejectReason: string) => Promise<void>;
   loading: boolean;
   setCurrentIndex: Function;
+  setIsPreview: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const [isExpandReason, setIsExpandReason] = useState(false);
+  const [isExpandRejectReason, setIsExpandRejectReason] = useState(false);
 
   const statusTiengViet = (status: string) => {
     switch (status) {
@@ -43,6 +49,8 @@ const ReturnRequestDialog = ({
         return <p className="text-slate-500">Chờ xử lý</p>;
     }
   };
+  const [openRejectDialog, setOpenRejectDialog] = useState<boolean>(false);
+  const [rejectReason, setRejectReason] = useState<string>("");
 
 
   return (
@@ -83,10 +91,18 @@ const ReturnRequestDialog = ({
             <h3 className="font-semibold text-base mb-2">Người gửi yêu cầu</h3>
             <div className="flex items-center gap-2 bg-muted p-4 rounded-lg">
               <Avatar className="w-10 h-10">
-                <AvatarImage src={dialogDetail?.requestedBy && dialogDetail?.requestedBy.avatar} />
+                <AvatarImage
+                  src={
+                    dialogDetail?.requestedBy &&
+                    dialogDetail?.requestedBy.avatar
+                  }
+                />
               </Avatar>
               <div>
-                <p className="font-semibold">{dialogDetail?.requestedBy && dialogDetail?.requestedBy.fullName}</p>
+                <p className="font-semibold">
+                  {dialogDetail?.requestedBy &&
+                    dialogDetail?.requestedBy.fullName}
+                </p>
               </div>
             </div>
           </div>
@@ -95,23 +111,34 @@ const ReturnRequestDialog = ({
           <div className="col-span-6 text-end space-y-2">
             <div>
               <p className="font-medium">Trạng thái</p>
-              {statusTiengViet(dialogDetail?.status ? dialogDetail?.status : "rejected")}
+              {statusTiengViet(
+                dialogDetail?.status ? dialogDetail?.status : "rejected"
+              )}
             </div>
             <div>
               <p className="font-medium">Thời gian yêu cầu</p>
-              <p>{dialogDetail?.createdAt}</p>
+              <p>{new Date(dialogDetail?.createdAt || new Date()).toLocaleString("vi-VN", {dateStyle: "full"})}</p>
             </div>
             {dialogDetail?.status !== "pending" && (
               <>
                 <div className="flex items-center justify-end gap-2">
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={dialogDetail?.approvedBy && dialogDetail?.approvedBy.avatar} />
+                    <AvatarImage
+                      src={
+                        dialogDetail?.approvedBy &&
+                        dialogDetail?.approvedBy.avatar
+                      }
+                    />
                   </Avatar>
-                  <p>Duyệt bởi: {dialogDetail?.approvedBy && dialogDetail?.approvedBy.fullName}</p>
+                  <p>
+                    Duyệt bởi:{" "}
+                    {dialogDetail?.approvedBy &&
+                      dialogDetail?.approvedBy.fullName}
+                  </p>
                 </div>
                 <div>
                   <p className="font-medium">Thời gian duyệt</p>
-                  <p>{dialogDetail?.updatedAt}</p>
+                  <p>{new Date(dialogDetail?.updatedAt || new Date()).toLocaleString("vi-VN", {dateStyle: "full"})}</p>
                 </div>
               </>
             )}
@@ -120,7 +147,9 @@ const ReturnRequestDialog = ({
           {/* Lý do */}
           <div className="col-span-12">
             <p className="font-medium mb-1">Lý do trả thú nuôi</p>
-            {dialogDetail?.reason && dialogDetail?.reason?.length > 300 && !isExpandReason ? (
+            {dialogDetail?.reason &&
+            dialogDetail?.reason?.length > 300 &&
+            !isExpandReason ? (
               <>
                 <p>{dialogDetail?.reason.slice(0, 300)}...</p>
                 <a
@@ -130,7 +159,9 @@ const ReturnRequestDialog = ({
                   Đọc thêm
                 </a>
               </>
-            ) : (dialogDetail?.reason && dialogDetail?.reason?.length > 300 && isExpandReason) ? (
+            ) : dialogDetail?.reason &&
+              dialogDetail?.reason?.length > 300 &&
+              isExpandReason ? (
               <>
                 <p>{dialogDetail?.reason}</p>
                 <a
@@ -145,17 +176,53 @@ const ReturnRequestDialog = ({
             )}
           </div>
 
-          {/* Ảnh bằng chứng */}
+          {/* Lý do  từ chối yêu cầu*/}
+          {dialogDetail && dialogDetail.status === "rejected" && <div className="col-span-12">
+            <p className="font-medium mb-1">Lý do từ chối yêu cầu</p>
+            {dialogDetail?.rejectReason &&
+            dialogDetail?.rejectReason?.length > 300 &&
+            !isExpandRejectReason ? (
+              <>
+                <p>{dialogDetail?.rejectReason.slice(0, 300)}...</p>
+                <a
+                  onClick={() => setIsExpandRejectReason(true)}
+                  className="text-blue-500 underline cursor-pointer"
+                >
+                  Đọc thêm
+                </a>
+              </>
+            ) : dialogDetail?.rejectReason &&
+              dialogDetail?.rejectReason?.length > 300 &&
+              isExpandRejectReason ? (
+              <>
+                <p>{dialogDetail?.rejectReason}</p>
+                <a
+                  onClick={() => setIsExpandRejectReason(false)}
+                  className="text-blue-500 underline cursor-pointer"
+                >
+                  Rút gọn
+                </a>
+              </>
+            ) : (
+              <p>{dialogDetail?.rejectReason || "Không có lý do"}</p>
+            )}
+          </div>}
+
+          {/* Ảnh */}
           {dialogDetail?.photos && dialogDetail?.photos.length > 0 && (
             <div className="col-span-12">
               <p className="font-medium mb-1">Ảnh</p>
               <div className="flex flex-wrap gap-3 p-2 border rounded-md">
                 {dialogDetail?.photos.map((photo, idx) => (
-                  <img
+                    <img
+                    onSelect={(e) => e.preventDefault()}
                     key={idx}
                     src={photo}
                     className="h-24 w-36 object-cover rounded cursor-pointer border hover:scale-105 transition-transform"
-                    onClick={() => setCurrentIndex(idx)}
+                    onClick={() => {
+                          setCurrentIndex(idx);
+                          setIsPreview(true);
+                    }}
                     alt={`proof-${idx}`}
                   />
                 ))}
@@ -165,21 +232,74 @@ const ReturnRequestDialog = ({
         </div>
 
         <DialogFooter>
-        <Button variant="outline" onClick={() => setDialogDetail(null)}>Đóng</Button>
+          <Button variant="outline" onClick={() => setDialogDetail(null)}>
+            Đóng
+          </Button>
           {dialogDetail?.status === "pending" && (
             <>
-              <Button onClick={() => handleApprove(dialogDetail._id)} disabled={loading}>
-                {loading ? <Loader2Icon className="mr-2 animate-spin" /> : null}
-                Chấp thuận
-              </Button>
               <Button
-                variant="destructive"
-                onClick={() => handleReject(dialogDetail._id)}
+                onClick={() => handleApprove(dialogDetail._id)}
                 disabled={loading}
               >
                 {loading ? <Loader2Icon className="mr-2 animate-spin" /> : null}
-                Từ chối
+                Chấp thuận
               </Button>
+              <Dialog
+                open={openRejectDialog}
+                onOpenChange={setOpenRejectDialog}
+              >
+                <DialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setOpenRejectDialog(true)}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Loader2Icon className="mr-2 animate-spin" />
+                    ) : null}
+                    Từ chối
+                  </Button>
+                </DialogTrigger>
+
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Lý do từ chối</DialogTitle>
+                  </DialogHeader>
+                  <DialogDescription></DialogDescription>
+
+                  <Textarea
+                    placeholder="Nhập lý do từ chối yêu cầu này..."
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    className="min-h-[100px]"
+                  />
+
+                  <DialogFooter className="pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setRejectReason("");
+                        setOpenRejectDialog(false);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      Hủy
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        handleReject(dialogDetail._id, rejectReason);
+                        setRejectReason("");
+                        setOpenRejectDialog(false);
+                      }}
+                      disabled={!rejectReason.trim()}
+                      className="cursor-pointer"
+                    >
+                      Xác nhận từ chối
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </>
           )}
         </DialogFooter>
