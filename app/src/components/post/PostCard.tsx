@@ -122,7 +122,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
             ) === String(currentUserId) ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="p-2 hover:bg-muted rounded-md">
+                  <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
                     <Ellipsis className="w-5 h-5" />
                   </button>
                 </DropdownMenuTrigger>
@@ -140,7 +140,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="p-2 hover:bg-muted rounded-md">
+                  <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
                     <Ellipsis className="w-5 h-5" />
                   </button>
                 </DropdownMenuTrigger>

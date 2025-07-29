@@ -36,6 +36,7 @@ import PostDetailDialog from "@/components/post/PostDetail";
 import EditPostDialog from "@/components/post/EditPostDialog";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import ReportPostDialog from "@/components/post/ReportPost";
 dayjs.extend(relativeTime);
 dayjs.locale("vi");
 
@@ -584,10 +585,10 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                     </div>
                   </div>
 
-                  {String(post.createdBy?._id || post.createdBy) === currentUserId && (
+                  {String(post.createdBy?._id || post.createdBy) === userProfile?._id ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="p-2 hover:bg-muted rounded-md">
+                        <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
                           <Ellipsis className="w-5 h-5" />
                         </button>
                       </DropdownMenuTrigger>
@@ -607,6 +608,17 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                         }>
                           <Trash2 className="w-4 h-4 text-red-500 mr-2" /> Xóa
                         </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
+                          <Ellipsis className="w-5 h-5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40 p-1 z-50">
+                        <ReportPostDialog postId={post._id} key={post._id} />
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
