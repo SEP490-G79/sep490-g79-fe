@@ -48,6 +48,7 @@ const BlogCard = ({ blog} : {blog: Blog}) => {
           <Button
             className="text-sm px-3 py-1 rounded-md font-medium cursor-pointer"
             onClick={() => {
+              window.scrollTo({ top: 0, left: 0, behavior: "instant" });
               navigate(`/shelters/${blog.shelter._id}/blog/${blog._id}`);
             }}
           >

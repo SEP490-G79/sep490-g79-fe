@@ -14,6 +14,8 @@ import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import ReturnRequestTable from './ReturnRequestTable';
 import ReturnRequestDialog from './ReturnRequestDialog';
+import {Lightbox} from "yet-another-react-lightbox"
+import Zoom from 'yet-another-react-lightbox/plugins/zoom';
 
 const PendingReturnRequests = () => {
       const [returnRequest, setReturnRequest] = useState<ReturnRequest[]>([]);
@@ -37,11 +39,27 @@ const PendingReturnRequests = () => {
         .catch((err) => console.log(err?.response.data.message))
       }, [refresh])
     
+      // hien thi preview anh
+  if (isPreview) {
+    return (
+        dialogDetail !== null &&
+      dialogDetail.photos &&
+      dialogDetail.photos.length > 0 && (
+        <Lightbox
+          open={isPreview}
+          index={currentIndex}
+          close={() => setIsPreview(false)}
+          slides={dialogDetail.photos.map((src) => ({ src }))}
+          plugins={[Zoom]}
+        />
+      )
+    );
+  }
 
     const handleApproveReturnRequest = async (requestId : string) => {
       try {
         setLoading(true);
-        await authAxios.put(`${shelterAPI}/${shelterId}/${requestId}/approve`)
+        await authAxios.put(`${shelterAPI}/${shelterId}/return-requests/${requestId}/approve`)
         setDialogDetail(null);
         setRefresh(prev => !prev)
         toast.success("Xử lý yêu cầu thành công!")
@@ -52,10 +70,10 @@ const PendingReturnRequests = () => {
       }
     };
 
-    const handleRejectReturnRequest = async (requestId : string) => {
+    const handleRejectReturnRequest = async (requestId : string, rejectReason : string) => {
       try {
         setLoading(true);
-        await authAxios.put(`${shelterAPI}/${shelterId}/${requestId}/reject`)
+        await authAxios.put(`${shelterAPI}/${shelterId}/return-requests/${requestId}/reject`, {rejectReason})
         setDialogDetail(null);
         setRefresh(prev => !prev)
         toast.success("Xử lý yêu cầu thành công!")
@@ -83,6 +101,7 @@ const PendingReturnRequests = () => {
         handleReject={handleRejectReturnRequest}
         loading={loading}
         setCurrentIndex={setCurrentIndex}
+        setIsPreview={setIsPreview}
         />
       </div>
     </div>

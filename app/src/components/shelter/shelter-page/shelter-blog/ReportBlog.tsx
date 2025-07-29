@@ -34,7 +34,7 @@ const predefinedReasons = [
   "Spam, quảng cáo sản phẩm/dịch vụ không liên quan",
   "Sử dụng ngôn từ thô tục, kích động hoặc thiếu tôn trọng",
   "Không phù hợp với cộng đồng yêu động vật và thú cưng",
-  "Khác (vui lòng nêu rõ)",
+  "Khác",
 ];
 
 export default function ReportBlogDialog({
