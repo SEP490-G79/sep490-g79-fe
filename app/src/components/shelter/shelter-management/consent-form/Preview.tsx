@@ -15,7 +15,7 @@ import {
   SquareX,
 } from "lucide-react";
 import React, { useContext, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { mockDeliveryMethods, mockStatus } from "@/types/ConsentForm";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
@@ -29,6 +29,7 @@ function Preview() {
   const authAxios = useAuthAxios();
   const [isLoading, setIsLoading] = React.useState(false);
   const [consentForm, setConsentForm] = React.useState<ConsentForm>();
+  const navigate = useNavigate();
   const fetchConsentForm = async () => {
     setIsLoading(true);
     await authAxios
@@ -198,7 +199,7 @@ function Preview() {
           <div className="basis-full flex justify-center">
             <p className="text-xl font-medium">Người nhận nuôi</p>
           </div>
-          <div className="basis-full lg:basis-1/7 ">
+          {/* <div className="basis-full lg:basis-1/7 ">
             <Avatar className="rounded-sm ring-2 ring-(--primary) w-12 h-12">
               <AvatarImage
                 src={consentForm?.adopter?.avatar}
@@ -210,13 +211,13 @@ function Preview() {
                 </span>
               </AvatarFallback>
             </Avatar>
-          </div>
+          </div> */}
           <div className="basis-full lg:basis-5/7 ">
-            <p className="text-sm font-medium hover:text-(--primary) cursor-pointer line-clamp-1 ">
+            <p onClick={()=>{navigate(`/profile/${consentForm?.adopter?._id}`)}} className="text-sm font-medium hover:text-(--primary) cursor-pointer line-clamp-1 ">
               {consentForm?.adopter?.fullName}
             </p>
-            <p className="text-xs italic text-(--secondary)">
-              {consentForm?.adopter?.phoneNumber}
+            <p className="text-xs">
+              <strong>Số điện thoại:</strong> {consentForm?.adopter?.phoneNumber}
             </p>
           </div>
         </div>
@@ -240,7 +241,7 @@ function Preview() {
         <div className="basis-full flex justify-center">
             <p className="text-xl font-medium">Trung tâm cứu hộ</p>
           </div>
-          <div className="basis-full lg:basis-1/7 ">
+          {/* <div className="basis-full lg:basis-1/7 ">
             <Avatar className="rounded-sm ring-2 ring-(--primary) w-12 h-12">
               <AvatarImage
                 src={consentForm?.adopter?.avatar}
@@ -252,14 +253,14 @@ function Preview() {
                 </span>
               </AvatarFallback>
             </Avatar>
-          </div>
+          </div> */}
           <div className="basis-full lg:basis-5/7">
-            <p className="text-sm font-medium hover:text-(--primary) cursor-pointer line-clamp-1 ">
+            <p onClick={()=>{navigate(`/shelters/${consentForm?.shelter?._id}`)}} className="text-sm font-medium hover:text-(--primary) cursor-pointer line-clamp-1 ">
               {consentForm?.shelter?.name}
             </p>
             <p className="text-xs">
               <strong>Người tạo:</strong>{" "}
-              <Link to={``} className="hover:text-(--primary)">
+              <Link to={`/profile/${consentForm?.createdBy?._id}`} className="hover:text-(--primary)">
                 {consentForm?.createdBy?.fullName}
               </Link>
             </p>
