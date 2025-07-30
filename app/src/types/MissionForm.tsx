@@ -3,8 +3,8 @@ export interface MissionForm {
   createdAt: string;
   status: "pending" | "interviewing" | "approved" | "rejected" | "reviewed" | "scheduling";
   transportMethod: string;
-adoptionsLastMonth: number;
-total: number;
+  adoptionsLastMonth: number;
+  total: number;
   performedBy: {
     _id: string;
     email: string;
@@ -25,13 +25,33 @@ total: number;
       _id: string;
       name: string;
       petCode?: string;
-      photos: string[];
+      photos: string[]; 
       tokenMoney?: number;
     };
     shelter: {
       _id: string;
       name: string;
     };
+  };
+ interview: {
+    interviewId: string;
+    availableFrom?: string;
+    availableTo?: string;
+    selectedSchedule?: string;
+    scheduleAt?: string;
+    method?: string;
+    feedback?: string;
+    performedBy?: {
+      _id: string;
+      fullName: string;
+    };
+    reviewedBy?: {
+      _id: string;
+      fullName: string;
+    };
+    note?: string;
+    createAt: string;
+    updateAt: string;
   };
 
   answers: Answer[];

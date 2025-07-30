@@ -68,6 +68,11 @@ export default function PetSubmission() {
   const [showAnswers, setShowAnswers] = useState(true);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [filterByPerformer, setFilterByPerformer] = useState<string>("all");
+  const [interviewingSubFilter, setInterviewingSubFilter] = useState<"all" | "withSchedule" | "withoutSchedule">("all");
+  const [selectedTab, setSelectedTab] = useState<"answers" | "interview">("answers");
+
+  const [openPerformer, setOpenPerformer] = useState(false);
   const [scheduleData, setScheduleData] = useState({
     availableFrom: new Date(),
     availableTo: new Date(),
@@ -180,6 +185,15 @@ export default function PetSubmission() {
     }
   };
 
+  const uniquePerformers = Array.from(
+    new Set(
+      submissions
+        .map((s) => s.interview?.performedBy)
+        .filter((u) => u?._id)
+        .map((u) => JSON.stringify(u))
+    )
+  ).map((u) => JSON.parse(u));
+
 
   const statusOptions = ["pending", "scheduling", "interviewing", "reviewed", "approved", "rejected"];
   const statusLabels: Record<string, string> = {
@@ -192,14 +206,62 @@ export default function PetSubmission() {
 
   };
 
-  const statusCounts = submissions.reduce<Record<string, number>>((acc, sub) => {
-    acc[sub.status] = (acc[sub.status] || 0) + 1;
-    return acc;
-  }, {});
+
+
+
+  const isManager = isShelterManager;
+  const isStaff = shelters?.some((shelter) => {
+    if (shelter._id !== shelterId) return false;
+    return shelter.members?.some(
+      (member: any) =>
+        member._id === userProfile?._id &&
+        (member.roles === "staff" || (Array.isArray(member.roles) && member.roles.includes("staff")))
+    );
+  });
+
+  const statusCounts = submissions
+    .filter((sub) => {
+      if (isManager) return true;
+      if (isStaff) {
+        return sub.interview?.performedBy?._id === userProfile?._id;
+      }
+      return false;
+    })
+    .reduce<Record<string, number>>((acc, sub) => {
+      acc[sub.status] = (acc[sub.status] || 0) + 1;
+      return acc;
+    }, {});
 
   const filteredSubmissions = submissions
-    .filter((sub) => !statusFilter || sub.status === statusFilter)
+    .filter((sub) => {
+      if (sub.status !== statusFilter) return false;
+
+      // Filter phụ khi status === 'interviewing'
+      if (statusFilter === "interviewing") {
+        if (interviewingSubFilter === "withSchedule" && !sub.interview?.selectedSchedule) return false;
+        if (interviewingSubFilter === "withoutSchedule" && sub.interview?.selectedSchedule) return false;
+      }
+
+      // Các filter theo vai trò
+      if (["pending", "scheduling"].includes(sub.status)) return true;
+
+      if (isManager) {
+        if (filterByPerformer !== "all") {
+          return sub.interview?.performedBy?._id === filterByPerformer;
+        }
+        return true;
+      }
+
+      if (isStaff) {
+        return sub.interview?.performedBy?._id === userProfile?._id;
+      }
+
+      return false;
+    })
     .sort((a, b) => (b.total ?? 0) - (a.total ?? 0));
+
+
+
   const getStatusLabel = (status: string) => {
     const statusMap: Record<string, string> = {
       pending: "Chờ duyệt",
@@ -215,7 +277,7 @@ export default function PetSubmission() {
 
   const statusOptionsMap: { [key: string]: string[] } = {
     pending: ["pending", "scheduling", "rejected"],
-    scheduling: ["scheduling", "pending",  "rejected"],
+    scheduling: ["scheduling", "pending", "rejected"],
     interviewing: ["interviewing", "rejected", "reviewed"],
     reviewed: ["reviewed", "approved", "rejected"],
     rejected: ["rejected", "pending", "interviewing"],
@@ -255,6 +317,7 @@ export default function PetSubmission() {
             </button>
           ))}
         </div>
+
         <Dialog>
           <DialogTrigger asChild>
             <button className="px-3 py-1 rounded-full border text-sm bg-white dark:bg-gray-800 ">
@@ -286,10 +349,93 @@ export default function PetSubmission() {
           </DialogContent>
         </Dialog>
 
+        {isManager && !["pending", "scheduling"].includes(statusFilter) && (
+          <div className="flex items-center gap-2">
+            <Label>Nhân viên thực hiện:</Label>
+            <Popover open={openPerformer} onOpenChange={setOpenPerformer}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className="w-[250px] justify-between"
+                >
+                  {filterByPerformer === "all"
+                    ? "Tất cả nhân viên"
+                    : uniquePerformers.find((p) => p._id === filterByPerformer)?.fullName || "Không rõ"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[250px] p-0">
+                <Command>
+                  <CommandInput placeholder="Tìm nhân viên..." className="h-9" />
+                  <CommandList>
+                    <CommandItem
+                      value="all"
+                      onSelect={() => {
+                        setFilterByPerformer("all");
+                        setOpenPerformer(false);
+                      }}
+                    >
+                      Tất cả nhân viên
+                      {filterByPerformer === "all" && (
+                        <Check className="ml-auto h-4 w-4 text-green-500" />
+                      )}
+                    </CommandItem>
+                    {uniquePerformers.map((p) => (
+                      <CommandItem
+                        key={p._id}
+                        value={p.fullName.toLowerCase()}
+                        onSelect={() => {
+                          setFilterByPerformer(p._id);
+                          setOpenPerformer(false);
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={p.avatar || "/placeholder-avatar.png"}
+                            alt={p.fullName}
+                            className="w-5 h-5 rounded-full"
+                          />
+                          <span className="truncate">{p.fullName}</span>
+                        </div>
+                        {filterByPerformer === p._id && (
+                          <Check className="ml-auto h-4 w-4 text-green-500" />
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
+
+        {statusFilter === "interviewing" && (
+          <div className="flex items-center gap-2">
+            <Label>Lọc phỏng vấn:</Label>
+            <Button
+              variant={interviewingSubFilter === "all" ? "default" : "outline"}
+              onClick={() => setInterviewingSubFilter("all")}
+            >
+              Tất cả
+            </Button>
+            <Button
+              variant={interviewingSubFilter === "withSchedule" ? "default" : "outline"}
+              onClick={() => setInterviewingSubFilter("withSchedule")}
+            >
+              Chờ phỏng vấn
+            </Button>
+            <Button
+              variant={interviewingSubFilter === "withoutSchedule" ? "default" : "outline"}
+              onClick={() => setInterviewingSubFilter("withoutSchedule")}
+            >
+              Chờ người xác nhận lịch
+            </Button>
+          </div>
+        )}
+
 
       </div>
-
-
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -299,7 +445,6 @@ export default function PetSubmission() {
           filteredSubmissions.map((submission) => {
             const total = submission.total ?? 0;
             const colorBar = getColorBarClass(total);
-
             return (
               <div key={submission._id} className="flex rounded-md shadow-sm overflow-hidden border">
                 <div className={`w-2 ${colorBar}`} />
@@ -309,7 +454,7 @@ export default function PetSubmission() {
                       <CardTitle className="text-base">
                         <div className="flex items-center justify-between">
                           <div>
-                            Người nộp:{" "}
+                            Người đăng ký nhận nuôi:{" "}
                             <span className="text-primary font-medium">
                               {submission.performedBy?.fullName || "Ẩn danh"}
                             </span>
@@ -323,11 +468,31 @@ export default function PetSubmission() {
                       <p className="text-xs text-muted-foreground">
                         Nộp lúc: {format(new Date(submission.createdAt), "HH:mm dd/MM/yyyy")}
                       </p>
+                      <div>
+                        <span className="font-medium"> Nhân viên thực hiện:{" "}</span>
+                        <span className="text-primary font-medium">
+                          {submission.interview?.performedBy?.fullName || "Ẩn danh"}
+                        </span>
+                      </div>
+
+
+                      <p className="text-xs text-muted-foreground">
+                        {submission.interview?.selectedSchedule ? (
+                          <>
+                            Ngày thực hiện: {dayjs(submission.interview.selectedSchedule).format("DD/MM/YYYY")}
+                          </>
+                        ) : submission.interview?.availableFrom && submission.interview?.availableTo ? (
+                          <>
+                            Thời gian dự kiến: từ {dayjs(submission.interview.availableFrom).format("DD/MM/YYYY")} đến {dayjs(submission.interview.availableTo).format("DD/MM/YYYY")}
+                          </>
+                        ) : (
+                          "Chưa có thời gian phỏng vấn"
+                        )}
+                      </p>
+
+
                     </CardHeader>
                     <CardContent className="flex items-center justify-between">
-                      {/* <Badge variant="outline" className="text-sm">
-                        Tổng điểm: {total}
-                      </Badge> */}
 
                       <button
                         onClick={() => setSelectedSubmission(submission)}
@@ -459,7 +624,7 @@ export default function PetSubmission() {
                         className="ml-2 bg-primary dark:bg-primary text-white hover:bg-primary/90 transition rounded-md text-sm flex items-center justify-center gap-1  "
                         onClick={() => setShowScheduleDialog(true)}
                       >
-                          <CalendarCheck2 />
+                        <CalendarCheck2 />
                         Tạo lịch phỏng vấn
                       </Button>
                     )}
@@ -603,16 +768,26 @@ export default function PetSubmission() {
 
                   <p><strong>Thời gian gửi yêu cầu:</strong> {format(new Date(selectedSubmission.createdAt), "HH:mm dd/MM/yyyy")}</p>
                   <p><strong>Số lượng thú cưng nhận nuôi trong 1 tháng:</strong> {selectedSubmission?.adoptionsLastMonth || "Không có"} </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowAnswers((prev) => !prev)}
-                  >
-                    {showAnswers ? "Ẩn câu trả lời" : "Hiển thị câu trả lời"}
-                  </Button>
+                  <div className="flex gap-2 border-b mb-4">
+                    <button
+                      className={`px-4 py-2 text-sm font-medium ${selectedTab === "answers" ? "border-b-2 border-primary text-primary" : "text-muted-foreground"
+                        }`}
+                      onClick={() => setSelectedTab("answers")}
+                    >
+                      Câu trả lời
+                    </button>
+                    <button
+                      className={`px-4 py-2 text-sm font-medium ${selectedTab === "interview" ? "border-b-2 border-primary text-primary" : "text-muted-foreground"
+                        }`}
+                      onClick={() => setSelectedTab("interview")}
+                    >
+                      Thông tin phỏng vấn
+                    </button>
+                  </div>
+
 
                   {/* Thêm các trường khác nếu có */}
-                  {showAnswers && selectedSubmission.answers && (
+                  {selectedTab === "answers" && selectedSubmission.answers && (
                     <div className="space-y-4 pt-4">
 
 
@@ -665,6 +840,32 @@ export default function PetSubmission() {
                       })}
                     </div>
                   )}
+                  {selectedTab === "interview" && (
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      {selectedSubmission.interview ? (
+                        <>
+                          <p>
+                            <strong>Nhân viên thực hiện:</strong>{" "}
+                            {selectedSubmission.interview.performedBy?.fullName || "Chưa có"}
+                          </p>
+                          <p>
+                            <strong>Phương thức:</strong> {selectedSubmission.interview.method || "Chưa có"}
+                          </p>
+                          <p>
+                            <strong>Thời gian dự kiến:</strong>{" "}
+                            {selectedSubmission.interview.selectedSchedule
+                              ? dayjs(selectedSubmission.interview.selectedSchedule).format("DD/MM/YYYY")
+                              : selectedSubmission.interview.availableFrom && selectedSubmission.interview.availableTo
+                                ? `Từ ${dayjs(selectedSubmission.interview.availableFrom).format("DD/MM/YYYY")} đến ${dayjs(selectedSubmission.interview.availableTo).format("DD/MM/YYYY")}`
+                                : "Chưa có"}
+                          </p>
+                        </>
+                      ) : (
+                        <p>Chưa có thông tin phỏng vấn</p>
+                      )}
+                    </div>
+                  )}
+
 
                 </div>
               </div>
