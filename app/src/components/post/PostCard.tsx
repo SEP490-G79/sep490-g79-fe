@@ -40,6 +40,7 @@ interface PostCardProps {
   currentUserId: string;
   onLike: (postId: string | number) => void;
   isGuest?: boolean;
+  isShelterMember?: boolean;
   onEdit: (post: PostType) => void;
   onDelete: (post: PostType) => void;
   latestComment?: CommentType | null;
@@ -57,7 +58,7 @@ const formatCreatedAt = (date: string | Date): string => {
   return target.format('DD/MM/YYYY');
 };
 
-const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGuest, onEdit, onDelete, latestComment, onViewDetail }) => {
+const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGuest, onEdit, onDelete, latestComment, onViewDetail, isShelterMember }) => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const shouldTruncate = post.title.length > 300;
@@ -78,7 +79,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                 }
                 className="flex gap-x-3 items-start hover:underline"
               >
-                <Avatar className="w-10 h-10 object-center object-cover ring-2">
+                <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
                   <AvatarImage
                     src={post.shelter?.avatar || post.user.avatar || "/placeholder.svg"}
                     alt="avatar"
@@ -90,28 +91,49 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
               </Link>
 
               <div className="flex flex-col justify-top text-sm">
-                <Link
-                  to={
-                    post.shelter
-                      ? `/shelters/${post.shelter._id}`
-                      : `/profile/${post.createdBy}`
-                  }
-                  className="hover:underline"
-                >
-                  <span className="font-medium">
-                    {post.shelter
-                      ? `${post.shelter.name} (${post.user.fullName})`
-                      : post.user.fullName}
-                  </span>
-                </Link>
-                <div className="text-xs text-muted-foreground flex items-center gap-2">
-                  <span>{formatCreatedAt(post.createdAt)}</span>
-                  {post.privacy.includes("public") ? (
-                    <Globe className="w-4 h-4" />
+
+                <span className="font-medium leading-snug">
+                  {post.shelter ? (
+                    <>
+                      <Link
+                        to={`/shelters/${post.shelter._id}`}
+                        className="hover:underline"
+                      >
+                        {post.shelter.name}
+                      </Link>
+
+                      {isShelterMember && (
+                        <span className="text-xs text-muted-foreground block mt-0.5 flex items-center gap-2">
+                          Người đăng: {post.user.fullName}
+                          <span className="text-muted-foreground">• {formatCreatedAt(post.createdAt)}</span>
+                          {post.privacy.includes("public") ? (
+                            <Globe className="w-4 h-4" />
+                          ) : (
+                            <GlobeLock className="w-4 h-4" />
+                          )}
+                        </span>
+                      )}
+                    </>
                   ) : (
-                    <GlobeLock className="w-4 h-4" />
+                    <>
+                      <Link
+                        to={`/profile/${post.createdBy}`}
+                        className="hover:underline"
+                      >
+                      <span>{post.user.fullName}</span>
+                      </Link>
+                      <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
+                        <span>{formatCreatedAt(post.createdAt)}</span>
+                        {post.privacy.includes("public") ? (
+                          <Globe className="w-4 h-4" />
+                        ) : (
+                          <GlobeLock className="w-4 h-4" />
+                        )}
+                      </div>
+                    </>
                   )}
-                </div>
+                </span>
+
               </div>
 
             </div>
@@ -141,16 +163,16 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
               </DropdownMenu>
             ) : (
               !isGuest && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
-                    <Ellipsis className="w-5 h-5" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40 p-1 z-50">
-                  <ReportPostDialog postId={post._id} key={post._id} />
-                </DropdownMenuContent>
-              </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
+                      <Ellipsis className="w-5 h-5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40 p-1 z-50">
+                    <ReportPostDialog postId={post._id} key={post._id} />
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )
             )}
 
@@ -273,14 +295,14 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
         </div>
       </CardFooter>
 
-      <hr />
+      {latestComment && <hr />}
 
       {latestComment && (
         <div className="flex items-start gap-2 px-4  mt-1 hover:bg-muted/60 rounded-md">
           <Link
             to={`/profile/${latestComment.commenter._id}`}
           >
-            <Avatar className="w-8 h-8 object-center object-cover ring-2">
+            <Avatar className="w-8 h-8 object-center object-cover ring-2 ring-(--primary)">
               <AvatarImage src={latestComment.commenter.avatar || "/placeholder.svg"} />
               <AvatarFallback>{latestComment.commenter.fullName?.charAt(0)}</AvatarFallback>
             </Avatar>
@@ -299,15 +321,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
           </div>
         </div>
       )}
-
-      <div className="px-4 ">
-        <button
-          className="text-gray-600 hover:underline text-sm flex items-center gap-1 cursor-pointer"
-          onClick={() => onViewDetail(post._id)}
-        >
-          Xem thêm bình luận
-        </button>
-      </div>
     </Card>
   );
 };

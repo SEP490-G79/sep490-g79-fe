@@ -37,6 +37,8 @@ import EditPostDialog from "@/components/post/EditPostDialog";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import ReportPostDialog from "@/components/post/ReportPost";
+import { sortPostsByDistance, type LatLng } from "@/utils/sortByDistance";
+
 dayjs.extend(relativeTime);
 dayjs.locale("vi");
 
@@ -64,6 +66,8 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
   const [location, setLocation] = useState<{ lat: number; lng: number }>({ lat: 0, lng: 0 });
   const [suggestions, setSuggestions] = useState<{ place_id: string; description: string }[]>([]);
   const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [sortOption, setSortOption] = useState<"latest" | "oldest" | "nearest" | "farthest">("latest");
+  const [userLocation, setUserLocation] = useState<LatLng | null>(null);
   const isGuest = !userProfile;
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -78,6 +82,22 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
     description: "",
     onConfirm: () => { },
   });
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setUserLocation({
+          lat: coords.latitude,
+          lng: coords.longitude,
+        });
+      },
+      (err) => {
+        console.error("Không lấy được vị trí:", err);
+      },
+      { enableHighAccuracy: true }
+    );
+  }, []);
+
   const fetchUser = async () => {
     try {
       if (!userProfile && accessToken) {
@@ -341,13 +361,23 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
     );
   };
 
-  const userPosts = [...postsData]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .filter(post =>
-      (typeof post.createdBy === "string"
-        ? post.createdBy
-        : post.createdBy._id) === currentUserId && !post.shelter
-    );
+  const filteredPosts = (() => {
+    let filtered = postsData.filter((post) => {
+      const createdById = typeof post.createdBy === "string" ? post.createdBy : post.createdBy._id;
+      return createdById === currentUserId;
+    });
+
+    if (sortOption === "latest") {
+      filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else if (sortOption === "oldest") {
+      filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    } else if ((sortOption === "nearest" || sortOption === "farthest") && userLocation) {
+      const sorted = sortPostsByDistance(filtered, userLocation);
+      filtered = sortOption === "farthest" ? sorted.reverse() : sorted;
+    }
+
+    return filtered;
+  })();
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto py-10 px-4">
@@ -356,7 +386,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
           <div className="bg-(--card) rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
             onClick={() => setOpenCreateDialog(true)}
           >
-            <Avatar className="w-10 h-10 object-center object-cover ring-2">
+            <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
               <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
               <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
             </Avatar>
@@ -373,7 +403,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
 
               <div className="px-6 pb-6 pt-4 space-y-4 bg-background">
                 <div className="flex items-start gap-3">
-                  <Avatar className="w-10 h-10 object-center object-cover ring-2">
+                  <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
                     <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
                     <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                   </Avatar>
@@ -528,7 +558,22 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
         </>
       )}
 
-      <div className="flex justify-end items-center gap-2">
+      <div className="flex justify-between items-center gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Sắp xếp:</span>
+          <Select value={sortOption} onValueChange={(val) => setSortOption(val as any)}>
+            <SelectTrigger className="w-[160px] h-8 text-sm">
+              <SelectValue placeholder="Sắp xếp" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="latest">Mới nhất</SelectItem>
+              <SelectItem value="oldest">Cũ nhất</SelectItem>
+              <SelectItem value="nearest">Gần nhất</SelectItem>
+              <SelectItem value="farthest">Xa nhất</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <Button
           variant="outline"
           onClick={fetchPosts}
@@ -563,19 +608,19 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
             </div>
           ))}
         </div>
-      ) : userPosts.length === 0 ? (
+      ) : filteredPosts.length === 0 ? (
         <p className="text-center text-muted-foreground text-sm mt-6">
           Chưa có bài viết nào.
         </p>
       ) : (
-        userPosts.slice(0, visiblePosts).map((post) => (
+        filteredPosts.slice(0, visiblePosts).map((post) => (
           <Card key={post._id} className="shadow-md bg-(--card)">
             <CardHeader className="pt-4 pb-2 relative">
               <CardTitle className="text-lg font-semibold">
                 <div className="flex items-start justify-between">
                   <div className="flex gap-x-3">
                     <Link to={`/profile/${post.createdBy}`}>
-                      <Avatar className="w-10 h-10 object-center object-cover ring-2">
+                      <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
                         <AvatarImage src={post.user.avatar || "/placeholder.svg"} alt="avatar" />
                         <AvatarFallback>{post.user.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                       </Avatar>
@@ -729,12 +774,12 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
               </div>
             </CardFooter>
 
-            <hr />
+            {post.latestComment && <hr />}
 
             {post.latestComment && (
               <div className="flex items-start gap-2 px-4 mt-1 hover:bg-muted/60 rounded-md">
                 <Link to={`/profile/${post.latestComment.commenter._id}`} className="flex-shrink-0">
-                  <Avatar className="w-10 h-10 object-center object-cover ring-2">
+                  <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
                     <AvatarImage src={post.latestComment.commenter.avatar || "/placeholder.svg"} />
                     <AvatarFallback>{post.latestComment.commenter.fullName?.charAt(0)}</AvatarFallback>
                   </Avatar>
@@ -747,15 +792,9 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                 </div>
               </div>
             )}
-
-            <div className="px-4 pb-3">
-              <button onClick={() => setDetailPostId(post._id)} className="text-gray-600 hover:underline text-sm cursor-pointer">
-                Xem thêm bình luận
-              </button>
-            </div>
           </Card>
         )))}
-      {loadingMore && userPosts.length > visiblePosts && (
+      {loadingMore && filteredPosts.length > visiblePosts && (
         <div className="space-y-6 mt-6">
           {[...Array(3)].map((_, idx) => (
             <div key={idx} className="p-4 border rounded-xl bg-background shadow space-y-4">

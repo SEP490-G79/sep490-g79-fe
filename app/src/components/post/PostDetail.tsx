@@ -197,7 +197,7 @@ export default function PostDetailDialog({
                                 <div className="relative bg-(--card)  shadow-md p-4 space-y-3">
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-center gap-3">
-                                            <Avatar className="w-10 h-10 object-center object-cover ring-2">
+                                            <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
                                                 <AvatarImage src={post.shelter?.avatar || post.createdBy.avatar || "/placeholder.svg"} alt="avatar" />
                                                 <AvatarFallback>{post.shelter?.name?.charAt(0).toUpperCase() || post.createdBy.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                                             </Avatar>

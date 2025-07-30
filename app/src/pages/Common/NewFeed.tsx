@@ -61,6 +61,7 @@ const Newfeed = () => {
   const [addressConfirmed, setAddressConfirmed] = useState(false);
   const [postAs, setPostAs] = useState<"user" | string>("user");
   const [myShelters, setMyShelters] = useState<{ _id: string; name: string; avatar: string }[]>([]);
+  const [sortOption, setSortOption] = useState<"latest" | "oldest" | "nearest" | "farthest">("latest");
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
     title: "",
@@ -282,23 +283,23 @@ const Newfeed = () => {
     }
   };
 
-  const sortedPosts = (() => {
-    const now = new Date();
-    const recentThreshold = 1000 * 60 * 60 * 24;
-    const recentPosts = posts.filter(post => new Date(now).getTime() - new Date(post.createdAt).getTime() < recentThreshold);
-    const otherPosts = posts.filter(post => !recentPosts.includes(post));
+  const filteredPosts = (() => {
+    if (!posts.length) return [];
 
-    const sortedRecent = [...recentPosts].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    if (sortOption === "latest") {
+      return [...posts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
 
-    const sortedOther = userLocation
-      ? sortPostsByDistance(otherPosts, userLocation)
-      : [...otherPosts].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+    if (sortOption === "oldest") {
+      return [...posts].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    }
 
-    return [...sortedRecent, ...sortedOther];
+    if ((sortOption === "nearest" || sortOption === "farthest") && userLocation) {
+      const sorted = sortPostsByDistance(posts, userLocation);
+      return sortOption === "farthest" ? sorted.reverse() : sorted;
+    }
+
+    return posts;
   })();
 
 
@@ -378,7 +379,7 @@ const Newfeed = () => {
             className="bg-(--card) rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
             onClick={() => setOpenCreateDialog(true)}
           >
-            <Avatar className="w-10 h-10 object-center object-vocer ring-2">
+            <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
               <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
               <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
             </Avatar>
@@ -403,7 +404,7 @@ const Newfeed = () => {
               <div className="bg-background px-6 pb-6 pt-4 space-y-4">
                 <div className="flex items-start justify-between gap-3 w-full">
                   <div className="flex gap-3">
-                    <Avatar className="w-10 h-10 object-center object-cover ring-2">
+                    <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
                       <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
                       <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                     </Avatar>
@@ -612,6 +613,21 @@ const Newfeed = () => {
         </div>
       )}
       <div className="flex justify-end">
+        <div className="w-full flex justify-start items-center gap-2 ml-0">
+          <span className="text-sm text-muted-foreground">Sắp xếp:</span>
+          <Select value={sortOption} onValueChange={(value) => setSortOption(value as any)}>
+            <SelectTrigger className="w-[160px] h-8 text-sm">
+              <SelectValue placeholder="Sắp xếp" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="latest">Mới nhất</SelectItem>
+              <SelectItem value="oldest">Cũ nhất</SelectItem>
+              <SelectItem value="nearest">Gần nhất</SelectItem>
+              <SelectItem value="farthest">Xa nhất</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <Button
           variant="outline"
           onClick={fetchPosts}
@@ -622,6 +638,8 @@ const Newfeed = () => {
           {loadingPosts ? "Đang tải..." : "Tải lại bài viết"}
         </Button>
       </div>
+
+
 
       {loadingPosts ? (
         <div className="space-y-6">
@@ -648,7 +666,7 @@ const Newfeed = () => {
           ))}
         </div>
       ) : (
-        sortedPosts
+        filteredPosts
           .slice()
           .slice(0, visiblePosts)
           .map((post) => (
@@ -658,6 +676,7 @@ const Newfeed = () => {
               currentUserId={currentUserId}
               onLike={handleLike}
               isGuest={!userProfile?._id}
+              isShelterMember={post.shelter?.members?.some((m: any) => m._id === userProfile?._id)}
               onEdit={(post) => {
                 setEditingPost(post);
                 setIsEditOpen(true);
@@ -714,7 +733,7 @@ const Newfeed = () => {
           if (!open) setDetailPostId(null);
         }}
         onPostUpdated={(updatedPost) => {
-          console.log("Updated post from dialog:", updatedPost); 
+          console.log("Updated post from dialog:", updatedPost);
           setPosts((prev) =>
             prev.map((p) =>
               p._id === updatedPost._id
