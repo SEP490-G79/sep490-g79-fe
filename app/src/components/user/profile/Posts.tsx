@@ -64,6 +64,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
   const [location, setLocation] = useState<{ lat: number; lng: number }>({ lat: 0, lng: 0 });
   const [suggestions, setSuggestions] = useState<{ place_id: string; description: string }[]>([]);
   const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const isGuest = !userProfile;
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
@@ -342,16 +343,20 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
 
   const userPosts = [...postsData]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .filter(post => String(post.createdBy) === currentUserId && !post.shelter);
+    .filter(post =>
+      (typeof post.createdBy === "string"
+        ? post.createdBy
+        : post.createdBy._id) === currentUserId && !post.shelter
+    );
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto py-10 px-4">
       {userProfile?._id && (!profileUserId || profileUserId === userProfile._id) && (
         <>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
+          <div className="bg-(--card) rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
             onClick={() => setOpenCreateDialog(true)}
           >
-            <Avatar className="w-10 h-10">
+            <Avatar className="w-10 h-10 object-center object-cover ring-2">
               <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
               <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
             </Avatar>
@@ -368,7 +373,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
 
               <div className="px-6 pb-6 pt-4 space-y-4 bg-background">
                 <div className="flex items-start gap-3">
-                  <Avatar className="w-10 h-10">
+                  <Avatar className="w-10 h-10 object-center object-cover ring-2">
                     <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
                     <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                   </Avatar>
@@ -483,6 +488,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                 <div className="flex justify-end gap-2 mt-4">
                   <Button
                     variant="ghost"
+                    disabled={loading}
                     onClick={() => {
                       setConfirmDialog({
                         open: true,
@@ -563,13 +569,13 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
         </p>
       ) : (
         userPosts.slice(0, visiblePosts).map((post) => (
-          <Card key={post._id} className="shadow-md dark:bg-gray-800">
+          <Card key={post._id} className="shadow-md bg-(--card)">
             <CardHeader className="pt-4 pb-2 relative">
               <CardTitle className="text-lg font-semibold">
                 <div className="flex items-start justify-between">
                   <div className="flex gap-x-3">
                     <Link to={`/profile/${post.createdBy}`}>
-                      <Avatar className="w-10 h-10">
+                      <Avatar className="w-10 h-10 object-center object-cover ring-2">
                         <AvatarImage src={post.user.avatar || "/placeholder.svg"} alt="avatar" />
                         <AvatarFallback>{post.user.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                       </Avatar>
@@ -611,16 +617,18 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
-                          <Ellipsis className="w-5 h-5" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40 p-1 z-50">
-                        <ReportPostDialog postId={post._id} key={post._id} />
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    !isGuest && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
+                            <Ellipsis className="w-5 h-5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40 p-1 z-50">
+                          <ReportPostDialog postId={post._id} key={post._id} />
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )
                   )}
                 </div>
               </CardTitle>
@@ -702,7 +710,15 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
 
             <CardFooter className="text-sm text-gray-500 px-4">
               <div className="flex w-full justify-between">
-                <div onClick={() => handleLike(post._id)} className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${userProfile?._id && post.likedBy.includes(userProfile._id) ? "text-red-500" : ""}`}>
+                <div
+                  onClick={() => {
+                    if (isGuest) {
+                      toast.warning("Vui lòng đăng nhập để yêu thích bài viết");
+                      return;
+                    }
+                    handleLike(post._id);
+                  }}
+                  className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${userProfile?._id && post.likedBy.includes(userProfile._id) ? "text-red-500" : ""}`}>
                   <Heart className="w-5 h-5" />
                   <span>{post.likedBy.length}</span>
                 </div>
@@ -718,7 +734,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
             {post.latestComment && (
               <div className="flex items-start gap-2 px-4 mt-1 hover:bg-muted/60 rounded-md">
                 <Link to={`/profile/${post.latestComment.commenter._id}`} className="flex-shrink-0">
-                  <Avatar>
+                  <Avatar className="w-10 h-10 object-center object-cover ring-2">
                     <AvatarImage src={post.latestComment.commenter.avatar || "/placeholder.svg"} />
                     <AvatarFallback>{post.latestComment.commenter.fullName?.charAt(0)}</AvatarFallback>
                   </Avatar>
@@ -814,7 +830,13 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
               p._id === updated._id
                 ? {
                   ...p,
-                  likedBy: updated.likedBy,
+                  ...updated,
+                  createdBy:
+                    typeof updated.createdBy === "string"
+                      ? { _id: updated.createdBy, fullName: p.user.fullName, avatar: p.user.avatar }
+                      : updated.createdBy,
+                  user: updated.user || p.user,
+                  shelter: updated.shelter || p.shelter,
                   latestComment: updated.latestComment ?? p.latestComment,
                 }
                 : p

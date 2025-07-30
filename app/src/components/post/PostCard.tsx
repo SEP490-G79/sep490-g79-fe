@@ -65,7 +65,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
     ? post.title.slice(0, 300) + "..."
     : post.title;
   return (
-    <Card className="shadow-md dark:bg-gray-800">
+    <Card className="shadow-md bg-(--card)">
       <CardHeader className="pt-4 pb-2 relative">
         <CardTitle className="text-lg font-semibold">
           <div className="flex items-start justify-between">
@@ -78,7 +78,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                 }
                 className="flex gap-x-3 items-start hover:underline"
               >
-                <Avatar className="w-10 h-10">
+                <Avatar className="w-10 h-10 object-center object-cover ring-2">
                   <AvatarImage
                     src={post.shelter?.avatar || post.user.avatar || "/placeholder.svg"}
                     alt="avatar"
@@ -99,7 +99,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                   className="hover:underline"
                 >
                   <span className="font-medium">
-                    {post.shelter?.name || post.user.fullName}
+                    {post.shelter
+                      ? `${post.shelter.name} (${post.user.fullName})`
+                      : post.user.fullName}
                   </span>
                 </Link>
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
@@ -138,6 +140,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
+              !isGuest && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
@@ -148,6 +151,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                   <ReportPostDialog postId={post._id} key={post._id} />
                 </DropdownMenuContent>
               </DropdownMenu>
+              )
             )}
 
             <AlertDialog
@@ -276,7 +280,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
           <Link
             to={`/profile/${latestComment.commenter._id}`}
           >
-            <Avatar className="w-8 h-8">
+            <Avatar className="w-8 h-8 object-center object-cover ring-2">
               <AvatarImage src={latestComment.commenter.avatar || "/placeholder.svg"} />
               <AvatarFallback>{latestComment.commenter.fullName?.charAt(0)}</AvatarFallback>
             </Avatar>

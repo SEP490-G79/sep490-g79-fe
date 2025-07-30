@@ -375,10 +375,10 @@ const Newfeed = () => {
       {userProfile?._id && (
         <>
           <div
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
+            className="bg-(--card) rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
             onClick={() => setOpenCreateDialog(true)}
           >
-            <Avatar className="w-10 h-10">
+            <Avatar className="w-10 h-10 object-center object-vocer ring-2">
               <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
               <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
             </Avatar>
@@ -403,7 +403,7 @@ const Newfeed = () => {
               <div className="bg-background px-6 pb-6 pt-4 space-y-4">
                 <div className="flex items-start justify-between gap-3 w-full">
                   <div className="flex gap-3">
-                    <Avatar className="w-10 h-10">
+                    <Avatar className="w-10 h-10 object-center object-cover ring-2">
                       <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
                       <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                     </Avatar>
@@ -556,6 +556,7 @@ const Newfeed = () => {
                 <div className="flex justify-end pt-2">
                   <Button
                     variant="ghost"
+                    disabled={loading || (!postContent.trim() && selectedImages.length === 0)}
                     onClick={() => {
                       setConfirmDialog({
                         open: true,
@@ -583,7 +584,7 @@ const Newfeed = () => {
                   </Button>
                   <Button
                     onClick={handlePostSubmit}
-                    disabled={loading || (!postContent.trim() && selectedImages.length === 0)}
+                    disabled={loading}
                   >
                     {loading ? "Đang đăng..." : "Đăng bài"}
                   </Button>
@@ -713,16 +714,20 @@ const Newfeed = () => {
           if (!open) setDetailPostId(null);
         }}
         onPostUpdated={(updatedPost) => {
-          setPosts(prev =>
-            prev.map(p => {
-              if (p._id !== updatedPost._id) return p;
-              return {
-                ...p,
-                ...updatedPost,
-                createdBy: (updatedPost.createdBy as any)._id || updatedPost.createdBy,
-                latestComment: updatedPost.latestComment ?? p.latestComment,
-              };
-            })
+          console.log("Updated post from dialog:", updatedPost); 
+          setPosts((prev) =>
+            prev.map((p) =>
+              p._id === updatedPost._id
+                ? {
+                  ...p,
+                  ...updatedPost,
+                  createdBy: (updatedPost.createdBy as any)._id || updatedPost.createdBy,
+                  latestComment: updatedPost.latestComment ?? p.latestComment,
+                  user: updatedPost.user || p.user,
+                  shelter: updatedPost.shelter || p.shelter,
+                }
+                : p
+            )
           );
         }}
       />

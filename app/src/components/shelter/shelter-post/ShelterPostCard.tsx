@@ -26,6 +26,7 @@ type ShelterPostCardProps = {
   onEdit: (post: any) => void;
   onDelete: (postId: string) => void;
   onViewDetail: (postId: string) => void;
+  isGuest?: boolean;
 };
 
 export default function ShelterPostCard({
@@ -35,6 +36,7 @@ export default function ShelterPostCard({
   onEdit,
   onDelete,
   onViewDetail,
+  isGuest = false,
 }: ShelterPostCardProps) {
   const [expanded, setExpanded] = useState(false);
   const currentMember = post.shelter?.members?.find((m: any) => m._id?._id === currentUserId || m._id === currentUserId);
@@ -50,7 +52,7 @@ export default function ShelterPostCard({
   };
 
   return (
-    <Card className="shadow-md dark:bg-gray-800">
+    <Card className="shadow-md bg-(--card)">
       <CardHeader className="pt-4 pb-2 relative">
         <CardTitle className="text-lg font-semibold">
           <div className="flex items-start justify-between">
@@ -59,7 +61,7 @@ export default function ShelterPostCard({
                 to={`/shelters  /${post.shelter?._id}`}
                 className="flex gap-x-3 items-start hover:underline"
               >
-                <Avatar className="w-10 h-10">
+                <Avatar className="w-10 h-10 object-center object-cover ring-2">
                   <AvatarImage src={post.shelter?.avatar || "/placeholder.svg"} alt="shelter avatar" />
                   <AvatarFallback>{post.shelter?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                 </Avatar>
@@ -69,7 +71,10 @@ export default function ShelterPostCard({
                   to={`/shelters/${post.shelter?._id}`}
                   className="hover:underline"
                 >
-                  <span className="font-medium">{post.shelter?.name}</span>
+                  <span className="font-medium">
+                    {post.shelter?.name}
+                    {post.createdBy?.fullName ? ` (${post.createdBy.fullName})` : ""}
+                  </span>
                 </Link>
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
                   <span>{formatCreatedAt(post.createdAt)}</span>
@@ -79,7 +84,7 @@ export default function ShelterPostCard({
 
             </div>
 
-            {(isManager || isOwner) && (
+            {(isManager || isOwner) && !isGuest && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="p-2 hover:bg-muted rounded-md">

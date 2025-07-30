@@ -338,10 +338,10 @@ function ShelterPosts() {
         <div className="max-w-2xl mx-auto py-10 px-4">
             {isManagerOrStaff && (
                 <div
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
+                    className="bg-(--card) rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
                     onClick={() => setOpenDialog(true)}
                 >
-                    <Avatar className="w-10 h-10">
+                    <Avatar className="w-10 h-10 object-center object-cover ring-2">
                         {/* shelter avatar */}
                         <AvatarImage src={shelterInfo?.avatar || "/placeholder.svg"} />
                         <AvatarFallback>{shelterInfo?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
@@ -477,6 +477,7 @@ function ShelterPosts() {
                         <div className="flex justify-end">
                             <Button
                                 variant="ghost"
+                                disabled={loading}
                                 onClick={() => {
                                     setConfirmDialog({
                                         open: true,
@@ -640,7 +641,10 @@ function ShelterPosts() {
                             p._id === updated._id
                                 ? {
                                     ...p,
-                                    likedBy: updated.likedBy,
+                                    ...updated,
+                                    createdBy: updated.createdBy?._id || updated.createdBy,
+                                    user: updated.user || p.user,
+                                    shelter: updated.shelter || p.shelter,
                                     latestComment: updated.latestComment ?? p.latestComment,
                                 }
                                 : p

@@ -43,6 +43,7 @@ export default function PostDetailDialog({
 
     const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+    const isGuest = !userProfile;
 
     const fetchUser = async () => {
         try {
@@ -155,17 +156,20 @@ export default function PostDetailDialog({
     const handlePostUpdated = (updatedPost: PostType) => {
         if (!post) return;
 
-        setPost({
+        const enrichedPost: PostType = {
             ...post,
             ...updatedPost,
             createdBy: post.createdBy,
-            shelter: post.shelter,
             user: post.user,
-        });
+            shelter: post.shelter,
+        };
 
+        setPost(enrichedPost);
         setIsEditOpen(false);
-    };
 
+        // GỌI cập nhật ra ngoài Newfeed
+        onPostUpdated?.(enrichedPost);
+    };
 
 
     if (!open && !post) return null;
@@ -190,10 +194,10 @@ export default function PostDetailDialog({
                             </DialogHeader>
 
                             <div className="space-y-4">
-                                <div className="relative bg-white dark:bg-gray-800  shadow-md p-4 space-y-3">
+                                <div className="relative bg-(--card)  shadow-md p-4 space-y-3">
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-center gap-3">
-                                            <Avatar className="w-10 h-10">
+                                            <Avatar className="w-10 h-10 object-center object-cover ring-2">
                                                 <AvatarImage src={post.shelter?.avatar || post.createdBy.avatar || "/placeholder.svg"} alt="avatar" />
                                                 <AvatarFallback>{post.shelter?.name?.charAt(0).toUpperCase() || post.createdBy.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                                             </Avatar>
@@ -210,6 +214,7 @@ export default function PostDetailDialog({
                                             </div>
                                         </div>
 
+                                        {!isGuest && (
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
@@ -231,10 +236,13 @@ export default function PostDetailDialog({
                                                         </DropdownMenuItem>
                                                     </>
                                                 ) : (
+                                                    ( 
                                                     <ReportPostDialog postId={post._id} key={post._id} />
+                                                    )
                                                 )}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
+                                        )}
 
                                     </div>
 
