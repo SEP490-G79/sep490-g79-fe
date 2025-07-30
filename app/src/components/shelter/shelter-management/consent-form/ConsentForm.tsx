@@ -40,7 +40,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import AppContext from "@/context/AppContext";
-import { type ConsentForm } from "@/types/ConsentForm";
+
 import type { GoongSuggestion } from "@/utils/AddressInputWithGoong";
 import useAuthAxios from "@/utils/authAxios";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -62,8 +62,9 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { fi } from "zod/v4/locales";
 import Preview from "./Preview";
+import type { ConsentForm } from "@/types/ConsentForm";
 
-function ConsentForm() {
+export default function ConsentForm() {
   const { shelterId, consentFormId } = useParams();
   const { coreAPI, shelterConsentForms, setShelterConsentForms } =
     useContext(AppContext);
@@ -723,4 +724,3 @@ function ConsentForm() {
   );
 }
 
-export default ConsentForm;

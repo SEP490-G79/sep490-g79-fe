@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, ChevronsUpDown, Plus, Search } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, PlusSquare, Search } from "lucide-react";
 import React, { useContext, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -194,9 +194,9 @@ export default function CreateDialog({setIsLoading}:Props) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="default">
-          <Plus />
-          Tạo form
+      <Button variant="ghost" className="text-xs">
+          <PlusSquare className="text-(--primary)" />
+          Tạo mới
         </Button>
       </DialogTrigger>
 

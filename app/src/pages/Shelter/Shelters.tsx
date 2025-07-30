@@ -192,7 +192,7 @@ export default function Shelters() {
       </Breadcrumb>
 
       {/* Search */}
-      <div className="basis-full flex flex-wrap justify-items-center my-5">
+      <div className="basis-full flex flex-wrap justify-items-center my-5 px-40">
         <PlaceholdersAndVanishInput
           placeholders={placeholders}
           onChange={handleChange}
@@ -200,15 +200,13 @@ export default function Shelters() {
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant={"outline"}>
-              <SlidersHorizontal className="h-4 w-4" />
+
+            <Button variant="ghost" className="text-xs h-full">
+              <SlidersHorizontal className="text-(--primary)" />
+              Sắp xếp
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuLabel className="text-sm text-(--muted-foreground)">
-              Sắp xếp theo
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={(e) => {
                 e.preventDefault();
