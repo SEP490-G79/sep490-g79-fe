@@ -45,6 +45,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
 import dayjs from "dayjs";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -71,6 +78,11 @@ export default function PetSubmission() {
   const [filterByPerformer, setFilterByPerformer] = useState<string>("all");
   const [interviewingSubFilter, setInterviewingSubFilter] = useState<"all" | "withSchedule" | "withoutSchedule">("all");
   const [selectedTab, setSelectedTab] = useState<"answers" | "interview">("answers");
+  const [feedback, setFeedback] = useState("");
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [isEarlyFeedback, setIsEarlyFeedback] = useState(false);
+  const [isEditingFeedback, setIsEditingFeedback] = useState(false);
+
 
   const [openPerformer, setOpenPerformer] = useState(false);
   const [scheduleData, setScheduleData] = useState({
@@ -185,6 +197,59 @@ export default function PetSubmission() {
     }
   };
 
+  const handleSubmitFeedback = async () => {
+    try {
+      if (!selectedSubmission) {
+        toast.error("Chưa chọn hồ sơ để gửi feedback");
+        return;
+      }
+
+      const res = await authAxios.put(`${coreAPI}/adoption-submissions/interview-feedback/${shelterId}`, {
+        submissionId: selectedSubmission?._id,
+        feedback: feedback.trim(),
+      });
+      fetchSubmissions();
+      // Cập nhật lại submission sau khi gửi feedback
+      const updated = {
+        ...selectedSubmission,
+        interview: {
+          ...selectedSubmission?.interview,
+          feedback: res.data.feedback,
+          scheduleAt: res.data.scheduleAt,
+        },
+      };
+
+
+      setSelectedSubmission((prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          interview: {
+            ...prev.interview,
+            feedback: res.data.feedback,
+            scheduleAt: res.data.scheduleAt,
+          },
+        };
+      });
+
+      setFeedback("");
+      setIsEditingFeedback(false);
+      toast.success(
+        selectedSubmission.interview.feedback
+          ? "Cập nhật feedback thành công!"
+          : "Thêm feedback phỏng vấn thành công!"
+      );
+
+
+    } catch (err) {
+      const error = err as any;
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra");
+    }
+
+  };
+
+
   const uniquePerformers = Array.from(
     new Set(
       submissions
@@ -285,6 +350,15 @@ export default function PetSubmission() {
 
   const currentStatus = selectedSubmission?.status || "";
   const options = statusOptionsMap[currentStatus] || statusOptions;
+  const onTrySubmitFeedback = () => {
+    if (!selectedSubmission?.interview?.selectedSchedule) return;
+
+    const selectedDate = dayjs(selectedSubmission.interview.selectedSchedule).startOf("day");
+    const today = dayjs().startOf("day");
+
+    setIsEarlyFeedback(today.isBefore(selectedDate));
+    setShowConfirmDialog(true);
+  };
 
 
 
@@ -429,7 +503,7 @@ export default function PetSubmission() {
               variant={interviewingSubFilter === "withoutSchedule" ? "default" : "outline"}
               onClick={() => setInterviewingSubFilter("withoutSchedule")}
             >
-              Chờ người xác nhận lịch
+              Chờ xác nhận lại lịch
             </Button>
           </div>
         )}
@@ -849,7 +923,8 @@ export default function PetSubmission() {
                             {selectedSubmission.interview.performedBy?.fullName || "Chưa có"}
                           </p>
                           <p>
-                            <strong>Phương thức:</strong> {selectedSubmission.interview.method || "Chưa có"}
+                            <strong>Phương thức:</strong>{" "}
+                            {selectedSubmission.interview.method || "Chưa có"}
                           </p>
                           <p>
                             <strong>Thời gian dự kiến:</strong>{" "}
@@ -859,6 +934,114 @@ export default function PetSubmission() {
                                 ? `Từ ${dayjs(selectedSubmission.interview.availableFrom).format("DD/MM/YYYY")} đến ${dayjs(selectedSubmission.interview.availableTo).format("DD/MM/YYYY")}`
                                 : "Chưa có"}
                           </p>
+
+                          {/* === Feedback section === */}
+                          {selectedSubmission.status === "interviewing" &&
+                            selectedSubmission.interview.selectedSchedule &&
+                            selectedSubmission.interview.performedBy?._id === userProfile?._id && (
+                              <div className="mt-4">
+                                {selectedSubmission.interview.feedback && !isEditingFeedback ? (
+                                  <div className="p-3 rounded-md bg-muted/60 relative">
+                                    <p className="font-medium text-foreground">Feedback:</p>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                      {selectedSubmission.interview.feedback}
+                                    </p>
+                                    {/* Nút chỉnh sửa */}
+                                    <div className="absolute top-2 right-2">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button variant="ghost" size="icon" className="h-6 w-6">
+                                            <MoreVertical className="w-4 h-4" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              setFeedback(selectedSubmission.interview.feedback || "");
+                                              setIsEditingFeedback(true);
+                                            }}
+                                          >
+                                            Chỉnh sửa feedback
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <p className="text-sm font-medium text-foreground mb-1">
+                                      {isEditingFeedback ? "Chỉnh sửa phản hồi" : "Gửi phản hồi cuộc phỏng vấn"}
+                                    </p>
+                                    <Textarea
+                                      rows={3}
+                                      value={feedback}
+                                      onChange={(e) => setFeedback(e.target.value)}
+                                      placeholder="Nhập nội dung phản hồi..."
+                                    />
+                                    <div className="flex gap-2 mt-2">
+                                      <Button
+                                        size="sm"
+                                        onClick={onTrySubmitFeedback}
+                                        disabled={feedback.trim() === ""}
+                                      >
+                                        {isEditingFeedback ? "Cập nhật feedback" : "Gửi feedback"}
+                                      </Button>
+                                      {isEditingFeedback && (
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => {
+                                            setIsEditingFeedback(false);
+                                            setFeedback("");
+                                          }}
+                                        >
+                                          Hủy
+                                        </Button>
+                                      )}
+                                    </div>
+
+                                    {/* Dialog xác nhận */}
+                                    <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>
+                                            {isEditingFeedback
+                                              ? "Xác nhận cập nhật feedback"
+                                              : "Xác nhận gửi phản hồi phỏng vấn"}
+                                          </AlertDialogTitle>
+                                        </AlertDialogHeader>
+                                        <div className="text-sm text-muted-foreground">
+                                          {isEarlyFeedback ? (
+                                            <p>
+                                              ⚠️ Bạn đang gửi feedback <strong>sớm hơn</strong> lịch phỏng vấn đã chọn (
+                                              {dayjs(selectedSubmission?.interview?.selectedSchedule).format("DD/MM/YYYY")}).<br />
+                                              Vui lòng đảm bảo buổi phỏng vấn đã diễn ra.
+                                            </p>
+                                          ) : (
+                                            <p>
+                                              {isEditingFeedback
+                                                ? "Bạn chắc chắn muốn cập nhật phản hồi?"
+                                                : "Bạn chắc chắn muốn gửi phản hồi cuộc phỏng vấn?"}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Hủy</AlertDialogCancel>
+                                          <AlertDialogAction
+                                            onClick={async () => {
+                                              await handleSubmitFeedback();
+                                              setShowConfirmDialog(false);
+                                            }}
+                                          >
+                                            {isEditingFeedback ? "Cập nhật" : "Gửi feedback"}
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </>
+                                )}
+                              </div>
+                            )}
                         </>
                       ) : (
                         <p>Chưa có thông tin phỏng vấn</p>
