@@ -95,6 +95,7 @@ export const MinimalTiptapEditor = React.forwardRef<
       {!hideToolbar && <Toolbar editor={editor} />}
       <EditorContent
         editor={editor}
+
         className={cn(
           `minimal-tiptap-editor h-full w-full ${hideToolbar ? "" : "overflow-y-auto"}`,
           editorContentClassName

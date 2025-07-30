@@ -164,7 +164,7 @@ function Preview() {
       </div>
     );
   }
-
+  
   return (
     <div className="w-full flex gap-5 justify-between flex-wrap bg-(--card) p-5">
       <div className="basis-full flex gap-3 ">

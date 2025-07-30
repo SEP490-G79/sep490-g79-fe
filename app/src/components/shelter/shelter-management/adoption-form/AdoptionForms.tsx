@@ -409,7 +409,7 @@ export function AdoptionForms() {
           }
           className="max-w-sm"
         />
-        <CreateDialog />
+        <CreateDialog setIsLoading={setIsLoading} />
       </div>
       <div className="rounded-md border">
         <Table>
