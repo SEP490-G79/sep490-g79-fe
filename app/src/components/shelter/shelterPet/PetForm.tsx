@@ -17,18 +17,11 @@ import Autosuggest from "react-autosuggest";
 import PetPhotoUpload from "./PetPhotoUpload";
 import PetImageAIButton from "./PetImageAIButton";
 import { toast } from "sonner";
+import type { Species, Breed, PetFormState } from "@/types/pet.types";
 
-interface Breed {
-  _id: string;
-  name: string;
-}
-interface Species {
-  _id: string;
-  name: string;
-}
 interface PetFormProps {
-  form: any;
-  setForm: React.Dispatch<React.SetStateAction<any>>;
+  form: PetFormState;
+  setForm: React.Dispatch<React.SetStateAction<PetFormState>>;
   speciesList: Species[];
   setSpeciesList: React.Dispatch<React.SetStateAction<Species[]>>;
   breedList: Breed[];
@@ -49,12 +42,6 @@ export default function PetForm({
   onCreateSpecies,
   isEditing,
 }: PetFormProps) {
-  const filteredBreeds = breedList.filter(
-    (b) =>
-      b.species === form.species ||
-      (typeof b.species === "object" ? b.species._id : b.species) ===
-        form.species
-  );
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   const colorSuggestions = [
     "Trắng",
@@ -175,13 +162,13 @@ export default function PetForm({
           getSuggestionValue={(s) => s}
           renderSuggestion={(s) => <span>{s}</span>}
           onSuggestionSelected={(_, { suggestion }) =>
-            setForm((prev) => ({ ...prev, color: suggestion }))
+            setForm((prev: PetFormState) => ({ ...prev, color: suggestion }))
           }
           inputProps={{
             placeholder: "Nhập màu lông...",
             value: form.color,
-            onChange: (_: any, { newValue }: { newValue: string }) =>
-              setForm((prev) => ({ ...prev, color: newValue })),
+            onChange: (_: unknown, { newValue }: { newValue: string }) =>
+              setForm((prev: PetFormState) => ({ ...prev, color: newValue })),
           }}
           theme={{
             input:
@@ -316,7 +303,9 @@ export default function PetForm({
       <div className="col-span-full">
         <PetPhotoUpload
           photos={form.photos}
-          setPhotos={(photos) => setForm((prev) => ({ ...prev, photos }))}
+          setPhotos={(photos) =>
+            setForm((prev: PetFormState) => ({ ...prev, photos }))
+          }
         />
       </div>
 

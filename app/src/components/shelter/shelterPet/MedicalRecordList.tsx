@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  getMedicalRecordsByPet,
   createMedicalRecord,
   updateMedicalRecord,
   deleteMedicalRecord,
@@ -328,8 +327,13 @@ const MedicalRecordForm: React.FC<{
       newErrors.procedureDate = "Vui lòng chọn ngày thực hiện";
     else if (new Date(form.procedureDate) > new Date())
       newErrors.procedureDate = "Ngày thực hiện không được lớn hơn hôm nay";
-    if (!form.performedBy.trim())
+    if (
+      typeof form.performedBy !== "string" ||
+      form.performedBy.trim() === ""
+    ) {
       newErrors.performedBy = "Vui lòng nhập nơi thực hiện";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -499,7 +503,11 @@ const MedicalRecordForm: React.FC<{
           </label>
           <input
             name="performedBy"
-            value={form.performedBy}
+            value={
+              typeof form.performedBy === "string"
+                ? form.performedBy
+                : form.performedBy?.fullName || ""
+            }
             onChange={handleChange}
             placeholder="Nhập tên phòng khám hoặc nơi thực hiện"
             className="border rounded px-3 py-2 text-sm"

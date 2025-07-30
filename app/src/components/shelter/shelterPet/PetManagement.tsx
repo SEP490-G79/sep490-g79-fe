@@ -2,7 +2,6 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useAppContext } from "@/context/AppContext";
 import { useParams } from "react-router-dom";
 import PetForm from "./PetForm";
 import PetDetailDialog from "./PetDetailDialog";
@@ -14,10 +13,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { usePetApi } from "@/apis/pet.api";
+import type { Pet } from "@/types/Pet";
+import type { Breed, PetFormState, Species } from "@/types/pet.types";
+import axios from "axios";
 
 export default function PetManagement() {
-  const { user } = useAppContext();
-  const { getAllPets, createPet, updatePet, disablePet } = usePetApi();
+  const {
+    getAllPets,
+    createPet,
+    updatePet,
+    disablePet,
+    getAllSpecies,
+    getAllBreeds,
+  } = usePetApi();
 
   const [pagination, setPagination] = React.useState({
     total: 0,
@@ -26,10 +34,10 @@ export default function PetManagement() {
   });
 
   const { shelterId } = useParams<{ shelterId: string }>();
-  const [data, setData] = React.useState<any[]>([]);
-  const [speciesList, setSpeciesList] = React.useState<any[]>([]);
-  const [breedList, setBreedList] = React.useState<any[]>([]);
-  const [form, setForm] = React.useState<any>({
+  const [data, setData] = React.useState<Pet[]>([]);
+  const [speciesList, setSpeciesList] = React.useState<Species[]>([]);
+  const [breedList, setBreedList] = React.useState<Breed[]>([]);
+  const [form, setForm] = React.useState<PetFormState>({
     name: "",
     photos: [],
     age: "",
@@ -42,10 +50,11 @@ export default function PetManagement() {
     status: "unavailable",
     species: "",
     breeds: [],
+    shelter: shelterId || "", // nếu bạn cần thêm shelter
   });
   const [showForm, setShowForm] = React.useState(false);
   const [isEditing, setIsEditing] = React.useState(false);
-  const [detailPet, setDetailPet] = React.useState<any | null>(null);
+  const [detailPet, setDetailPet] = React.useState<Pet | null>(null);
   const [searchKeyword, setSearchKeyword] = React.useState("");
 
   const validateForm = () => {
@@ -73,6 +82,8 @@ export default function PetManagement() {
   };
 
   const fetchPets = async () => {
+    if (!shelterId) return;
+
     const res = await getAllPets(shelterId, pagination.page, pagination.limit);
     setData(res.data.pets || []);
     setPagination((prev) => ({
@@ -102,18 +113,22 @@ export default function PetManagement() {
   }, [shelterId, pagination.page]);
 
   React.useEffect(() => {
-    fetch("http://localhost:9999/species/getAll")
-      .then((res) => res.json())
-      .then((data) => {
-        setSpeciesList(data);
-      })
-      .catch(() => toast.error("Không thể lấy danh sách loài"));
+    const fetchSpeciesAndBreeds = async () => {
+      try {
+        const [speciesRes, breedRes] = await Promise.all([
+          getAllSpecies(),
+          getAllBreeds(),
+        ]);
+        setSpeciesList(speciesRes.data);
+        setBreedList(breedRes.data);
+      } catch {
+        toast.error("Không thể lấy danh sách loài hoặc giống");
+      }
+    };
 
-    fetch("http://localhost:9999/breeds/getAll")
-      .then((res) => res.json())
-      .then(setBreedList)
-      .catch(() => toast.error("Không thể lấy danh sách giống"));
+    fetchSpeciesAndBreeds();
   }, []);
+
   const filteredData = data.filter((pet) => {
     const keyword = searchKeyword.toLowerCase();
     return (
@@ -130,11 +145,16 @@ export default function PetManagement() {
       ...form,
       shelter:
         typeof form.shelter === "object" ? form.shelter._id : form.shelter,
+
       age: Number(form.age),
       weight: Number(form.weight),
     };
 
     try {
+      if (!shelterId) {
+        toast.error("Không tìm thấy ShelterId");
+        return;
+      }
       if (isEditing && form._id) {
         const payload = {
           ...form,
@@ -165,15 +185,17 @@ export default function PetManagement() {
         species: "",
         breeds: [],
       });
-    } catch (err) {
-      const message =
-        err?.response?.data?.error ||
-        err?.response?.data?.message ||
-        "Đã có lỗi xảy ra";
+    } catch (err: unknown) {
+      let message = "Đã có lỗi xảy ra";
+
+      if (axios.isAxiosError(err)) {
+        message =
+          err.response?.data?.error || err.response?.data?.message || message;
+      }
+
       toast.error(message);
     }
   };
-
   return (
     <div className="w-full p-6">
       <div className="flex items-center py-4 gap-2">
@@ -220,26 +242,47 @@ export default function PetManagement() {
           setPagination((prev) => ({ ...prev, page: newPage }))
         }
         onEdit={(pet) => {
-          const normalizedPet = {
-            ...pet,
+          const normalizedPet: PetFormState = {
+            _id: pet._id,
+            name: pet.name ?? "",
+            isMale: pet.isMale ?? true,
+            age: String(pet.age ?? ""),
+            weight: String(pet.weight ?? ""),
+            color: pet.color ?? "",
+            identificationFeature: pet.identificationFeature ?? "",
+            sterilizationStatus: pet.sterilizationStatus ?? false,
+            status: pet.status ?? "unavailable",
             species:
-              typeof pet.species === "object" ? pet.species._id : pet.species,
+              typeof pet.species === "object"
+                ? pet.species._id
+                : pet.species ?? "",
             breeds: Array.isArray(pet.breeds)
               ? pet.breeds.map((b) => (typeof b === "object" ? b._id : b))
               : [],
-            age: String(pet.age ?? ""),
-            weight: String(pet.weight ?? ""),
+            bio: pet.bio ?? "",
+            photos: pet.photos ?? [],
+            shelter:
+              typeof pet.shelter === "object"
+                ? pet.shelter._id
+                : pet.shelter ?? "",
           };
+
           setForm(normalizedPet);
           setShowForm(true);
           setIsEditing(true);
         }}
         onDelete={async (id) => {
+          if (!shelterId) {
+            toast.error("Không tìm thấy ShelterId");
+            return;
+          }
           await disablePet(id, shelterId);
           toast.success("Xóa thành công");
           fetchPets();
         }}
-        onView={(pet) => setDetailPet(pet)}
+        onView={(pet) => {
+          setDetailPet(pet);
+        }}
       />
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
