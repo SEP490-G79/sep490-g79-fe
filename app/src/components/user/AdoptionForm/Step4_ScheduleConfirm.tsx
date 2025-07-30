@@ -8,7 +8,25 @@ import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import { SimpleDateSelector } from './SimpleDateSelector';
 import { AlertCircle, Calendar, Clock, Heart, MapPin, Phone, Video, CheckCircle2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 dayjs.locale("vi");
+import isBetween from "dayjs/plugin/isBetween";
+import { toast } from 'sonner';
+dayjs.extend(isBetween);
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface Step4Props {
   submissionId: string | null;
@@ -22,6 +40,12 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
   const [selectedTime, setSelectedTime] = useState<Date | null>(null);
   const authAxios = useAuthAxios();
   const { coreAPI } = useContext(AppContext);
+  const formattedSchedule = dayjs(selectedTime)
+    .tz("Asia/Ho_Chi_Minh")
+    .format("YYYY-MM-DDTHH:mm:ssZ");
+  const isScheduleConfirmed = !!submission?.interview?.selectedSchedule;
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
 
   useEffect(() => {
     if (!submissionId) return;
@@ -38,26 +62,48 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
     fetchSubmission();
   }, [submissionId]);
 
+  const handleConfirmSchedule = async () => {
+    if (!submissionId || !selectedTime) return;
+
+    try {
+      await authAxios.put(
+        `${coreAPI}/adoption-submissions/select-schedule`,
+        {
+          submissionId,
+          selectedSchedule: formattedSchedule,
+        }
+      );
+
+      const res = await authAxios.get(`${coreAPI}/adoption-submissions/${submissionId}`);
+      setSubmission(res.data);
+      onLoadedSubmission?.(res.data);
+      toast.success("Đã xác nhận lịch phỏng vấn!");
+    } catch (error) {
+      console.error("Lỗi khi xác nhận lịch:", error);
+      toast.error("Có lỗi xảy ra khi xác nhận lịch.");
+    }
+  };
+
+
+
   const isValidDateInRange = (date: Date | null) => {
     if (!date) return false;
     const from = new Date(submission.interview.availableFrom);
     const to = new Date(submission.interview.availableTo);
-    return date >= from && date <= to;
+    return dayjs(date).isBetween(from, to, 'day', '[]');
   };
 
   if (!submission?.interview) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <AlertCircle className="w-16 h-16 text-gray-400 mb-4" />
+      
         <p className="text-lg text-gray-600">Chưa có lịch phỏng vấn được tạo.</p>
       </div>
     );
   }
 
   const deadline = new Date(submission.interview.availableFrom);
-          deadline.setDate(deadline.getDate() - 1);
-
-  console.log(submission);
+  deadline.setDate(deadline.getDate() - 1);
 
 
   return (
@@ -102,7 +148,7 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
               </div>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-lg">
+          <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-50 to-white">
             <CardHeader className="pb-0">
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-blue-600" />
@@ -113,15 +159,26 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
               <div className="grid gap-4">
                 <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
                   <Clock className="w-5 h-5 text-green-600 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-gray-800">Thời gian có thể phỏng vấn</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      <strong>Từ:</strong> {dayjs(submission.interview.availableFrom).format("HH:mm [ngày] DD/MM/YYYY")}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <strong>Đến:</strong> {dayjs(submission.interview.availableTo).format("HH:mm [ngày] DD/MM/YYYY")}
-                    </p>
-                  </div>
+                  {isScheduleConfirmed ? (
+                    <div>
+                      <p className="font-medium text-gray-800">Thời gian phỏng vấn</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        <strong>Ngày:</strong> {dayjs(submission.interview?.selectedSchedule).format(" DD/MM/YYYY")}
+                      </p>
+                    </div>
+
+                  ) : (
+                    <div>
+                      <p className="font-medium text-gray-800">Thời gian có thể phỏng vấn</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        <strong>Từ:</strong> {dayjs(submission.interview.availableFrom).format(" DD/MM/YYYY")}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <strong>Đến:</strong> {dayjs(submission.interview.availableTo).format(" DD/MM/YYYY")}
+                      </p>
+                    </div>
+                  )}
+
                 </div>
 
                 <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -138,21 +195,55 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
-                  <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-red-800">Hạn chót chọn lịch</p>
-                    <p className="text-sm text-red-600 mt-1">
-                      {dayjs(deadline).format("HH:mm [ngày] DD/MM/YYYY")}
-                    </p>
-                    <p className="text-xs text-red-500 mt-2">
-                      ⚠️ Nếu không chọn lịch đúng hạn, đơn của bạn có thể bị hủy
-                    </p>
+                {isScheduleConfirmed ? (
+                  <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-orange-50">
+                    <CardContent className="pl-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">💡</span>
+                        </div>
+                        <h3 className="font-semibold text-gray-800">Lời khuyên cho buổi phỏng vấn</h3>
+                      </div>
+                      <ul className="space-y-2 text-sm text-gray-700">
+                        <li className="flex items-start gap-2">
+                          <span className="text-green-600 mt-0.5">✓</span>
+                          Chuẩn bị sẵn các câu hỏi về thú cưng
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-green-600 mt-0.5">✓</span>
+                          Mang theo giấy tờ tùy thân (nếu phỏng vấn trực tiếp)
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-green-600 mt-0.5">✓</span>
+                          Đến đúng giờ hoặc sớm 5-10 phút
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-green-600 mt-0.5">✓</span>
+                          Thể hiện sự chân thành và yêu thương động vật
+                        </li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
+                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-red-800">Hạn chót chọn lịch</p>
+                      <p className="text-sm text-red-600 mt-1">
+                        {dayjs(deadline).format("HH:mm [ngày] DD/MM/YYYY")}
+                      </p>
+                      <p className="text-xs text-red-500 mt-2">
+                        Nếu không chọn lịch đúng hạn, đơn của bạn có thể bị hủy
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
+
+
               </div>
             </CardContent>
           </Card>
+
         </div>
 
         <div className="space-y-6">
@@ -164,10 +255,11 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
             <CardContent className="flex flex-col items-center">
               <SimpleDateSelector
                 value={selectedTime}
-                onChange={setSelectedTime}
+                onChange={isScheduleConfirmed ? () => { } : setSelectedTime}
                 minDate={new Date(submission.interview.availableFrom)}
                 maxDate={new Date(submission.interview.availableTo)}
               />
+
 
               {selectedTime && (
                 <div className="mt-6 w-full max-w-sm">
@@ -183,15 +275,38 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
                 </div>
               )}
 
-              <Button
-                size="lg"
-                className="mt-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
-                disabled={!isValidDateInRange(selectedTime)}
-                onClick={() => console.log("Confirm")}
-              >
-                <CheckCircle2 className="w-5 h-5 mr-2" />
-                Xác nhận lịch phỏng vấn
-              </Button>
+              {isScheduleConfirmed ? (
+                <div className="mt-6 bg-gradient-to-r from-blue-600 to-purple-600  text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform ">
+                  <CheckCircle2 className="inline w-5 h-5 mr-2" />
+                  Bạn đã xác nhận lịch phỏng vấn
+                </div>) : (
+                <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      size="lg"
+                      className="mt-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
+                      disabled={!isValidDateInRange(selectedTime) || isScheduleConfirmed}
+                    >
+                      <CheckCircle2 className="w-5 h-5 mr-2" />
+                      Xác nhận lịch phỏng vấn
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Bạn có chắc chắn?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Bạn sẽ không thể thay đổi lại thời gian phỏng vấn sau khi xác nhận.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Hủy</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleConfirmSchedule}>Xác nhận</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+              )}
+
             </CardContent>
           </Card>
         </div>

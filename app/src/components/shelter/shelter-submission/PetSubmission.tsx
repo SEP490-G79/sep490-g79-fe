@@ -184,7 +184,7 @@ export default function PetSubmission() {
   const statusOptions = ["pending", "scheduling", "interviewing", "reviewed", "approved", "rejected"];
   const statusLabels: Record<string, string> = {
     pending: "Chờ duyệt",
-    scheduling: "Lên lịch phỏng vấn",
+    scheduling: "Chờ lên lịch phỏng vấn",
     interviewing: "Chờ phỏng vấn",
     reviewed: "Đã phỏng vấn",
     approved: "Đồng ý",

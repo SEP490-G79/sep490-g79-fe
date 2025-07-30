@@ -2,6 +2,15 @@ import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import dayjs from "dayjs";
 import clsx from "clsx";
+import isoWeek from "dayjs/plugin/isoWeek";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(isoWeek);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+dayjs.tz.setDefault("Asia/Ho_Chi_Minh"); // Đặt timezone mặc định
 
 interface Props {
     value: Date | null;
@@ -13,23 +22,30 @@ interface Props {
 export const SimpleDateSelector = ({ value, onChange, minDate, maxDate }: Props) => {
     const [viewDate, setViewDate] = React.useState(value || new Date());
 
-    const startOfMonth = dayjs(viewDate).startOf("month");
-    const endOfMonth = dayjs(viewDate).endOf("month");
-    const startDay = startOfMonth.startOf("week");
-    const endDay = endOfMonth.endOf("week");
+    // Luôn dùng dayjs.tz để đảm bảo giờ VN
+    const startOfMonth = dayjs(viewDate).tz().startOf("month");
+    const endOfMonth = dayjs(viewDate).tz().endOf("month");
+    const startDay = startOfMonth.startOf("isoWeek");
+    const endDay = endOfMonth.endOf("isoWeek");
 
     const days: Date[] = [];
-    let day = startDay;
-    while (day.isBefore(endDay)) {
+    let day = startDay.clone();
+    while (day.isBefore(endDay) || day.isSame(endDay, "day")) {
         days.push(day.toDate());
         day = day.add(1, "day");
     }
 
-    const isSameDay = (d1: Date, d2: Date) => dayjs(d1).isSame(dayjs(d2), "day");
-    const isDisabled = (date: Date) => dayjs(date).isBefore(dayjs(minDate), "day") || dayjs(date).isAfter(dayjs(maxDate), "day");
+    const isSameDay = (d1: Date, d2: Date) =>
+        dayjs(d1).tz().isSame(dayjs(d2).tz(), "day");
+
+    const isDisabled = (date: Date) =>
+        dayjs(date).tz().isBefore(dayjs(minDate).tz(), "day") ||
+        dayjs(date).tz().isAfter(dayjs(maxDate).tz(), "day");
+
+    const weekDays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
     const handleMonthChange = (delta: number) => {
-        setViewDate(dayjs(viewDate).add(delta, "month").toDate());
+        setViewDate(dayjs(viewDate).tz().add(delta, "month").toDate());
     };
 
     return (
@@ -44,7 +60,7 @@ export const SimpleDateSelector = ({ value, onChange, minDate, maxDate }: Props)
                         <ChevronLeft className="w-5 h-5 text-gray-600" />
                     </button>
                     <span className="text-md font-medium text-gray-700">
-                        {dayjs(viewDate).format("MMMM YYYY")}
+                        {dayjs(viewDate).tz().format("MMMM YYYY")}
                     </span>
                     <button onClick={() => handleMonthChange(1)}>
                         <ChevronRight className="w-5 h-5 text-gray-600" />
@@ -52,7 +68,7 @@ export const SimpleDateSelector = ({ value, onChange, minDate, maxDate }: Props)
                 </div>
 
                 <div className="grid grid-cols-7 gap-2 text-xs text-center text-gray-500 mb-2">
-                    {["CN", "T2", "T3", "T4", "T5", "T6", "T7"].map((day) => (
+                    {weekDays.map((day) => (
                         <div key={day} className="p-1">
                             {day}
                         </div>
@@ -72,7 +88,7 @@ export const SimpleDateSelector = ({ value, onChange, minDate, maxDate }: Props)
                                 className={clsx(
                                     "aspect-square text-sm rounded-lg transition-all duration-200",
                                     disabled
-                                        ? "text-gray-300 cursor-not-allowed"
+                                        ? "text-gray-300 cursor-not-allowed bg-transparent border-none"
                                         : selected
                                             ? "bg-blue-600 text-white shadow-lg scale-110"
                                             : "bg-white hover:bg-blue-100 border border-blue-200 hover:border-blue-400"
@@ -82,7 +98,6 @@ export const SimpleDateSelector = ({ value, onChange, minDate, maxDate }: Props)
                             </button>
                         );
                     })}
-
                 </div>
             </div>
         </div>
