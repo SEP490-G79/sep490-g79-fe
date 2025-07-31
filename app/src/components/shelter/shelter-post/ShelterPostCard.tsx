@@ -78,8 +78,13 @@ export default function ShelterPostCard({
                   </Link>
 
                   <span className="text-xs text-muted-foreground block mt-0.5 flex items-center gap-2">
-                    Người đăng: {post.createdBy.fullName + " "}
-                    • {formatCreatedAt(post.createdAt)}
+                    {currentMember && (
+                      <>
+                        Người đăng: {post.createdBy.fullName}
+                        <span className="mx-1">•</span>
+                      </>
+                    )}
+                    {formatCreatedAt(post.createdAt)}
                     {post.privacy === "public" ? (
                       <Globe className="w-4 h-4" />
                     ) : (
