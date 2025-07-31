@@ -15,11 +15,11 @@ export interface Pet {
   color?: string;
   bio?: string;
   intakeTime?: string;
-  photos?: string[];
+  photos: string[];
   foundLocation?: string;
   tokenMoney?: number;
   shelter?: Shelter;
-  adopter?: string;
+  adopter?: string | { _id: string; fullName?: string };
   status: "unavailable" | "available" | "adopted" | "disabled" | "booking" | "delivered";
   createdAt?: string;
   updatedAt?: string;

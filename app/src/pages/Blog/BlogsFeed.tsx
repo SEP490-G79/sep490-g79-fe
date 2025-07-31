@@ -20,7 +20,7 @@ export default function BlogsFeed() {
   const [filteredBlogs, setFilteredBlogs] = useState<Blog[]>([]);
   const [keyword, setKeyword] = useState("");
   const {blogAPI} = useContext(AppContext);
-  const [shownBlogs, setShownBlogs] = useState<number>(4);
+  const [shownBlogs, setShownBlogs] = useState<number>(8);
 
   useEffect(() => {
     axios
@@ -52,11 +52,11 @@ export default function BlogsFeed() {
       <h2 className="text-3xl font-bold tracking-tight text-center">
         Khám phá các bài viết thú vị
       </h2>
-      <p className="text-muted-foreground max-w-2xl mx-auto">
+      <p className="text-muted-foreground max-w-2xl mx-auto text-center">
         Cùng đọc các chia sẻ hữu ích về chăm sóc thú cưng, hành trình giải cứu
         và câu chuyện truyền cảm hứng từ cộng đồng yêu động vật.
       </p>
-      <Carousel className="w-[90vw] mx-auto my-5">
+      {/* <Carousel className="w-[90vw] mx-auto my-5">
         <CarouselPrevious />
         <CarouselContent className="h-[60vh] ">
           <CarouselItem key={1}>
@@ -82,32 +82,40 @@ export default function BlogsFeed() {
           </CarouselItem>
         </CarouselContent>
         <CarouselNext />
-      </Carousel>
+      </Carousel> */}
 
       <div className="px-30">
         {/* <div className="w-full my-2">
           <BlogPreview blog={blogs[0]} />
         </div> */}
-        <div className="w-full my-2">
+        {/* <div className="w-full my-2">
           <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight text-center">
             {" "}
             Các blog mới nổi gần đây{" "}
           </h3>
-        </div>
+        </div> */}
         <Input
           placeholder="Tìm kiếm bài viết..."
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-          className="mb-6"
+          className="mb-6 w-2/3 mx-auto mt-2"
         />
         <div className="space-y-6 grid grid-cols-4 gap-2">
-          {filteredBlogs?.slice(0, shownBlogs).map((blog) => (
-            <BlogCard blog={blog} />
-          ))}
+          {filteredBlogs && filteredBlogs.length > 0 ? (
+            filteredBlogs
+              ?.slice(0, shownBlogs)
+              .map((blog) => <BlogCard blog={blog} />)
+          ) : (
+            <div className="col-span-4 text-center">
+              <h4 className="scroll-m-20 text-xl font-semibold tracking-tight mb-30">
+                Không tìm thấy bài viết blog
+              </h4>
+            </div>
+          )}
         </div>
-        {filteredBlogs.length > 4 && shownBlogs < filteredBlogs.length && (
+        {filteredBlogs.length > 8 && shownBlogs < filteredBlogs.length && (
           <div className="space-y-6 text-center mt-5">
-            <Button onClick={() => setShownBlogs((prev) => (prev += 4))}>
+            <Button onClick={() => setShownBlogs((prev) => (prev += 8))}>
               Xem thêm
             </Button>
           </div>

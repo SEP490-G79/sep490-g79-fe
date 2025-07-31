@@ -76,6 +76,7 @@ function ShelterPosts() {
     const [userLocation, setUserLocation] = useState<LatLng | null>(null);
     const [addressConfirmed, setAddressConfirmed] = useState(false);
     const [shelterInfo, setShelterInfo] = useState<any>(null);
+    const [sortOption, setSortOption] = useState<"latest" | "oldest" | "nearest" | "farthest">("latest");
     const [confirmDialog, setConfirmDialog] = useState({
         open: false,
         title: "",
@@ -84,6 +85,26 @@ function ShelterPosts() {
         cancelText: "Hủy",
         onConfirm: () => { },
     });
+
+    const fetchShelterInfo = async () => {
+        try {
+            const res = await axios.get(`${coreAPI}/shelters/get-by-id/${shelterId}`);
+            setShelterInfo(res.data);
+
+            // Kiểm tra role nếu user là thành viên
+            const member = res.data.members.find(
+                (m: any) =>
+                    m._id?._id === userProfile?._id || m._id === userProfile?._id
+            );
+
+            const roles = member?.roles || [];
+
+            setIsShelterMember(!!member);
+            setIsManagerOrStaff(roles.includes("manager") || roles.includes("staff"));
+        } catch {
+            console.error("Không lấy được thông tin shelter");
+        }
+    };
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -133,23 +154,10 @@ function ShelterPosts() {
     }, [shelterId]);
 
     useEffect(() => {
-        if (userProfile && postsData.length > 0) {
-            const members = postsData[0]?.shelter?.members || [];
-
-            const member = members.find(
-                (m: any) =>
-                    m._id?._id === userProfile._id || m._id === userProfile._id
-            );
-
-            const roles = member?.roles || [];
-
-            setIsShelterMember(!!member);
-            setIsManagerOrStaff(roles.includes("manager") || roles.includes("staff"));
-        } else {
-            setIsShelterMember(false);
-            setIsManagerOrStaff(false);
+        if (shelterId && userProfile) {
+            fetchShelterInfo();
         }
-    }, [userProfile, postsData]);
+    }, [shelterId, userProfile]);
 
     //scroll to load more posts
     useEffect(() => {
@@ -239,26 +247,20 @@ function ShelterPosts() {
 
 
     function getSortedShelterPosts(posts: any[], userLocation: LatLng | null): any[] {
-        const now = new Date();
-        const recentThreshold = 1000 * 60 * 60 * 24; // 24 giờ
+        if (sortOption === "latest") {
+            return [...posts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }
 
-        const recentPosts = posts.filter(
-            (post) => new Date(now).getTime() - new Date(post.createdAt).getTime() < recentThreshold
-        );
+        if (sortOption === "oldest") {
+            return [...posts].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        }
 
-        const otherPosts = posts.filter((post) => !recentPosts.includes(post));
+        if ((sortOption === "nearest" || sortOption === "farthest") && userLocation) {
+            const sorted = sortPostsByDistance(posts, userLocation);
+            return sortOption === "farthest" ? sorted.reverse() : sorted;
+        }
 
-        const sortedRecent = [...recentPosts].sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-
-        const sortedOther = userLocation
-            ? sortPostsByDistance(otherPosts, userLocation)
-            : [...otherPosts].sort(
-                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            );
-
-        return [...sortedRecent, ...sortedOther];
+        return posts;
     }
 
 
@@ -331,10 +333,10 @@ function ShelterPosts() {
         <div className="max-w-2xl mx-auto py-10 px-4">
             {isManagerOrStaff && (
                 <div
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
+                    className="bg-(--card) rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
                     onClick={() => setOpenDialog(true)}
                 >
-                    <Avatar className="w-10 h-10">
+                    <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
                         {/* shelter avatar */}
                         <AvatarImage src={shelterInfo?.avatar || "/placeholder.svg"} />
                         <AvatarFallback>{shelterInfo?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
@@ -356,7 +358,7 @@ function ShelterPosts() {
                 </div>
             )}
             <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                <DialogContent className="sm:max-w-[600px]">
+                <DialogContent className="sm:max-w-[600px] bg-background rounded-xl overflow-visible border border-border">
                     <DialogHeader>
                         <DialogTitle>Tạo bài viết</DialogTitle>
                     </DialogHeader>
@@ -406,7 +408,7 @@ function ShelterPosts() {
                             <div className="relative">
                                 <SmileIcon className="w-5 h-5 cursor-pointer" onClick={() => setShowPicker(!showPicker)} />
                                 {showPicker && (
-                                    <div ref={emojiPickerRef} className="absolute left-8 z-50">
+                                    <div ref={emojiPickerRef} className="absolute left-15 bottom-[-200px] z-50 ">
                                         <EmojiPicker onEmojiClick={(e) => setPostContent(prev => prev + e.emoji)} />
                                     </div>
                                 )}
@@ -470,6 +472,7 @@ function ShelterPosts() {
                         <div className="flex justify-end">
                             <Button
                                 variant="ghost"
+                                disabled={loading}
                                 onClick={() => {
                                     setConfirmDialog({
                                         open: true,
@@ -502,7 +505,22 @@ function ShelterPosts() {
                 </DialogContent>
             </Dialog>
 
-            <div className="flex justify-end items-center gap-2 mt-6">
+            <div className="flex justify-between items-center gap-2 mt-6">
+                <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground">Sắp xếp:</span>
+                    <Select value={sortOption} onValueChange={(value) => setSortOption(value as any)}>
+                        <SelectTrigger className="w-[160px] h-8 text-sm">
+                            <SelectValue placeholder="Sắp xếp" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="latest">Mới nhất</SelectItem>
+                            <SelectItem value="oldest">Cũ nhất</SelectItem>
+                            <SelectItem value="nearest">Gần nhất</SelectItem>
+                            <SelectItem value="farthest">Xa nhất</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
                 <Button variant="outline" onClick={fetchPosts} className="flex items-center gap-2 text-sm">
                     <RefreshCcw className={`w-4 h-4 ${loadingPosts ? "animate-spin" : ""}`} />
                     {loadingPosts ? "Đang tải..." : "Tải lại bài viết"}
@@ -540,7 +558,6 @@ function ShelterPosts() {
                 ) : (
                     getSortedShelterPosts(postsData, userLocation)
                         .slice(0, visiblePosts)
-                        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                         .map((post) => (
                             <ShelterPostCard
                                 key={post._id}
@@ -633,7 +650,10 @@ function ShelterPosts() {
                             p._id === updated._id
                                 ? {
                                     ...p,
-                                    likedBy: updated.likedBy,
+                                    ...updated,
+                                    createdBy: updated.createdBy?._id || updated.createdBy,
+                                    user: updated.user || p.user,
+                                    shelter: updated.shelter || p.shelter,
                                     latestComment: updated.latestComment ?? p.latestComment,
                                 }
                                 : p

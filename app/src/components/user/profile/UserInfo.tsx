@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Button } from "@/components/ui/button";
-import { Plus, Mail, Cake, MapPinHouse } from 'lucide-react';
-import AppContext from "@/context/AppContext";
+import { Mail, Cake, MapPinHouse } from 'lucide-react';
 import dayjs from "dayjs";
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import 'react-photo-view/dist/react-photo-view.css';
 import type { User } from "@/types/User";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function UserInfo({ profile }: { profile: User }) {
 
@@ -21,16 +18,20 @@ function UserInfo({ profile }: { profile: User }) {
                     {/* Container: Card + Button */}
                     <div className="absolute bottom-[-530px]  flex flex-col items-start gap-y-14 px-4 sm:px-6 ml-20">
                         {/* Card: Avatar + Info */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center w-[300px] ">
+                        <div className="bg-(--card) rounded-xl shadow-lg p-6 flex flex-col items-center w-[300px] ">
                             {/* Avatar */}
                             <div className="mb-4">
                                 <PhotoProvider>
                                  <PhotoView src={profile?.avatar}>
-                                <img
-                                    src={profile?.avatar || "/placeholder.svg"}
-                                    alt="Avatar"
-                                    className="w-35 h-35 rounded-full border-1 border-gray-100 shadow-md object-cover object-center"
-                                />
+                                    <Avatar className="w-24 h-24">
+                                        <AvatarImage
+                                            src={profile?.avatar || "/placeholder.svg"}
+                                            alt="User Avatar"
+                                        />
+                                        <AvatarFallback>
+                                            {profile?.fullName?.charAt(0) || "?"}
+                                        </AvatarFallback>
+                                    </Avatar>
                                 </PhotoView>
                                 </PhotoProvider>
                             </div>
@@ -66,7 +67,7 @@ function UserInfo({ profile }: { profile: User }) {
                         </div>
                         {/* Card: Request to Join or Create a Shelter */}
 
-                        <div className="bg-slate-300 dark:bg-gray-800 rounded-xl shadow-lg p-6 w-[330px] pt-4 ">
+                        <div className="bg-(--card) rounded-xl shadow-lg p-6 w-[330px] pt-4 ">
                             <h3 className="text-md font-semibold mb-2 text-black dark:text-white">
                                 Yêu cầu tham gia hoặc tạo mới một trung tâm cứu trợ
                             </h3>

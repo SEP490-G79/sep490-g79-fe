@@ -87,8 +87,8 @@ export function AdoptionForms() {
       .replace(/đ/g, "d")
       .replace(/Đ/g, "D");
 
-  const handleDelete = (formId: string) => {
-    authAxios
+  const handleDelete = async (formId: string) => {
+    await authAxios
       .delete(`${coreAPI}/shelters/${shelterId}/adoptionForms/${formId}/delete`)
       .then(() => {
         setShelterForms([...shelterForms].filter((form) => form._id != formId));
@@ -99,9 +99,9 @@ export function AdoptionForms() {
         toast.error(err.data.response.message);
       });
   };
-  const handleChangeStatus = (formId: string, status: string) => {
+  const handleChangeStatus = async (formId: string, status: string) => {
     setIsLoading(true);
-    authAxios
+    await authAxios
       .put(
         `${coreAPI}/shelters/${shelterId}/adoptionForms/${formId}/change-status`,
         {
@@ -252,7 +252,7 @@ export function AdoptionForms() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>Hành động</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Link to={`${adoptionForm._id}`} className="flex gap-1">
@@ -409,7 +409,7 @@ export function AdoptionForms() {
           }
           className="max-w-sm"
         />
-        <CreateDialog />
+        <CreateDialog setIsLoading={setIsLoading} />
       </div>
       <div className="rounded-md border">
         <Table>

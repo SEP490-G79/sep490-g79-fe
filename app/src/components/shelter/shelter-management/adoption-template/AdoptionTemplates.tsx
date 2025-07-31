@@ -80,6 +80,22 @@ export function AdoptionTemplates() {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    setIsLoading(true)
+    authAxios
+      .get(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/get-all`)
+      .then((res) => {
+        setShelterTemplates(res.data);
+      })
+      .catch((err) => {
+        console.log(err.data.response.message);
+      })
+      .finally(()=>{
+        setTimeout(() => {
+          setIsLoading(false)
+        }, 200);
+      });
+  }, [shelterId]);
   const removeDiacritics = (str: string) =>
     str
       .normalize("NFD")
@@ -128,138 +144,6 @@ export function AdoptionTemplates() {
     }
   };
 
-  // const columns: ColumnDef<AdoptionTemplate>[] = [
-  //   {
-  //     accessorKey: "stt",
-  //     header: ({ column }) => (
-  //       <Button
-  //         variant="ghost"
-  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  //       >
-  //         STT
-  //         <ArrowUpDown className="ml-1" />
-  //       </Button>
-  //     ),
-  //     cell: ({ row }) => <span className="pl-5">{row.index + 1}</span>,
-  //   },
-  //   {
-  //     accessorKey: "title",
-  //     header: ({ column }) => (
-  //       <Button
-  //         variant="ghost"
-  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  //       >
-  //         Tiêu đề
-  //         <ArrowUpDown className="ml-1" />
-  //       </Button>
-  //     ),
-  //     filterFn: (row, columnId, filterValue) => {
-  //       const cell = String(row.getValue<string>(columnId) ?? "");
-  //       const keyword = removeDiacritics(filterValue ?? "").toLowerCase();
-  //       return removeDiacritics(cell).toLowerCase().includes(keyword);
-  //     },
-  //     cell: ({ row }) => <span>{row.getValue("title")}</span>,
-  //   },
-  //   {
-  //     accessorKey: "species",
-  //     accessorFn: (row) => row.species?.name ?? "",
-  //     header: ({ column }) => (
-  //       <Button
-  //         variant="ghost"
-  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  //       >
-  //         Loài vật
-  //         <ArrowUpDown className="ml-1" />
-  //       </Button>
-  //     ),
-  //     filterFn: (row, columnId, filterValue) => {
-  //       const cell = String(row.getValue<string>(columnId) ?? "");
-  //       const keyword = removeDiacritics(filterValue ?? "").toLowerCase();
-  //       return removeDiacritics(cell).toLowerCase().includes(keyword);
-  //     },
-  //     cell: ({ row }) => <span>{row.getValue("species")}</span>,
-  //   },
-  //   {
-  //     accessorKey: "createdBy",
-  //     accessorFn: (row) => row.createdBy?.fullName ?? "",
-  //     header: ({ column }) => (
-  //       <Button
-  //         variant="ghost"
-  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  //       >
-  //         Người tạo
-  //         <ArrowUpDown className="ml-1" />
-  //       </Button>
-  //     ),
-  //     cell: ({ row }) => <span>{row.getValue("createdBy")}</span>,
-  //   },
-  //   {
-  //     accessorKey: "createdAt",
-  //     header: ({ column }) => (
-  //       <Button
-  //         variant="ghost"
-  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  //       >
-  //         Ngày tạo
-  //         <ArrowUpDown className="ml-1" />
-  //       </Button>
-  //     ),
-  //     cell: ({ row }) => {
-  //       const iso = row.getValue<string>("createdAt");
-  //       return (
-  //         <span className="pl-3">
-  //           {new Date(iso).toLocaleDateString("vi-VN", {
-  //             day: "2-digit",
-  //             month: "2-digit",
-  //             year: "numeric",
-  //           })}
-  //         </span>
-  //       );
-  //     },
-  //   },
-  //   {
-  //     id: "actions",
-  //     enableHiding: false,
-  //     cell: ({ row }) => {
-  //       const adoptionTemplate = row.original;
-
-  //       return (
-  //         <DropdownMenu>
-  //           <DropdownMenuTrigger asChild>
-  //             <Button variant="ghost" className="h-8 w-8 p-0">
-  //               <span className="sr-only">Open menu</span>
-  //               <MoreHorizontal />
-  //             </Button>
-  //           </DropdownMenuTrigger>
-  //           <DropdownMenuContent align="end">
-  //             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-  //             <DropdownMenuSeparator />
-  //             <DropdownMenuItem>
-  //               <Link to={`${adoptionTemplate._id}`} className="flex gap-1">
-  //                 <Pen /> Chỉnh sửa mẫu
-  //               </Link>
-  //             </DropdownMenuItem>
-  //             <DropdownMenuItem
-  //               className="flex gap-1"
-  //               onClick={() => {
-  //                 handleDuplicate(adoptionTemplate._id);
-  //               }}
-  //             >
-  //               <Copy /> Tạo bản sao
-  //             </DropdownMenuItem>
-  //             <DropdownMenuItem
-  //               variant="destructive"
-  //               onClick={() => handleDelete(adoptionTemplate._id)}
-  //             >
-  //               <Trash /> Xóa mẫu
-  //             </DropdownMenuItem>
-  //           </DropdownMenuContent>
-  //         </DropdownMenu>
-  //       );
-  //     },
-  //   },
-  // ];
-
   const filtered = useMemo(() => {
     return (shelterTemplates ?? []).filter((t) =>
       t.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -286,6 +170,7 @@ export function AdoptionTemplates() {
     });
     return arr;
   }, [filtered, sortOption]);
+
   if (isLoading) {
     return (
       <div className="w-full">
@@ -333,6 +218,78 @@ export function AdoptionTemplates() {
   //   },
   // });
 
+  if (!shelterTemplates || shelterTemplates.length == 0) {
+    return (
+      <div className="w-full">
+        <div className="flex justify-between items-center py-4">
+          <div className="flex justify-around basis-1/3 gap-5">
+            <Input
+              placeholder="Tìm kiếm ..."
+              className="max-w-sm"
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+              }}
+            />
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant={"outline"}>
+                  <SlidersHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel className="text-sm text-(--muted-foreground)">
+                  Sắp xếp theo
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  <Checkbox
+                    id="terms"
+                    checked={sortOption.species}
+                    onCheckedChange={(checked: boolean) =>
+                      setSortOption({ ...sortOption, species: checked })
+                    }
+                  />
+                  <span className="text-sm">Loài vật</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  <Checkbox
+                    id="terms"
+                    checked={sortOption.alphabetical}
+                    onCheckedChange={(checked: boolean) =>
+                      setSortOption({ ...sortOption, alphabetical: checked })
+                    }
+                  />
+                  <span className="text-sm">A-Z</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div className=" basis-1/3 flex justify-end">
+            <CreateDialog />
+          </div>
+        </div>
+        <div className="flex flex-col items-center flex-wrap mt-30">
+          <h2 className="basis-1 text-xl font-semibold text-(--primary)">
+            Không có mẫu đơn nào
+          </h2>
+          <p className="basis-1 text-sm text-(--muted-foreground) mb-4">
+            Hãy tạo mẫu đơn nhận nuôi thú cưng đầu tiên của bạn!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       <div className="flex justify-between items-center py-4">
@@ -347,15 +304,12 @@ export function AdoptionTemplates() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant={"outline"}>
-                <SlidersHorizontal className="h-4 w-4" />
+              <Button variant="ghost" className="text-xs">
+                <SlidersHorizontal className="text-(--primary)" />
+                Sắp xếp
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuLabel className="text-sm text-(--muted-foreground)">
-                Sắp xếp theo
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={(e) => {
                   e.preventDefault();
@@ -401,7 +355,7 @@ export function AdoptionTemplates() {
             >
               <AvatarFallback className="rounded-none">
                 <span className="text-6xl font-normal">
-                  {template.title?.charAt(0).toUpperCase() ||"T"}
+                  {template.title?.charAt(0).toUpperCase() || "T"}
                 </span>
               </AvatarFallback>
             </Avatar>
@@ -437,7 +391,7 @@ export function AdoptionTemplates() {
                     <EllipsisVertical className="h-4 w-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuLabel>Hành động</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>
                       <Link to={`${template._id}`} className="flex gap-1">

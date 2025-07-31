@@ -1,4 +1,3 @@
-import React from 'react'
 import type { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, Ban, Eye, MoreHorizontal, Pencil } from 'lucide-react';
@@ -7,15 +6,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { ReturnRequest } from '@/types/ReturnRequest';
-import { DataTableBlogs } from '../blog/data-table-blogs';
+import { DataTable } from '@/components/data-table';
 
 type ReturnRequestTableProps = {
     filteredReturnRequest: ReturnRequest[];
-    handleApproveReturnRequest?: (blogId: string) => Promise<boolean>;
-    handleRejectReturnRequest?: (blogId: string) => Promise<boolean>;
+    setDialogDetail: React.Dispatch<React.SetStateAction<ReturnRequest | null>>;
 }
 
-const ReturnRequestTable = ({filteredReturnRequest, handleApproveReturnRequest, handleRejectReturnRequest}: ReturnRequestTableProps) => {
+const ReturnRequestTable = ({filteredReturnRequest, setDialogDetail}: ReturnRequestTableProps) => {
     const columns: ColumnDef<ReturnRequest>[] = [
       {
         header: "STT",
@@ -25,19 +23,31 @@ const ReturnRequestTable = ({filteredReturnRequest, handleApproveReturnRequest, 
         accessorKey: "pet",
         header: ({ column }) => {
           return (
-            <Button variant="ghost" className="cursor-pointer">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="cursor-pointer"
+            >
               Thú nuôi
+              <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           );
         },
         cell: ({ row }) => {
-          return <div>
-            <Avatar>
-                <AvatarImage src={row.original.pet.photos[0]} alt={row.original.pet.petCode} />
+          return (
+            <div className='flex gap-2'>
+              <Avatar>
+                <AvatarImage
+                  src={row.original.pet.photos[0]}
+                  alt={row.original.pet.petCode}
+                />
                 <AvatarFallback>Thú cưng</AvatarFallback>
-            </Avatar>
-            <p>{row.original.pet.name}</p>
-          </div>
+              </Avatar>
+              <p className='my-auto'>{row.original.pet.name}</p>
+            </div>
+          );
         },
       },
       {
@@ -61,7 +71,7 @@ const ReturnRequestTable = ({filteredReturnRequest, handleApproveReturnRequest, 
         },
       },
       {
-        accessorKey: "createdBy",
+        accessorKey: "requestedBy",
         header: ({ column }) => {
           return (
             <Button
@@ -76,14 +86,21 @@ const ReturnRequestTable = ({filteredReturnRequest, handleApproveReturnRequest, 
             </Button>
           );
         },
-        // cell: ({ row }) => {
-        //   return <span className='flex gap-2'>
-        //     <Avatar>
-        //       <AvatarImage src={row.original.createdBy.avatar} alt={`avatar cua ${row.original.createdBy.fullName}`} />
-        //     </Avatar>
-        //     <p className='my-auto truncate max-w-[10vw]'>{row.original.createdBy.fullName}</p>
-        //   </span>;
-        // },
+        cell: ({ row }) => {
+          return (
+            <span className="flex gap-2">
+              <Avatar>
+                <AvatarImage
+                  src={row.original.requestedBy.avatar}
+                  alt={`avatar cua ${row.original.requestedBy.fullName}`}
+                />
+              </Avatar>
+              <p className="my-auto truncate max-w-[10vw]">
+                {row.original.requestedBy.fullName}
+              </p>
+            </span>
+          );
+        },
       },
       {
         accessorKey: "status",
@@ -101,23 +118,35 @@ const ReturnRequestTable = ({filteredReturnRequest, handleApproveReturnRequest, 
             </Button>
           );
         },
-        // cell: ({ row }) => {
-        //   const isModerating = row.original.status === "moderating";
-        //   const isRejected = row.original.status === "rejected";
-        //   return (
-        //     <Badge
-        //       variant={
-        //         isModerating
-        //           ? "secondary"
-        //           : isRejected
-        //           ? "destructive"
-        //           : "default"
-        //       }
-        //     >
-        //       {isModerating ? "Chờ duyệt" : isRejected ? "Từ chối" : "Đã đăng"}
-        //     </Badge>
-        //   );
-        // },
+        cell: ({ row }) => {
+          const status = row.original.status;
+
+          let badgeVariant: "default" | "secondary" | "destructive" = "default";
+          let label = "";
+
+          switch (status) {
+            case "approved":
+              badgeVariant = "default";
+              label = "Chấp thuận";
+              break;
+            case "pending":
+              badgeVariant = "secondary";
+              label = "Chờ xử lý";
+              break;
+            case "rejected":
+              badgeVariant = "destructive";
+              label = "Từ chối";
+              break;
+            case "cancelled":
+              badgeVariant = "destructive";
+              label = "Đã huỷ";
+              break;
+            default:
+              label = "Không rõ";
+          }
+
+          return <Badge variant={badgeVariant}>{label}</Badge>;
+        },
       },
       {
         accessorKey: "createdAt",
@@ -155,12 +184,11 @@ const ReturnRequestTable = ({filteredReturnRequest, handleApproveReturnRequest, 
             <DropdownMenuContent
               align="center"
               sideOffset={0}
-              className="w-50 rounded-md border bg-background shadow-lg p-1"
+              className="max-w-50 rounded-md border bg-background shadow-lg p-1"
             >
-              <DropdownMenuItem
-                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
+              <DropdownMenuItem className="flex items-center py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
+              onSelect={() => setDialogDetail(row.original)}
               >
-                <Eye className="w-4 h-4" />
                 Chi tiết/duyệt
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -170,7 +198,7 @@ const ReturnRequestTable = ({filteredReturnRequest, handleApproveReturnRequest, 
     ];
 
   return (
-    <DataTableBlogs columns={columns} data={filteredReturnRequest ?? []} />
+    <DataTable columns={columns} data={filteredReturnRequest ?? []} />
   )
 }
 
