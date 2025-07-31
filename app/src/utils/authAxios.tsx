@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import { useContext } from "react";
 import AppContext from "@/context/AppContext";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface tokenData {
   id: string;
@@ -19,7 +20,7 @@ interface tokenData {
 const useAuthAxios = () => {
   let accessToken = localStorage.getItem("accessToken");
   const navigate = useNavigate();
-  const { logout } = useContext(AppContext);
+  const { logout, user } = useContext(AppContext);
 
   const authAxios = axios.create({
     timeout: 50000,
@@ -32,6 +33,14 @@ const useAuthAxios = () => {
       config: InternalAxiosRequestConfig
     ): Promise<InternalAxiosRequestConfig<any>> {
       if (accessToken != null) {
+          if (user && user.status === "banned") {
+              toast.error("Tài khoản đã bị khóa!");
+              logout();
+              navigate("/login");
+          return Promise.reject();
+      }
+
+
         const tokenData: tokenData = jwtDecode(accessToken);
         const tokenExpirationDate = tokenData.exp;
         if (tokenExpirationDate !== undefined) {

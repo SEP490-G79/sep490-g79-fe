@@ -44,6 +44,7 @@ import PetSubmission from "@/components/shelter/shelter-submission/PetSubmission
 import ReturnRequestManagement from "@/components/shelter/shelter-management/return-request/ReturnRequestManagement";
 import { ConsentForms } from "@/components/shelter/shelter-management/consent-form/ConsentForms";
 import ConsentForm from "@/components/shelter/shelter-management/consent-form/ConsentForm";
+import ForgotPassword from "@/pages/Common/ForgotPassword";
 
 function AppRoutes() {
   return (
@@ -53,6 +54,7 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/active-account" element={<HandleVerify />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
       </Route>
       <Route path="/faq" element={<FAQ />} />
       <Route path="/pets-list" element={<PetsListPage />} />
@@ -68,17 +70,7 @@ function AppRoutes() {
         element={<BlogDetail />}
       />
       <Route path="/pet/:petId" element={<ViewPetDetails />} />
-      <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
-
-      <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
-        <Route index element={<ShelterProfile />} />
-        <Route path="profile" element={<ShelterProfile />} />
-        <Route path="staffs-management" element={<ShelterStaffManagement />} />
-        <Route path="pet-profiles" element={<PetManagement />} />
-
-        <Route path="adoption-templates" element={<AdoptionTemplates />} />
-        <Route path="adoption-forms" element={<AdoptionForms />} />
-      </Route>
+      
 
       <Route element={<PrivateRoutes />}>
         <Route index element={<Navigate to="/home" replace={true} />} />
