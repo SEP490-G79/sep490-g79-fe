@@ -141,7 +141,7 @@ export default function Comment({ comments, postId, fetchComments }: Props) {
                 {comments.map((cmt) => (
                     <div key={cmt._id} className="flex items-start gap-3 relative group">
                         <Link to={`/profile/${cmt.commenter._id}`} className="flex-shrink-0">
-                            <Avatar>
+                            <Avatar className="w-10 h-10 object-center object-cover ring-2">
                                 <AvatarImage src={cmt.commenter.avatar || "/placeholder.svg"} />
                                 <AvatarFallback>{cmt.commenter.fullName?.charAt(0)}</AvatarFallback>
                             </Avatar>

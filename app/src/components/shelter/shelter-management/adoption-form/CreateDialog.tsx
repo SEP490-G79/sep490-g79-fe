@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, ChevronsUpDown, Plus, Search } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, PlusSquare, Search } from "lucide-react";
 import React, { useContext, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -59,7 +59,11 @@ import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { AvatarFallback } from "@/components/ui/avatar";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 
-export default function CreateDialog() {
+type Props = {
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+export default function CreateDialog({setIsLoading}:Props) {
   const { coreAPI, shelterForms, shelterTemplates, setShelterForms, petsList } =
     useContext(AppContext);
   const { shelterId } = useParams();
@@ -92,14 +96,17 @@ export default function CreateDialog() {
   });
 
   const onSubmit = async (values: FormValues) => {
-    console.log("Form submitted:", values);
+    // console.log("Form submitted:", values);
+    setIsLoading(true);
     if (values.adoptionTemplate) {
       const selectedTemplate = shelterTemplates.find(
         (template) => template._id == values.adoptionTemplate
       );
       if (selectedTemplate) {
         values.description = selectedTemplate.description || "";
-      const newQuestions = selectedTemplate.questions.map(({_id,...question})=>question) || [];
+        const newQuestions =
+          selectedTemplate.questions.map(({ _id, ...question }) => question) ||
+          [];
         await authAxios
           .post(
             `${coreAPI}/shelters/${shelterId}/adoptionForms/create-by-template/${values.pet}`,
@@ -127,8 +134,44 @@ export default function CreateDialog() {
           .catch((err) => {
             console.error("Error creating adoption form:", err);
             toast.error("Tạo form nhận nuôi thất bại. Vui lòng thử lại.");
+          })
+          .finally(()=>{
+            setTimeout(() => {
+              setIsLoading(false);
+            }, 200);
           });
       }
+    } else {
+      await authAxios
+        .post(
+          `${coreAPI}/shelters/${shelterId}/adoptionForms/create/${values.pet}`,
+          {
+            title: values.title,
+            description: values.description,
+          }
+        )
+        .then((res) => {
+          toast.success("Tạo form nhận nuôi thành công! Đang chuyển hướng ...");
+          setShelterForms([...shelterForms, res.data]);
+          form.reset();
+          document
+            .querySelector<HTMLButtonElement>('[data-slot="dialog-close"]')
+            ?.click();
+          // setTimeout(() => {
+          //   navigate(
+          //     `/shelters/${shelterId}/management/adoption-forms/${res.data._id}`
+          //   );
+          // }, 800);
+        })
+        .catch((err) => {
+          console.error("Error creating adoption form:", err);
+          toast.error("Tạo form nhận nuôi thất bại. Vui lòng thử lại.");
+        })
+        .finally(()=>{
+          setTimeout(() => {
+            setIsLoading(false);
+          }, 200);
+        });
     }
   };
 
@@ -151,9 +194,9 @@ export default function CreateDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="default">
-          <Plus />
-          Tạo form
+      <Button variant="ghost" className="text-xs">
+          <PlusSquare className="text-(--primary)" />
+          Tạo mới
         </Button>
       </DialogTrigger>
 
@@ -206,10 +249,12 @@ export default function CreateDialog() {
                             (p: any) => p._id == field.value
                           ) ? (
                             <SelectValue>
-                              {availablePets.find(
-                                (p: any) => p._id == field.value
-                              )?.name}
-                            </SelectValue>  
+                              {
+                                availablePets.find(
+                                  (p: any) => p._id == field.value
+                                )?.name
+                              }
+                            </SelectValue>
                           ) : (
                             <SelectValue placeholder="Chọn thú nuôi" />
                           )}
@@ -225,7 +270,11 @@ export default function CreateDialog() {
                                 className="flex items-center w-full mx-2 py-1"
                               >
                                 <Avatar className="rounded-none w-8 h-8">
-                                  <AvatarImage src={s?.photos[0]} alt={s?.name} className="w-8 h-8 object-center object-cover"/>
+                                  <AvatarImage
+                                    src={s?.photos[0]}
+                                    alt={s?.name}
+                                    className="w-8 h-8 object-center object-cover"
+                                  />
                                   <AvatarFallback className="rounded-none">
                                     <span className="font-medium">
                                       {s.name.charAt(0).toUpperCase()}

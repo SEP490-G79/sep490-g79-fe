@@ -23,6 +23,8 @@ function ProfilePage() {
   const [profile, setProfile] = useState<User | null>(null);
   const { userProfile, userAPI, } = useContext(AppContext);
   const isOwnProfile = !userId || userId === userProfile?._id;
+  const isGuest = !userProfile;
+  
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
@@ -35,6 +37,13 @@ function ProfilePage() {
       .catch(() => toast.error("Không thể tải thông tin người dùng", { id: "user-load-error" }));
 
   }, [userId, userProfile]);
+
+  useEffect(() => {
+  if (isGuest && localStorage.getItem("profileTab") === "activities") {
+    setShowActivities(false);
+    localStorage.setItem("profileTab", "posts");
+  }
+}, [isGuest]);
 
   useEffect(() => {
     return () => {
@@ -94,6 +103,8 @@ function ProfilePage() {
               >
                 Bài đăng
               </button>
+
+              {!isGuest && (
               <button
                 onClick={() => {
                   setShowActivities(true);
@@ -106,6 +117,7 @@ function ProfilePage() {
               >
                 Thú nuôi của bạn
               </button>
+              )}
             </div>
             {/* Post button */}
             {isOwnProfile ? (
@@ -115,6 +127,7 @@ function ProfilePage() {
                 </Button>
               </Link>
             ) : (
+              (!isGuest && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="p-2 hover:bg-muted rounded-md">
@@ -125,6 +138,7 @@ function ProfilePage() {
                   <ReportUserDialog userId={userId} key={userId} />
                 </DropdownMenuContent>
               </DropdownMenu>
+              ))
             )}
           </div>
 
