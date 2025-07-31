@@ -125,7 +125,7 @@ const UserAdoptionFormPage = () => {
     fetchData();
   }, [id]);
 
- 
+
 
   // Ghi lại mỗi khi step thay đổi
   useEffect(() => {
@@ -152,7 +152,6 @@ const UserAdoptionFormPage = () => {
   if (loading || !form || !hasCheckedSubmitted) {
     return <div className="text-center mt-10">Đang tải dữ liệu thú cưng...</div>;
   }
-console.log(submission);
 
 
   const steps = ["Quy định chung", "Đăng ký nhận nuôi", "Chờ phản hồi", "Xác nhận lịch phỏng vấn", "Đơn cam kết"];

@@ -102,8 +102,8 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
     );
   }
 
-  const deadline = new Date(submission.interview.availableFrom);
-  deadline.setDate(deadline.getDate() - 1);
+  const deadline = new Date(submission.interview.availableTo);
+  deadline.setDate(deadline.getDate());
 
 
   return (
@@ -230,7 +230,7 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
                     <div>
                       <p className="font-medium text-red-800">Hạn chót chọn lịch</p>
                       <p className="text-sm text-red-600 mt-1">
-                        {dayjs(deadline).format("HH:mm [ngày] DD/MM/YYYY")}
+                        {dayjs(deadline).format("[Trước ngày] DD/MM/YYYY")}
                       </p>
                       <p className="text-xs text-red-500 mt-2">
                         Nếu không chọn lịch đúng hạn, đơn của bạn có thể bị hủy

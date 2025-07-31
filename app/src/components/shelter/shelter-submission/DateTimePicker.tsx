@@ -33,11 +33,12 @@ export function DateTimePicker({
     if (maxDate && isAfter(day, startOfDay(maxDate))) return true;
     return false;
   };
-    const handleReset = () => {
-    const now = new Date();
-    setTempDate(now);
-    onChange(now);
-  };
+   const handleReset = () => {
+  const now = startOfDay(new Date());
+  setTempDate(now);
+  onChange(now);
+};
+
 
   return (
     <div className="space-y-1">
