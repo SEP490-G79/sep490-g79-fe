@@ -8,6 +8,8 @@ import {
   Youtube,
 } from "lucide-react";
 import React from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import logo from "../../assets/logo/bbkzwnb6hyyrmi8jhiwp.jpg"
 
 function AppFooter() {
   return (
@@ -15,10 +17,15 @@ function AppFooter() {
       <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5 max-w-7xl mx-auto">
         {/* Logo & Quote */}
         <div>
-          <div className="mb-4 text-xl font-bold">LOGO</div>
+          <div className="mb-4 text-xl font-bold">
+            <Avatar>
+              <AvatarImage src={logo} alt="Logo pawshelter"></AvatarImage>{" "}
+              <AvatarFallback>PawShelter</AvatarFallback>
+            </Avatar>
+          </div>
           <blockquote className="border-l-2 pl-4 italic text-sm text-muted-foreground max-w-xs">
-            &quot;After all,&quot; he said, &quot;everyone enjoys a good joke,
-            so it&apos;s only fair that they should pay for the privilege.&quot;
+            &quot;Bạn không thể thay đổi cả thế giới, nhưng bạn có thể thay đổi
+            cả thế giới của một chú thú cưng.&quot;
           </blockquote>
         </div>
 
@@ -44,16 +51,16 @@ function AppFooter() {
         <div className="flex flex-col text-sm gap-1">
           <h3 className="font-semibold mb-2">Thông tin liên hệ</h3>
           <a href="#" className="flex items-center gap-2">
-            <MapPinHouse className="w-4 h-4" />
-            Hòa Lạc
+            <MapPinHouse className="w-9 h-9 mb-auto" />
+            Đại học FPT, Khu Công nghệ cao Hòa Lạc, Thạch Hòa, Thạch Thất, Hà Nội
           </a>
           <a href="#" className="flex items-center gap-2">
             <Mail className="w-4 h-4" />
-            4189hr34@gmail.com
+            pawsheltersystem@gmail.com
           </a>
           <a href="#" className="flex items-center gap-2">
             <Phone className="w-4 h-4" />
-            +84 73489164271
+            +84 865498699
           </a>
         </div>
 

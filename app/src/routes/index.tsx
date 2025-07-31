@@ -45,6 +45,8 @@ import ReturnRequestManagement from "@/components/shelter/shelter-management/ret
 import { ConsentForms } from "@/components/shelter/shelter-management/consent-form/ConsentForms";
 import ConsentForm from "@/components/shelter/shelter-management/consent-form/ConsentForm";
 import ForgotPassword from "@/pages/Common/ForgotPassword";
+import AboutUs from "@/pages/Common/AboutUs";
+import AdoptionProcedures from "@/pages/Common/AdoptionProcedures";
 
 function AppRoutes() {
   return (
@@ -57,6 +59,8 @@ function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
       </Route>
       <Route path="/faq" element={<FAQ />} />
+      <Route path="/about-us" element={<AboutUs />} />
+      <Route path="/adoption-procedures" element={<AdoptionProcedures />} />
       <Route path="/pets-list" element={<PetsListPage />} />
       <Route path="/pets/:id" element={<PetProfilePage />} />
       <Route
