@@ -87,7 +87,7 @@ function AppRoutes() {
             </ShelterRoute>
           }
         >
-          <Route index element={<ShelterDashboard />} />
+          <Route index element={<ShelterProfile />} />
           <Route path="dashboard" element={<ShelterDashboard />} />
           <Route path="shelter-profile" element={<ShelterProfile />} />
           <Route
