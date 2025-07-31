@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import type { Pet } from "@/types/Pet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface PetTableProps {
   data: Pet[];
@@ -61,11 +62,16 @@ export default function PetTable({
       accessorKey: "photos",
       header: "Ảnh",
       cell: ({ row }) => (
-        <img
-          src={row.original.photos?.[0] || "/placeholder.png"}
-          alt="pet"
-          className="w-10 h-10 object-cover rounded"
-        />
+        <Avatar className="w-10 h-10 rounded ring-2 ring-(--primary)">
+          <AvatarImage
+            src={row.original.photos?.[0]}
+            alt={row.original.name}
+            className="object-cover "
+          />
+          <AvatarFallback>
+            {row.original.name?.charAt(0).toUpperCase() || "?"}
+          </AvatarFallback>
+        </Avatar>
       ),
     },
     { accessorKey: "name", header: "Tên" },

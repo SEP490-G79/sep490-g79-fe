@@ -1,5 +1,3 @@
-// components/shelter/shelter-management/dashboard/SubmissionPieChart.tsx
-
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import {
   Card,
@@ -54,11 +52,11 @@ export const SubmissionPieChart = ({
   return (
     <Card className="h-full w-full shadow-xl border-none">
       <CardHeader>
-        <CardTitle className="text-lg font-bold text-gray-800">
+        <CardTitle className="text-lg font-bold text-foreground">
           Tỷ lệ đơn nhận nuôi
         </CardTitle>
         <CardDescription>
-          Phân bố số lượng đơn duyệt, từ chối và Đang xử lý
+          Phân bố số lượng đơn duyệt, từ chối và đang xử lý
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col justify-center items-center h-[360px]">
@@ -81,7 +79,14 @@ export const SubmissionPieChart = ({
                   />
                 ))}
               </Pie>
-              <Tooltip formatter={(value: number) => `${value} đơn`} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "hsl(var(--background))",
+                  color: "hsl(var(--foreground))",
+                  border: "1px solid hsl(var(--border))",
+                }}
+                formatter={(value: number) => `${value} đơn`}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -94,7 +99,7 @@ export const SubmissionPieChart = ({
                 className="w-4 h-4 rounded-sm"
                 style={{ backgroundColor: item.color }}
               ></div>
-              <span className="text-sm" style={{ color: item.color }}>
+              <span className="text-sm text-foreground">
                 {item.name}: {item.value} đơn ({item.percentage}%)
               </span>
             </div>

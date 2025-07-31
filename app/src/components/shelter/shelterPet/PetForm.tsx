@@ -1,11 +1,9 @@
 // File: components/PetForm.tsx
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import CreatableSelect from "react-select/creatable";
 import { PET_STATUSES } from "@/components/shelter/shelterPet/petStatus";
-import ReactSelect from "react-select";
 import {
   Select,
   SelectContent,
@@ -16,7 +14,6 @@ import {
 import Autosuggest from "react-autosuggest";
 import PetPhotoUpload from "./PetPhotoUpload";
 import PetImageAIButton from "./PetImageAIButton";
-import { toast } from "sonner";
 import type { Species, Breed, PetFormState } from "@/types/pet.types";
 
 interface PetFormProps {
@@ -43,6 +40,11 @@ export default function PetForm({
   isEditing,
 }: PetFormProps) {
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
+  const [selectedBreedTemp, setSelectedBreedTemp] = useState<
+    string | undefined
+  >(undefined);
+  const [breedSelectKey, setBreedSelectKey] = useState(0);
+
   const colorSuggestions = [
     "Trắng",
     "Đen",
@@ -172,11 +174,12 @@ export default function PetForm({
           }}
           theme={{
             input:
-              "w-full px-3 py-2 rounded-md border border-input bg-background text-sm",
+              "w-full px-3 py-2 rounded-md border border-input bg-background text-sm text-foreground",
             suggestionsContainer:
-              "z-50 absolute bg-white border mt-1 rounded shadow-md",
-            suggestion: "px-4 py-2 hover:bg-gray-100 cursor-pointer",
-            suggestionHighlighted: "bg-muted",
+              "z-50 absolute border mt-1 rounded shadow-md bg-white border-gray-300 dark:bg-[#1f2937] dark:border-gray-700",
+            suggestion:
+              "px-4 py-2 cursor-pointer hover:bg-gray-100 text-black dark:hover:bg-[#374151] dark:text-white",
+            suggestionHighlighted: "bg-blue-500 text-white dark:bg-blue-600",
           }}
         />
       </div>
@@ -233,63 +236,101 @@ export default function PetForm({
           </Select>
         </div>
       )}
-
-      <div className="flex flex-col gap-1 col-span-full">
+      <div className="flex flex-col gap-1">
         <label className="text-sm font-medium">Loài *</label>
-        <CreatableSelect
-          isClearable
-          placeholder="Chọn hoặc thêm loài mới..."
-          value={
-            speciesList.find((s) => s._id === form.species)
-              ? {
-                  value: form.species,
-                  label: speciesList.find((s) => s._id === form.species)?.name,
-                }
-              : null
-          }
-          options={speciesList.map((s) => ({ value: s._id, label: s.name }))}
-          onChange={(option) =>
-            setForm({
-              ...form,
-              species: option ? option.value : "",
-              breeds: [],
-            })
-          }
-          onCreateOption={onCreateSpecies}
-        />
+        <Select
+          value={form.species}
+          onValueChange={(value) => {
+            if (value === "__create__") {
+              const name = prompt("Nhập tên loài mới:");
+              if (name) {
+                onCreateSpecies(name); // Hàm tạo loài mới
+              }
+            } else {
+              setForm((f) => ({ ...f, species: value, breeds: [] }));
+            }
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Chọn loài..." />
+          </SelectTrigger>
+          <SelectContent>
+            {speciesList.map((s) => (
+              <SelectItem key={s._id} value={s._id}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="flex flex-col gap-1 col-span-full">
         <label className="text-sm font-medium">Giống (tối đa 2)</label>
-        <ReactSelect
-          isMulti
-          placeholder={
-            form.species
-              ? "Chọn giống thuộc loài đã chọn..."
-              : "Vui lòng chọn loài trước"
-          }
-          isDisabled={!form.species}
-          value={breedList
-            .filter((b) => form.breeds?.includes(b._id))
-            .map((b) => ({ value: b._id, label: b.name }))}
-          options={breedList
-            .filter(
-              (b) =>
-                b.species === form.species ||
-                (typeof b.species === "object" ? b.species._id : b.species) ===
-                  form.species
-            )
-            .map((b) => ({ value: b._id, label: b.name }))}
-          onChange={(options) => {
-            if (options.length > 2) {
-              toast.error("Chỉ được chọn tối đa 2 giống.");
-              return;
-            }
-            setForm({
-              ...form,
-              breeds: options.map((o) => o.value),
-            });
-          }}
-        />
+
+        {/* Hiển thị giống đã chọn */}
+        <div className="flex flex-wrap gap-2 mb-2">
+          {form.breeds.map((breedId) => {
+            const breed = breedList.find((b) => b._id === breedId);
+            return (
+              <span
+                key={breedId}
+                className="flex items-center gap-2 px-3 py-1 rounded-full text-sm bg-muted text-muted-foreground border"
+              >
+                {breed?.name || "Không rõ"}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm((f) => ({
+                      ...f,
+                      breeds: f.breeds.filter((id) => id !== breedId),
+                    }))
+                  }
+                  className="hover:text-destructive text-base leading-none"
+                  title="Xóa giống này"
+                >
+                  ×
+                </button>
+              </span>
+            );
+          })}
+        </div>
+
+        {/* Dropdown chọn giống mới */}
+        {form.breeds.length < 2 && (
+          <Select
+            key={breedSelectKey}
+            value={selectedBreedTemp}
+            onValueChange={(value) => {
+              if (form.breeds.includes(value)) return;
+              setForm((f) => ({ ...f, breeds: [...f.breeds, value] }));
+              setSelectedBreedTemp(undefined);
+              setBreedSelectKey((k) => k + 1); // 👉 force re-render Select
+            }}
+            disabled={!form.species}
+          >
+            <SelectTrigger className="w-full h-9 border border-input rounded-md px-3 text-sm">
+              <SelectValue placeholder="Chọn giống để thêm..." />
+            </SelectTrigger>
+            <SelectContent className="z-50 max-h-64 overflow-y-auto">
+              {breedList
+                .filter(
+                  (b) =>
+                    (b.species === form.species ||
+                      (typeof b.species === "object" &&
+                        b.species._id === form.species)) &&
+                    !form.breeds.includes(b._id)
+                )
+                .map((b) => (
+                  <SelectItem
+                    key={b._id}
+                    value={b._id}
+                    className="cursor-pointer px-3 py-2 text-sm hover:bg-accent"
+                  >
+                    {b.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <div className="col-span-full">
@@ -317,6 +358,7 @@ export default function PetForm({
           setSpeciesList={setSpeciesList}
           breedList={breedList}
           setBreedList={setBreedList}
+          colorSuggestions={colorSuggestions}
         />
       </div>
 

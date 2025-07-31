@@ -100,28 +100,33 @@ const ShelterDashboard = () => {
     <div className="flex flex-col min-h-screen px-4 py-4 md:px-8 md:py-6 bg-background">
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <SectionCard
-          icon={<PawPrint className="w-6 h-6 text-primary" />}
+          icon={<PawPrint className="w-6 h-6 text-[--color-primary]" />}
           title="Thú đang chăm sóc"
           number={dashboardData.caringPets}
           changePercentage="5%"
           isHigher
         />
+
         <SectionCard
-          icon={<Check className="w-6 h-6 text-green-600" />}
+          icon={<Check className="w-6 h-6 text-[--color-foreground]" />}
           title="Đã nhận nuôi"
           number={dashboardData.adoptedPets}
           changePercentage="10%"
           isHigher
         />
+
         <SectionCard
-          icon={<BookOpenTextIcon className="w-6 h-6 text-blue-600" />}
+          icon={<BookOpenTextIcon className="w-6 h-6 text-[--color-chart-1]" />}
           title="Bài viết đã đăng"
           number={dashboardData.posts}
           changePercentage="15%"
           isHigher
         />
+
         <SectionCard
-          icon={<UsersIcon className="w-6 h-6 text-yellow-600" />}
+          icon={
+            <UsersIcon className="w-6 h-6 text-[--color-muted-foreground]" />
+          }
           title="Thành viên"
           number={dashboardData.members}
           changePercentage="0%"

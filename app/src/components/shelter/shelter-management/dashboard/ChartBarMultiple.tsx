@@ -17,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getAdoptionFormsByWeek } from "@/apis/shelter.api";
+import { getAdoptionSubmissionsByWeek } from "@/apis/shelter.api";
 import { toast } from "sonner";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 
@@ -37,10 +37,10 @@ export function ChartBarMultiple() {
   useEffect(() => {
     if (!shelterId) return;
 
-    getAdoptionFormsByWeek(shelterId)
+    getAdoptionSubmissionsByWeek(shelterId)
       .then((data) => {
         const formatted = data.map((item: { week: string; count: number }) => ({
-          week: item.week, // đã là dạng "DD/MM - DD/MM"
+          week: item.week,
           forms: item.count,
         }));
         setChartData(formatted);
@@ -50,10 +50,12 @@ export function ChartBarMultiple() {
       });
   }, [shelterId]);
 
+  const totalForms = chartData.reduce((sum, item) => sum + item.forms, 0);
+
   return (
     <Card className="h-full w-full shadow-xl border-none">
       <CardHeader>
-        <CardTitle className="text-lg font-bold text-gray-800">
+        <CardTitle className="text-lg font-bold text-foreground">
           Biểu đồ mẫu đơn nhận nuôi
         </CardTitle>
         <CardDescription>Trong 4 tuần gần nhất</CardDescription>
@@ -65,14 +67,15 @@ export function ChartBarMultiple() {
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
-                stroke="#f1f5f9"
+                stroke="var(--border)"
               />
               <XAxis
                 dataKey="week"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={10}
-                style={{ fontSize: 14, fill: "#64748b" }}
+                style={{ fontSize: 14 }}
+                stroke="currentColor"
               />
               <Tooltip
                 cursor={{ fill: "rgba(0, 0, 0, 0.05)" }}
@@ -80,8 +83,16 @@ export function ChartBarMultiple() {
               />
               <defs>
                 <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.95} />
-                  <stop offset="100%" stopColor="#6366f1" stopOpacity={0.6} />
+                  <stop
+                    offset="0%"
+                    stopColor="var(--chart-1)"
+                    stopOpacity={0.95}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--chart-1)"
+                    stopOpacity={0.6}
+                  />
                 </linearGradient>
               </defs>
               <Bar
@@ -97,6 +108,10 @@ export function ChartBarMultiple() {
       <CardFooter className="flex-col items-start gap-2 text-sm pt-4">
         <div className="flex gap-2 leading-none font-semibold">
           Cập nhật 4 tuần gần nhất <TrendingUp className="h-4 w-4" />
+        </div>
+        <div className="text-muted-foreground">
+          Tổng số đơn:{" "}
+          <span className="font-semibold text-foreground">{totalForms}</span>
         </div>
       </CardFooter>
     </Card>

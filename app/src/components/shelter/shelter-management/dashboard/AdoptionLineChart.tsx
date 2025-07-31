@@ -25,7 +25,7 @@ export const AdoptionLineChart = ({ data }: AdoptionLineChartProps) => {
   return (
     <Card className="shadow-xl border-none">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-bold text-green-600">
+        <CardTitle className="text-lg font-bold text-foreground">
           Biểu đồ số lượt nhận nuôi theo tuần
         </CardTitle>
         <p className="text-sm text-muted-foreground">
@@ -38,21 +38,30 @@ export const AdoptionLineChart = ({ data }: AdoptionLineChartProps) => {
             data={data}
             margin={{ top: 20, right: 30, left: 50, bottom: 60 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis
               dataKey="week"
               angle={-25}
               textAnchor="end"
               interval={0}
               tickMargin={10}
-              style={{ fontSize: 12, fill: "#64748b" }}
+              stroke="currentColor"
+              className="text-muted-foreground"
+              style={{ fontSize: 12 }}
             />
             <YAxis
               allowDecimals={false}
-              style={{ fontSize: 12, fill: "#64748b" }}
+              stroke="currentColor"
+              className="text-muted-foreground"
+              style={{ fontSize: 12 }}
             />
             <Tooltip
-              contentStyle={{ backgroundColor: "white", borderRadius: 8 }}
+              contentStyle={{
+                backgroundColor: "hsl(var(--background))",
+                color: "hsl(var(--foreground))",
+                borderRadius: 8,
+                border: "1px solid hsl(var(--border))",
+              }}
               labelStyle={{ fontWeight: "bold" }}
               formatter={(value: number) => [`${value} lượt`, "Số lượng"]}
             />
