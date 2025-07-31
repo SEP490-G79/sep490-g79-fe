@@ -276,9 +276,11 @@ export default function AdoptionActivities({ userId }: Props) {
                   <div className="flex flex-col">
                     <span className="text-muted-foreground text-xs">Phí nhận nuôi</span>
                     <span className="font-medium">
-                      {submission.adoptionForm?.pet?.tokenMoney > 0
-                        ? `${submission.adoptionForm?.pet?.tokenMoney.toLocaleString()}đ`
+                      {typeof submission.adoptionForm?.pet?.tokenMoney === "number" &&
+                        submission.adoptionForm.pet.tokenMoney > 0
+                        ? `${submission.adoptionForm.pet.tokenMoney.toLocaleString()}đ`
                         : "Miễn phí"}
+
                     </span>
                   </div>
 
