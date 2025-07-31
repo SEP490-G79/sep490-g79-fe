@@ -362,18 +362,32 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
   };
 
   const filteredPosts = (() => {
+    // Chỉ lọc bài viết do user hiện tại tạo
     let filtered = postsData.filter((post) => {
       const createdById = typeof post.createdBy === "string" ? post.createdBy : post.createdBy._id;
-      return createdById === currentUserId;
+      return createdById === currentUserId && !post.shelter;
     });
-
     if (sortOption === "latest") {
-      filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    } else if (sortOption === "oldest") {
-      filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    } else if ((sortOption === "nearest" || sortOption === "farthest") && userLocation) {
-      const sorted = sortPostsByDistance(filtered, userLocation);
-      filtered = sortOption === "farthest" ? sorted.reverse() : sorted;
+      return [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+
+    if (sortOption === "oldest") {
+      return [...filtered].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    }
+
+    if ((sortOption === "nearest" || sortOption === "farthest") && userLocation) {
+      const postsWithLocation = filtered.filter(post => post.location?.lat && post.location?.lng);
+      const postsWithoutLocation = filtered.filter(post => !post.location?.lat || !post.location?.lng);
+
+      const sorted = sortPostsByDistance(postsWithLocation, userLocation);
+      const sortedByDirection = sortOption === "farthest" ? sorted.reverse() : sorted;
+
+      return [
+        ...sortedByDirection,
+        ...postsWithoutLocation.sort((a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ),
+      ];
     }
 
     return filtered;
@@ -432,7 +446,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                   value={postContent}
                   onChange={(e) => setPostContent(e.target.value)}
                   placeholder="Bạn đang nghĩ gì?"
-                  className="resize-none border text-base placeholder:text-muted-foreground"
+                  className="resize-none border border-border text-base placeholder:text-muted-foreground overflow-y-auto max-h-[200px] focus:ring-0"
                 />
 
                 {previewUrls.length > 0 && (
@@ -517,8 +531,9 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
 
                 <div className="flex justify-end gap-2 mt-4">
                   <Button
+                    className="cursor-pointer"
                     variant="ghost"
-                    disabled={loading}
+                    disabled={loading || (!postContent.trim() && selectedImages.length === 0)}
                     onClick={() => {
                       setConfirmDialog({
                         open: true,
@@ -547,7 +562,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                     Hủy
                   </Button>
 
-                  <Button onClick={handleCreatePost} disabled={loading || (!postContent.trim() && selectedImages.length === 0)} >
+                  <Button className="cursor-pointer" onClick={handleCreatePost} disabled={loading || (!postContent.trim() && selectedImages.length === 0)} >
                     {loading ? "Đang đăng..." : "Đăng bài"}
                   </Button>
                 </div>
@@ -562,14 +577,14 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Sắp xếp:</span>
           <Select value={sortOption} onValueChange={(val) => setSortOption(val as any)}>
-            <SelectTrigger className="w-[160px] h-8 text-sm">
+            <SelectTrigger className="w-[160px] h-8 text-sm cursor-pointer">
               <SelectValue placeholder="Sắp xếp" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="latest">Mới nhất</SelectItem>
-              <SelectItem value="oldest">Cũ nhất</SelectItem>
-              <SelectItem value="nearest">Gần nhất</SelectItem>
-              <SelectItem value="farthest">Xa nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="latest">Mới nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="oldest">Cũ nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="nearest">Gần nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="farthest">Xa nhất</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -578,7 +593,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
           variant="outline"
           onClick={fetchPosts}
           disabled={loadingPosts}
-          className="flex items-center gap-2 text-sm"
+          className="flex items-center gap-2 text-sm cursor-pointer"
         >
           <RefreshCcw className={`w-4 h-4 ${loadingPosts ? "animate-spin" : ""}`} />
           {loadingPosts ? "Đang tải..." : "Tải lại bài viết"}
@@ -644,20 +659,22 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => { setEditingPost(post); setIsEditOpen(true); }}>
+                        <DropdownMenuItem onClick={() => { setEditingPost(post); setIsEditOpen(true); }} className="cursor-pointer">
                           <Pencil className="w-4 h-4 text-blue-500 mr-2" /> Chỉnh sửa
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() =>
                           setConfirmDialog({
                             open: true,
                             title: "Xác nhận xóa bài viết",
-                            description: "Bạn có chắc chắn muốn xóa bài viết này? Thao tác này không thể hoàn tác.",
+                            description: "Bạn có chắc chắn muốn xóa bài đăng này? Thao tác này không thể hoàn tác.",
                             confirmText: "Xoá",
                             cancelText: "Hủy",
                             onConfirm: () => handleDeletePost(post._id),
                           })
-                        }>
-                          <Trash2 className="w-4 h-4 text-red-500 mr-2" /> Xóa
+                        }
+                          className="cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500 mr-2" /> Xóa bài đăng
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -720,7 +737,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
               <CardContent>
                 <PhotoProvider>
                   <div className="grid grid-cols-2 gap-2">
-                    {post.photos.slice(0, 3).map((url, idx) => (
+                    {post.photos.slice(0, 3).map((url: string, idx: number) => (
                       <PhotoView key={idx} src={url}>
                         <img
                           src={url}

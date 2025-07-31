@@ -28,7 +28,6 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Globe, GlobeLock, ImageIcon, SmileIcon, X, LocateFixed, MapPinIcon } from "lucide-react";
-import { PhotoProvider, PhotoView } from "react-photo-view";
 import EmojiPicker from "emoji-picker-react";
 import { useRef, useState, useEffect, useContext } from "react";
 import AppContext from "@/context/AppContext";

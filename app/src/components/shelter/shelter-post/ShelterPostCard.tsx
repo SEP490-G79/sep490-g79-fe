@@ -101,16 +101,16 @@ export default function ShelterPostCard({
             {(isManager || isOwner) && !isGuest && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="p-2 hover:bg-muted rounded-md">
+                  <button className="p-2 hover:bg-muted rounded-md cursor-pointer">
                     <Ellipsis className="w-5 h-5" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onEdit(post)}>
+                  <DropdownMenuItem onClick={() => onEdit(post)} className="cursor-pointer">
                     <Pencil className="w-4 h-4 text-blue-500 mr-2" /> Chỉnh sửa
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDelete(post._id)}>
-                    <Trash2 className="w-4 h-4 text-red-500 mr-2" /> Xóa
+                  <DropdownMenuItem onClick={() => onDelete(post._id)} className="cursor-pointer">
+                    <Trash2 className="w-4 h-4 text-red-500 mr-2" /> Xóa bài đăng
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

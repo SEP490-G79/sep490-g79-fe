@@ -154,11 +154,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40 p-1 z-50">
-                  <DropdownMenuItem onClick={() => onEdit(post)}>
+                  <DropdownMenuItem onClick={() => onEdit(post)} className="cursor-pointer">
                     <Pencil className="w-4 h-4 text-blue-500 mr-2" />
                     Chỉnh sửa
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setOpenDeleteDialog(true)}>
+                  <DropdownMenuItem onClick={() => setOpenDeleteDialog(true)} className="cursor-pointer">
                     <Trash2 className="w-4 h-4 text-red-500 mr-2" />
                     Xóa bài đăng
                   </DropdownMenuItem>

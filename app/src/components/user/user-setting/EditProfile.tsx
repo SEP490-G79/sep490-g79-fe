@@ -183,7 +183,7 @@ export default function EditProfile() {
           const place = res.data.results?.[0];
           if (place) {
             setAddress(place.formatted_address);
-            setPlaceId(""); // reverse không có place_id
+            setPlaceId("");
           }
         } catch (error) {
           console.error("Reverse geocode error:", error);
