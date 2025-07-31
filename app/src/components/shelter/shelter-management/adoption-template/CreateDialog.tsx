@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, PlusSquare } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -107,9 +107,9 @@ export default function CreateDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="default">
-          <Plus />
-          Tạo mẫu
+      <Button variant="ghost" className="text-xs">
+          <PlusSquare className="text-(--primary)" />
+          Tạo mới
         </Button>
       </DialogTrigger>
 

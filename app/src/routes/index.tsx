@@ -68,17 +68,6 @@ function AppRoutes() {
         element={<BlogDetail />}
       />
       <Route path="/pet/:petId" element={<ViewPetDetails />} />
-      <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
-
-      <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
-        <Route index element={<ShelterProfile />} />
-        <Route path="profile" element={<ShelterProfile />} />
-        <Route path="staffs-management" element={<ShelterStaffManagement />} />
-        <Route path="pet-profiles" element={<PetManagement />} />
-
-        <Route path="adoption-templates" element={<AdoptionTemplates />} />
-        <Route path="adoption-forms" element={<AdoptionForms />} />
-      </Route>
 
       <Route element={<PrivateRoutes />}>
         <Route index element={<Navigate to="/home" replace={true} />} />

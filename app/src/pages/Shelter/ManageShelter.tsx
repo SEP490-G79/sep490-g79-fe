@@ -24,30 +24,26 @@ function ManageShelter() {
     return (shelters ?? [])?.find((s) => s._id == shelterId);
   }, [shelterId, shelters]);
 
-  useEffect(() => {
-    authAxios
-      .get(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/get-all`)
-      .then((res) => {
-        setShelterTemplates(res.data);
-      })
-      .catch((err) => {
-        console.log(err.data.response.message);
-      });
-  }, [shelterId]);
 
-  const navs = [
-    { title: "Thông tin chung", href: "dashboard" },
-    { title: "Hồ sơ trung tâm", href: "shelter-profile" },
-    { title: "Quản lý thành viên", href: "staffs-management" },
-    { title: "Quản lý bài viết blog", href: "blogs-management" },
-    { title: "Quản lý hồ sơ thú nuôi", href: "pet-profiles" },
-    { title: "Quản lý mẫu nhận nuôi", href: "adoption-templates" },
-    { title: "Quản lý form nhận nuôi", href: "adoption-forms" },
-    { title: "Quản lý đơn đăng kí nhận nuôi", href: "submission-forms" },
-    { title: "Quản lý bản đồng ý nhận nuôi", href: "consent-forms" },
-    { title: "Quản lý yêu cầu trả thú nuôi", href: "return-requests" },
 
-  ];
+
+  const navs = useMemo(() => {
+    const base = [
+      { title: "Hồ sơ trung tâm", href: "shelter-profile" },
+      { title: "Quản lý thành viên", href: "staffs-management" },
+      { title: "Quản lý bài viết blog", href: "blogs-management" },
+      { title: "Quản lý hồ sơ thú nuôi", href: "pet-profiles" },
+      { title: "Quản lý mẫu nhận nuôi", href: "adoption-templates" },
+      { title: "Quản lý form nhận nuôi", href: "adoption-forms" },
+      { title: "Quản lý đơn đăng kí nhận nuôi", href: "submission-forms" },
+      { title: "Quản lý bản đồng ý nhận nuôi", href: "consent-forms" },
+      { title: "Quản lý yêu cầu trả thú nuôi", href: "return-requests" },
+    ];
+    if (shelter?.members?.find((member)=>member?._id == user?._id)?.roles?.includes("manager")) {
+      base.unshift({ title: "Thông tin chung", href: "dashboard" });
+    }
+    return base;
+  }, [shelter,user]);
 
   return (
     <div className="w-full min-h-full flex flex-wrap justify-around px-20 py-5">
