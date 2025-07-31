@@ -182,9 +182,14 @@ function handleGoogleLogin(){
         <div className="flex flex-col flex-grow items-center">
           {/* Title + SubTitle - Giới hạn width như Card */}
           <div className="w-full  max-w-md text-center mt-5 flex flex-col justify-center items-center px-5 mt-35">
-            <h1 className="scroll-m-20 text-4xl font-bold tracking-tight text-balance">
-              Đăng nhập
-            </h1>
+            <Button
+              variant="outline"
+              className="w-full flex items-center gap-2 cursor-pointer"
+              onClick={handleGoogleLogin}
+              disabled={loginLoading ? true : undefined}
+            >
+              <FcGoogle /> Đăng nhập bằng tài khoản Google
+            </Button>
 
             <div className="w-full flex items-center my-4">
               <Separator className="flex-1" />
@@ -192,14 +197,9 @@ function handleGoogleLogin(){
               <Separator className="flex-1" />
             </div>
 
-            <Button
-              variant="outline"
-              className="w-full flex items-center gap-2 cursor-pointer"
-              onClick={handleGoogleLogin}
-              disabled={loginLoading ? true : undefined}
-            >
-              Đăng nhập bằng tài khoản Google
-            </Button>
+            <h1 className="scroll-m-20 text-4xl font-bold tracking-tight text-balance">
+              Đăng nhập
+            </h1>
           </div>
 
           {/* Card form */}
@@ -239,13 +239,23 @@ function handleGoogleLogin(){
                               type="password"
                               {...field}
                               placeholder="Nhập mật khẩu..."
-                              className="my-2"
+                              className="mt-2"
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                                    <div className="w-full text-end mb-1">
+                  <span
+                    className="text-sm text-(--muted-foreground) hover:text-amber-500 cursor-pointer underline"
+                    onClick={() => {
+                      navigate("/forgot-password");
+                    }}
+                  >
+                    Quên mật khẩu?
+                  </span>
+                </div>
                     {loginLoading ? (
                       <Button type="submit" className="w-full" disabled>
                         <Loader2Icon className="animate-spin" />
@@ -267,7 +277,7 @@ function handleGoogleLogin(){
                 <div className="w-full flex items-center">
                   <Separator className="flex-1" />
                   <span className="text-(--muted-foreground)">
-                    Bản chưa có tài khoản?
+                    Bạn chưa có tài khoản?
                   </span>
                   <Separator className="flex-1" />
                 </div>

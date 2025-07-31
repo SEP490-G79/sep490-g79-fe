@@ -44,6 +44,9 @@ import PetSubmission from "@/components/shelter/shelter-submission/PetSubmission
 import ReturnRequestManagement from "@/components/shelter/shelter-management/return-request/ReturnRequestManagement";
 import { ConsentForms } from "@/components/shelter/shelter-management/consent-form/ConsentForms";
 import ConsentForm from "@/components/shelter/shelter-management/consent-form/ConsentForm";
+import ForgotPassword from "@/pages/Common/ForgotPassword";
+import AboutUs from "@/pages/Common/AboutUs";
+import AdoptionProcedures from "@/pages/Common/AdoptionProcedures";
 
 function AppRoutes() {
   return (
@@ -53,8 +56,11 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/active-account" element={<HandleVerify />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
       </Route>
       <Route path="/faq" element={<FAQ />} />
+      <Route path="/about-us" element={<AboutUs />} />
+      <Route path="/adoption-procedures" element={<AdoptionProcedures />} />
       <Route path="/pets-list" element={<PetsListPage />} />
       <Route path="/pets/:id" element={<PetProfilePage />} />
       <Route
@@ -68,6 +74,7 @@ function AppRoutes() {
         element={<BlogDetail />}
       />
       <Route path="/pet/:petId" element={<ViewPetDetails />} />
+      
 
       <Route element={<PrivateRoutes />}>
         <Route index element={<Navigate to="/home" replace={true} />} />
