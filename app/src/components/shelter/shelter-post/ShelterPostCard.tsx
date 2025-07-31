@@ -77,7 +77,7 @@ export default function ShelterPostCard({
                     {post.shelter.name}
                   </Link>
 
-                  <span className="text-xs text-muted-foreground block mt-0.5 flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground block mt-0.5 flex items-center gap-1">
                     {currentMember && (
                       <>
                         Người đăng: {post.createdBy.fullName}
