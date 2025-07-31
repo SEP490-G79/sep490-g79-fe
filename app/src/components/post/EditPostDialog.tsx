@@ -230,26 +230,25 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onOpenChange, pos
                         className="resize-none border border-border text-base placeholder:text-muted-foreground overflow-y-auto max-h-[200px] focus:ring-0"
                     />
 
-                    <PhotoProvider>
-                        <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1">
-                            {allPreviewImages.map((item, idx) => (
-                                <div key={idx} className="relative">
-                                    <PhotoView src={item.url}>
-                                        <img src={item.url} className="w-full h-40 object-cover rounded-lg cursor-pointer" />
-                                    </PhotoView>
-                                    <button
-                                        onClick={() => item.isNew
-                                            ? removeNewImage(item.index)
-                                            : removeExistingPhoto(item.index)
-                                        }
-                                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1"
-                                    >
-                                        <X size={16} />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </PhotoProvider>
+                    <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                        {allPreviewImages.map((item, idx) => (
+                            <div key={idx} className="relative">
+                                <img
+                                    src={item.url}
+                                    alt={`Ảnh ${idx + 1}`}
+                                    className="w-full h-40 object-cover rounded-lg"
+                                />
+                                <button
+                                    onClick={() =>
+                                        item.isNew ? removeNewImage(item.index) : removeExistingPhoto(item.index)
+                                    }
+                                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 cursor-pointer"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
 
                     <div className="flex gap-4 items-center text-muted-foreground relative pl-1">
                         <label htmlFor="edit-image-upload">
