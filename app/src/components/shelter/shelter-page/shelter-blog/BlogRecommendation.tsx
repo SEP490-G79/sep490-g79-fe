@@ -3,7 +3,7 @@ import { CalendarIcon } from "lucide-react";
 import type { Blog } from "@/types/Blog";
 import { useNavigate } from "react-router-dom";
 import { getTimeAgo } from "@/utils/dateUtils";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 
 const BlogRecommendation = ({ blog} : {blog: Blog}) => {
@@ -30,7 +30,7 @@ const BlogRecommendation = ({ blog} : {blog: Blog}) => {
         <div className="flex items-center justify-between text-sm text-muted-foreground border-t pt-3">
           <div className="flex justify-between items-center w-full">
             <div className="flex gap-2 items-center">
-              <Avatar>
+              <Avatar className="ring-2 ring-primary">
                 <AvatarImage
                   className="cursor-pointer"
                   src={blog.createdBy.avatar}
@@ -40,6 +40,7 @@ const BlogRecommendation = ({ blog} : {blog: Blog}) => {
                     navigate(`/profile/${blog.createdBy._id}`)
                   }}
                 />
+                <AvatarFallback>Avt</AvatarFallback>
               </Avatar>
               <p>{blog.createdBy.fullName}</p>
             </div>
