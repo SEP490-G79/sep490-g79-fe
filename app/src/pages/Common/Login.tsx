@@ -265,11 +265,14 @@ function handleGoogleLogin(){
               </CardContent>
               <CardFooter className="flex-col gap-2">
                 <div className="w-full text-center">
-                  <span className="text-(--muted-foreground) hover:text-amber-500 cursor-pointer" onClick={() => {
+                  <span className="text-(--muted-foreground) hover:text-amber-500 cursor-pointer underline" onClick={() => {
                     navigate("/forgot-password")
                   }}>
                     Quên mật khẩu?
                   </span>
+                </div>
+                <div className="w-full text-center">
+                  Hoặc
                 </div>
                 <div className="w-full flex items-center">
                   <Separator className="flex-1" />
