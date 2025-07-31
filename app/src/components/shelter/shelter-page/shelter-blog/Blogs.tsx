@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react'
+import  { useContext, useEffect, useState } from 'react'
 import BlogCard from './BlogCard'
 import {type Blog } from '@/types/Blog';
-import type useAuthAxios from '@/utils/authAxios';
 import AppContext from '@/context/AppContext';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';

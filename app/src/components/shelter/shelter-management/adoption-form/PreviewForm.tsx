@@ -23,7 +23,7 @@ import AppContext from "@/context/AppContext";
 import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { Question } from "@/types/Question";
 import useAuthAxios from "@/utils/authAxios";
-import React, { useContext, useEffect, useState } from "react";
+import  { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 

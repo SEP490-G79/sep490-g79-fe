@@ -8,8 +8,7 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { ClipboardList, Settings } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import type { Shelter } from "@/types/Shelter";

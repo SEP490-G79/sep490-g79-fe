@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import  { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,14 +11,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Ban, ChevronDown, Loader2Icon, MoreHorizontal, RotateCcwKey, UserRoundCog } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
-import type { ColumnDef } from "@tanstack/react-table";
 import type { ShelterMember } from "@/types/ShelterMember";
 import { useParams } from "react-router-dom";
-import { DataTableStaff } from "@/components/data-table-staff";
 import { Separator } from "@/components/ui/separator";
 import { SearchFilter } from "@/components/SearchFilter";
 import { Command, CommandItem } from "@/components/ui/command";
@@ -26,10 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { EmailSelector } from "@/components/EmailSelector";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import StaffTable from "./StaffTable";
 
 
@@ -57,7 +51,7 @@ const ShelterStaffsList = () => {
     const [shelterMembersList, setShelterMembersList] = useState<ShelterMember[]>([]);
      const [filteredMembers, setFilteredMembers] = useState<ShelterMember[]>();
      const [eligibleEmails, setEligibleEmails] = useState<eligibleEmail>([]);
-    const [loadingButton, setLoadingButton] = useState<Boolean>(false);
+    // const [loadingButton, setLoadingButton] = useState<Boolean>(false);
     const authAxios = useAuthAxios();
     const {shelterAPI, user} = useContext(AppContext)
     const {shelterId} = useParams();
@@ -241,7 +235,7 @@ const ShelterStaffsList = () => {
                             {["staff", "manager"].map((role) => {
                               const label =
                                 role === "staff" ? "Thành viên" : "Quản lý";
-                              const isChecked = field.value.includes(role);
+                              const isChecked = field.value.includes(role === "manager" ? "manager" : "staff");
                               return (
                                 <CommandItem
                                   key={role}

@@ -1,34 +1,17 @@
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-} from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Eye,
-  Github,
-  Home,
-  Linkedin,
-  LucideArrowLeft,
-  Mail,
-  Pen,
-  PenLine,
   Plus,
-  PlusCircle,
   SaveAllIcon,
-  X,
 } from "lucide-react";
-import React, { useContext, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import  { useContext, useEffect, useState } from "react";
+import {  useParams } from "react-router-dom";
 import QuestionCard from "../question/QuestionCard";
 import EditDialog from "./EditDialog";
 import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { toast } from "sonner";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 import {
   Tooltip,
@@ -38,20 +21,8 @@ import {
 } from "@/components/ui/tooltip";
 import type { Question } from "@/types/Question";
 
-import { cn } from "@/lib/utils";
 import { Dock, DockIcon } from "@/components/ui/magicui/dock";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import { DndContext, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -63,7 +34,9 @@ export default function TemplateDialog() {
     shelterId: string;
     templateId: string;
   }>();
-  const { coreAPI, shelterTemplates, setShelterTemplates } =
+  const { coreAPI, 
+    // shelterTemplates, 
+    setShelterTemplates } =
     useContext(AppContext);
   const [adoptionTemplate, setAdoptionTemplate] = useState<AdoptionTemplate>();
   const [questionsList, setQuestionsList] = useState<Question[]>([]);

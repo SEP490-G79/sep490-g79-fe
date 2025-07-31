@@ -1,6 +1,5 @@
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -11,11 +10,9 @@ import {
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Loader2Icon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import type { ReturnRequest } from "@/types/ReturnRequest";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { PhotoView } from "react-photo-view";
 
 const ReturnRequestDialog = ({
   dialogDetail,

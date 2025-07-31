@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, Loader2Icon, MoreHorizontal, RefreshCcw } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
@@ -553,8 +553,7 @@ const ShelterStaffRequestManagement = () => {
             {/* Nếu là request và chưa hết hạn, chưa duyệt, chưa bị huỷ → hiển thị nút */}
             {detailDialog.detail?.requestType === "request" &&
             detailDialog.detail?.requestStatus === "pending" &&
-            new Date(detailDialog.detail?.expireAt) > new Date() &&
-            detailDialog.detail?.requestStatus !== "cancelled" ? (
+            new Date(detailDialog.detail?.expireAt) > new Date() ? (
               <div className="flex gap-2">
                 {loadingButton ? (
                   <Button disabled>

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { useAppContext } from "@/context/AppContext";
 import type { Pet } from "@/types/Pet";
 import useAuthAxios from "@/utils/authAxios";
-import { useParams, useNavigate, Link} from "react-router-dom";
+import { useParams, useNavigate} from "react-router-dom";
 import { toast } from "sonner";
 import {
     Card,
@@ -18,9 +18,7 @@ import {
     PaginationLink,
 } from "@/components/ui/pagination";
 
-import { Badge } from "@/components/ui/badge";
 import type { MissionForm } from "@/types/MissionForm";
-import { ArrowRight } from 'lucide-react';
 
 export default function SubmissionForms() {
     const { coreAPI, setSubmissionsByPetId } = useAppContext();

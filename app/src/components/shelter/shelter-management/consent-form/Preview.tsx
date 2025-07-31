@@ -1,13 +1,11 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import { Badge } from "@/components/ui/badge";
 import AppContext from "@/context/AppContext";
 import type { ConsentForm } from "@/types/ConsentForm";
 import useAuthAxios from "@/utils/authAxios";
 import {
-  ArrowRightLeft,
   CheckSquare,
   MessageCircleX,
-  NotebookText,
   NotepadTextDashed,
   Paperclip,
   Send,
@@ -17,7 +15,7 @@ import {
 import React, { useContext, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { mockDeliveryMethods, mockStatus } from "@/types/ConsentForm";
+import { mockDeliveryMethods } from "@/types/ConsentForm";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";

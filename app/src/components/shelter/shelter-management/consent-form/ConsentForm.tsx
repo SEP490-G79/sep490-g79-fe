@@ -1,15 +1,5 @@
 import { Button } from "@/components/ui/button";
 import {
-  FileUpload,
-  FileUploadDropzone,
-  FileUploadItem,
-  FileUploadItemDelete,
-  FileUploadItemMetadata,
-  FileUploadItemPreview,
-  FileUploadList,
-  FileUploadTrigger,
-} from "@/components/ui/file-upload";
-import {
   Form,
   FormControl,
   FormField,
@@ -18,7 +8,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Dock, DockIcon } from "@/components/ui/magicui/dock";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import {
   Select,
@@ -45,22 +34,18 @@ import type { GoongSuggestion } from "@/utils/AddressInputWithGoong";
 import useAuthAxios from "@/utils/authAxios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { set } from "date-fns";
 import {
   Eye,
   PenLine,
   SaveAllIcon,
   SquareChevronDown,
   SquareChevronUp,
-  Upload,
-  X,
 } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
-import { fi } from "zod/v4/locales";
 import Preview from "./Preview";
 import type { ConsentForm } from "@/types/ConsentForm";
 

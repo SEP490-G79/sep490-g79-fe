@@ -1,7 +1,6 @@
 import { ArrowRight, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import Image_1 from "@/assets/card_1jpg.jpg";
 import {
   Tooltip,
   TooltipContent,

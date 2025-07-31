@@ -1,4 +1,4 @@
-import React from "react";
+
 import { IconCloud } from "../ui/magicui/icon-cloud";
 
 function Intro() {

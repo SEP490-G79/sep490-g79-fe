@@ -7,18 +7,13 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   Check,
-  CheckCircle,
   ChevronsDown,
   ChevronsUp,
   ChevronsUpDown,
   CircleCheckBig,
   CircleSlash,
   Equal,
-  Grip,
   GripVertical,
-  Menu,
-  Square,
-  SquareCheck,
   SquareCheckBig,
   Text,
   ToggleLeft,
@@ -29,14 +24,6 @@ import TextOption from "./TextOption";
 import SingleChoiceOption from "./SingleChoiceOption";
 import YesNoOption from "./YesNoOption";
 import MultipleChoiceOption from "./MultipleChoiceOption";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Value } from "@radix-ui/react-select";
 import type { Question } from "@/types/Question";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -47,13 +34,10 @@ import {
 } from "@/components/ui/popover";
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { cn } from "@/lib/utils";
 type Props = {
   question: Question;
   setQuestionsList: React.Dispatch<React.SetStateAction<Question[]>>;

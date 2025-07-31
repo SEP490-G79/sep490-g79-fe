@@ -18,7 +18,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -26,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pen, PenBoxIcon, PenLine, PenLineIcon, Plus } from "lucide-react";
+import {  PenBoxIcon} from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -35,7 +34,6 @@ import { z } from "zod";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { useNavigate, useParams } from "react-router-dom";
-import { ca } from "zod/v4/locales";
 import { toast } from "sonner";
 import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import {

@@ -14,7 +14,6 @@ import { useState, useContext } from "react";
 import { toast } from "sonner";
 import useAuthAxios from "@/utils/authAxios";
 import type { ReturnRequest } from "@/types/ReturnRequest";
-import axios from "axios";
 import AppContext from "@/context/AppContext";
 
 type PetInfo = ReturnRequest["pet"];

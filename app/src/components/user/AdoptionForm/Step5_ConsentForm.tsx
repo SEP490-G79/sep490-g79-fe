@@ -1,5 +1,3 @@
-import React from 'react'
-
 
 interface Step4Props {
   onNext: () => void;

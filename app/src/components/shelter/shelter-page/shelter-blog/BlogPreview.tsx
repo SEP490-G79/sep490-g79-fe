@@ -1,15 +1,12 @@
 import { type Blog } from "@/types/Blog";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { getTimeAgo } from "@/utils/dateUtils";
-import locationUtils from "@/utils/locationUtils";
-import { useContext } from "react";
-import AppContext from "@/context/AppContext";
 import { Link, useNavigate } from "react-router-dom";
 
 
 const BlogPreview = ({blog}: {blog: Blog}) => {
-  const {calculateDistance} = locationUtils;
-  const {user} = useContext(AppContext);
+  // const {calculateDistance} = locationUtils;
+  // const {user} = useContext(AppContext);
   const navigate = useNavigate();
 
   if (!blog) return <div className="text-center text-gray-500">Không tìm thấy bài viết.</div>;

@@ -6,11 +6,11 @@ interface ShelterInfoProps {
 }
 
 // Utility để chọn class theo status
-const statusClasses: Record<Shelter['status'], string> = {
-  verifying: 'bg-yellow-100 text-yellow-800',
-  active:    'bg-green-100 text-green-800',
-  banned:    'bg-red-100 text-red-800',
-};
+// const statusClasses: Record<Shelter['status'], string> = {
+//   verifying: 'bg-yellow-100 text-yellow-800',
+//   active:    'bg-green-100 text-green-800',
+//   banned:    'bg-red-100 text-red-800',
+// };
 
 export const ShelterInfo: React.FC<ShelterInfoProps> = ({ shelter }) => {
   const foundation = new Date(shelter.foundationDate).toLocaleDateString();

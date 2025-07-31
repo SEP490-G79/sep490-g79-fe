@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { useState, useEffect, useContext } from "react";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import { SimpleDateSelector } from './SimpleDateSelector';
-import { AlertCircle, Calendar, Clock, Heart, MapPin, Phone, Video, CheckCircle2 } from "lucide-react";
+import { AlertCircle, Calendar, Clock, MapPin, Phone, Video, CheckCircle2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogTrigger,

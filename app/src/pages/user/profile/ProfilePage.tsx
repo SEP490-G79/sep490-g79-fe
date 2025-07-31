@@ -1,10 +1,10 @@
-import React, { useState, useContext, useEffect } from "react";
+import  { useState, useContext, useEffect } from "react";
 import UserInfo from "@/components/user/profile/UserInfo";
 import Posts from "@/components/user/profile/Posts";
 import AdoptionActivities from "@/components/user/profile/AdoptionActivities";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Ellipsis, MoreHorizontal, Pencil } from "lucide-react";
+import { Ellipsis,  Pencil } from "lucide-react";
 import AppContext from "@/context/AppContext";
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import 'react-photo-view/dist/react-photo-view.css';
@@ -12,7 +12,7 @@ import { useParams } from "react-router-dom";
 import type { User } from "@/types/User";
 import { toast } from "sonner";
 import axios from "axios";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ReportUserDialog from "@/components/user/profile/ReportUser";
 
 function ProfilePage() {

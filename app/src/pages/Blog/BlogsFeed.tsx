@@ -1,18 +1,11 @@
-import React, { useContext, useEffect, useState } from "react";
+import  { useContext, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { CalendarDays } from "lucide-react";
-import dayjs from "dayjs";
 import AppContext from "@/context/AppContext";
 import axios from "axios";
 import BlogCard from "@/components/shelter/shelter-page/shelter-blog/BlogCard";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import BlogPreview from "@/components/shelter/shelter-page/shelter-blog/BlogPreview";
 import type { Blog } from "@/types/Blog";
 import { Button } from "@/components/ui/button";
 import bg1 from "../../assets/blogs/pexels-edd1egalaxy-3628100.jpg"
-import bg2 from "../../assets/blogs/pexels-fox-58267-1386422.jpg"
-import bg3 from "../../assets/blogs/pexels-francesco-ungaro-96428.jpg"
-import bg4 from "../../assets/blogs/pexels-nancy-guth-269359-850602.jpg"
 import logo from "../../assets/logo/bbkzwnb6hyyrmi8jhiwp.jpg"
 
 export default function BlogsFeed() {

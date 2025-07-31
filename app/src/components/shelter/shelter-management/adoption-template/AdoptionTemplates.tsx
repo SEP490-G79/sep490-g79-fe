@@ -1,26 +1,9 @@
+
 import {
-  type ColumnDef,
-  type ColumnFiltersState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  type SortingState,
-  useReactTable,
-  type VisibilityState,
-  type PaginationState,
-} from "@tanstack/react-table";
-import {
-  ArrowUpDown,
-  ChevronDown,
   Copy,
-  Ellipsis,
   EllipsisVertical,
   LayoutTemplate,
-  MoreHorizontal,
   Pen,
-  Plus,
   SlidersHorizontal,
   Trash,
 } from "lucide-react";
@@ -29,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -37,35 +19,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useContext, useEffect, useMemo, useState } from "react";
-import { type AdoptionForm } from "@/types/AdoptionForm";
-import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { Skeleton } from "@/components/ui/skeleton";
 import CreateDialog from "./CreateDialog";
 import { toast } from "sonner";
-import { set } from "date-fns";
-import EditDialog from "./EditDialog";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Label } from "@/components/ui/label";
 
 export function AdoptionTemplates() {
   const { shelterId } = useParams();

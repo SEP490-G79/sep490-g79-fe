@@ -1,9 +1,9 @@
-import React from "react";
+
 import { Route, Routes } from "react-router-dom";
 import PublicRoutes from "./PublicRoutes";
 import PrivateRoutes from "./PrivateRoutes";
 import LandingPage from "@/pages/Common/LandingPage";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Login } from "@/pages/Common/Login";
 import ProfilePage from "@/pages/user/profile/ProfilePage";
 import Newfeed from "@/pages/Common/NewFeed";

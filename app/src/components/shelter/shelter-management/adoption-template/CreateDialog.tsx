@@ -18,7 +18,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -26,8 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, PlusSquare } from "lucide-react";
-import React, { useContext, useEffect, useState } from "react";
+import {  PlusSquare } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -35,9 +34,7 @@ import { z } from "zod";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { useNavigate, useParams } from "react-router-dom";
-import { ca } from "zod/v4/locales";
 import { toast } from "sonner";
-import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import axios from "axios";
 import type { Species } from "@/types/Species";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";

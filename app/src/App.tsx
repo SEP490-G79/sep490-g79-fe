@@ -1,6 +1,4 @@
-import { Button } from "@/components/ui/button";
 import { ThemeProvider } from "@/components/theme/theme-provider";
-import { ModeToggle } from "./components/ui/mode-toggle";
 import AppRoutes from "./routes";
 import AppHeader from "./components/layouts/AppHeader";
 import AppFooter from "./components/layouts/AppFooter";

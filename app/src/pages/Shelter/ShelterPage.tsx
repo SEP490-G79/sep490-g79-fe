@@ -4,11 +4,9 @@ import ShelterInfo from "@/components/shelter/shelter-page/ShelterInfo";
 import { Skeleton } from "@/components/ui/skeleton";
 import AppContext from "@/context/AppContext";
 import { type Shelter } from "@/types/Shelter";
-import React, { useContext, useMemo, useState, useEffect } from "react";
+import { useContext, useMemo} from "react";
 import { Navigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { getShelterDashboardStatistics } from "@/apis/shelter.api";
-import { z } from "zod";
 import useAuthAxios from "@/utils/authAxios";
 import { Button } from "@/components/ui/button";
 

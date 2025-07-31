@@ -1,6 +1,5 @@
-import React, { useEffect, useContext } from "react";
+import  { useEffect, useContext } from "react";
 import { ModeToggle } from "../ui/mode-toggle";
-import { NavigationMenu } from "@/components/ui/navigation-menu";
 import { HeaderMenu } from "../header/HeaderMenu";
 import { Button } from "../ui/button";
 import { Link } from "react-router-dom";

@@ -1,6 +1,5 @@
-import React from "react";
+
 import { Link } from "react-router-dom";
-import Image_1 from "@/assets/card_1jpg.jpg";
 import { Badge } from "@/components/ui/badge";
 import { HomeIcon } from "lucide-react";
 import type { Shelter } from "@/types/Shelter";

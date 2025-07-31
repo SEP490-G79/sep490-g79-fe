@@ -1,6 +1,4 @@
 
-import { Button } from "@/components/ui/button";
-import React from "react";
 import {CTA} from '@/components/landing-page/CTA'
 import HeroSection from '@/components/landing-page/HeroSection'
 import Intro from '@/components/landing-page/Intro'

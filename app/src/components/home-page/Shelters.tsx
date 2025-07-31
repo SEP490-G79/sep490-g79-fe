@@ -1,5 +1,4 @@
-import React, { useContext, useMemo } from "react";
-import PetCard from "../landing-page/PetCard";
+import  { useContext, useMemo } from "react";
 import { Button } from "../ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRightIcon } from "lucide-react";

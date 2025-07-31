@@ -4,9 +4,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Eye, HeartHandshake, Play, Shield, Sprout } from "lucide-react"
+import {  HeartHandshake,  Shield, Sprout } from "lucide-react"
 import background from "../../assets/about-us/rescue-dog-enjoying-being-pet-by-woman-shelter.jpg"
 import teamwork1 from "../../assets/about-us/team-work-1.jpg"
 import pet1 from "../../assets/about-us/3729519.jpg"

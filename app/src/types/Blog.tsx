@@ -1,4 +1,3 @@
-import type { Shelter } from "./Shelter";
 
 export interface Blog {
   _id: string;

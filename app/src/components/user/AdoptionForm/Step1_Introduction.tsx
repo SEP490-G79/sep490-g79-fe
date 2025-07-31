@@ -10,8 +10,6 @@ import { Separator } from "@/components/ui/separator";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 import type { AdoptionForm } from "@/types/AdoptionForm";
-import type { Pet } from "@/types/Pet";
-import { toast } from "sonner";
 import { useState } from "react";
 
 interface Step1Props {

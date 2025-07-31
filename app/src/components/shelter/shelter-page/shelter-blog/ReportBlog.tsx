@@ -22,7 +22,6 @@ import { toast } from "sonner";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { Flag } from "lucide-react";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 
 const predefinedReasons = [

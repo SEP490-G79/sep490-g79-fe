@@ -1,9 +1,9 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import type { Blog } from "@/types/Blog";
+
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
 import {useForm } from "react-hook-form";
@@ -195,6 +195,7 @@ type FormValues = z.infer<typeof FormSchema>;
                       autofocus={true}
                       editable={true}
                       editorClassName="focus:outline-hidden"
+                      hideToolbar={false}
                     />
                   </FormControl>
                   <FormMessage />

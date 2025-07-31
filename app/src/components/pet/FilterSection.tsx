@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import type { Pet } from "@/types/Pet";
 import TagCombobox from "./TagCombobox";
@@ -15,12 +8,9 @@ import {
   Venus,
   SlidersHorizontal,
   Search,
-  Badge,
   Scan,
-  Info,
 } from "lucide-react";
 import type { User } from "@/types/User";
-import { Separator } from "@/components/ui/separator";
 import shelterBg from "@/assets/BgFilter.jpg";
 import { Input } from "../ui/input";
 import {

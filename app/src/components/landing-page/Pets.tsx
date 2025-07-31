@@ -1,10 +1,10 @@
-import React, { useContext } from "react";
+import  { useContext } from "react";
 import PetCard from "./PetCard";
 import { Button } from "../ui/button";
 import { ArrowRightIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppContext from "@/context/AppContext";
-import PetsList from "../pet/PetsList";
+
 
 function Pets() {
   const {petsList} = useContext(AppContext);

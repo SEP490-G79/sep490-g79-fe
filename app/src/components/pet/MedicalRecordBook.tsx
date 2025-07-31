@@ -1,8 +1,8 @@
 import { useState } from "react"
 import { PhotoProvider, PhotoView } from "react-photo-view"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ArrowRight, BookOpen } from "lucide-react"
-import { Dialog, DialogContent, DialogFooter, DialogTrigger } from "@/components/ui/dialog"
+import { BookOpen } from "lucide-react"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import type { MedicalRecord } from "@/types/MedicalRecord"
 

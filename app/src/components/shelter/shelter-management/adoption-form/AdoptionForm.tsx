@@ -1,20 +1,13 @@
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-} from "@/components/ui/breadcrumb";
+
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Eye,
-  LucideArrowLeft,
-  PenBox,
   PenLine,
   Plus,
   SaveAllIcon,
 } from "lucide-react";
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import QuestionCard from "../question/QuestionCard";
 import type { AdoptionForm } from "@/types/AdoptionForm";
@@ -46,7 +39,9 @@ export default function AdoptionForm() {
     shelterId: string;
     formId: string;
   }>();
-  const { coreAPI, shelterForms, setShelterForms, petsList } =
+  const { coreAPI,
+    //  shelterForms,
+      setShelterForms, petsList } =
     useContext(AppContext);
   const [adoptionForm, setAdoptionForm] = useState<AdoptionForm>();
   const [questionsList, setQuestionsList] = useState<Question[]>([]);

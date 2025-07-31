@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import type { Pet } from "@/types/Pet";
 import type { MissionForm } from "@/types/MissionForm";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Popover,
@@ -17,7 +16,6 @@ import {
 } from "@/components/ui/popover";
 import { Command, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { CalendarCheck2, Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -43,13 +41,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
 import dayjs from "dayjs";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -71,7 +62,7 @@ export default function PetSubmission() {
   const submissions = submissionsByPetId[petId ?? ""] || [];
   const [selectedSubmission, setSelectedSubmission] = useState<MissionForm | null>(null);
   const navigate = useNavigate();
-  const [showAnswers, setShowAnswers] = useState(true);
+  // const [showAnswers, setShowAnswers] = useState(true);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [filterByPerformer, setFilterByPerformer] = useState<string>("all");

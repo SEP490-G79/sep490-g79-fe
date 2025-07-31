@@ -3,9 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage } from "./ui/avatar";
-import { CircleX } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils"; // nếu dùng Tailwind + shadcn
 
 interface EmailRadioSelectProps {

@@ -10,18 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  FileUpload,
-  FileUploadDropzone,
-  FileUploadItem,
-  FileUploadItemDelete,
-  FileUploadItemMetadata,
-  FileUploadItemPreview,
-  FileUploadItemProgress,
-  FileUploadList,
-  type FileUploadProps,
-  FileUploadTrigger,
-} from "@/components/ui/file-upload";
-import {
   Form,
   FormControl,
   FormField,
@@ -38,26 +26,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, PlusSquare, Upload, X } from "lucide-react";
-import React, { useContext, useEffect, useState } from "react";
+import { PlusSquare} from "lucide-react";
+import React, { useContext, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { type Attachment } from "@/types/ConsentForm";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { useNavigate, useParams } from "react-router-dom";
-import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import { toast } from "sonner";
 
 export default function CreateDialog() {
-  const { coreAPI } = useContext(AppContext);
+  // const { coreAPI } = useContext(AppContext);
 
-  const { shelterId } = useParams();
-  const authAxios = useAuthAxios();
-  const navigate = useNavigate();
-  const [files, setFiles] = useState<File[]>([]);
-  const [btnLoading, setBtnLoading] = useState(false);
+  // const { shelterId } = useParams();
+  // const authAxios = useAuthAxios();
+  // const navigate = useNavigate();
+  // const [files, setFiles] = useState<File[]>([]);
+  // const [btnLoading, setBtnLoading] = useState(false);
 
   type FormValues = z.infer<typeof FormSchema>;
 

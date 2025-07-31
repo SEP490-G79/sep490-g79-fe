@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import React, { useContext, useEffect, useState } from "react";
+import  { useContext, useState } from "react";
 import type { Question } from "@/types/Question";
 import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { User } from "@/types/User";
@@ -13,14 +13,12 @@ import {
 } from "@/components/ui/card";
 import {
     Dialog,
-    DialogTrigger,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { Car, Flag } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
 import { toast } from "sonner";
 import AppContext from "@/context/AppContext";

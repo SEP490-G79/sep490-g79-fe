@@ -184,6 +184,7 @@ type FormValues = z.infer<typeof FormSchema>;
                       autofocus={true}
                       editable={true}
                       editorClassName="focus:outline-hidden"
+                      hideToolbar={false}
                     />
                   </FormControl>
                   <FormMessage />

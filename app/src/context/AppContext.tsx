@@ -16,17 +16,17 @@ import type { MissionForm } from "@/types/MissionForm";
 import type { ConsentForm } from "@/types/ConsentForm";
 import { useLocation } from "react-router-dom";
 
-const excludedURLs = [
-  "/",
-  "/login",
-  "/register",
-  "/active-account",
-  "/faq",
-  "/donation",
-  "/donation/success",
-  "/donation/cancel",
-  "/newfeed",
-];
+// const excludedURLs = [
+//   "/",
+//   "/login",
+//   "/register",
+//   "/active-account",
+//   "/faq",
+//   "/donation",
+//   "/donation/success",
+//   "/donation/cancel",
+//   "/newfeed",
+// ];
 
 interface AppContextType {
   user: User | null;

@@ -7,7 +7,6 @@ import {
   Twitter,
   Youtube,
 } from "lucide-react";
-import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import logo from "../../assets/logo/bbkzwnb6hyyrmi8jhiwp.jpg"
 

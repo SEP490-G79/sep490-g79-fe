@@ -1,13 +1,6 @@
-import {
-  BellIcon,
-  CalendarIcon,
-  FileTextIcon,
-  GlobeIcon,
-  InputIcon,
-} from "@radix-ui/react-icons";
 
 import { BentoCard, BentoGrid } from "@/components/ui/magicui/bento-grid";
-import CTA_1 from "@/assets/CTA_1.jpg";
+
 
 import {
   HomeIcon,

@@ -1,17 +1,15 @@
-import React, { useContext, useEffect, useState } from 'react'
+import  { useContext, useEffect, useState } from 'react'
 import BlogTable from './BlogTable';
 import { useParams } from 'react-router-dom';
 import AppContext from '@/context/AppContext';
 import type { Blog } from '@/types/Blog';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import EditBlog from './EditBlog';
 import BlogDetail from './BlogDetail';
 import CreateBlog from './CreateBlog';
 import useAuthAxios from '@/utils/authAxios';
 import { toast } from 'sonner';
-import { SearchFilter } from '@/components/SearchFilter';
 
 const BlogList = () => {
     const [blogs, setBlogs] = useState<Blog[]>([]);

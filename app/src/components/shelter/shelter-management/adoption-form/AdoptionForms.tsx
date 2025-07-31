@@ -9,25 +9,20 @@ import {
   getSortedRowModel,
   type SortingState,
   useReactTable,
-  type VisibilityState,
   type PaginationState,
 } from "@tanstack/react-table";
 import {
   ArrowLeftRight,
   ArrowUpDown,
-  ChevronDown,
   List,
   MoreHorizontal,
   Pen,
-  SwitchCamera,
   Trash,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -70,14 +65,13 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { set } from "date-fns";
 
 export function AdoptionForms() {
   const { shelterId } = useParams();
   const { coreAPI, shelterForms, setShelterForms, petsList } =
     React.useContext(AppContext);
   const authAxios = useAuthAxios();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [isLoading, setIsLoading] = React.useState(false);
 
   const removeDiacritics = (str: string) =>

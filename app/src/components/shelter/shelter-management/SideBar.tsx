@@ -1,7 +1,7 @@
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import React from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
   items: {
     href: string;
@@ -9,7 +9,7 @@ interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
   }[];
 }
 function SideBar({ items }: SidebarNavProps) {
-  const { shelterId } = useParams();
+  // const { shelterId } = useParams();
   const pathname = useLocation().pathname;
   // console.log(pathname);
   const currentTab = pathname.split("/").pop() || "";

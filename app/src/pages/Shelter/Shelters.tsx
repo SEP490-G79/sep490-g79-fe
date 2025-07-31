@@ -1,5 +1,5 @@
 // src/pages/Shelters.tsx
-import React, { useEffect, useState, useMemo, useContext } from "react";
+import React, { useState, useMemo, useContext } from "react";
 import ShelterCard from "@/components/home-page/ShelterCard";
 import {
   Breadcrumb,
@@ -10,16 +10,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
-import { type Shelter } from "@/types/Shelter";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import AppContext from "@/context/AppContext";
 import {
   sortSheltersByProximity,
@@ -33,8 +23,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
