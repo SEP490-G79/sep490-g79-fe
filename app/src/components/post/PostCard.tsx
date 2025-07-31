@@ -102,17 +102,20 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                         {post.shelter.name}
                       </Link>
 
-                      {isShelterMember && (
-                        <span className="text-xs text-muted-foreground block mt-0.5 flex items-center gap-2">
-                          Người đăng: {post.user.fullName}
-                          <span className="text-muted-foreground">• {formatCreatedAt(post.createdAt)}</span>
-                          {post.privacy.includes("public") ? (
-                            <Globe className="w-4 h-4" />
-                          ) : (
-                            <GlobeLock className="w-4 h-4" />
-                          )}
-                        </span>
-                      )}
+                      <span className="text-xs text-muted-foreground block mt-0.5 flex items-center gap-2">
+                        {isShelterMember && (
+                          <>
+                            Người đăng: {post.user.fullName}
+                            <span className="text-muted-foreground">•</span>
+                          </>
+                        )}
+                        <span>{formatCreatedAt(post.createdAt)}</span>
+                        {post.privacy.includes("public") ? (
+                          <Globe className="w-4 h-4" />
+                        ) : (
+                          <GlobeLock className="w-4 h-4" />
+                        )}
+                      </span>
                     </>
                   ) : (
                     <>
@@ -120,7 +123,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
                         to={`/profile/${post.createdBy}`}
                         className="hover:underline"
                       >
-                      <span>{post.user.fullName}</span>
+                        <span>{post.user.fullName}</span>
                       </Link>
                       <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
                         <span>{formatCreatedAt(post.createdAt)}</span>
