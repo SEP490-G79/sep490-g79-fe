@@ -14,7 +14,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { FcGoogle } from "react-icons/fc";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { toast } from "sonner"
+import { toast } from "sonner";
 import Image from "@/assets/Home_1.jpg"; // đúng đường dẫn assets của bạn
 import {
   Form,
@@ -31,7 +31,8 @@ import axios from "axios";
 
 export const Login = () => {
   // const [loginLoading, setLoginLoading] = useState<Boolean>(false);
-  const { login, authAPI, loginLoading, setLoginLoading } = useContext(AppContext);
+  const { login, authAPI, loginLoading, setLoginLoading } =
+    useContext(AppContext);
   const navigate = useNavigate();
   const hasRun = useRef(false);
 
@@ -64,7 +65,7 @@ export const Login = () => {
     const isLoginByGoogle = urlParams.get("isLoginByGoogle");
     const message = urlParams.get("message");
 
-    if (isLoginByGoogle === 'false') {
+    if (isLoginByGoogle === "false") {
       setLoginLoading(false);
       setTimeout(() => {
         setLoginLoading(false);
@@ -72,22 +73,25 @@ export const Login = () => {
       }, 1000);
     }
 
-    if (isLoginByGoogle === 'true') {
+    if (isLoginByGoogle === "true") {
       setLoginLoading(true);
-      axios.get(`${authAPI}/getUserByAccessToken`, { withCredentials: true })
-        .then(res => {
+      axios
+        .get(`${authAPI}/getUserByAccessToken`, { withCredentials: true })
+        .then((res) => {
           const { user, accessToken } = res.data;
           switch (user.status) {
-            case 'verifying':
+            case "verifying":
               setLoginLoading(false);
-              toast.error("Tài khoản của bạn chưa kích hoạt! Hãy kích hoạt thông qua email")
+              toast.error(
+                "Tài khoản của bạn chưa kích hoạt! Hãy kích hoạt thông qua email"
+              );
               break;
-            case 'banned':
+            case "banned":
               setLoginLoading(false);
-              toast.error("Tài khoản của bạn đã bị khóa!")
+              toast.error("Tài khoản của bạn đã bị khóa!");
               break;
             default:
-              toast.success("Đăng nhập bằng tài khoản google thành công!")
+              toast.success("Đăng nhập bằng tài khoản google thành công!");
               setTimeout(() => {
                 setLoginLoading(false);
                 login(accessToken, user);
@@ -99,29 +103,29 @@ export const Login = () => {
                 } else {
                   navigate("/home");
                 }
-                navigate(redirectPath ? decodeURIComponent(redirectPath) : "/home");
+                navigate(
+                  redirectPath ? decodeURIComponent(redirectPath) : "/home"
+                );
               }, 2000);
               break;
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error?.response.data.message);
         });
     }
-  }, [])
-
+  }, []);
 
   const sendActiveToken = async (activeToken: string) => {
     try {
       const res = await axios.post(`${authAPI}/send-activation-email`, {
-        activeToken: activeToken
+        activeToken: activeToken,
       });
-      toast.success(res?.data.message)
+      toast.success(res?.data.message);
     } catch (error: any) {
-      console.log(error?.response.data.message)
+      console.log(error?.response.data.message);
     }
-
-  }
+  };
 
   const onLogin = async ({ email, password }: z.infer<typeof loginSchema>) => {
     setLoginLoading(true);
@@ -129,13 +133,12 @@ export const Login = () => {
       const response = await axios.post(`${authAPI}/login`, {
         email: email,
         password: password,
-        type: 'user'
+        type: "user",
       });
-
 
       if (response.status === 200) {
         toast.success("Đăng nhập thành công!");
-        login(response.data.accessToken, response.data.user)
+        login(response.data.accessToken, response.data.user);
         setTimeout(() => {
           setLoginLoading(false);
           const redirectPath = localStorage.getItem("redirectAfterLogin");
@@ -157,16 +160,19 @@ export const Login = () => {
             label: "Gửi lại",
             onClick: () => sendActiveToken(error?.response.data.activeToken),
           },
-        })
+        });
       }
       setLoginLoading(false);
     }
   };
 
-function handleGoogleLogin(){
-  const searchParams = new URLSearchParams(location.search);
-  const redirectPaths = searchParams.get("redirect") || ""; 
-    window.open(`${authAPI}/loginByGoogle?redirect=${decodeURIComponent(redirectPaths)}`, "_self");
+  function handleGoogleLogin() {
+    const searchParams = new URLSearchParams(location.search);
+    const redirectPaths = searchParams.get("redirect") || "";
+    window.open(
+      `${authAPI}/loginByGoogle?redirect=${decodeURIComponent(redirectPaths)}`,
+      "_self"
+    );
   }
   return (
     <div className="w-full h-full flex">
@@ -182,24 +188,23 @@ function handleGoogleLogin(){
         <div className="flex flex-col flex-grow items-center">
           {/* Title + SubTitle - Giới hạn width như Card */}
           <div className="w-full  max-w-md text-center mt-5 flex flex-col justify-center items-center px-5 mt-35">
+            <h1 className="scroll-m-20 text-4xl font-bold tracking-tight text-balance ">
+              Đăng nhập
+            </h1>
             <Button
               variant="outline"
-              className="w-full flex items-center gap-2 cursor-pointer"
+              className="w-full flex items-center gap-2 cursor-pointer mt-6"
               onClick={handleGoogleLogin}
               disabled={loginLoading ? true : undefined}
             >
               <FcGoogle /> Đăng nhập bằng tài khoản Google
             </Button>
 
-            <div className="w-full flex items-center my-4">
+            <div className="w-full flex items-center my-3">
               <Separator className="flex-1" />
               <span className="mx-2 text-muted-foreground">Hoặc</span>
               <Separator className="flex-1" />
             </div>
-
-            <h1 className="scroll-m-20 text-4xl font-bold tracking-tight text-balance">
-              Đăng nhập
-            </h1>
           </div>
 
           {/* Card form */}
@@ -246,16 +251,16 @@ function handleGoogleLogin(){
                         </FormItem>
                       )}
                     />
-                                    <div className="w-full text-end mb-1">
-                  <span
-                    className="text-sm text-(--muted-foreground) hover:text-amber-500 cursor-pointer underline"
-                    onClick={() => {
-                      navigate("/forgot-password");
-                    }}
-                  >
-                    Quên mật khẩu?
-                  </span>
-                </div>
+                    <div className="w-full text-end mb-1">
+                      <span
+                        className="text-sm text-(--muted-foreground) hover:text-amber-500 cursor-pointer underline"
+                        onClick={() => {
+                          navigate("/forgot-password");
+                        }}
+                      >
+                        Quên mật khẩu?
+                      </span>
+                    </div>
                     {loginLoading ? (
                       <Button type="submit" className="w-full" disabled>
                         <Loader2Icon className="animate-spin" />

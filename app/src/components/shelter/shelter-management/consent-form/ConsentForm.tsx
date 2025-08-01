@@ -293,7 +293,7 @@ export default function ConsentForm() {
     },
     {
       value: "send",
-      label: "Đã gửi",
+      label: "Chờ phản hồi",
       disabled: !(consentForm?.status == "draft")
     },
     {
@@ -309,13 +309,13 @@ export default function ConsentForm() {
     },
     {
       value: "approved",
-      label: "Đã duyệt",
+      label: "Đã xác nhận",
       disabled: !(consentForm?.status == "accepted")
 
     },
     {
       value: "rejected",
-      label: "Đã từ chối",
+      label: "Yêu cầu sửa",
       disabled: true
 
     },

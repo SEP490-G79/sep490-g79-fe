@@ -49,8 +49,13 @@ import useAuthAxios from "@/utils/authAxios";
 import { useNavigate, useParams } from "react-router-dom";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import { toast } from "sonner";
+import type { MissionForm } from "@/types/MissionForm";
 
-export default function CreateDialog() {
+type Props = {
+  submission: MissionForm | undefined;
+};
+
+export default function CreateDialog({ submission }: Props) {
   const { coreAPI } = useContext(AppContext);
 
   const { shelterId } = useParams();
@@ -63,10 +68,13 @@ export default function CreateDialog() {
 
   const FormSchema = z.object({
     title: z.string().min(1, "Tiêu đề không được để trống"),
-    tokenMoney: z
-      .number()
+    tokenMoney: z.coerce
+      .number({
+        invalid_type_error: "Số tiền phải là một số",
+        required_error: "Số tiền không được để trống",
+      })
       .min(0, "Số tiền phải lớn hơn hoặc bằng 0")
-      .max(100000000, "Số tiền không được vượt quá 100 triệu"), 
+      .max(1000000000, "Số tiền không được quá 1 tỷ đồng"),
     deliveryMethod: z.string().min(1),
     note: z.string(),
     address: z.string().min(1, "Địa chỉ không được để trống"),
@@ -76,15 +84,40 @@ export default function CreateDialog() {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       title: "",
-      tokenMoney: 0,
+      tokenMoney: submission?.adoptionForm?.pet?.tokenMoney || 0,
       deliveryMethod: "pickup",
       note: "",
-      address: "",
+      address: submission?.performedBy?.address || "",
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     console.log("Form submitted:", values);
+    await authAxios
+      .post(`${coreAPI}/shelters/${shelterId}/consentForms/create-form`, {
+        title: values.title,
+        tokenMoney: values.tokenMoney,
+        deliveryMethod: values.deliveryMethod,
+        commitments: "Điền cam kết cho người nhận nuôi!",
+        note: values.note,
+        address: values.address,
+        petId: submission?.adoptionForm?.pet?._id,
+        adopterId: submission?.performedBy?._id,
+      })
+      .then((res) => {
+        toast.success(
+          `Tạo bản đòng ý thành công. Đang chuyển hướng đến bản đòng ý nhận nuôi!`
+        );
+        navigate(
+          `/shelters/685f5ab190842987ab51901a/management/consent-forms/${res.data._id}`
+        );
+      })
+      .catch((error) => {
+        // console.log("Create consent form:"+ error);
+        toast.error(
+          error?.response?.data?.message || "Lỗi khi tạo bản đồng ý nhận nuôi!"
+        );
+      });
   };
 
   const onFileReject = React.useCallback((file: File, message: string) => {
@@ -97,11 +130,11 @@ export default function CreateDialog() {
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" className="text-xs">
-          <PlusSquare className="text-(--primary)" />
+      <DialogTrigger>
+        <span className="text-xs flex items-center gap-2">
+          <PlusSquare className="text-(--primary) w-4 h-4 " />
           Tạo mới
-        </Button>
+        </span>
       </DialogTrigger>
 
       <DialogContent className=" min-w-4xl max-w-4xl max-h-5/6 overflow-y-auto">
@@ -119,14 +152,23 @@ export default function CreateDialog() {
               <FormItem className="md:col-span-2">
                 <FormLabel>Thú nuôi</FormLabel>
                 <FormControl>
-                  <Input type="text" value={""} disabled />
+                  <Input
+                    type="text"
+                    value={submission?.adoptionForm?.pet?.name}
+                    disabled
+                  />
                 </FormControl>
               </FormItem>
 
               <FormItem className="md:col-span-2">
                 <FormLabel>Tên người nhận</FormLabel>
                 <FormControl>
-                  <Input type="text" placeholder="" value={""} disabled />
+                  <Input
+                    type="text"
+                    placeholder=""
+                    value={submission?.performedBy?.fullName}
+                    disabled
+                  />
                 </FormControl>
               </FormItem>
               <FormField
@@ -136,7 +178,11 @@ export default function CreateDialog() {
                   <FormItem className="md:col-span-3 self-start">
                     <FormLabel>Tiêu đề</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nhập tiêu đề ..." {...field} />
+                      <Input
+                        type="text"
+                        placeholder="Nhập tiêu đề ..."
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -151,7 +197,7 @@ export default function CreateDialog() {
                     <FormLabel>Tiền vía</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
+                        type="text"
                         placeholder="Nhập tiền vía"
                         {...field}
                       />
@@ -168,7 +214,11 @@ export default function CreateDialog() {
                   <FormItem className="md:col-span-3 self-start">
                     <FormLabel>Địa chỉ</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nhập địa chỉ" {...field} />
+                      <Input
+                        type="text"
+                        placeholder="Nhập địa chỉ"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -190,9 +240,7 @@ export default function CreateDialog() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="pickup">Tự đến nhận</SelectItem>
-                        <SelectItem value="delivery">
-                          Giao tận nơi
-                        </SelectItem>
+                        <SelectItem value="delivery">Giao tận nơi</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
