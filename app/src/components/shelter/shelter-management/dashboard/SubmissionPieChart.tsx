@@ -80,12 +80,18 @@ export const SubmissionPieChart = ({
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--background))",
-                  color: "hsl(var(--foreground))",
-                  border: "1px solid hsl(var(--border))",
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="rounded border bg-background px-3 py-2 text-sm shadow text-foreground">
+                        <p className="font-medium">
+                          {payload[0].name}: {payload[0].value} đơn
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
                 }}
-                formatter={(value: number) => `${value} đơn`}
               />
             </PieChart>
           </ResponsiveContainer>

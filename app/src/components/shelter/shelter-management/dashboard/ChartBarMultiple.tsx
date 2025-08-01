@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { getAdoptionSubmissionsByWeek } from "@/apis/shelter.api";
 import { toast } from "sonner";
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer } from "@/components/ui/chart";
 
 const chartConfig = {
   forms: {
@@ -56,7 +56,7 @@ export function ChartBarMultiple() {
     <Card className="h-full w-full shadow-xl border-none">
       <CardHeader>
         <CardTitle className="text-lg font-bold text-foreground">
-          Biểu đồ mẫu đơn nhận nuôi
+          Biểu đồ yêu cầu nhận nuôi
         </CardTitle>
         <CardDescription>Trong 4 tuần gần nhất</CardDescription>
       </CardHeader>
@@ -79,8 +79,26 @@ export function ChartBarMultiple() {
               />
               <Tooltip
                 cursor={{ fill: "rgba(0, 0, 0, 0.05)" }}
-                content={<ChartTooltipContent indicator="dashed" />}
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length > 0) {
+                    return (
+                      <div className="bg-white border rounded px-3 py-2 text-sm shadow-md">
+                        <p className="font-medium text-foreground mb-1">
+                          {payload[0].payload.week}
+                        </p>
+                        <p className="text-muted-foreground">
+                          Nhận nuôi:{" "}
+                          <span className="font-semibold text-foreground">
+                            {payload[0].payload.forms}
+                          </span>
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
               />
+
               <defs>
                 <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop

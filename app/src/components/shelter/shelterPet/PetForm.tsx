@@ -183,6 +183,20 @@ export default function PetForm({
           }}
         />
       </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium">Phí nhận nuôi (VNĐ)</label>
+        <Input
+          type="number"
+          min={0}
+          value={form.tokenMoney}
+          onChange={(e) =>
+            setForm({ ...form, tokenMoney: Number(e.target.value) })
+          }
+          placeholder="Ví dụ: 200000"
+        />
+      </div>
+
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium">Đặc điểm nhận dạng</label>
         <Input
