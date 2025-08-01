@@ -117,7 +117,7 @@ export function ConsentForms() {
         setShelterConsentForms(res.data);
       })
       .catch((err) => {
-        // console.error("Error fetching consent forms:", err);
+        // console.log("Error fetching consent forms:", err);
         toast.error(
           err.response?.data?.message ||
             "Không thể tải bản đồng ý nhận nuôi! Vui lòng thử lại sau."
@@ -153,7 +153,7 @@ export function ConsentForms() {
         toast.success("Đã xóa bản đồng ý nhận nuôi thành công.");
       })
       .catch((err) => {
-        // console.error("Error deleting consent form:", err);
+        // console.log("Error deleting consent form:", err);
         toast.error(
           err.response?.data?.message ||
             "Không thể xóa bản đồng ý nhận nuôi! Vui lòng thử lại sau."
@@ -215,7 +215,7 @@ export function ConsentForms() {
           </div>
 
           <div className=" basis-1/3 flex justify-end">
-            <CreateDialog />
+            {/* <CreateDialog /> */}
           </div>
         </div>
         <div className="flex flex-col items-center flex-wrap mt-30">
@@ -244,7 +244,7 @@ export function ConsentForms() {
         </div>
 
         <div className=" basis-1/3 flex justify-center">
-          <CreateDialog />
+          {/* <CreateDialog /> */}
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">

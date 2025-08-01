@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import {
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
-import PetCard from "@/components/landing-page/PetCard";
 import ReturnRequestList from "@/components/user/return-request/ReturnRequestList";
 import {
   Pagination,
@@ -27,7 +26,6 @@ import type { MissionForm } from "@/types/MissionForm";
 import type { Pet } from '@/types/Pet';
 import { useAppContext } from "@/context/AppContext";
 import PetsList from "@/components/pet/PetsList";
-import type { User } from '@/types/User';
 import useAuthAxios from "@/utils/authAxios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";

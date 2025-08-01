@@ -82,8 +82,7 @@ const PetSubmissionInterviewSection = ({
   const canProvideFeedback =
     selectedSubmission.status === "interviewing" &&
     interview?.selectedSchedule &&
-    interview?.performedBy?._id === userProfile?._id &&
-    !isShelterManager
+    interview?.performedBy?._id === userProfile?._id 
 
   const canProvideNote = selectedSubmission.status === "reviewed" && isShelterManager
 
@@ -103,21 +102,21 @@ const PetSubmissionInterviewSection = ({
     if (!interview) return null
 
     if (interview.selectedSchedule) {
-  const hasFeedback = !!interview.feedback;
-  const isUpcoming = dayjs(interview.selectedSchedule).isAfter(dayjs());
+      const hasFeedback = !!interview.feedback;
+      const isUpcoming = dayjs(interview.selectedSchedule).isAfter(dayjs());
 
-  return (
-    <Badge variant={hasFeedback || !isUpcoming ? "secondary" : "default"} className="gap-1">
-      <CalendarCheck className="w-3 h-3" />
-      {hasFeedback || !isUpcoming ? "Đã diễn ra" : "Sắp diễn ra"}
-    </Badge>
-  );
-}
+      return (
+        <Badge variant={hasFeedback || !isUpcoming ? "secondary" : "default"} className="gap-1 dark:text-white dark:bg-gray-500">
+          <CalendarCheck className="w-3 h-3" />
+          {hasFeedback || !isUpcoming ? "Đã diễn ra" : "Sắp diễn ra"}
+        </Badge>
+      );
+    }
 
 
     if (interview.availableFrom && interview.availableTo) {
       return (
-        <Badge variant="outline" className="gap-1">
+        <Badge variant="outline" className="gap-1 dark:text-white dark:bg-gray-500">
           <Clock className="w-3 h-3" />
           Chờ chọn lịch
         </Badge>
@@ -125,7 +124,7 @@ const PetSubmissionInterviewSection = ({
     }
 
     return (
-      <Badge variant="secondary" className="gap-1">
+      <Badge variant="secondary" className="gap-1 bg-gray-400 dark:text-white dark:bg-gray-500">
         <AlertTriangle className="w-3 h-3" />
         Chưa có lịch
       </Badge>
@@ -151,8 +150,8 @@ const PetSubmissionInterviewSection = ({
       <Card className="border-dashed border-2 border-gray-200">
         <CardContent className="flex flex-col items-center justify-center py-12 text-center">
           <Calendar className="w-16 h-16 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-600 mb-2">Chưa có thông tin phỏng vấn</h3>
-          <p className="text-sm text-gray-500">Thông tin phỏng vấn sẽ xuất hiện khi có lịch hẹn được tạo</p>
+          <h3 className="text-lg font-semibold text-gray-600 mb-2 dark:text-gray-300">Chưa có thông tin phỏng vấn</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Thông tin phỏng vấn sẽ xuất hiện khi có lịch hẹn được tạo</p>
         </CardContent>
       </Card>
     )
@@ -161,11 +160,11 @@ const PetSubmissionInterviewSection = ({
   return (
     <div className="space-y-6">
       {/* Interview Overview */}
-      <Card className="border-0 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-50">
+      <Card className="border-0 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-gray-700 dark:to-gray-800 ">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Calendar className="w-5 h-5 text-blue-600" />
+            <CardTitle className="flex items-center gap-2 text-lg dark:text-white">
+              <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               Thông tin phỏng vấn
             </CardTitle>
             {getInterviewStatusBadge()}
@@ -173,12 +172,12 @@ const PetSubmissionInterviewSection = ({
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Staff Assignment */}
-          <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+          <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200 dark:bg-gray-800 dark:border-gray-700">
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
               <UserCheck className="w-5 h-5 text-blue-600" />
             </div>
-            <div className="flex-1">
-              <p className="font-medium text-gray-800 text-sm">Nhân viên thực hiện</p>
+            <div className="flex-1 ">
+              <p className="font-medium text-gray-800 text-sm dark:text-white">Nhân viên thực hiện</p>
               {interview.performedBy ? (
                 <div className="flex items-center gap-2 mt-1">
                   <img
@@ -186,80 +185,80 @@ const PetSubmissionInterviewSection = ({
                     alt={interview.performedBy.fullName}
                     className="w-6 h-6 rounded-full"
                   />
-                  <span className="text-sm text-gray-600">{interview.performedBy.fullName}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{interview.performedBy.fullName}</span>
                 </div>
               ) : (
-                <span className="text-sm text-gray-500">Chưa được phân công</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">Chưa được phân công</span>
               )}
             </div>
           </div>
 
           {/* Interview Method */}
           {interview.method && (
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-green-200">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-green-200 dark:bg-gray-800 dark:border-gray-700">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center ">
                 {getMethodIcon(interview.method)}
               </div>
               <div>
-                <p className="font-medium text-gray-800 text-sm">Hình thức phỏng vấn</p>
-                <p className="text-sm text-gray-600 mt-1">{interview.method}</p>
+                <p className="font-medium text-gray-800 text-sm dark:text-white">Hình thức phỏng vấn</p>
+                <p className="text-sm text-gray-600 mt-1 dark:text-gray-400">{interview.method}</p>
               </div>
             </div>
           )}
 
           {/* Schedule Information */}
           <div className="grid gap-3">
-  {!interview.selectedSchedule && interview.availableFrom && interview.availableTo && (
-    <div className="p-3 bg-white rounded-lg border border-yellow-200">
-      <div className="flex items-center gap-2 mb-2">
-        <Clock className="w-4 h-4 text-yellow-600" />
-        <span className="font-medium text-gray-800 text-sm">Khung thời gian có thể phỏng vấn</span>
-      </div>
-      <div className="text-sm text-gray-600 space-y-1">
-        <p>
-          <strong>Từ:</strong> {dayjs(interview.availableFrom).format("DD/MM/YYYY")}
-        </p>
-        <p>
-          <strong>Đến:</strong> {dayjs(interview.availableTo).format("DD/MM/YYYY")}
-        </p>
-      </div>
-    </div>
-  )}
+            {!interview.selectedSchedule && interview.availableFrom && interview.availableTo && (
+              <div className="p-3 bg-white rounded-lg border border-yellow-200 dark:bg-gray-800 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="w-4 h-4 text-yellow-600" />
+                  <span className="font-medium text-gray-800 text-sm dark:text-white" >Khung thời gian có thể phỏng vấn</span>
+                </div>
+                <div className="text-sm text-gray-600 space-y-1 dark:text-gray-400">
+                  <p>
+                    <strong>Từ:</strong> {dayjs(interview.availableFrom).format("DD/MM/YYYY")}
+                  </p>
+                  <p>
+                    <strong>Đến:</strong> {dayjs(interview.availableTo).format("DD/MM/YYYY")}
+                  </p>
+                </div>
+              </div>
+            )}
 
-  {interview.selectedSchedule && (
-    <>
-      <div className="p-3 bg-white rounded-lg border border-purple-200">
-        <div className="flex items-center gap-2 mb-2">
-          <CalendarCheck className="w-4 h-4 text-purple-600" />
-          <span className="font-medium text-gray-800 text-sm">Ngày người nhận nuôi chỉ định</span>
-        </div>
-        <p className="text-sm text-gray-600">
-          {dayjs(interview.selectedSchedule).format("dddd, DD/MM/YYYY")}
-        </p>
-      </div>
+            {interview.selectedSchedule && (
+              <>
+                <div className="p-3 bg-white rounded-lg border border-purple-200 dark:bg-gray-800 dark:border-gray-700">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CalendarCheck className="w-4 h-4 text-purple-600" />
+                    <span className="font-medium text-gray-800 text-sm dark:text-white">Ngày người nhận nuôi chỉ định</span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 ml-6">
+                    {dayjs(interview.selectedSchedule).format("dddd, DD/MM/YYYY")}
+                  </p>
+                </div>
 
-      {interview.scheduleAt && (
-        <div className="p-3 bg-white rounded-lg border border-green-200">
-          <div className="flex items-center gap-2 mb-2">
-            <Calendar className="w-4 h-4 text-green-600" />
-            <span className="font-medium text-gray-800 text-sm">Ngày thực tế thực hiện</span>
+                {interview.scheduleAt && (
+                  <div className="p-3 bg-white rounded-lg border border-green-200 dark:bg-gray-800 dark:border-gray-700">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Calendar className="w-4 h-4 text-green-600" />
+                      <span className="font-medium text-gray-800 text-sm dark:text-white">Ngày thực tế thực hiện</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 ml-6">
+                      {dayjs(interview.scheduleAt).format("dddd, DD/MM/YYYY [lúc] HH:mm")}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-          <p className="text-sm text-gray-600">
-            {dayjs(interview.scheduleAt).format("dddd, DD/MM/YYYY [lúc] HH:mm")}
-          </p>
-        </div>
-      )}
-    </>
-  )}
-</div>
 
         </CardContent>
       </Card>
 
       {/* Feedback Section */}
       {canViewFeedback && (
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-4">
+        <Card className="border-0 shadow-sm dark:bg-gray-800">
+          <CardHeader >
             <CardTitle className="flex items-center gap-2 text-lg">
               <MessageSquare className="w-5 h-5 text-green-600" />
               Phản hồi phỏng vấn
@@ -273,7 +272,7 @@ const PetSubmissionInterviewSection = ({
                     <User className="w-4 h-4 text-green-600" />
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2 ">
                       <p className="font-medium text-green-800 text-sm">
                         Phản hồi từ {interview.performedBy?.fullName}
                       </p>
@@ -281,7 +280,7 @@ const PetSubmissionInterviewSection = ({
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-6 w-6">
-                              <MoreVertical className="w-4 h-4" />
+                              <MoreVertical className="w-4 h-4 dark:text-black" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -358,9 +357,9 @@ const PetSubmissionInterviewSection = ({
 
       {/* Manager Note Section */}
       {(interview.note || canProvideNote) && canViewNote && (
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
+        <Card className="border-0 shadow-sm dark:bg-gray-800">
+          <CardHeader >
+            <CardTitle className="flex items-center gap-2 text-lg ">
               <FileText className="w-5 h-5 text-orange-600" />
               Ghi chú quản lý
             </CardTitle>
@@ -380,8 +379,8 @@ const PetSubmissionInterviewSection = ({
                       {canProvideNote && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6">
-                              <MoreVertical className="w-4 h-4" />
+                            <Button variant="ghost" size="icon" className="h-6 w-6 ">
+                              <MoreVertical className="w-4 h-4 dark:text-black" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">

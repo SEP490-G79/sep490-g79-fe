@@ -44,6 +44,7 @@ interface Step2Props {
 
 const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack, form, userProfile, readOnly, onNextNormal }: Step2Props) => {
     const pet = form.pet;
+    const shelterId = pet?.shelter;
     const activeQuestions = questions.filter((q) => q.status === "active");
     const authAxios = useAuthAxios();
     const { coreAPI } = useContext(AppContext);
@@ -92,6 +93,8 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
         return true;
     };
 
+
+
     const handleSubmit = async () => {
         try {
             setIsSubmitting(true); // bật loading
@@ -106,16 +109,18 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
             };
 
             const res = await authAxios.post(
-                `${coreAPI}/pets/${form.pet._id}/adoption-submissions/create-adoption-submission`,
+                `${coreAPI}/pets/${form.pet._id}/adoption-submissions/create-adoption-submission/${shelterId}`,
                 payload
             );
 
             toast.success("Nộp đơn thành công");
             clearAdoptionFormCache(form.pet._id);
             onNext(res.data._id);
-        } catch (error) {
-            toast.error("Có lỗi xảy ra khi nộp đơn");
+        } catch (error: any) {
+            const message = error?.response?.data?.message || "Có lỗi xảy ra khi nộp đơn";
+            toast.error(message);
             console.error(error);
+
         } finally {
             setIsSubmitting(false); // tắt loading dù thành công hay thất bại
         }

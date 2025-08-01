@@ -34,7 +34,7 @@ interface Props {
 }
 
 export default function Comment({ comments, postId, fetchComments }: Props) {
-    const { userProfile, coreAPI, accessToken } = useContext(AppContext);
+    const { userProfile, coreAPI} = useContext(AppContext);
     const authAxios = useAuthAxios();
 
     const [newComment, setNewComment] = useState("");

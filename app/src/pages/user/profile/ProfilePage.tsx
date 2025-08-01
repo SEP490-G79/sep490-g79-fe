@@ -1,10 +1,10 @@
-import React, { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect } from "react";
 import UserInfo from "@/components/user/profile/UserInfo";
 import Posts from "@/components/user/profile/Posts";
 import AdoptionActivities from "@/components/user/profile/AdoptionActivities";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Ellipsis, MoreHorizontal, Pencil } from "lucide-react";
+import { Ellipsis, Pencil } from "lucide-react";
 import AppContext from "@/context/AppContext";
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import 'react-photo-view/dist/react-photo-view.css';
@@ -12,7 +12,7 @@ import { useParams } from "react-router-dom";
 import type { User } from "@/types/User";
 import { toast } from "sonner";
 import axios from "axios";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ReportUserDialog from "@/components/user/profile/ReportUser";
 
 function ProfilePage() {
@@ -24,7 +24,7 @@ function ProfilePage() {
   const { userProfile, userAPI, } = useContext(AppContext);
   const isOwnProfile = !userId || userId === userProfile?._id;
   const isGuest = !userProfile;
-  
+
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
@@ -39,11 +39,11 @@ function ProfilePage() {
   }, [userId, userProfile]);
 
   useEffect(() => {
-  if (isGuest && localStorage.getItem("profileTab") === "activities") {
-    setShowActivities(false);
-    localStorage.setItem("profileTab", "posts");
-  }
-}, [isGuest]);
+    if (isGuest && localStorage.getItem("profileTab") === "activities") {
+      setShowActivities(false);
+      localStorage.setItem("profileTab", "posts");
+    }
+  }, [isGuest]);
 
   useEffect(() => {
     return () => {
@@ -104,19 +104,19 @@ function ProfilePage() {
                 Bài đăng
               </button>
 
-              {!isGuest && (
-              <button
-                onClick={() => {
-                  setShowActivities(true);
-                  localStorage.setItem("profileTab", "activities");
-                }}
-                className={`text-sm font-medium pb-[15px] ${showActivities
-                  ? "border-b-[2px] border-blue-500 text-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
-                  }`}
-              >
-                Thú nuôi của bạn
-              </button>
+              {isOwnProfile && (
+                <button
+                  onClick={() => {
+                    setShowActivities(true);
+                    localStorage.setItem("profileTab", "activities");
+                  }}
+                  className={`text-sm font-medium pb-[15px] ${showActivities
+                    ? "border-b-[2px] border-blue-500 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                    }`}
+                >
+                  Thú nuôi của bạn
+                </button>
               )}
             </div>
             {/* Post button */}
@@ -128,23 +128,27 @@ function ProfilePage() {
               </Link>
             ) : (
               (!isGuest && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="p-2 hover:bg-muted rounded-md">
-                    <Ellipsis className="w-5 h-5" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-10 p-1">
-                  <ReportUserDialog userId={userId} key={userId} />
-                </DropdownMenuContent>
-              </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-2 hover:bg-muted rounded-md">
+                      <Ellipsis className="w-5 h-5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-10 p-1">
+                    <ReportUserDialog userId={userId} key={userId} />
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ))
             )}
           </div>
 
           {/* Nội dung */}
           <div className="mt-6">
-            {showActivities ? <AdoptionActivities userId={profile?._id} /> : <Posts profileUserId={profile?._id} />}
+            {showActivities && isOwnProfile ? (
+              <AdoptionActivities userId={profile?._id} />
+            ) : (
+              <Posts profileUserId={profile?._id} />
+            )}
           </div>
         </div>
       </div>

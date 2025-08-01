@@ -14,7 +14,6 @@ import { useState, useContext } from "react";
 import { toast } from "sonner";
 import useAuthAxios from "@/utils/authAxios";
 import type { ReturnRequest } from "@/types/ReturnRequest";
-import axios from "axios";
 import AppContext from "@/context/AppContext";
 
 type PetInfo = ReturnRequest["pet"];
@@ -48,7 +47,7 @@ export default function ReturnRequestDialog({ open, onOpenChange, pet, shelter }
 
         try {
             setLoading(true);
-            const res = await authAxios.post(`${returnRequestAPI}/create`, formData);
+            await authAxios.post(`${returnRequestAPI}/create`, formData);
             toast.success("Gửi yêu cầu trả thú cưng thành công");
             onOpenChange(false);
         } catch (err: any) {

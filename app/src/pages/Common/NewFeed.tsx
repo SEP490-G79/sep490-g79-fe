@@ -295,13 +295,22 @@ const Newfeed = () => {
     }
 
     if ((sortOption === "nearest" || sortOption === "farthest") && userLocation) {
-      const sorted = sortPostsByDistance(posts, userLocation);
-      return sortOption === "farthest" ? sorted.reverse() : sorted;
+      const postsWithLocation = posts.filter(post => post.location?.lat && post.location?.lng);
+      const postsWithoutLocation = posts.filter(post => !post.location?.lat || !post.location?.lng);
+
+      const sorted = sortPostsByDistance(postsWithLocation, userLocation);
+      const sortedByDirection = sortOption === "farthest" ? sorted.reverse() : sorted;
+
+      return [
+        ...sortedByDirection,
+        ...postsWithoutLocation.sort((a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ),
+      ];
     }
 
     return posts;
   })();
-
 
   //goong
   const fetchAddressSuggestions = async (query: string) => {
@@ -557,6 +566,7 @@ const Newfeed = () => {
                 <div className="flex justify-end pt-2">
                   <Button
                     variant="ghost"
+                    className="cursor-pointer"
                     disabled={loading || (!postContent.trim() && selectedImages.length === 0)}
                     onClick={() => {
                       setConfirmDialog({
@@ -585,7 +595,8 @@ const Newfeed = () => {
                   </Button>
                   <Button
                     onClick={handlePostSubmit}
-                    disabled={loading}
+                    disabled={loading || (!postContent.trim() && selectedImages.length === 0)}
+                    className="cursor-pointer ml-2"
                   >
                     {loading ? "Đang đăng..." : "Đăng bài"}
                   </Button>
@@ -616,14 +627,14 @@ const Newfeed = () => {
         <div className="w-full flex justify-start items-center gap-2 ml-0">
           <span className="text-sm text-muted-foreground">Sắp xếp:</span>
           <Select value={sortOption} onValueChange={(value) => setSortOption(value as any)}>
-            <SelectTrigger className="w-[160px] h-8 text-sm">
+            <SelectTrigger className="w-[160px] h-8 text-sm cursor-pointer">
               <SelectValue placeholder="Sắp xếp" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="latest">Mới nhất</SelectItem>
-              <SelectItem value="oldest">Cũ nhất</SelectItem>
-              <SelectItem value="nearest">Gần nhất</SelectItem>
-              <SelectItem value="farthest">Xa nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="latest">Mới nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="oldest">Cũ nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="nearest">Gần nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="farthest">Xa nhất</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -632,7 +643,7 @@ const Newfeed = () => {
           variant="outline"
           onClick={fetchPosts}
           disabled={loadingPosts}
-          className="flex items-center gap-2 text-sm"
+          className="flex items-center gap-2 text-sm cursor-pointer"
         >
           <RefreshCcw className={`w-4 h-4 ${loadingPosts ? "animate-spin" : ""}`} />
           {loadingPosts ? "Đang tải..." : "Tải lại bài viết"}

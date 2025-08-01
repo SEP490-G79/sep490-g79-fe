@@ -157,23 +157,23 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4">
-                <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200 dark:bg-gray-800">
                   <Clock className="w-5 h-5 text-green-600 mt-0.5" />
                   {isScheduleConfirmed ? (
                     <div>
-                      <p className="font-medium text-gray-800">Thời gian phỏng vấn</p>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="font-medium text-gray-800 dark:text-white">Thời gian phỏng vấn</p>
+                      <p className="text-sm text-gray-600 mt-1 dark:text-gray-300">
                         <strong>Ngày:</strong> {dayjs(submission.interview?.selectedSchedule).format(" DD/MM/YYYY")}
                       </p>
                     </div>
 
                   ) : (
                     <div>
-                      <p className="font-medium text-gray-800">Thời gian có thể phỏng vấn</p>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="font-medium text-gray-800 dark:text-white">Thời gian có thể phỏng vấn</p>
+                      <p className="text-sm text-gray-600 mt-1 dark:text-gray-300">
                         <strong>Từ:</strong> {dayjs(submission.interview.availableFrom).format(" DD/MM/YYYY")}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
                         <strong>Đến:</strong> {dayjs(submission.interview.availableTo).format(" DD/MM/YYYY")}
                       </p>
                     </div>
@@ -181,7 +181,7 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
 
                 </div>
 
-                <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200 dark:bg-gray-800">
                   {submission.interview.method.includes("trực tiếp") ? (
                     <MapPin className="w-5 h-5 text-green-600 mt-0.5" />
                   ) : submission.interview.method.includes("video") ? (
@@ -190,21 +190,21 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
                     <Phone className="w-5 h-5 text-orange-600 mt-0.5" />
                   )}
                   <div>
-                    <p className="font-medium text-gray-800">Hình thức phỏng vấn</p>
-                    <p className="text-sm text-gray-600 mt-1">{submission.interview.method}</p>
+                    <p className="font-medium text-gray-800 dark:text-white">Hình thức phỏng vấn</p>
+                    <p className="text-sm text-gray-600 mt-1 dark:text-gray-300">{submission.interview.method}</p>
                   </div>
                 </div>
 
                 {isScheduleConfirmed ? (
-                  <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-orange-50">
+                  <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-gray-600 dark:to-gray-800">
                     <CardContent className="pl-4">
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
                           <span className="text-white font-bold text-sm">💡</span>
                         </div>
-                        <h3 className="font-semibold text-gray-800">Lời khuyên cho buổi phỏng vấn</h3>
+                        <h3 className="font-semibold text-gray-800 dark:text-white" >Lời khuyên cho buổi phỏng vấn</h3>
                       </div>
-                      <ul className="space-y-2 text-sm text-gray-700">
+                      <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                         <li className="flex items-start gap-2">
                           <span className="text-green-600 mt-0.5">✓</span>
                           Chuẩn bị sẵn các câu hỏi về thú cưng
@@ -225,14 +225,14 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
+                  <div className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border border-red-200 dark:bg-gray-800">
                     <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
                     <div>
-                      <p className="font-medium text-red-800">Hạn chót chọn lịch</p>
-                      <p className="text-sm text-red-600 mt-1">
+                      <p className="font-medium text-red-800 dark:text-white">Hạn chót chọn lịch</p>
+                      <p className="text-sm text-red-600 mt-1 dark:text-gray-300">
                         {dayjs(deadline).format("[Trước ngày] DD/MM/YYYY")}
                       </p>
-                      <p className="text-xs text-red-500 mt-2">
+                      <p className="text-xs text-red-500 mt-2 dark:text-gray-300">
                         Nếu không chọn lịch đúng hạn, đơn của bạn có thể bị hủy
                       </p>
                     </div>
@@ -262,13 +262,13 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
 
 
               {selectedTime && (
-                <div className="mt-6 w-full max-w-sm">
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+                <div className="mt-6 w-full max-w-sm ">
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4  ">
                     <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      <span className="font-semibold text-green-800">Thời gian đã chọn</span>
+                      <CheckCircle2 className="w-5 h-5 text-green-600 "  />
+                      <span className="font-semibold text-green-800 ">Thời gian đã chọn</span>
                     </div>
-                    <p className="text-green-700 font-medium">
+                    <p className="text-green-700 font-medium " >
                       {dayjs(selectedTime).format("dddd, DD/MM/YYYY ")}
                     </p>
                   </div>

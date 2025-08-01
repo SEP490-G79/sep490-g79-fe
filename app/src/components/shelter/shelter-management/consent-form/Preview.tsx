@@ -21,6 +21,7 @@ import { mockDeliveryMethods, mockStatus } from "@/types/ConsentForm";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import dayjs from "dayjs";
 
 function Preview() {
   const { shelterId, consentFormId } = useParams();
@@ -78,35 +79,37 @@ function Preview() {
     },
     {
       value: "send",
-      label: "Đã gửi",
+      label: "Chờ phản hồi",
       color: "chart-3",
       icon: <Send size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "accepted",
-      label: "Chấp nhận",
+      label: "Đã chấp nhận",
       color: "chart-2",
       icon: <CheckSquare size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "approved",
-      label: "Xác nhận",
+      label: "Đã xác nhận",
       color: "chart-4",
       icon: <Signature size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "rejected",
-      label: "Từ chối",
+      label: "Yêu cầu sửa",
       color: "chart-1",
       icon: <MessageCircleX size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "cancelled",
-      label: "Hủy",
+      label: "Đã hủy",
       color: "destructive",
       icon: <SquareX size={"15px"} strokeWidth={"2px"} />,
     },
   ];
+
+  
 
   if (isLoading) {
     return (
@@ -165,17 +168,11 @@ function Preview() {
       </div>
     );
   }
-  
+
   return (
     <div className="w-full flex gap-5 justify-between flex-wrap bg-(--card) p-5">
       <div className="basis-full flex gap-3 ">
-        <Badge
-          className={`rounded-3xl px-5 bg-(--${
-            mockStatus.find(
-              (s) => s.value.toUpperCase() == consentForm?.status.toUpperCase()
-            )?.color
-          }) `}
-        >
+        <Badge className={`rounded-3xl px-5 `} variant={"outline"}>
           <span className="flex gap-1">
             {
               mockStatus.find(
@@ -213,11 +210,17 @@ function Preview() {
             </Avatar>
           </div> */}
           <div className="basis-full lg:basis-5/7 ">
-            <p onClick={()=>{navigate(`/profile/${consentForm?.adopter?._id}`)}} className="text-sm font-medium hover:text-(--primary) cursor-pointer line-clamp-1 ">
+            <p
+              onClick={() => {
+                navigate(`/profile/${consentForm?.adopter?._id}`);
+              }}
+              className="text-sm font-medium hover:text-(--primary) cursor-pointer line-clamp-1 "
+            >
               {consentForm?.adopter?.fullName}
             </p>
             <p className="text-xs">
-              <strong>Số điện thoại:</strong> {consentForm?.adopter?.phoneNumber}
+              <strong>Số điện thoại:</strong>{" "}
+              {consentForm?.adopter?.phoneNumber}
             </p>
           </div>
         </div>
@@ -238,7 +241,7 @@ function Preview() {
 
       <div className="basis-full sm:basis-5/11  p-3">
         <div className="w-full flex flex-wrap justify-start items-start gap-3">
-        <div className="basis-full flex justify-center">
+          <div className="basis-full flex justify-center">
             <p className="text-xl font-medium">Trung tâm cứu hộ</p>
           </div>
           {/* <div className="basis-full lg:basis-1/7 ">
@@ -255,12 +258,20 @@ function Preview() {
             </Avatar>
           </div> */}
           <div className="basis-full lg:basis-5/7">
-            <p onClick={()=>{navigate(`/shelters/${consentForm?.shelter?._id}`)}} className="text-sm font-medium hover:text-(--primary) cursor-pointer line-clamp-1 ">
+            <p
+              onClick={() => {
+                navigate(`/shelters/${consentForm?.shelter?._id}`);
+              }}
+              className="text-sm font-medium hover:text-(--primary) cursor-pointer line-clamp-1 "
+            >
               {consentForm?.shelter?.name}
             </p>
             <p className="text-xs">
               <strong>Người tạo:</strong>{" "}
-              <Link to={`/profile/${consentForm?.createdBy?._id}`} className="hover:text-(--primary)">
+              <Link
+                to={`/profile/${consentForm?.createdBy?._id}`}
+                className="hover:text-(--primary)"
+              >
                 {consentForm?.createdBy?.fullName}
               </Link>
             </p>
@@ -271,7 +282,9 @@ function Preview() {
             <strong>Tiền vía:</strong> {consentForm?.tokenMoney} (đồng)
           </p>
           <p className="text-xs my-2 line-clamp-1">
-            <strong>Ngày tạo đơn:</strong> {consentForm?.title}
+            <strong>Ngày tạo đơn:</strong>{" "}
+            {consentForm?.createdAt &&
+              dayjs(consentForm.createdAt).format("DD/MM/YYYY")}
           </p>
         </div>
       </div>
@@ -299,7 +312,8 @@ function Preview() {
         <p className="basis-full lg:basis-11/23  flex items-center gap-2">
           <span>Ngày: </span>
           <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
-            {consentForm?.createdAt?.toString()}
+            {consentForm?.createdAt &&
+              dayjs(consentForm.createdAt).format("DD/MM/YYYY")}
           </span>
         </p>
         <p className="basis-full lg:basis-11/23   flex items-center gap-2">
@@ -346,22 +360,24 @@ function Preview() {
         </div>
         {/* <span>{consentForm?.commitments}</span> */}
       </div>
-      <div className=" flex flex-wrap gap-5 justify-between items-start basis-full px-5">
-        <div className="basis-full">
-          <p className="font-medium">Ghi chú:</p>
+      {consentForm?.note && (
+        <div className=" flex flex-wrap gap-5 justify-between items-start basis-full px-5">
+          <div className="basis-full">
+            <p className="font-medium">Ghi chú:</p>
+          </div>
+          <span className="basis-9/11 italic text-sm px-2">
+            {" "}
+            {consentForm?.note}{" "}
+          </span>
+          <div className="basis-1/11 items-end px-2">
+            <Paperclip
+              className="text-(--secondary)"
+              size={"15px"}
+              strokeWidth={"1px"}
+            />
+          </div>
         </div>
-        <span className="basis-9/11 italic text-sm px-2">
-          {" "}
-          {consentForm?.note}{" "}
-        </span>
-        <div className="basis-1/11 items-end px-2">
-          <Paperclip
-            className="text-(--secondary)"
-            size={"15px"}
-            strokeWidth={"1px"}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 }
