@@ -14,6 +14,7 @@ interface Props {
   setSpeciesList: React.Dispatch<React.SetStateAction<Species[]>>;
   breedList: Breed[];
   setBreedList: React.Dispatch<React.SetStateAction<Breed[]>>;
+  colorSuggestions: string[];
 }
 
 export default function PetImageAIButton({
@@ -109,49 +110,40 @@ export default function PetImageAIButton({
     );
   };
 
-  const getMatchedBreed = (
-    breedRaw: string | undefined,
-    description: string | undefined
-  ) => {
+  const getMatchedBreed = (breedRaw: string | undefined) => {
+    const normalizedBreed = breedRaw?.toLowerCase().trim();
     return (breedList as Breed[]).find(
-      (b) =>
-        b.name.toLowerCase() === breedRaw?.toLowerCase() ||
-        description?.toLowerCase().includes(b.name.toLowerCase())
+      (b) => b.name.toLowerCase().trim() === normalizedBreed
     );
   };
 
-  const getMatchedColors = (rawColor: string | undefined) => {
+  const getMatchedColors = (rawColor: string | string[] | undefined) => {
     if (!rawColor) return [];
-    const extractedColors = rawColor
-      .split(/[,;]/)
-      .map((c) => c.trim().toLowerCase());
+    const extractedColors = Array.isArray(rawColor)
+      ? rawColor.map((c) => c.trim().toLowerCase())
+      : rawColor.split(/[,;]/).map((c) => c.trim().toLowerCase());
+
     return colorSuggestions.filter((color) =>
-      extractedColors.some(
-        (c) =>
-          color.toLowerCase().includes(c) || c.includes(color.toLowerCase())
-      )
+      extractedColors.includes(color.toLowerCase())
     );
   };
+
   const mapResultToForm = (
     result: unknown,
-    matchedSpecies: unknown,
-    matchedBreed: unknown
+    matchedSpecies: Species | undefined,
+    matchedBreed: Breed | undefined
   ) => {
     const r = result as AnalyzeResult;
-    const species = matchedSpecies as Species;
-    const breed = matchedBreed as Breed;
-
     const colorArray = getMatchedColors(r.color);
 
     setForm((prev: PetFormState) => ({
-      ...prev,
-      age: r.age !== undefined ? String(r.age) : prev.age,
-      weight: r.weight !== undefined ? String(r.weight) : prev.weight,
-      color: colorArray.join(", ") || prev.color,
-      identificationFeature:
-        r.identificationFeature ?? prev.identificationFeature,
-      species: species?._id ?? prev.species,
-      breeds: breed ? [breed._id] : prev.breeds,
+      ...prev, // giữ những field không liên quan như photos
+      species: matchedSpecies?._id ?? "",
+      breeds: matchedBreed ? [matchedBreed._id] : [],
+      age: r.age !== undefined ? String(r.age) : "",
+      weight: r.weight !== undefined ? String(r.weight) : "",
+      color: colorArray.join(", "),
+      identificationFeature: r.identificationFeature ?? "",
     }));
   };
 
@@ -173,20 +165,21 @@ export default function PetImageAIButton({
       if (!result) return toast.error("Không thể phân tích ảnh.");
 
       const matchedSpecies = getMatchedSpecies(result.species);
-      const matchedBreed = getMatchedBreed(result.breed, result.description);
+      const matchedBreed = getMatchedBreed(result.breed);
 
       let hasError = false;
+
       if (!matchedSpecies) {
-        setSpeciesError(`Loài: ${result.species || "[Chưa xác định]"}`);
+        setSpeciesError(result.species || "[Chưa xác định]");
+        setBreedError(null); // Đừng báo giống nếu loài đã sai
         hasError = true;
-      }
-      if (!matchedBreed) {
-        setBreedError(
-          `Loài: ${result.species || "[Chưa xác định]"}\nGiống: ${
-            result.breed || "[Chưa xác định]"
-          }`
-        );
+      } else if (!matchedBreed) {
+        setSpeciesError(null); // Loài đúng rồi thì không cần báo nữa
+        setBreedError(result.breed || "[Chưa xác định]");
         hasError = true;
+      } else {
+        setSpeciesError(null);
+        setBreedError(null);
       }
 
       if (hasError) {
@@ -228,26 +221,30 @@ export default function PetImageAIButton({
       <span className="text-xs text-muted-foreground italic">
         (*) AI chỉ phân tích được ảnh chứa một con thú cưng duy nhất
       </span>
+      <br />
 
+      <span className="text-xs text-muted-foreground italic">
+        (*) Nên phân tích AI từ 2-3 lần để đạt độ chính xác cao nhất
+      </span>
       {speciesError && (
         <ErrorSuggestion
           title="Loài chưa có trong hệ thống"
-          content={speciesError}
+          content={`Loài: ${speciesError}`}
           onCopy={() =>
             handleCopy(
-              `Kính thưa Quản trị viên,\n\nTôi muốn đề xuất thêm loài thú nuôi mới:\n${speciesError}\n\nTrân trọng,`
+              `Kính thưa Quản trị viên,\n\nTôi muốn đề xuất thêm loài thú nuôi mới:\nLoài: ${speciesError}.\n\nTrân trọng!`
             )
           }
         />
       )}
 
-      {breedError && (
+      {speciesError === null && breedError && (
         <ErrorSuggestion
           title="Giống chưa có trong hệ thống"
-          content={breedError}
+          content={`Giống: ${breedError}`}
           onCopy={() =>
             handleCopy(
-              `Kính thưa Quản trị viên,\n\nTôi muốn đề xuất thêm giống thú nuôi mới:\n${breedError}\n\nTrân trọng,`
+              `Kính thưa Quản trị viên,\n\nTôi muốn đề xuất thêm giống thú nuôi mới:\nGiống: ${breedError}\n\nTrân trọng,`
             )
           }
         />

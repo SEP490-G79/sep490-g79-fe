@@ -47,11 +47,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { set } from "date-fns";
 import {
+  CheckSquare,
   Eye,
+  MessageCircleX,
+  NotepadTextDashed,
+  PenBox,
   PenLine,
   SaveAllIcon,
+  Send,
+  Signature,
   SquareChevronDown,
   SquareChevronUp,
+  SquareX,
   Upload,
   X,
 } from "lucide-react";
@@ -63,6 +70,8 @@ import { z } from "zod";
 import { fi } from "zod/v4/locales";
 import Preview from "./Preview";
 import type { ConsentForm } from "@/types/ConsentForm";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ConsentForm() {
   const { shelterId, consentFormId } = useParams();
@@ -138,7 +147,6 @@ export default function ConsentForm() {
           address: data.address,
           commitments: data.commitments,
         });
-
       })
       .catch((err) => {
         // console.error("Error fetching consent forms:", err);
@@ -146,7 +154,6 @@ export default function ConsentForm() {
           err.response?.data?.message ||
             "Không thể tải bản đồng ý nhận nuôi! Vui lòng thử lại sau."
         );
-
       })
       .finally(() => {
         setTimeout(() => {
@@ -235,11 +242,11 @@ export default function ConsentForm() {
     await authAxios
       .put(
         `${coreAPI}/shelters/${shelterId}/consentForms/${consentForm?._id}/change-status-shelter`,
-        {status}
+        { status }
       )
       .then((res) => {
         setConsentForm(res.data);
-        toast.success("Cập nhật trạng thái thành công!")
+        toast.success("Cập nhật trạng thái thành công!");
       })
       .catch((err) => {
         // console.log("Consent form error:"+err);
@@ -288,38 +295,44 @@ export default function ConsentForm() {
   const mockStatus = [
     {
       value: "draft",
-      label: "Nháp",
-      disabled: !(consentForm?.status == "rejected"  || consentForm?.status == "cancelled" ||consentForm?.status == "send" )
+      label: "Đang chuẩn bị",
+      color: "secondary",
+      icon: <NotepadTextDashed size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "send",
       label: "Chờ phản hồi",
-      disabled: !(consentForm?.status == "draft")
+      color: "chart-3",
+      icon: <Send size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "accepted",
       label: "Đã chấp nhận",
-      disabled: true
-    },
-    {
-      value: "cancelled",
-      label: "Đã hủy",
-      disabled: true
-
+      color: "chart-2",
+      icon: <CheckSquare size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "approved",
       label: "Đã xác nhận",
-      disabled: !(consentForm?.status == "accepted")
-
+      color: "chart-4",
+      icon: <Signature size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "rejected",
       label: "Yêu cầu sửa",
-      disabled: true
-
+      color: "chart-1",
+      icon: <MessageCircleX size={"15px"} strokeWidth={"2px"} />,
+    },
+    {
+      value: "cancelled",
+      label: "Đã hủy",
+      color: "destructive",
+      icon: <SquareX size={"15px"} strokeWidth={"2px"} />,
     },
   ];
+
+
+
 
   if (isLoading) {
     return (
@@ -417,34 +430,105 @@ export default function ConsentForm() {
           <TabsContent value="edit">
             <div className="w-full flex flex-wrap">
               <div className="basis-full flex justify-between">
-                <h1 className="text-2xl font-medium mb-4">
-                  {consentForm?.title || "Bản đồng ý nhận nuôi thú cưng"}
-                </h1>
-                <Select onValueChange={(value) => handleChangeStatus(value)}>
-                  <SelectTrigger className="w-1/8">
-                    <span>
+                <div className=" flex gap-2">
+                  <span className="text-2xl font-medium">
+                    {consentForm?.title}
+                  </span>
+                  <Badge className={`rounded-3xl px-3`} variant={"outline"}>
+                    <span className="flex gap-1">
                       {
                         mockStatus.find(
                           (s) =>
                             s.value.toUpperCase() ==
-                            consentForm?.status?.toUpperCase()
+                            consentForm?.status.toUpperCase()
+                        )?.icon
+                      }
+                      {
+                        mockStatus.find(
+                          (s) =>
+                            s.value.toUpperCase() ==
+                            consentForm?.status.toUpperCase()
                         )?.label
                       }
                     </span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Trạng thái</SelectLabel>
-                      {mockStatus?.map((status) => {
-                        return (
-                          <SelectItem key={status.value} value={status.value} disabled={status.disabled }>
-                            {status.label}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                  </Badge>
+                </div>
+                <div>
+                  {/* <Select onValueChange={(value) => handleChangeStatus(value)}>
+                    <SelectTrigger className="w-1/8">
+                      <span>
+                        {
+                          mockStatus.find(
+                            (s) =>
+                              s.value.toUpperCase() ==
+                              consentForm?.status?.toUpperCase()
+                          )?.label
+                        }
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Trạng thái</SelectLabel>
+                        {mockStatus?.map((status) => {
+                          return (
+                            <SelectItem
+                              key={status.value}
+                              value={status.value}
+                              disabled={status.disabled}
+                            >
+                              {status.label}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select> */}
+                  {consentForm?.status == "draft" && (
+                    <Button
+                      variant={"ghost"}
+                      className="cursor-pointer text-xs"
+                      onClick={() => {
+                        handleChangeStatus("send");
+                      }}
+                    >
+                      <Send
+                        className="text-(--primary)"
+                        
+                      />{" "}
+                      Gửi
+                    </Button>
+                  )}
+                  {consentForm?.status == "accepted" && (
+                    <Button
+                      variant={"ghost"}
+                      className="cursor-pointer text-xs"
+                      onClick={() => {
+                        handleChangeStatus("approved");
+                      }}
+                    >
+                      <Signature
+                        className="text-(--primary)"
+                        
+                      />{" "}
+                      Xác nhận
+                    </Button>
+                  )}
+                  {consentForm?.status == "rejected" && (
+                    <Button
+                      variant={"ghost"}
+                      className="cursor-pointer text-xs"
+                      onClick={() => {
+                        handleChangeStatus("draft");
+                      }}
+                    >
+                      <PenBox
+                        className="text-(--primary)"
+                        
+                      />{" "}
+                      Chỉnh sửa
+                    </Button>
+                  )}
+                </div>
               </div>
               <Separator className="my-4" />
               <div className="basis-full grid grid-cols-5 gap-2">
@@ -462,7 +546,7 @@ export default function ConsentForm() {
                       </FormItem>
 
                       <FormItem className="md:col-span-2 self-start">
-                        <FormLabel>Thu nuôi</FormLabel>
+                        <FormLabel>Thú nuôi</FormLabel>
                         <FormControl>
                           <Input value={consentForm?.pet?.name} disabled />
                         </FormControl>
@@ -478,7 +562,7 @@ export default function ConsentForm() {
                               <Input
                                 placeholder="Nhập tiêu đề ..."
                                 {...field}
-                                disabled={consentForm?.status !="draft"}
+                                disabled={consentForm?.status != "draft"}
                               />
                             </FormControl>
                             <FormMessage />
@@ -497,7 +581,7 @@ export default function ConsentForm() {
                                 type="text"
                                 placeholder="Nhập tiền vía"
                                 {...field}
-                                disabled={consentForm?.status !="draft"}
+                                disabled={consentForm?.status != "draft"}
                               />
                             </FormControl>
                             <FormMessage />
@@ -517,7 +601,7 @@ export default function ConsentForm() {
                                 <Input
                                   placeholder="Nhập địa chỉ"
                                   {...field}
-                                  disabled={consentForm?.status !="draft"}
+                                  disabled={consentForm?.status != "draft"}
                                   onChange={(e) => {
                                     field.onChange(e);
                                     fetchAddressSuggestions(e.target.value);
@@ -560,7 +644,7 @@ export default function ConsentForm() {
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
-                              disabled={consentForm?.status !="draft"}
+                              disabled={consentForm?.status != "draft"}
                             >
                               <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Chọn phương thức vận chuyển" />
@@ -589,7 +673,7 @@ export default function ConsentForm() {
                               <Textarea
                                 placeholder="Nhập ghi chú"
                                 {...field}
-                                disabled={consentForm?.status !="draft"}
+                                disabled={consentForm?.status != "draft"}
                                 cols={3}
                               />
                             </FormControl>
@@ -723,4 +807,3 @@ export default function ConsentForm() {
     </div>
   );
 }
-

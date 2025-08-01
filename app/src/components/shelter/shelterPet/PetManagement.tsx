@@ -44,6 +44,7 @@ export default function PetManagement() {
     isMale: true,
     weight: "",
     color: "",
+    tokenMoney: 0,
     identificationFeature: "",
     sterilizationStatus: false,
     bio: "",
@@ -178,6 +179,7 @@ export default function PetManagement() {
         isMale: true,
         weight: "",
         color: "",
+        tokenMoney: 0,
         identificationFeature: "",
         sterilizationStatus: false,
         bio: "",
@@ -218,6 +220,7 @@ export default function PetManagement() {
               age: "",
               isMale: true,
               weight: "",
+              tokenMoney: 0,
               color: "",
               identificationFeature: "",
               sterilizationStatus: false,
@@ -265,6 +268,7 @@ export default function PetManagement() {
               typeof pet.shelter === "object"
                 ? pet.shelter._id
                 : pet.shelter ?? "",
+            tokenMoney: pet.tokenMoney ?? 0, // ✅ thêm dòng này
           };
 
           setForm(normalizedPet);

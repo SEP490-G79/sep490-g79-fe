@@ -161,3 +161,18 @@ export const getSubmissionStatistics = async (
   );
   return response.data;
 };
+
+export interface WeeklySubmissionStat {
+  week: string;
+  count: number;
+}
+
+export const getAdoptionSubmissionsByWeek = async (
+  shelterId: string
+): Promise<WeeklySubmissionStat[]> => {
+  const response = await axios.get(
+    `${BASE_URL}/shelters/${shelterId}/statistics/adoption-submissions-by-week`,
+    { headers: getAuthHeaders() }
+  );
+  return response.data;
+};

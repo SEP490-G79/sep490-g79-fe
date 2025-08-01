@@ -10,7 +10,6 @@ export interface Breed {
   name: string;
   species: string | Species;
 }
-
 export interface PetFormState {
   _id?: string;
   name: string;
@@ -25,15 +24,6 @@ export interface PetFormState {
   breeds: string[];
   bio: string;
   photos: string[];
-  shelter?: string | { _id: string }; // ← thêm dòng này
-}
-
-export interface AnalyzeResult {
-  age?: number;
-  weight?: number;
-  color?: string;
-  identificationFeature?: string;
-  species?: string;
-  breed?: string;
-  description?: string;
+  shelter?: string | { _id: string };
+  tokenMoney: number;
 }

@@ -74,7 +74,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import {
   mockDeliveryMethods,
-  mockStatus,
   type ConsentForm,
 } from "@/types/ConsentForm";
 import CreateDialog from "./CreateDialog";
@@ -165,7 +164,44 @@ export function ConsentForms() {
         }, 200);
       });
   };
+  const mockStatus = [
+    {
+      value: "draft",
+      label: "Đang chuẩn bị",
+      color: "secondary",
+  
+    },
+    {
+      value: "send",
+      label: "Chờ phản hồi",
+      color: "chart-3",
 
+    },
+    {
+      value: "accepted",
+      label: "Đã chấp nhận",
+      color: "chart-2",
+ 
+    },
+    {
+      value: "approved",
+      label: "Đã xác nhận",
+      color: "chart-4",
+
+    },
+    {
+      value: "rejected",
+      label: "Yêu cầu sửa",
+      color: "chart-1",
+    
+    },
+    {
+      value: "cancelled",
+      label: "Đã hủy",
+      color: "destructive",
+   
+    },
+  ];
   if (isLoading) {
     return (
       <div className="w-full">
@@ -230,6 +266,7 @@ export function ConsentForms() {
       </div>
     );
   }
+
   return (
     <div className="w-full">
       <div className="flex justify-between items-center py-4">
@@ -283,7 +320,7 @@ export function ConsentForms() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="absolute top-1 left-22 ">
-                  <Badge className="inline-block max-w-[10rem] sm:max-w-[5rem] md:max-w-[5    rem] lg:max-w-[5rem] xl:max-w-[10rem] text-xs hover:bg-(--primary)/50 p-0 px-0.5 rounded-sm">
+                  <Badge className="inline-block max-w-[10rem] sm:max-w-[5rem] md:max-w-[5rem] lg:max-w-[5rem] xl:max-w-[10rem] text-xs hover:bg-(--primary)/50 p-0 px-0.5 rounded-sm">
                     <span className="inline-flex w-full items-center text-xs">
                       <MapPin strokeWidth={3} size={"12px"} className=" mr-1" />{" "}
                       <span className="w-full truncate">

@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { MissionForm } from "@/types/MissionForm";
 import dayjs from "dayjs";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 interface Step4Props {
   onNext: () => void;
   onBack: () => void;
@@ -101,50 +102,73 @@ const Step5_ConsentForm = ({ submission }: Step4Props) => {
   const mockStatus = [
     {
       value: "draft",
-      label: "Đang chuẩn bị", 
+      label: "Đang chuẩn bị",
       color: "secondary",
       icon: <NotepadTextDashed size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "send",
-      label: "Chờ xác nhận", 
+      label: "Chờ chấp nhận",
       color: "chart-3",
       icon: <Send size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "accepted",
-      label: "Bạn đã xác nhận", 
+      label: "Bạn đã chấp nhận",
       color: "chart-2",
       icon: <CheckSquare size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "approved",
-      label: "Trung tâm đã duyệt", 
+      label: "Trung tâm đã xác nhận",
       color: "chart-4",
       icon: <Signature size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "rejected",
-      label: "Bạn đã từ chối bản đồng ý", 
+      label: "Yêu cầu sửa",
       color: "chart-1",
       icon: <MessageCircleX size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "cancelled",
-      label: "Bạn đã hủy yêu cầu nhận nuôi", 
+      label: "Đã hủy",
       color: "destructive",
       icon: <SquareX size={"15px"} strokeWidth={"2px"} />,
     },
   ];
-  
 
-  if(!consentForm || consentForm?.status == "draft"){
-    return(
-      <></>
-    )
+  if (!consentForm || (consentForm && consentForm?.status == "draft")) {
+    return (
+      <div className="w-full flex justify-center items-center py-10">
+        <Card className="max-w-2xl w-full p-6 space-y-4 shadow-md">
+          <CardHeader>
+            <CardTitle className="text-xl">
+              Bạn đã được chọn là người nhận nuôi!
+            </CardTitle>
+            <CardDescription>
+              Hãy chờ trạm cứu hộ hoàn tất và gửi bản đồng ý nhận nuôi.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <p>
+              Vui lòng đọc kỹ các cam kết khi nhận nuôi thú cưng. Nếu có điểm
+              nào không phù hợp, bạn có thể yêu cầu sửa đổi, đồng ý với nội dung
+              hoặc hủy nhận nuôi trước khi trạm xác nhận chính thức.
+            </p>
+            <ul className="list-disc list-inside">
+              <li>Chờ bản đồng ý từ trạm cứu hộ.</li>
+              <li>Xem xét kỹ các cam kết.</li>
+              <li>
+                Sau khi nhận bản, bạn có thể chọn <b>chấp nhận</b>,{" "}
+                <b>yêu cầu sửa</b>, hoặc <b>hủy nhận nuôi</b>.
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
-
-
 
   if (isLoading) {
     return (
@@ -205,7 +229,7 @@ const Step5_ConsentForm = ({ submission }: Step4Props) => {
   }
 
   return (
-    <div className="w-full flex gap-5 justify-between flex-wrap bg-(--card) p-5">
+    <div className="w-full flex gap-5 justify-between flex-wrap bg-(--card) p-5 shadow">
       <div className="basis-full flex gap-3 ">
         <Badge className={`rounded-3xl px-5 `} variant={"outline"}>
           <span className="flex gap-1">
@@ -378,8 +402,12 @@ const Step5_ConsentForm = ({ submission }: Step4Props) => {
               "Không có đặc điểm nhận dạng"}
           </span>
         </p>
-        <p className="basis-full">
-          <span>Cam kết của người nhận nuôi: </span>
+        <p className="basis-full mt-2">
+          <span>
+            Để đáp ứng đầy đủ các điều kiện nhận nuôi, tôi/chúng tôi cam kết
+            thực hiện đầy đủ các nội dung sau khi nhận nuôi thú cưng từ trạm cứu
+            hộ:{" "}
+          </span>
         </p>
         <div className="basis-full h-auto my-2">
           <MinimalTiptapEditor
