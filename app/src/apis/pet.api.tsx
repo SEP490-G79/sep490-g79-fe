@@ -25,6 +25,8 @@ export const usePetApi = () => {
       .then((res) => res.data);
   const getAllSpecies = () => authAxios.get(`${BASE_URL}/species/getAll`);
   const getAllBreeds = () => authAxios.get(`${BASE_URL}/breeds/getAll`);
+  const searchPetWithGPT = (formData: FormData) =>
+    authAxios.post(`${API_URL}/search-by-ai`, formData).then((res) => res.data);
 
   return {
     getAllPets,
@@ -34,5 +36,6 @@ export const usePetApi = () => {
     analyzePetImage,
     getAllSpecies,
     getAllBreeds,
+    searchPetWithGPT,
   };
 };

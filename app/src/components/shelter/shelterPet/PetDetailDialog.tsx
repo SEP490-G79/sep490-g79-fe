@@ -40,6 +40,11 @@ export default function PetDetailDialog({ open, onClose, pet }: Props) {
             <strong>Cân nặng:</strong> {pet.weight} kg
           </p>
           <p>
+            <strong>Phí nhận nuôi:</strong>{" "}
+            {pet.tokenMoney?.toLocaleString("vi-VN") || 0} VNĐ
+          </p>
+
+          <p>
             <strong>Màu lông:</strong> {pet.color}
           </p>
           <p>

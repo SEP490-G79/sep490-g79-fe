@@ -109,22 +109,33 @@ const MedicalRecordList: React.FC<Props> = ({ petId }) => {
               key={rec._id}
               className="border rounded-md p-4 flex justify-between items-start shadow-sm bg-background"
             >
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-primary mb-1">
-                  {rec.title}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-1">
-                  <b>Chi phí:</b>{" "}
-                  {rec.cost
-                    ? rec.cost.toLocaleString("vi-VN") + " VND"
-                    : "Không có"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  <b>Nơi thực hiện:</b>{" "}
-                  {typeof rec.performedBy === "string"
-                    ? rec.performedBy
-                    : rec.performedBy?.fullName || "Không rõ"}
-                </p>
+              <div className="flex gap-4 flex-1 items-center">
+                {/* Thumbnail nếu có ảnh */}
+                {rec.photos && rec.photos.length > 0 && (
+                  <img
+                    src={rec.photos[0]}
+                    alt="record thumbnail"
+                    className="w-14 h-14 object-cover rounded-md ring-2 ring-primary"
+                  />
+                )}
+
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-primary mb-1">
+                    {rec.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    <b>Chi phí:</b>{" "}
+                    {rec.cost
+                      ? rec.cost.toLocaleString("vi-VN") + " VND"
+                      : "Không có"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    <b>Nơi thực hiện:</b>{" "}
+                    {typeof rec.performedBy === "string"
+                      ? rec.performedBy
+                      : rec.performedBy?.fullName || "Không rõ"}
+                  </p>
+                </div>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -412,7 +423,7 @@ const MedicalRecordForm: React.FC<{
             name="type"
             value={form.type}
             onChange={handleChange}
-            className="border rounded px-3 py-2 text-sm"
+            className="border rounded px-3 py-2 text-sm bg-background text-foreground"
             required
           >
             <option value="">Chọn loại</option>
@@ -422,12 +433,12 @@ const MedicalRecordForm: React.FC<{
             <option value="treatment">Điều trị</option>
             <option value="other">Khác</option>
           </select>
+
           {errors.type && (
             <span className="text-red-500 text-xs">{errors.type}</span>
           )}
         </div>
 
-        {/* Title */}
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium">
             Tiêu đề <span className="text-red-500">*</span>
