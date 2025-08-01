@@ -77,7 +77,7 @@ export default function ShelterPostCard({
                     {post.shelter.name}
                   </Link>
 
-                  <span className="text-xs text-muted-foreground block mt-0.5 flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground block mt-0.5 flex items-center gap-1">
                     {currentMember && (
                       <>
                         Người đăng: {post.createdBy.fullName}
@@ -101,16 +101,16 @@ export default function ShelterPostCard({
             {(isManager || isOwner) && !isGuest && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="p-2 hover:bg-muted rounded-md">
+                  <button className="p-2 hover:bg-muted rounded-md cursor-pointer">
                     <Ellipsis className="w-5 h-5" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onEdit(post)}>
+                  <DropdownMenuItem onClick={() => onEdit(post)} className="cursor-pointer">
                     <Pencil className="w-4 h-4 text-blue-500 mr-2" /> Chỉnh sửa
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDelete(post._id)}>
-                    <Trash2 className="w-4 h-4 text-red-500 mr-2" /> Xóa
+                  <DropdownMenuItem onClick={() => onDelete(post._id)} className="cursor-pointer">
+                    <Trash2 className="w-4 h-4 text-red-500 mr-2" /> Xóa bài đăng
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -132,7 +132,7 @@ export default function ShelterPostCard({
             {post.title.slice(0, 300)}...
             <button
               onClick={() => setExpanded(true)}
-              className="text-blue-500 underline ml-1 text-xs cursor-pointer"
+              className="ml-2 text-xs cursor-pointer hover:text-primary"
             >
               Xem thêm
             </button>
@@ -143,7 +143,7 @@ export default function ShelterPostCard({
             {post.title.length > 300 && (
               <button
                 onClick={() => setExpanded(false)}
-                className="text-blue-500 underline ml-1 text-xs"
+                className="ml-2 text-xs cursor-pointer hover:text-primary"
               >
                 Ẩn bớt
               </button>

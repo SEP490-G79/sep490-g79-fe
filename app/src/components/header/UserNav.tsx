@@ -70,7 +70,7 @@ function UserNav() {
           <div className="relative cursor-pointer">
             <Bell className="w-5 h-5 hover:text-primary mx-8" />
             {unseenCount > 0 && (
-              <span className="absolute top-0 right-5 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+              <span className="absolute bottom-2 right-5 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
                 {unseenCount > 99 ? "99+" : unseenCount}
               </span>
             )}

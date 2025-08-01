@@ -63,11 +63,10 @@ function ShelterPosts() {
     const [editingPost, setEditingPost] = useState<any | null>(null);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [detailPostId, setDetailPostId] = useState<string | null>(null);
-    const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
     const [loadingPosts, setLoadingPosts] = useState(false);
     const [visiblePosts, setVisiblePosts] = useState(7);
     const [loadingMore, setLoadingMore] = useState(false);
-    const [isShelterMember, setIsShelterMember] = useState(false);
+
     const [isManagerOrStaff, setIsManagerOrStaff] = useState(false);
     const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null);
     const [address, setAddress] = useState("");
@@ -98,8 +97,6 @@ function ShelterPosts() {
             );
 
             const roles = member?.roles || [];
-
-            setIsShelterMember(!!member);
             setIsManagerOrStaff(roles.includes("manager") || roles.includes("staff"));
         } catch {
             console.error("Không lấy được thông tin shelter");
@@ -256,8 +253,15 @@ function ShelterPosts() {
         }
 
         if ((sortOption === "nearest" || sortOption === "farthest") && userLocation) {
-            const sorted = sortPostsByDistance(posts, userLocation);
-            return sortOption === "farthest" ? sorted.reverse() : sorted;
+            const postsWithLocation = posts.filter(post => post.location?.lat && post.location?.lng);
+            const postsWithoutLocation = posts.filter(post => !post.location?.lat || !post.location?.lng);
+
+            const sorted = sortPostsByDistance(postsWithLocation, userLocation);
+            const sortedByDirection = sortOption === "farthest" ? sorted.reverse() : sorted;
+
+            return [...sortedByDirection, ...postsWithoutLocation.sort((a, b) =>
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            )];
         }
 
         return posts;
@@ -388,6 +392,7 @@ function ShelterPosts() {
                             value={postContent}
                             onChange={(e) => setPostContent(e.target.value)}
                             placeholder="Bạn muốn chia sẻ điều gì?"
+                            className="resize-none border border-border text-base placeholder:text-muted-foreground overflow-y-auto max-h-[200px] focus:ring-0"
                         />
                         <div className="flex gap-4">
                             <label htmlFor="upload-image">
@@ -472,7 +477,8 @@ function ShelterPosts() {
                         <div className="flex justify-end">
                             <Button
                                 variant="ghost"
-                                disabled={loading}
+                                disabled={loading || (!postContent.trim() && selectedImages.length === 0)}
+                                className="cursor-pointer"
                                 onClick={() => {
                                     setConfirmDialog({
                                         open: true,
@@ -497,7 +503,7 @@ function ShelterPosts() {
                             >
                                 Hủy
                             </Button>
-                            <Button onClick={handleCreatePost} disabled={loading || (!postContent.trim() && selectedImages.length === 0)} className="flex items-center gap-2">
+                            <Button onClick={handleCreatePost}  disabled={loading || (!postContent.trim() && selectedImages.length === 0)} className="flex items-center gap-2 cursor-pointer ml-2">
                                 {loading ? "Đang đăng..." : "Đăng bài"}
                             </Button>
                         </div>
@@ -509,19 +515,19 @@ function ShelterPosts() {
                 <div className="flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground">Sắp xếp:</span>
                     <Select value={sortOption} onValueChange={(value) => setSortOption(value as any)}>
-                        <SelectTrigger className="w-[160px] h-8 text-sm">
+                        <SelectTrigger className="w-[160px] h-8 text-sm cursor-pointer">
                             <SelectValue placeholder="Sắp xếp" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="latest">Mới nhất</SelectItem>
-                            <SelectItem value="oldest">Cũ nhất</SelectItem>
-                            <SelectItem value="nearest">Gần nhất</SelectItem>
-                            <SelectItem value="farthest">Xa nhất</SelectItem>
+                            <SelectItem className="cursor-pointer" value="latest">Mới nhất</SelectItem>
+                            <SelectItem className="cursor-pointer" value="oldest">Cũ nhất</SelectItem>
+                            <SelectItem className="cursor-pointer" value="nearest">Gần nhất</SelectItem>
+                            <SelectItem className="cursor-pointer" value="farthest">Xa nhất</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
 
-                <Button variant="outline" onClick={fetchPosts} className="flex items-center gap-2 text-sm">
+                <Button variant="outline" onClick={fetchPosts} className="flex items-center gap-2 text-sm cursor-pointer">
                     <RefreshCcw className={`w-4 h-4 ${loadingPosts ? "animate-spin" : ""}`} />
                     {loadingPosts ? "Đang tải..." : "Tải lại bài viết"}
                 </Button>
