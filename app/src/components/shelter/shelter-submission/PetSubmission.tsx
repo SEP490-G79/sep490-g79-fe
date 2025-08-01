@@ -55,6 +55,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { DateTimePicker } from "./DateTimePicker";
 import PetSubmissionInterviewSection from "./PetSubmissionInterviewSection";
+import CreateDialog from "@/components/shelter/shelter-management/consent-form/CreateDialog";
 function getColorBarClass(total: number): string {
   if (total <= 29) return "bg-red-500";
   if (total >= 30 && total <= 59) return "bg-yellow-400";
@@ -117,7 +118,7 @@ const isShelterManager: boolean = shelters?.some((shelter) => {
       (roles === "manager" || (Array.isArray(roles) && roles.includes("manager")))
     );
   });
-}) ?? false; // <-- fallback nếu undefined
+}) ?? false; 
 
 
 
@@ -632,12 +633,13 @@ const isShelterManager: boolean = shelters?.some((shelter) => {
                     <CardContent className="flex items-center justify-between">
 
                       <button
-                        onClick={() => setSelectedSubmission(submission)}
+                        onClick={() => setSelectedSubmission(submission) }                   
                         className="text-sm underline text-primary ml-auto"
                       >
                         Xem chi tiết
                       </button>
-
+                        <CreateDialog />
+           
                     </CardContent>
                   </Card>
                 </div>

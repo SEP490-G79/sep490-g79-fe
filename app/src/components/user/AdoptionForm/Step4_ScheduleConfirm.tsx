@@ -109,15 +109,15 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
   return (
     <div className="max-w-6xl mx-auto space-y-8 py-12">
       <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-gray-900">Hãy xác nhân lịch phỏng vấn!</h1>
-        <p className="text-gray-600 max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Hãy xác nhân lịch phỏng vấn!</h1>
+        <p className="text-gray-600 max-w-2xl mx-auto dark:text-gray-400">
           Chúng tôi rất vui khi bạn quan tâm đến việc nhận nuôi. Hãy chọn thời gian phù hợp để chúng ta có thể trò chuyện.
         </p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="space-y-6">
-          <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-blue-50">
+          <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-blue-50 dark:from-gray-700 dark:to-gray-800">
             <CardContent className="p-6">
               <div className="flex items-center gap-4 mb-6">
                 <div className="relative">
@@ -129,7 +129,7 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
 
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">Xin chào, {submission?.performedBy?.fullName}! </h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Xin chào, {submission?.performedBy?.fullName}! </h3>
                   <p className="text-gray-600">
                     Bạn đang nhận nuôi{" "}
                     <span className="font-semibold text-blue-600">bé {submission?.adoptionForm?.pet?.name}</span>
@@ -137,18 +137,18 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg p-4 border border-blue-100">
+              <div className="bg-white rounded-lg p-4 border border-blue-100 dark:bg-gray-800">
                 <div className="flex items-center gap-2 mb-2">
 
-                  <span className="font-medium text-gray-800">Trung tâm {submission?.adoptionForm?.shelter?.name}</span>
+                  <span className="font-medium text-gray-800 dark:text-white">Trung tâm {submission?.adoptionForm?.shelter?.name}</span>
                 </div>
-                <p className="text-sm">Địa chỉ: {submission?.adoptionForm?.shelter?.address}</p>
-                <p className="text-sm">Hotline: {submission?.adoptionForm?.shelter?.hotline}</p>
-                <p className="text-sm">Email: {submission?.adoptionForm?.shelter?.email}</p>
+                <p className="text-sm dark:text-gray-400">Địa chỉ: {submission?.adoptionForm?.shelter?.address}</p>
+                <p className="text-sm dark:text-gray-400">Hotline: {submission?.adoptionForm?.shelter?.hotline}</p>
+                <p className="text-sm dark:text-gray-400">Email: {submission?.adoptionForm?.shelter?.email}</p>
               </div>
-            </CardContent>
+            </CardContent>  
           </Card>
-          <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-50 to-white">
+          <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-50 to-white dark:from-gray-800 dark:to-gray-700">
             <CardHeader className="pb-0">
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-blue-600" />
@@ -247,10 +247,10 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
         </div>
 
         <div className="space-y-6">
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-purple-50">
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-purple-100 dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900">
             <CardHeader className="text-center pb-4">
-              <CardTitle className="text-xl text-gray-800">Chọn thời gian phù hợp với bạn</CardTitle>
-              <p className="text-sm text-gray-600">Vui lòng chọn ngày và giờ bạn muốn tham gia phỏng vấn</p>
+              <CardTitle className="text-xl text-gray-800 dark:text-white">Chọn thời gian phù hợp với bạn</CardTitle>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Vui lòng chọn ngày và giờ bạn muốn tham gia phỏng vấn</p>
             </CardHeader>
             <CardContent className="flex flex-col items-center">
               <SimpleDateSelector

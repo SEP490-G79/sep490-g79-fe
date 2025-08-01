@@ -99,7 +99,6 @@ export default function AdoptionActivities({ userId }: Props) {
   });
 
 
-
   const filteredActivities = submissions.filter((item) => {
     const matchShelter =
       selectedShelter === "Tất cả" ||
@@ -146,8 +145,8 @@ export default function AdoptionActivities({ userId }: Props) {
   };
 
   const handleCardClick = (submission: MissionForm) => {
-    const petId = submission.adoptionForm.pet._id;
-    const submissionId = submission._id;
+    const petId = submission.adoptionForm?.pet?._id;
+    const submissionId = submission?._id;
     navigate(`/adoption-form/${petId}/${submissionId}`);
   };
 
@@ -258,10 +257,15 @@ export default function AdoptionActivities({ userId }: Props) {
                 {/* Nội dung chính */}
                 <CardHeader className="flex flex-row items-center gap-4 pb-2 z-0">
                   <img
-                    src={submission.adoptionForm?.pet?.photos[0]}
+                    src={
+                      Array.isArray(submission.adoptionForm?.pet?.photos) && submission.adoptionForm.pet.photos.length > 0
+                        ? submission.adoptionForm.pet.photos[0]
+                        : "/fallback-avatar.png"
+                    }
                     alt="Pet Avatar"
                     className="w-16 h-16 rounded object-cover"
                   />
+
                   <div>
                     <CardTitle className="text-lg">
                       {submission.adoptionForm?.pet?.name}
