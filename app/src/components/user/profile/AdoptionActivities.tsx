@@ -154,6 +154,8 @@ export default function AdoptionActivities({ userId }: Props) {
     };
   }, []);
 
+  console.log(petsList);
+  
 
   return (
     <Tabs

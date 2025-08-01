@@ -80,21 +80,19 @@ const UserAdoptionFormPage = () => {
           setSubmissionId(checkRes.data.submissionId);
           setAgreed(true);
           setHasChecked(checkRes.data);
-    
-          
 
           if (status === "pending" || status === "scheduling") {
             setStep(3);
           } else if (status === "interviewing" || status === "reviewed") {
             setStep(4);
-          } else if(status === "rejected"){
-              if(hasChecked?.selectedSchedule){
-                setStep(5);
-              }else{
-                setStep(3);
-              }
-          
-          } else if (status === "approved" ) {
+          } else if (status === "rejected") {
+            if (hasChecked?.selectedSchedule) {
+              setStep(5);
+            } else {
+              setStep(3);
+            }
+
+          } else if (status === "approved") {
             setStep(5);
           } else {
             setStep(3);
@@ -125,6 +123,21 @@ const UserAdoptionFormPage = () => {
     fetchData();
   }, [id]);
 
+useEffect(() => {
+  const fetchSubmission = async () => {
+    if (!submissionId) return;
+    try {
+      const res = await authAxios.get(`${coreAPI}/adoption-submissions/${submissionId}`);
+      setSubmission(res.data);
+    } catch (err) {
+      console.error("Lỗi khi lấy submission:", err);
+    }
+  };
+
+  if (!submission && submissionId && hasCheckedSubmitted) {
+    fetchSubmission();
+  }
+}, [submissionId, submission, hasCheckedSubmitted]);
 
 
   // Ghi lại mỗi khi step thay đổi
@@ -146,6 +159,9 @@ const UserAdoptionFormPage = () => {
     }
   }, [answers, id, submissionId, hasCheckedSubmitted]);
 
+useEffect(() => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}, [step]);
 
 
 
@@ -164,14 +180,14 @@ const UserAdoptionFormPage = () => {
   } else if (status === "interviewing" || status === "reviewed") {
     maxStep = 3;
   } else if (status === "rejected") {
-    if(hasChecked?.selectedSchedule){
+    if (hasChecked?.selectedSchedule) {
       maxStep = 4;
-    }else{
+    } else {
       maxStep = 2;
     }
   }
-  
-  else if (status === "approved" ) {
+
+  else if (status === "approved") {
     maxStep = 4;
   }
   const renderStepIndicator = () => (
@@ -192,17 +208,17 @@ const UserAdoptionFormPage = () => {
 
           const StepCircle = (
             <div
-  className={`
+              className={`
     rounded-full w-12 h-12 flex items-center justify-center text-sm font-semibold
     transition-transform duration-300 ease-in-out
     ${isActive ? "bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white scale-125 shadow-xl z-10" : ""}
     ${isCompleted ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white" : ""}
     ${!isActive && !isCompleted ? "bg-slate-200 text-slate-500" : ""}
   `}
-  style={{ transformOrigin: "center" }}
->
-  {index + 1}
-</div>
+              style={{ transformOrigin: "center" }}
+            >
+              {index + 1}
+            </div>
 
           );
 
@@ -341,7 +357,7 @@ const UserAdoptionFormPage = () => {
           }} />;
 
       case 5:
-        return <Step5_ConsentForm onNext={next} onBack={back} submission = {submission} />
+        return <Step5_ConsentForm onNext={next} onBack={back} submission={submission} />
       default:
         return null;
     }

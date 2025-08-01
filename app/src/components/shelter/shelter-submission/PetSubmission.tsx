@@ -386,20 +386,13 @@ export default function PetSubmission() {
 
   const statusCounts = submissions
   .filter((sub) => {
-    // Nếu là manager => thấy tất cả
     if (isManager) return true;
-
-    // Nếu là staff
     if (isStaff) {
       if (["interviewing", "reviewed"].includes(sub.status)) {
-        // Chỉ thấy nếu là người phỏng vấn
         return sub.interview?.performedBy?._id === userProfile?._id;
       }
-      // Các status khác: cho xem hết như manager
       return true;
     }
-
-    // Các vai trò khác không thấy gì
     return false;
   })
   .reduce<Record<string, number>>((acc, sub) => {

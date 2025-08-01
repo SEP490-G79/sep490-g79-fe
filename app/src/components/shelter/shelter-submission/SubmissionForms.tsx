@@ -46,7 +46,7 @@ export default function SubmissionForms() {
                     params: {
                         page: 1,
                         limit: 1000, // Lấy tất cả để phân trang client-side
-                        status: "available",
+                        status: ["available", "adopted", "booking", "delivered"], 
                     },
                 });
 

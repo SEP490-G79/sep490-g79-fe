@@ -96,15 +96,30 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
   if (!submission?.interview) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-      
+
         <p className="text-lg text-gray-600">Chưa có lịch phỏng vấn được tạo.</p>
       </div>
     );
   }
 
+  const handleNextStep = () => {
+    if (submission?.status !== "approved" && submission?.status !== "subjected") {
+      toast.error("Bạn chưa thể chuyển bước. Đơn của bạn chưa đủ điều kiện.");
+      return;
+    }
+
+
+    if (!isValidDateInRange(selectedTime)) {
+      toast.error("Vui lòng chọn thời gian hợp lệ.");
+      return;
+    }
+
+    onNext();
+  };
+
+
   const deadline = new Date(submission.interview.availableTo);
   deadline.setDate(deadline.getDate());
-
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 py-12">
@@ -146,7 +161,7 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
                 <p className="text-sm dark:text-gray-400">Hotline: {submission?.adoptionForm?.shelter?.hotline}</p>
                 <p className="text-sm dark:text-gray-400">Email: {submission?.adoptionForm?.shelter?.email}</p>
               </div>
-            </CardContent>  
+            </CardContent>
           </Card>
           <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-50 to-white dark:from-gray-800 dark:to-gray-700">
             <CardHeader className="pb-0">
@@ -265,7 +280,7 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
                 <div className="mt-6 w-full max-w-sm ">
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4  ">
                     <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 "  />
+                      <CheckCircle2 className="w-5 h-5 text-green-600 " />
                       <span className="font-semibold text-green-800 ">Thời gian đã chọn</span>
                     </div>
                     <p className="text-green-700 font-medium " >
@@ -317,7 +332,7 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
           ← Quay lại
         </Button>
         <Button
-          onClick={onNext}
+          onClick={handleNextStep}
           disabled={!isValidDateInRange(selectedTime)}
           className="px-8 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200"
         >

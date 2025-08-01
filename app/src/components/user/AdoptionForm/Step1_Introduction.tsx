@@ -12,7 +12,7 @@ import "react-photo-view/dist/react-photo-view.css";
 import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { Pet } from "@/types/Pet";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Step1Props {
   form: AdoptionForm;
@@ -22,6 +22,7 @@ interface Step1Props {
   onBack: () => void;
   setAgreed: (val: boolean) => void;
   readOnly?: boolean;
+
 }
 
 const Step1_Introduction = ({ form, agreed, onAgree, onNext, onBack, setAgreed, readOnly }: Step1Props) => {
@@ -66,7 +67,7 @@ const Step1_Introduction = ({ form, agreed, onAgree, onNext, onBack, setAgreed, 
           maximumFractionDigits: 0,
         }).format(money);
 
-
+       
   return (
     <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
       <Card className="md:col-span-1">

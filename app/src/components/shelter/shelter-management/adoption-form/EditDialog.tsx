@@ -76,7 +76,6 @@ export default function EditDialog({
       pet.status == "unavailable" &&
       !shelterForms.some((form: AdoptionForm) => form.pet._id == pet._id)
   );
-  console.log(adoptionForm?.pet?._id);
 
   const FormSchema = z.object({
     title: z.string().min(5, "Tiêu đề không được để trống."),
