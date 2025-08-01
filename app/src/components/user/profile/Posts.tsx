@@ -711,7 +711,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                     onClick={() =>
                       setExpandedPosts(prev => ({ ...prev, [post._id]: true }))
                     }
-                    className="text-blue-500 underline ml-1 text-xs cursor-pointer"
+                    className="ml-2 text-xs cursor-pointer hover:text-primary"
                   >
                     Xem thêm
                   </button>
@@ -724,7 +724,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                       onClick={() =>
                         setExpandedPosts(prev => ({ ...prev, [post._id]: false }))
                       }
-                      className="text-blue-500 underline ml-1 text-xs"
+                      className="ml-2 text-xs cursor-pointer hover:text-primary"
                     >
                       Ẩn bớt
                     </button>

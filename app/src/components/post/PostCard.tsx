@@ -223,7 +223,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onLike, isGues
         {shouldTruncate && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="ml-2 text-blue-500 underline text-xs cursor-pointer hover:text-blue-600"
+            className="ml-2 text-xs cursor-pointer hover:text-primary"
           >
             {expanded ? "Ẩn bớt" : "Xem thêm"}
           </button>
