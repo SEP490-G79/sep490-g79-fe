@@ -14,6 +14,7 @@ import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { MissionForm } from "@/types/MissionForm";
 import type { ConsentForm } from "@/types/ConsentForm";
+import { useLocation } from "react-router-dom";
 
 const excludedURLs = [
   "/",
@@ -119,6 +120,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const [shelterConsentForms, setShelterConsentForms] = useState<ConsentForm[]>(
     []
   );
+  const location = useLocation();
 
   // APIs
   const coreAPI = "http://localhost:9999";
@@ -140,12 +142,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     axios
       .post(`${authAPI}/logout`, { id: user?.id })
       .then((res) => {
-        toast.success("Thoát đăng nhập thành công");
+        // toast.success("Thoát đăng nhập thành công");
         setUser(null);
         localStorage.removeItem("accessToken");
       })
       .catch((err) => {
-        toast.error("Lỗi thoát đăng nhập!");
+        toast.error("Lỗi đăng xuất!");
         setUser(null);
         localStorage.removeItem("accessToken");
       });
@@ -171,7 +173,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       setUser(null);
       setUserProfile(null);
     }
-  }, [localStorage.getItem("accessToken")]);
+  }, [localStorage.getItem("accessToken"), location.pathname]);
 
   // get pets list
   useEffect(() => {

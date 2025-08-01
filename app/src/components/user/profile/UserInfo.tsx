@@ -18,7 +18,7 @@ function UserInfo({ profile }: { profile: User }) {
                     {/* Container: Card + Button */}
                     <div className="absolute bottom-[-530px]  flex flex-col items-start gap-y-14 px-4 sm:px-6 ml-20">
                         {/* Card: Avatar + Info */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center w-[300px] ">
+                        <div className="bg-(--card) rounded-xl shadow-lg p-6 flex flex-col items-center w-[300px] ">
                             {/* Avatar */}
                             <div className="mb-4">
                                 <PhotoProvider>
@@ -67,7 +67,7 @@ function UserInfo({ profile }: { profile: User }) {
                         </div>
                         {/* Card: Request to Join or Create a Shelter */}
 
-                        <div className="bg-slate-300 dark:bg-gray-800 rounded-xl shadow-lg p-6 w-[330px] pt-4 ">
+                        <div className="bg-(--card) rounded-xl shadow-lg p-6 w-[330px] pt-4 ">
                             <h3 className="text-md font-semibold mb-2 text-black dark:text-white">
                                 Yêu cầu tham gia hoặc tạo mới một trung tâm cứu trợ
                             </h3>

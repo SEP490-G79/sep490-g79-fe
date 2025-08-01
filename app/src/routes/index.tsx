@@ -44,6 +44,9 @@ import PetSubmission from "@/components/shelter/shelter-submission/PetSubmission
 import ReturnRequestManagement from "@/components/shelter/shelter-management/return-request/ReturnRequestManagement";
 import { ConsentForms } from "@/components/shelter/shelter-management/consent-form/ConsentForms";
 import ConsentForm from "@/components/shelter/shelter-management/consent-form/ConsentForm";
+import ForgotPassword from "@/pages/Common/ForgotPassword";
+import AboutUs from "@/pages/Common/AboutUs";
+import AdoptionProcedures from "@/pages/Common/AdoptionProcedures";
 
 function AppRoutes() {
   return (
@@ -53,8 +56,11 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/active-account" element={<HandleVerify />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
       </Route>
       <Route path="/faq" element={<FAQ />} />
+      <Route path="/about-us" element={<AboutUs />} />
+      <Route path="/adoption-procedures" element={<AdoptionProcedures />} />
       <Route path="/pets-list" element={<PetsListPage />} />
       <Route path="/pets/:id" element={<PetProfilePage />} />
       <Route
@@ -68,23 +74,12 @@ function AppRoutes() {
         element={<BlogDetail />}
       />
       <Route path="/pet/:petId" element={<ViewPetDetails />} />
-      <Route path="/shelter/dashboard" element={<ShelterDashboard />} />
-
-      <Route path="/shelters/:shelterId/management" element={<ManageShelter />}>
-        <Route index element={<ShelterProfile />} />
-        <Route path="profile" element={<ShelterProfile />} />
-        <Route path="staffs-management" element={<ShelterStaffManagement />} />
-        <Route path="pet-profiles" element={<PetManagement />} />
-
-        <Route path="adoption-templates" element={<AdoptionTemplates />} />
-        <Route path="adoption-forms" element={<AdoptionForms />} />
-      </Route>
+      
 
       <Route element={<PrivateRoutes />}>
         <Route index element={<Navigate to="/home" replace={true} />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/profile/:userId" element={<ProfilePage />} />
         <Route path="/profile-setting" element={<ProfileSettings />} />
         <Route
           path="/shelter-establishment"
@@ -99,7 +94,7 @@ function AppRoutes() {
             </ShelterRoute>
           }
         >
-          <Route index element={<ShelterDashboard />} />
+          <Route index element={<ShelterProfile />} />
           <Route path="dashboard" element={<ShelterDashboard />} />
           <Route path="shelter-profile" element={<ShelterProfile />} />
           <Route
@@ -125,6 +120,8 @@ function AppRoutes() {
           />
         </Route>
       </Route>
+
+      <Route path="/profile/:userId" element={<ProfilePage />} />
 
       <Route path="/donation-history" element={<DonationHistory />} />
       <Route path="/donation" element={<DonationPage />} />

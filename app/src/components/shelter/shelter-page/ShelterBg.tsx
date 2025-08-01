@@ -9,10 +9,11 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Settings } from "lucide-react";
-import React from "react";
+import { ClipboardList, Settings } from "lucide-react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import type { Shelter } from "@/types/Shelter";
+import AppContext from "@/context/AppContext";
 
 interface ShelterBgProps {
   shelter: Shelter;
@@ -20,7 +21,10 @@ interface ShelterBgProps {
 
 export const ShelterBg: React.FC<ShelterBgProps> = ({ shelter }) => {
   const foundation = new Date(shelter.foundationDate).toLocaleDateString();
-
+  const { user } = useContext(AppContext);
+  const isShelterMember = shelter.members?.some(
+    (member) => member?._id == user?._id
+  );
   return (
     <>
       <Breadcrumb className="basis-full mb-1">
@@ -49,11 +53,21 @@ export const ShelterBg: React.FC<ShelterBgProps> = ({ shelter }) => {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <img
+      {/* <img
         src={shelter.background}
         alt={`${shelter.name} background`}
         className="w-full h-[15rem] object-cover rounded-md"
-      />
+      /> */}
+      <Avatar className="w-full h-[15rem] rounded-sm">
+        <AvatarImage
+          src={shelter.background}
+          alt={`${shelter.name} background`}
+          className=" object-cover object-center rounded-sm"
+        />
+        <AvatarFallback className="text-3xl rounded-sm">
+          <span>{shelter.name.toUpperCase()}</span>
+        </AvatarFallback>
+      </Avatar>
 
       <div className="flex flex-wrap justify-between items-center py-2 px-5">
         <div className="flex items-center space-x-4">
@@ -69,8 +83,8 @@ export const ShelterBg: React.FC<ShelterBgProps> = ({ shelter }) => {
 
             <div className="flex -space-x-2 mt-2">
               {shelter.members.map((member) => (
-               <Link to={`/profile/${member._id}`}>
-                  <Avatar key={member._id} className="ring-2 ring-primary">
+                <Link key={member?._id} to={`/profile/${member._id}`}>
+                  <Avatar className="ring-2 ring-primary">
                     <AvatarImage src={member.avatar} />
                     <AvatarFallback>
                       {member.fullName.trim().split(" ").pop()?.charAt(0) ?? ""}
@@ -86,16 +100,18 @@ export const ShelterBg: React.FC<ShelterBgProps> = ({ shelter }) => {
           </div>
         </div>
 
-        <Button variant="ghost" asChild>
-          <Link
-            to={`/shelters/${shelter._id}/management`}
-            onClick={() =>
-              window.scrollTo({ top: 0, left: 0, behavior: "instant" })
-            }
-          >
-            <Settings />
-          </Link>
-        </Button>
+        {isShelterMember && (
+          <Button variant="ghost" className="text-xs" asChild>
+            <Link
+              to={`/shelters/${shelter._id}/management`}
+              onClick={() =>
+                window.scrollTo({ top: 0, left: 0, behavior: "instant" })
+              }
+            >
+              <ClipboardList className="text-(--primary)" /> Quản lý trung tâm
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* <Separator /> */}

@@ -63,11 +63,10 @@ function ShelterPosts() {
     const [editingPost, setEditingPost] = useState<any | null>(null);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [detailPostId, setDetailPostId] = useState<string | null>(null);
-    const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
     const [loadingPosts, setLoadingPosts] = useState(false);
     const [visiblePosts, setVisiblePosts] = useState(7);
     const [loadingMore, setLoadingMore] = useState(false);
-    const [isShelterMember, setIsShelterMember] = useState(false);
+
     const [isManagerOrStaff, setIsManagerOrStaff] = useState(false);
     const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null);
     const [address, setAddress] = useState("");
@@ -76,6 +75,7 @@ function ShelterPosts() {
     const [userLocation, setUserLocation] = useState<LatLng | null>(null);
     const [addressConfirmed, setAddressConfirmed] = useState(false);
     const [shelterInfo, setShelterInfo] = useState<any>(null);
+    const [sortOption, setSortOption] = useState<"latest" | "oldest" | "nearest" | "farthest">("latest");
     const [confirmDialog, setConfirmDialog] = useState({
         open: false,
         title: "",
@@ -97,8 +97,6 @@ function ShelterPosts() {
             );
 
             const roles = member?.roles || [];
-
-            setIsShelterMember(!!member);
             setIsManagerOrStaff(roles.includes("manager") || roles.includes("staff"));
         } catch {
             console.error("Không lấy được thông tin shelter");
@@ -246,26 +244,27 @@ function ShelterPosts() {
 
 
     function getSortedShelterPosts(posts: any[], userLocation: LatLng | null): any[] {
-        const now = new Date();
-        const recentThreshold = 1000 * 60 * 60 * 24; // 24 giờ
+        if (sortOption === "latest") {
+            return [...posts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }
 
-        const recentPosts = posts.filter(
-            (post) => new Date(now).getTime() - new Date(post.createdAt).getTime() < recentThreshold
-        );
+        if (sortOption === "oldest") {
+            return [...posts].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        }
 
-        const otherPosts = posts.filter((post) => !recentPosts.includes(post));
+        if ((sortOption === "nearest" || sortOption === "farthest") && userLocation) {
+            const postsWithLocation = posts.filter(post => post.location?.lat && post.location?.lng);
+            const postsWithoutLocation = posts.filter(post => !post.location?.lat || !post.location?.lng);
 
-        const sortedRecent = [...recentPosts].sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+            const sorted = sortPostsByDistance(postsWithLocation, userLocation);
+            const sortedByDirection = sortOption === "farthest" ? sorted.reverse() : sorted;
 
-        const sortedOther = userLocation
-            ? sortPostsByDistance(otherPosts, userLocation)
-            : [...otherPosts].sort(
-                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            );
+            return [...sortedByDirection, ...postsWithoutLocation.sort((a, b) =>
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            )];
+        }
 
-        return [...sortedRecent, ...sortedOther];
+        return posts;
     }
 
 
@@ -338,10 +337,10 @@ function ShelterPosts() {
         <div className="max-w-2xl mx-auto py-10 px-4">
             {isManagerOrStaff && (
                 <div
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
+                    className="bg-(--card) rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
                     onClick={() => setOpenDialog(true)}
                 >
-                    <Avatar className="w-10 h-10">
+                    <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
                         {/* shelter avatar */}
                         <AvatarImage src={shelterInfo?.avatar || "/placeholder.svg"} />
                         <AvatarFallback>{shelterInfo?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
@@ -393,6 +392,7 @@ function ShelterPosts() {
                             value={postContent}
                             onChange={(e) => setPostContent(e.target.value)}
                             placeholder="Bạn muốn chia sẻ điều gì?"
+                            className="resize-none border border-border text-base placeholder:text-muted-foreground overflow-y-auto max-h-[200px] focus:ring-0"
                         />
                         <div className="flex gap-4">
                             <label htmlFor="upload-image">
@@ -477,6 +477,8 @@ function ShelterPosts() {
                         <div className="flex justify-end">
                             <Button
                                 variant="ghost"
+                                disabled={loading || (!postContent.trim() && selectedImages.length === 0)}
+                                className="cursor-pointer"
                                 onClick={() => {
                                     setConfirmDialog({
                                         open: true,
@@ -501,7 +503,7 @@ function ShelterPosts() {
                             >
                                 Hủy
                             </Button>
-                            <Button onClick={handleCreatePost} disabled={loading || (!postContent.trim() && selectedImages.length === 0)} className="flex items-center gap-2">
+                            <Button onClick={handleCreatePost}  disabled={loading || (!postContent.trim() && selectedImages.length === 0)} className="flex items-center gap-2 cursor-pointer ml-2">
                                 {loading ? "Đang đăng..." : "Đăng bài"}
                             </Button>
                         </div>
@@ -509,8 +511,23 @@ function ShelterPosts() {
                 </DialogContent>
             </Dialog>
 
-            <div className="flex justify-end items-center gap-2 mt-6">
-                <Button variant="outline" onClick={fetchPosts} className="flex items-center gap-2 text-sm">
+            <div className="flex justify-between items-center gap-2 mt-6">
+                <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground">Sắp xếp:</span>
+                    <Select value={sortOption} onValueChange={(value) => setSortOption(value as any)}>
+                        <SelectTrigger className="w-[160px] h-8 text-sm cursor-pointer">
+                            <SelectValue placeholder="Sắp xếp" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem className="cursor-pointer" value="latest">Mới nhất</SelectItem>
+                            <SelectItem className="cursor-pointer" value="oldest">Cũ nhất</SelectItem>
+                            <SelectItem className="cursor-pointer" value="nearest">Gần nhất</SelectItem>
+                            <SelectItem className="cursor-pointer" value="farthest">Xa nhất</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <Button variant="outline" onClick={fetchPosts} className="flex items-center gap-2 text-sm cursor-pointer">
                     <RefreshCcw className={`w-4 h-4 ${loadingPosts ? "animate-spin" : ""}`} />
                     {loadingPosts ? "Đang tải..." : "Tải lại bài viết"}
                 </Button>
@@ -547,7 +564,6 @@ function ShelterPosts() {
                 ) : (
                     getSortedShelterPosts(postsData, userLocation)
                         .slice(0, visiblePosts)
-                        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                         .map((post) => (
                             <ShelterPostCard
                                 key={post._id}
@@ -640,7 +656,10 @@ function ShelterPosts() {
                             p._id === updated._id
                                 ? {
                                     ...p,
-                                    likedBy: updated.likedBy,
+                                    ...updated,
+                                    createdBy: updated.createdBy?._id || updated.createdBy,
+                                    user: updated.user || p.user,
+                                    shelter: updated.shelter || p.shelter,
                                     latestComment: updated.latestComment ?? p.latestComment,
                                 }
                                 : p

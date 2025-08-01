@@ -7,7 +7,8 @@ import useAuthAxios from "@/utils/authAxios";
 import Step1_Introduction from "@/components/user/AdoptionForm/Step1_Introduction";
 import Step2_AdoptionForm from "@/components/user/AdoptionForm/Step2_AdoptionForm";
 import Step3_SubmissionForm from "@/components/user/AdoptionForm/Step3_SubmissionForm";
-import Step4_ConsentForm from "@/components/user/AdoptionForm/Step4_ConsentForm";
+import Step4_ScheduleConfirm from "@/components/user/AdoptionForm/Step4_ScheduleConfirm";
+import Step5_ConsentForm from "@/components/user/AdoptionForm/Step5_ConsentForm";
 import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { Question } from "@/types/Question";
 import {
@@ -17,13 +18,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+
 const UserAdoptionFormPage = () => {
   const getInitialAnswers = (): Record<string, string | string[]> => {
     if (!id || submissionId) return {};
     const saved = localStorage.getItem(`adoptionFormAnswers-${id}`);
     return saved ? JSON.parse(saved) : {};
   };
-  const { id,submissionId: routeSubmissionId  } = useParams();
+  const { id, submissionId: routeSubmissionId } = useParams();
   const { coreAPI, userProfile } = useContext(AppContext);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<AdoptionForm | null>(null);
@@ -32,6 +34,7 @@ const UserAdoptionFormPage = () => {
   const [submission, setSubmission] = useState<any>(null);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>(getInitialAnswers);
   const [hasCheckedSubmitted, setHasCheckedSubmitted] = useState(false);
+  const [hasChecked, setHasChecked] = useState<any>(null);
 
 
   const getInitialStep = () => {
@@ -73,10 +76,31 @@ const UserAdoptionFormPage = () => {
         );
 
         if (checkRes.data.submitted) {
-          setStep(3);
+          const status = checkRes.data.status;
           setSubmissionId(checkRes.data.submissionId);
           setAgreed(true);
-        } else {
+          setHasChecked(checkRes.data);
+    
+          
+
+          if (status === "pending" || status === "scheduling") {
+            setStep(3);
+          } else if (status === "interviewing" || status === "reviewed") {
+            setStep(4);
+          } else if(status === "rejected"){
+              if(hasChecked?.selectedSchedule){
+                setStep(5);
+              }else{
+                setStep(3);
+              }
+          
+          } else if (status === "approved" ) {
+            setStep(5);
+          } else {
+            setStep(3);
+          }
+        }
+        else {
           const savedAnswers = localStorage.getItem(`adoptionFormAnswers-${id}`);
           const savedStep = localStorage.getItem(`adoptionFormStep-${id}`);
           const savedAgreed = localStorage.getItem(`adoptionFormAgreed-${id}`);
@@ -94,12 +118,13 @@ const UserAdoptionFormPage = () => {
         toast.error("Không thể lấy thông tin đơn xin nhận nuôi");
       } finally {
         setLoading(false);
-        setHasCheckedSubmitted(true); // ✅ Đánh dấu đã check xong
+        setHasCheckedSubmitted(true); //  Đánh dấu đã check xong
       }
     };
 
     fetchData();
   }, [id]);
+
 
 
   // Ghi lại mỗi khi step thay đổi
@@ -129,86 +154,112 @@ const UserAdoptionFormPage = () => {
   }
 
 
-  const steps = ["Quy định chung", "Đăng ký nhận nuôi", "Chờ phản hồi", "Đơn cam kết"];
-const renderStepIndicator = () => (
-  <TooltipProvider>
-    <div className="flex items-center justify-between w-full max-w-4xl mx-auto px-4 py-4 relative">
-      {steps.map((label, index) => {
-        const isActive = index === step - 1;
-        const isCompleted = submissionId ? index < 3 : index < step - 1;
-        const isLineCompleted = submissionId ? index < 2 : index < step - 1;
-        const isLast = index === steps.length - 1;
+  const steps = ["Quy định chung", "Đăng ký nhận nuôi", "Chờ phản hồi", "Xác nhận lịch phỏng vấn", "Đơn cam kết"];
+  const status = submission?.status;
 
-        const canNavigate = submissionId ? index <= 2 : index <= step - 1;
+  let maxStep = step - 1;
 
-        const tooltipMessage = isCompleted
-          ? "Bước đã hoàn thành"
-          : isActive
-          ? "Bước hiện tại"
-          : `Cần hoàn thành bước trước để đến "${label}"`;
+  if (status === "pending" || status === "scheduling") {
+    maxStep = 2;
+  } else if (status === "interviewing" || status === "reviewed") {
+    maxStep = 3;
+  } else if (status === "rejected") {
+    if(hasChecked?.selectedSchedule){
+      maxStep = 4;
+    }else{
+      maxStep = 2;
+    }
+  }
+  
+  else if (status === "approved" ) {
+    maxStep = 4;
+  }
+  const renderStepIndicator = () => (
+    <TooltipProvider>
+      <div className="flex items-center justify-between w-full max-w-4xl mx-auto px-4 py-4 relative">
+        {steps.map((label, index) => {
+          const isActive = index === step - 1;
+          const isCompleted = index < maxStep;
+          const isLineCompleted = index < maxStep;
+          const isLast = index === steps.length - 1;
+          const canNavigate = index <= maxStep;
 
-        const StepCircle = (
-          <div
-            className={`rounded-full w-12 h-12 flex items-center justify-center text-sm font-medium
-              ${isCompleted
-                ? "bg-green-500 text-white"
-                : isActive
-                ? "bg-blue-500 text-white"
-                : "bg-gray-300 text-gray-600"}`}
-          >
-            {index + 1}
-          </div>
-        );
+          const tooltipMessage = isCompleted
+            ? "Bước đã hoàn thành"
+            : isActive
+              ? "Bước hiện tại"
+              : `Cần hoàn thành bước trước để đến "${label}"`;
 
-        return (
-          <div
-            key={index}
-            className={`relative flex-1 flex items-center justify-center ${
-              canNavigate ? "cursor-pointer" : "cursor-not-allowed"
-            }`}
-            onClick={() => {
-              if (canNavigate) {
-                setStep(index + 1);
-              }
-            }}
-          >
-            {!isLast && (
-              <div className="absolute top-1/3 left-1/2 w-full h-1 bg-gray-300 z-0">
-                <div
-                  className={`h-1 transition-all duration-300 ${
-                    isLineCompleted ? "bg-green-500 w-full" : "bg-gray-300 w-0"
-                  }`}
-                />
+          const StepCircle = (
+            <div
+  className={`
+    rounded-full w-12 h-12 flex items-center justify-center text-sm font-semibold
+    transition-transform duration-300 ease-in-out
+    ${isActive ? "bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white scale-125 shadow-xl z-10" : ""}
+    ${isCompleted ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white" : ""}
+    ${!isActive && !isCompleted ? "bg-slate-200 text-slate-500" : ""}
+  `}
+  style={{ transformOrigin: "center" }}
+>
+  {index + 1}
+</div>
+
+          );
+
+
+          return (
+            <div
+              key={index}
+              className={`relative flex-1 flex items-center justify-center ${canNavigate ? "cursor-pointer" : "cursor-not-allowed"
+                }`}
+              onClick={() => {
+                if (canNavigate) {
+                  if (index + 1 === 4) {
+                    if (submission?.status === "pending" || submission?.status === "scheduling") {
+                      toast.error("Bạn chưa thể xác nhận lịch phỏng vấn. Đơn đang chờ xử lý.");
+                      return;
+                    }
+                  }
+                  setStep(index + 1);
+                }
+              }}
+            >
+              {!isLast && (
+                <div className="absolute top-1/3 left-1/2 w-full h-1 bg-gray-300 z-0">
+                  <div
+                    className={`h-1 transition-all duration-300 ${isLineCompleted ? "bg-green-500 w-full" : "bg-gray-300 w-0"
+                      }`}
+                  />
+                </div>
+              )}
+
+              <div className="relative z-10 flex flex-col items-center">
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    {StepCircle}
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-sm text-center">
+                    {tooltipMessage}
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <div className="text-sm font-medium mt-1 text-center">
+                      {label}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-sm text-center">
+                    {tooltipMessage}
+                  </TooltipContent>
+                </Tooltip>
               </div>
-            )}
-
-            <div className="relative z-10 flex flex-col items-center">
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  {StepCircle}
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-sm text-center">
-                  {tooltipMessage}
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <div className="text-sm font-medium mt-1 text-center">
-                    {label}
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-sm text-center">
-                  {tooltipMessage}
-                </TooltipContent>
-              </Tooltip>
             </div>
-          </div>
-        );
-      })}
-    </div>
-  </TooltipProvider>
-);
+          );
+        })}
+      </div>
+    </TooltipProvider>
+  );
 
 
 
@@ -245,7 +296,13 @@ const renderStepIndicator = () => (
       case 3:
         return <Step3_SubmissionForm
           submissionId={submissionId}
-          onNext={next}
+          onNext={() => {
+            if (submission?.status === "pending" || submission?.status === "scheduling") {
+              toast.error("Bạn chưa thể xác nhận lịch phỏng vấn. Đơn đang chờ xử lý.");
+              return;
+            }
+            next();
+          }}
           onBack={back}
           onLoadedSubmission={(submission) => {
             setSubmission(submission);
@@ -265,7 +322,26 @@ const renderStepIndicator = () => (
 
 
       case 4:
-        return <Step4_ConsentForm onNext={next} onBack={back} />;
+        return <Step4_ScheduleConfirm
+          submissionId={submissionId}
+          onNext={next} onBack={back}
+          onLoadedSubmission={(submission) => {
+            setSubmission(submission);
+            const parsed: Record<string, string | string[]> = {};
+            submission.answers.forEach((item: any) => {
+              const qid = typeof item.questionId === "string"
+                ? item.questionId
+                : item.questionId?._id;
+
+              if (!qid) return;
+              parsed[qid] = item.selections.length === 1 ? item.selections[0] : item.selections;
+            });
+
+            setAnswers(parsed);
+          }} />;
+
+      case 5:
+        return <Step5_ConsentForm onNext={next} onBack={back} submission = {submission} />
       default:
         return null;
     }

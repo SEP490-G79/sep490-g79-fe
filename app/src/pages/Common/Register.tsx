@@ -118,10 +118,6 @@ export const Register = () => {
         <div className="w-full max-w-md flex flex-col gap-6">
           {/* Tiêu đề + Google */}
           <div className="text-center space-y-4">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-              Đăng ký
-            </h1>
-
             <Button
               variant="outline"
               className="w-full flex items-center gap-2 justify-center"
@@ -137,6 +133,10 @@ export const Register = () => {
               <span className="mx-2 text-muted-foreground">Hoặc</span>
               <Separator className="flex-1" />
             </div>
+
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+              Đăng ký
+            </h1>
           </div>
 
           {/* Card */}

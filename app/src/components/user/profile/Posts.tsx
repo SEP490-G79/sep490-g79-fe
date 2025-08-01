@@ -37,6 +37,8 @@ import EditPostDialog from "@/components/post/EditPostDialog";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import ReportPostDialog from "@/components/post/ReportPost";
+import { sortPostsByDistance, type LatLng } from "@/utils/sortByDistance";
+
 dayjs.extend(relativeTime);
 dayjs.locale("vi");
 
@@ -64,6 +66,9 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
   const [location, setLocation] = useState<{ lat: number; lng: number }>({ lat: 0, lng: 0 });
   const [suggestions, setSuggestions] = useState<{ place_id: string; description: string }[]>([]);
   const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [sortOption, setSortOption] = useState<"latest" | "oldest" | "nearest" | "farthest">("latest");
+  const [userLocation, setUserLocation] = useState<LatLng | null>(null);
+  const isGuest = !userProfile;
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
@@ -77,6 +82,22 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
     description: "",
     onConfirm: () => { },
   });
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setUserLocation({
+          lat: coords.latitude,
+          lng: coords.longitude,
+        });
+      },
+      (err) => {
+        console.error("Không lấy được vị trí:", err);
+      },
+      { enableHighAccuracy: true }
+    );
+  }, []);
+
   const fetchUser = async () => {
     try {
       if (!userProfile && accessToken) {
@@ -340,18 +361,46 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
     );
   };
 
-  const userPosts = [...postsData]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .filter(post => String(post.createdBy) === currentUserId && !post.shelter);
+  const filteredPosts = (() => {
+    // Chỉ lọc bài viết do user hiện tại tạo
+    let filtered = postsData.filter((post) => {
+      const createdById = typeof post.createdBy === "string" ? post.createdBy : post.createdBy._id;
+      return createdById === currentUserId && !post.shelter;
+    });
+    if (sortOption === "latest") {
+      return [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+
+    if (sortOption === "oldest") {
+      return [...filtered].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    }
+
+    if ((sortOption === "nearest" || sortOption === "farthest") && userLocation) {
+      const postsWithLocation = filtered.filter(post => post.location?.lat && post.location?.lng);
+      const postsWithoutLocation = filtered.filter(post => !post.location?.lat || !post.location?.lng);
+
+      const sorted = sortPostsByDistance(postsWithLocation, userLocation);
+      const sortedByDirection = sortOption === "farthest" ? sorted.reverse() : sorted;
+
+      return [
+        ...sortedByDirection,
+        ...postsWithoutLocation.sort((a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ),
+      ];
+    }
+
+    return filtered;
+  })();
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto py-10 px-4">
       {userProfile?._id && (!profileUserId || profileUserId === userProfile._id) && (
         <>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
+          <div className="bg-(--card) rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
             onClick={() => setOpenCreateDialog(true)}
           >
-            <Avatar className="w-10 h-10">
+            <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
               <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
               <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
             </Avatar>
@@ -368,7 +417,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
 
               <div className="px-6 pb-6 pt-4 space-y-4 bg-background">
                 <div className="flex items-start gap-3">
-                  <Avatar className="w-10 h-10">
+                  <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
                     <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
                     <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                   </Avatar>
@@ -397,7 +446,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                   value={postContent}
                   onChange={(e) => setPostContent(e.target.value)}
                   placeholder="Bạn đang nghĩ gì?"
-                  className="resize-none border text-base placeholder:text-muted-foreground"
+                  className="resize-none border border-border text-base placeholder:text-muted-foreground overflow-y-auto max-h-[200px] focus:ring-0"
                 />
 
                 {previewUrls.length > 0 && (
@@ -482,7 +531,9 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
 
                 <div className="flex justify-end gap-2 mt-4">
                   <Button
+                    className="cursor-pointer"
                     variant="ghost"
+                    disabled={loading || (!postContent.trim() && selectedImages.length === 0)}
                     onClick={() => {
                       setConfirmDialog({
                         open: true,
@@ -511,7 +562,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                     Hủy
                   </Button>
 
-                  <Button onClick={handleCreatePost} disabled={loading || (!postContent.trim() && selectedImages.length === 0)} >
+                  <Button className="cursor-pointer" onClick={handleCreatePost} disabled={loading || (!postContent.trim() && selectedImages.length === 0)} >
                     {loading ? "Đang đăng..." : "Đăng bài"}
                   </Button>
                 </div>
@@ -522,12 +573,27 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
         </>
       )}
 
-      <div className="flex justify-end items-center gap-2">
+      <div className="flex justify-between items-center gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Sắp xếp:</span>
+          <Select value={sortOption} onValueChange={(val) => setSortOption(val as any)}>
+            <SelectTrigger className="w-[160px] h-8 text-sm cursor-pointer">
+              <SelectValue placeholder="Sắp xếp" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem className="cursor-pointer" value="latest">Mới nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="oldest">Cũ nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="nearest">Gần nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="farthest">Xa nhất</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <Button
           variant="outline"
           onClick={fetchPosts}
           disabled={loadingPosts}
-          className="flex items-center gap-2 text-sm"
+          className="flex items-center gap-2 text-sm cursor-pointer"
         >
           <RefreshCcw className={`w-4 h-4 ${loadingPosts ? "animate-spin" : ""}`} />
           {loadingPosts ? "Đang tải..." : "Tải lại bài viết"}
@@ -557,19 +623,19 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
             </div>
           ))}
         </div>
-      ) : userPosts.length === 0 ? (
+      ) : filteredPosts.length === 0 ? (
         <p className="text-center text-muted-foreground text-sm mt-6">
           Chưa có bài viết nào.
         </p>
       ) : (
-        userPosts.slice(0, visiblePosts).map((post) => (
-          <Card key={post._id} className="shadow-md dark:bg-gray-800">
+        filteredPosts.slice(0, visiblePosts).map((post) => (
+          <Card key={post._id} className="shadow-md bg-(--card)">
             <CardHeader className="pt-4 pb-2 relative">
               <CardTitle className="text-lg font-semibold">
                 <div className="flex items-start justify-between">
                   <div className="flex gap-x-3">
                     <Link to={`/profile/${post.createdBy}`}>
-                      <Avatar className="w-10 h-10">
+                      <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
                         <AvatarImage src={post.user.avatar || "/placeholder.svg"} alt="avatar" />
                         <AvatarFallback>{post.user.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                       </Avatar>
@@ -593,34 +659,38 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => { setEditingPost(post); setIsEditOpen(true); }}>
+                        <DropdownMenuItem onClick={() => { setEditingPost(post); setIsEditOpen(true); }} className="cursor-pointer">
                           <Pencil className="w-4 h-4 text-blue-500 mr-2" /> Chỉnh sửa
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() =>
                           setConfirmDialog({
                             open: true,
                             title: "Xác nhận xóa bài viết",
-                            description: "Bạn có chắc chắn muốn xóa bài viết này? Thao tác này không thể hoàn tác.",
+                            description: "Bạn có chắc chắn muốn xóa bài đăng này? Thao tác này không thể hoàn tác.",
                             confirmText: "Xoá",
                             cancelText: "Hủy",
                             onConfirm: () => handleDeletePost(post._id),
                           })
-                        }>
-                          <Trash2 className="w-4 h-4 text-red-500 mr-2" /> Xóa
+                        }
+                          className="cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500 mr-2" /> Xóa bài đăng
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
-                          <Ellipsis className="w-5 h-5" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40 p-1 z-50">
-                        <ReportPostDialog postId={post._id} key={post._id} />
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    !isGuest && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
+                            <Ellipsis className="w-5 h-5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40 p-1 z-50">
+                          <ReportPostDialog postId={post._id} key={post._id} />
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )
                   )}
                 </div>
               </CardTitle>
@@ -641,7 +711,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                     onClick={() =>
                       setExpandedPosts(prev => ({ ...prev, [post._id]: true }))
                     }
-                    className="text-blue-500 underline ml-1 text-xs cursor-pointer"
+                    className="ml-2 text-xs cursor-pointer hover:text-primary"
                   >
                     Xem thêm
                   </button>
@@ -654,7 +724,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                       onClick={() =>
                         setExpandedPosts(prev => ({ ...prev, [post._id]: false }))
                       }
-                      className="text-blue-500 underline ml-1 text-xs"
+                      className="ml-2 text-xs cursor-pointer hover:text-primary"
                     >
                       Ẩn bớt
                     </button>
@@ -667,7 +737,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
               <CardContent>
                 <PhotoProvider>
                   <div className="grid grid-cols-2 gap-2">
-                    {post.photos.slice(0, 3).map((url, idx) => (
+                    {post.photos.slice(0, 3).map((url: string, idx: number) => (
                       <PhotoView key={idx} src={url}>
                         <img
                           src={url}
@@ -702,7 +772,15 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
 
             <CardFooter className="text-sm text-gray-500 px-4">
               <div className="flex w-full justify-between">
-                <div onClick={() => handleLike(post._id)} className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${userProfile?._id && post.likedBy.includes(userProfile._id) ? "text-red-500" : ""}`}>
+                <div
+                  onClick={() => {
+                    if (isGuest) {
+                      toast.warning("Vui lòng đăng nhập để yêu thích bài viết");
+                      return;
+                    }
+                    handleLike(post._id);
+                  }}
+                  className={`flex items-center gap-1 cursor-pointer w-1/2 ml-3 ${userProfile?._id && post.likedBy.includes(userProfile._id) ? "text-red-500" : ""}`}>
                   <Heart className="w-5 h-5" />
                   <span>{post.likedBy.length}</span>
                 </div>
@@ -713,12 +791,12 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
               </div>
             </CardFooter>
 
-            <hr />
+            {post.latestComment && <hr />}
 
             {post.latestComment && (
               <div className="flex items-start gap-2 px-4 mt-1 hover:bg-muted/60 rounded-md">
                 <Link to={`/profile/${post.latestComment.commenter._id}`} className="flex-shrink-0">
-                  <Avatar>
+                  <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
                     <AvatarImage src={post.latestComment.commenter.avatar || "/placeholder.svg"} />
                     <AvatarFallback>{post.latestComment.commenter.fullName?.charAt(0)}</AvatarFallback>
                   </Avatar>
@@ -731,15 +809,9 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
                 </div>
               </div>
             )}
-
-            <div className="px-4 pb-3">
-              <button onClick={() => setDetailPostId(post._id)} className="text-gray-600 hover:underline text-sm cursor-pointer">
-                Xem thêm bình luận
-              </button>
-            </div>
           </Card>
         )))}
-      {loadingMore && userPosts.length > visiblePosts && (
+      {loadingMore && filteredPosts.length > visiblePosts && (
         <div className="space-y-6 mt-6">
           {[...Array(3)].map((_, idx) => (
             <div key={idx} className="p-4 border rounded-xl bg-background shadow space-y-4">
@@ -814,7 +886,13 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
               p._id === updated._id
                 ? {
                   ...p,
-                  likedBy: updated.likedBy,
+                  ...updated,
+                  createdBy:
+                    typeof updated.createdBy === "string"
+                      ? { _id: updated.createdBy, fullName: p.user.fullName, avatar: p.user.avatar }
+                      : updated.createdBy,
+                  user: updated.user || p.user,
+                  shelter: updated.shelter || p.shelter,
                   latestComment: updated.latestComment ?? p.latestComment,
                 }
                 : p

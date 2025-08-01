@@ -26,6 +26,7 @@ type ShelterPostCardProps = {
   onEdit: (post: any) => void;
   onDelete: (postId: string) => void;
   onViewDetail: (postId: string) => void;
+  isGuest?: boolean;
 };
 
 export default function ShelterPostCard({
@@ -35,12 +36,14 @@ export default function ShelterPostCard({
   onEdit,
   onDelete,
   onViewDetail,
+  isGuest = false,
 }: ShelterPostCardProps) {
   const [expanded, setExpanded] = useState(false);
   const currentMember = post.shelter?.members?.find((m: any) => m._id?._id === currentUserId || m._id === currentUserId);
   const roles = currentMember?.roles || [];
   const isManager = roles.includes("manager");
   const isOwner = post.createdBy?._id === currentUserId;
+
 
   const formatCreatedAt = (date: string | Date): string => {
     const now = dayjs();
@@ -50,48 +53,64 @@ export default function ShelterPostCard({
   };
 
   return (
-    <Card className="shadow-md dark:bg-gray-800">
+    <Card className="shadow-md bg-(--card)">
       <CardHeader className="pt-4 pb-2 relative">
         <CardTitle className="text-lg font-semibold">
           <div className="flex items-start justify-between">
             <div className="flex gap-x-3">
               <Link
-                to={`/shelters  /${post.shelter?._id}`}
+                to={`/shelters/${post.shelter?._id}`}
                 className="flex gap-x-3 items-start hover:underline"
               >
-                <Avatar className="w-10 h-10">
+                <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
                   <AvatarImage src={post.shelter?.avatar || "/placeholder.svg"} alt="shelter avatar" />
                   <AvatarFallback>{post.shelter?.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                 </Avatar>
               </Link>
               <div className="flex flex-col text-sm">
-                <Link
-                  to={`/shelters/${post.shelter?._id}`}
-                  className="hover:underline"
-                >
-                  <span className="font-medium">{post.shelter?.name}</span>
-                </Link>
-                <div className="text-xs text-muted-foreground flex items-center gap-2">
-                  <span>{formatCreatedAt(post.createdAt)}</span>
-                  {post.privacy === "public" ? <Globe className="w-4 h-4" /> : <GlobeLock className="w-4 h-4" />}
-                </div>
+
+                <span className="font-medium leading-snug">
+                  <Link
+                    to={`/shelters/${post.shelter._id}`}
+                    className="hover:underline"
+                  >
+                    {post.shelter.name}
+                  </Link>
+
+                  <span className="text-xs text-muted-foreground block mt-0.5 flex items-center gap-1">
+                    {currentMember && (
+                      <>
+                        Người đăng: {post.createdBy.fullName}
+                        <span className="mx-1">•</span>
+                      </>
+                    )}
+                    {formatCreatedAt(post.createdAt)}
+                    {post.privacy === "public" ? (
+                      <Globe className="w-4 h-4" />
+                    ) : (
+                      <GlobeLock className="w-4 h-4" />
+                    )}
+                  </span>
+                </span>
+
+
               </div>
 
             </div>
 
-            {(isManager || isOwner) && (
+            {(isManager || isOwner) && !isGuest && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="p-2 hover:bg-muted rounded-md">
+                  <button className="p-2 hover:bg-muted rounded-md cursor-pointer">
                     <Ellipsis className="w-5 h-5" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onEdit(post)}>
+                  <DropdownMenuItem onClick={() => onEdit(post)} className="cursor-pointer">
                     <Pencil className="w-4 h-4 text-blue-500 mr-2" /> Chỉnh sửa
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDelete(post._id)}>
-                    <Trash2 className="w-4 h-4 text-red-500 mr-2" /> Xóa
+                  <DropdownMenuItem onClick={() => onDelete(post._id)} className="cursor-pointer">
+                    <Trash2 className="w-4 h-4 text-red-500 mr-2" /> Xóa bài đăng
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -113,7 +132,7 @@ export default function ShelterPostCard({
             {post.title.slice(0, 300)}...
             <button
               onClick={() => setExpanded(true)}
-              className="text-blue-500 underline ml-1 text-xs cursor-pointer"
+              className="ml-2 text-xs cursor-pointer hover:text-primary"
             >
               Xem thêm
             </button>
@@ -124,7 +143,7 @@ export default function ShelterPostCard({
             {post.title.length > 300 && (
               <button
                 onClick={() => setExpanded(false)}
-                className="text-blue-500 underline ml-1 text-xs"
+                className="ml-2 text-xs cursor-pointer hover:text-primary"
               >
                 Ẩn bớt
               </button>
@@ -185,26 +204,28 @@ export default function ShelterPostCard({
         </div>
       </CardFooter>
 
-      <hr />
+      {post.latestComment && <hr />}
 
       {post.latestComment && (
         <div className="flex items-start gap-2 px-4 mt-1 hover:bg-muted/60 rounded-md">
-          <img src={post.latestComment.commenter?.avatar} className="w-8 h-8 rounded-full" />
+          <Link
+            to={`/profile/${post.latestComment.commenter?._id}`}
+          >
+            <Avatar className="w-8 h-8 object-center object-cover ring-2 ring-(--primary)">
+              <AvatarImage src={post.latestComment.commenter?.avatar || "/placeholder.svg"} alt="commenter avatar" />
+              <AvatarFallback>{post.latestComment.commenter?.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+            </Avatar>
+          </Link>
           <div className="bg-muted px-3 py-2 rounded-xl max-w-[80%]">
-            <p className="text-xs font-semibold">{post.latestComment.commenter?.fullName}</p>
-            <p className="text-sm">{post.latestComment.message}</p>
+            <Link
+              to={`/profile/${post.latestComment.commenter?._id}`}
+            >
+              <p className="text-xs font-semibold">{post.latestComment.commenter?.fullName}</p>
+              <p className="text-sm">{post.latestComment.message}</p>
+            </Link>
           </div>
         </div>
       )}
-
-      <div className="px-4 pb-3">
-        <button
-          onClick={() => onViewDetail(post._id)}
-          className="text-gray-600 hover:underline text-sm cursor-pointer"
-        >
-          Xem thêm bình luận
-        </button>
-      </div>
     </Card>
   );
 }

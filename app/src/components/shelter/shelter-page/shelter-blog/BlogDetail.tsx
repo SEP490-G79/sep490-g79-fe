@@ -4,7 +4,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbS
 import AppContext from "@/context/AppContext";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTimeAgo } from "@/utils/dateUtils";
 import BlogRecommendation from "./BlogRecommendation";
 import ReportBlogDialog from "./ReportBlog";
@@ -72,7 +72,7 @@ const BlogDetail = () => {
       </Breadcrumb>
       <div className="col-span-3 mx-auto py-8 flex flex-col gap-2 w-full">
         <h4 className="font-semibold">Những bài viết cùng trạm</h4>
-        {recommendBlogs && recommendBlogs.map((item, index) => {
+        {recommendBlogs && recommendBlogs.slice(0,3).map((item, index) => {
           return <BlogRecommendation blog={item} key={index} />
         })}
       </div>
@@ -89,8 +89,9 @@ const BlogDetail = () => {
           </h1>
           <div className="flex mb-2 justify-between">
             <div className="flex gap-2 text-sm">
-              <Avatar className="my-auto">
+              <Avatar className="my-auto ring-2 ring-primary">
               <AvatarImage className="cursor-pointer" src={blog.createdBy.avatar} alt={`avatar cua ${blog.createdBy.fullName}`} onClick={() => navigate(`/profile/${blog.createdBy._id}`)}/>
+              <AvatarFallback>Avt</AvatarFallback>
             </Avatar>
               <div>
                 <span className="font-semibold ">{blog.createdBy?.fullName || ""}</span>

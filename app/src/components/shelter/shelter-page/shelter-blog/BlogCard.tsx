@@ -3,7 +3,7 @@ import type { Blog } from "@/types/Blog";
 import { useNavigate } from "react-router-dom";
 import { getTimeAgo } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 
 const BlogCard = ({ blog} : {blog: Blog}) => {
@@ -30,13 +30,14 @@ const BlogCard = ({ blog} : {blog: Blog}) => {
         <div className="flex items-center justify-between text-sm text-muted-foreground border-t pt-3">
           <div className="flex flex-col justify-between w-full">
             <div className="flex gap-2 items-center">
-              <Avatar>
+              <Avatar className="ring-2 ring-primary">
                 <AvatarImage
                   className="cursor-pointer"
                   src={blog.createdBy.avatar}
                   alt={`avatar cua ${blog.createdBy.fullName}`}
                   onClick={() => navigate(`/profile/${blog.createdBy._id}`)}
                 />
+                <AvatarFallback>Avt</AvatarFallback>
               </Avatar>
               <p>{blog.createdBy.fullName}</p>
             </div>

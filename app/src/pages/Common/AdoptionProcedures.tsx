@@ -1,0 +1,115 @@
+import { Timeline } from "@/components/ui/timeline"
+import step1 from "@/assets/adoption-procedures/register_page.png"
+import step2 from "@/assets/adoption-procedures/edit_profile.png"
+
+const AdoptionProcedures = () => {
+  const data = [
+  {
+    title: "Bước 1: Tạo tài khoản",
+    content: (
+      <div>
+          <p className="text-left">
+            Người dùng đăng ký tài khoản trên nền tảng PawShelter bằng email hoặc tài khoản Google. Sau khi xác thực email, người dùng có thể đăng nhập để sử dụng đầy đủ các chức năng.
+          </p>
+          <div>
+            <img
+              src={step1}
+              alt="step1_img"
+              className="h-60 w-full rounded-lg object-cover"
+            />
+          </div>
+        </div>
+    ),
+  },
+  {
+    title: "Bước 2: Cập nhật hồ sơ",
+    content: (
+      <div className="flex gap-2 items-start">
+          <p className="text-left">
+            Người dùng cần hoàn thiện hồ sơ cá nhân: họ tên, ngày sinh, số điện thoại, địa chỉ cư trú,... Đây là thông tin cần thiết để liên hệ và xét duyệt yêu cầu nhận nuôi.
+          </p>
+          <div>
+            <img
+              src={step2}
+              alt="step2_img"
+              className="h-full w-full rounded-lg object-cover"
+            />
+          </div>
+        </div>
+    ),
+  },
+  {
+    title: "Bước 3: Tìm kiếm thú cưng",
+    content: (
+      <p className="text-sm text-muted-foreground">
+        Người dùng duyệt danh sách thú cưng đang cần được nhận nuôi. Có thể lọc theo loài, giống, độ tuổi, màu lông, hoặc vị trí gần bạn.
+      </p>
+    ),
+  },
+  {
+    title: "Bước 4: Gửi yêu cầu nhận nuôi",
+    content: (
+      <p className="text-sm text-muted-foreground">
+        Với mỗi thú cưng, người dùng cần điền form đăng ký nhận nuôi, trả lời các câu hỏi đánh giá sự phù hợp và cam kết chăm sóc thú cưng đúng quy định.
+      </p>
+    ),
+  },
+  {
+    title: "Bước 5: Chờ xét duyệt",
+    content: (
+      <p className="text-sm text-muted-foreground">
+        Trạm cứu hộ sẽ xét duyệt yêu cầu dựa trên câu trả lời, mức độ phù hợp và tình trạng hiện tại của thú cưng. Có thể sẽ có thêm cuộc gọi hoặc phỏng vấn online nếu cần.
+      </p>
+    ),
+  },
+  {
+    title: "Bước 6: Lên lịch gặp mặt",
+    content: (
+      <p className="text-sm text-muted-foreground">
+        Nếu yêu cầu được duyệt, người dùng sẽ được chọn lịch hẹn để gặp trực tiếp thú cưng tại trạm hoặc tại địa điểm được thống nhất.
+      </p>
+    ),
+  },
+  {
+    title: "Bước 7: Ký cam kết nhận nuôi",
+    content: (
+      <p className="text-sm text-muted-foreground">
+        Người dùng và trạm cứu hộ sẽ cùng ký vào đơn cam kết nhận nuôi, thể hiện sự đồng ý về các điều khoản chăm sóc, theo dõi sau khi nhận nuôi, và quyền lợi của hai bên.
+      </p>
+    ),
+  },
+  {
+    title: "Bước 8: Hoàn tất nhận nuôi",
+    content: (
+      <p className="text-sm text-muted-foreground">
+        Sau khi ký cam kết, thú cưng sẽ được bàn giao cho người nhận nuôi. Trạm cứu hộ có thể thực hiện kiểm tra định kỳ trong thời gian đầu để đảm bảo thú cưng được chăm sóc tốt.
+      </p>
+    ),
+  },
+]
+
+
+  return (
+    <div className="h-full w-full bg-background px-40 pt-10 pb-60">
+      <h2 className="scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0 text-center text-primary">
+        {" "}
+        Thủ tục nhận nuôi{" "}
+      </h2>
+      <p className="leading-7 [&:not(:first-child)]:mt-6 text-muted-foreground text-left">
+        {" "}
+        Quy trình nhận nuôi tại <strong>PawShelter</strong> được thiết kế cẩn
+        trọng để đảm bảo mỗi thú cưng tìm được mái ấm phù hợp và yêu thương.
+        Người nhận nuôi sẽ trải qua các bước từ tạo tài khoản, hoàn thiện hồ sơ,
+        tìm kiếm thú cưng phù hợp, gửi đơn đăng ký, đến ký cam kết và chính thức
+        đưa thú cưng về nhà. Trong suốt quá trình, đội ngũ trạm cứu hộ sẽ đồng
+        hành, đánh giá và hỗ trợ nhằm đảm bảo lợi ích tốt nhất cho cả thú cưng
+        và người nhận nuôi.
+      </p>
+      <div className="shadow-lg my-2">
+        <Timeline data={data} />
+      </div>
+    </div>
+  );
+}
+
+export default AdoptionProcedures

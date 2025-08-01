@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import AppContext from "@/context/AppContext";
 import type { ConsentForm } from "@/types/ConsentForm";
@@ -21,12 +20,17 @@ import { mockDeliveryMethods, mockStatus } from "@/types/ConsentForm";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { MissionForm } from "@/types/MissionForm";
 import dayjs from "dayjs";
-
-function Preview() {
-  const { shelterId, consentFormId } = useParams();
-  const { coreAPI, shelterConsentForms, setShelterConsentForms } =
-    useContext(AppContext);
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+interface Step4Props {
+  onNext: () => void;
+  onBack: () => void;
+  submission: MissionForm | undefined;
+}
+const Step5_ConsentForm = ({ submission }: Step4Props) => {
+  const { coreAPI } = useContext(AppContext);
   const authAxios = useAuthAxios();
   const [isLoading, setIsLoading] = React.useState(false);
   const [consentForm, setConsentForm] = React.useState<ConsentForm>();
@@ -34,13 +38,14 @@ function Preview() {
   const fetchConsentForm = async () => {
     setIsLoading(true);
     await authAxios
-      .get(`${coreAPI}/shelters/${shelterId}/consentForms/get-by-shelter`)
+      .get(`${coreAPI}/consentForms/get-by-user`)
       .then((res) => {
-        setShelterConsentForms(res.data);
-        const data = res.data.find(
-          (item: ConsentForm) => item._id == consentFormId
+        const consentForm = res?.data?.find(
+          (c: ConsentForm) => c?.pet?._id == submission?.adoptionForm?.pet?._id
         );
-        setConsentForm(data);
+        // console.log(submission);
+
+        setConsentForm(consentForm);
         // const attachments = data.attachments.map((attachment: any) => {
         //   return new File([attachment], attachment.fileName, {
         //     type: attachment.mimeType,
@@ -65,10 +70,34 @@ function Preview() {
   };
 
   useEffect(() => {
-    if (shelterId && consentFormId) {
+    if (submission) {
       fetchConsentForm();
     }
-  }, [shelterId, consentFormId]);
+  }, [submission]);
+
+  const handleChangeStatus = async (status: string) => {
+    // console.log(status);
+    setIsLoading(true);
+    await authAxios
+      .put(`${coreAPI}/consentForms/${consentForm?._id}/change-status-user`, {
+        status,
+      })
+      .then((res) => {
+        setConsentForm(res.data);
+        toast.success("Cập nhật trạng thái thành công!");
+      })
+      .catch((err) => {
+        // console.log("Consent form error:"+err);
+        toast.error(
+          err.response?.data?.message || "Lỗi khi chuyển đổi trạng thái!"
+        );
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
+      });
+  };
 
   const mockStatus = [
     {
@@ -79,19 +108,19 @@ function Preview() {
     },
     {
       value: "send",
-      label: "Chờ phản hồi",
+      label: "Chờ chấp nhận",
       color: "chart-3",
       icon: <Send size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "accepted",
-      label: "Đã chấp nhận",
+      label: "Bạn đã chấp nhận",
       color: "chart-2",
       icon: <CheckSquare size={"15px"} strokeWidth={"2px"} />,
     },
     {
       value: "approved",
-      label: "Đã xác nhận",
+      label: "Trung tâm đã xác nhận",
       color: "chart-4",
       icon: <Signature size={"15px"} strokeWidth={"2px"} />,
     },
@@ -109,9 +138,41 @@ function Preview() {
     },
   ];
 
+  if (!consentForm || (consentForm && consentForm?.status == "draft")) {
+    return (
+      <div className="w-full flex justify-center items-center py-10">
+        <Card className="max-w-2xl w-full p-6 space-y-4 shadow-md">
+          <CardHeader>
+            <CardTitle className="text-xl">
+              Bạn đã được chọn là người nhận nuôi!
+            </CardTitle>
+            <CardDescription>
+              Hãy chờ trạm cứu hộ hoàn tất và gửi bản đồng ý nhận nuôi.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <p>
+              Vui lòng đọc kỹ các cam kết khi nhận nuôi thú cưng. Nếu có điểm
+              nào không phù hợp, bạn có thể yêu cầu sửa đổi, đồng ý với nội dung
+              hoặc hủy nhận nuôi trước khi trạm xác nhận chính thức.
+            </p>
+            <ul className="list-disc list-inside">
+              <li>Chờ bản đồng ý từ trạm cứu hộ.</li>
+              <li>Xem xét kỹ các cam kết.</li>
+              <li>
+                Sau khi nhận bản, bạn có thể chọn <b>chấp nhận</b>,{" "}
+                <b>yêu cầu sửa</b>, hoặc <b>hủy nhận nuôi</b>.
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
-      <div className="w-full flex gap-5 justify-between flex-wrap bg-muted/50 p-5 ">
+      <div className="w-full flex gap-5 justify-between flex-wrap bg-muted/50 p-5">
         {/* Header */}
         <div className="basis-full flex gap-3 items-center">
           <Skeleton className="h-6 w-24 rounded-3xl" /> {/* Badge */}
@@ -380,8 +441,44 @@ function Preview() {
           </div>
         </div>
       )}
+      <Separator className="my-2" />
+      <div className="basis-full flex justify-end gap-3">
+        {consentForm?.status == "send" && (
+          <>
+            <Button
+              variant={"default"}
+              className="cursor-pointer bg-(--chart-4)"
+              onClick={() => {
+                handleChangeStatus("accepted");
+              }}
+            >
+              Chấp nhận
+            </Button>
+            <Button
+              variant={"outline"}
+              className="cursor-pointer "
+              onClick={() => {
+                handleChangeStatus("rejected");
+              }}
+            >
+              Từ chối
+            </Button>
+          </>
+        )}
+        {consentForm?.status != "cancelled" && (
+          <Button
+            variant={"destructive"}
+            className="cursor-pointer "
+            onClick={() => {
+              handleChangeStatus("cancelled");
+            }}
+          >
+            Dừng nhận nuôi
+          </Button>
+        )}
+      </div>
     </div>
   );
-}
+};
 
-export default Preview;
+export default Step5_ConsentForm;
