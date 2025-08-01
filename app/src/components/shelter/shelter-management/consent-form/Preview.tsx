@@ -73,7 +73,7 @@ function Preview() {
   const mockStatus = [
     {
       value: "draft",
-      label: "Nháp",
+      label: "Đang chuẩn bị",
       color: "secondary",
       icon: <NotepadTextDashed size={"15px"} strokeWidth={"2px"} />,
     },
@@ -109,11 +109,9 @@ function Preview() {
     },
   ];
 
-  
-
   if (isLoading) {
     return (
-      <div className="w-full flex gap-5 justify-between flex-wrap bg-muted/50 p-5">
+      <div className="w-full flex gap-5 justify-between flex-wrap bg-muted/50 p-5 ">
         {/* Header */}
         <div className="basis-full flex gap-3 items-center">
           <Skeleton className="h-6 w-24 rounded-3xl" /> {/* Badge */}
@@ -170,7 +168,7 @@ function Preview() {
   }
 
   return (
-    <div className="w-full flex gap-5 justify-between flex-wrap bg-(--card) p-5">
+    <div className="w-full flex gap-5 justify-between flex-wrap bg-(--card) p-5 shadow">
       <div className="basis-full flex gap-3 ">
         <Badge className={`rounded-3xl px-5 `} variant={"outline"}>
           <span className="flex gap-1">
@@ -343,8 +341,12 @@ function Preview() {
               "Không có đặc điểm nhận dạng"}
           </span>
         </p>
-        <p className="basis-full">
-          <span>Cam kết của người nhận nuôi: </span>
+        <p className="basis-full mt-2">
+          <span>
+            Để đáp ứng đầy đủ các điều kiện nhận nuôi, tôi/chúng tôi cam kết
+            thực hiện đầy đủ các nội dung sau khi nhận nuôi thú cưng từ trạm cứu
+            hộ:{" "}
+          </span>
         </p>
         <div className="basis-full h-auto my-2">
           <MinimalTiptapEditor
