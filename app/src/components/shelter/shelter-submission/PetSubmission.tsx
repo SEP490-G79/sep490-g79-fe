@@ -63,6 +63,7 @@ import { toast } from "sonner";
 import { DateTimePicker } from "./DateTimePicker";
 import PetSubmissionInterviewSection from "./PetSubmissionInterviewSection";
 import CreateDialog from "@/components/shelter/shelter-management/consent-form/CreateDialog";
+import { is } from "date-fns/locale";
 
 function getColorBarClass(total: number): string {
   if (total <= 29) return "bg-red-500";
@@ -138,6 +139,17 @@ export default function PetSubmission() {
   });
 }) ?? false; 
 
+
+  const isManager = isShelterManager;
+  const isStaff = shelters?.some((shelter) => {
+    if (shelter._id !== shelterId) return false;
+    return shelter.members?.some(
+      (member: any) =>
+        member._id === userProfile?._id &&
+        (member.roles === "staff" ||
+          (Array.isArray(member.roles) && member.roles.includes("staff")))
+    );
+  });
 
 
   useEffect(() => {
@@ -228,7 +240,8 @@ export default function PetSubmission() {
     if (
       showScheduleDialog &&
       scheduleData.availableFrom &&
-      scheduleData.availableTo
+      scheduleData.availableTo &&
+      isManager
     ) {
       fetchInterviewers(scheduleData.availableFrom, scheduleData.availableTo);
     }
@@ -236,6 +249,7 @@ export default function PetSubmission() {
     showScheduleDialog,
     scheduleData.availableFrom,
     scheduleData.availableTo,
+    isManager
   ]);
 
   const fetchInterviewers = async (from: Date, to: Date) => {
@@ -347,6 +361,8 @@ export default function PetSubmission() {
     }
   };
 
+ 
+
   const uniquePerformers = Array.from(
     new Set(
       submissions
@@ -366,23 +382,24 @@ export default function PetSubmission() {
   ];
   const statusLabels: Record<string, string> = {
     pending: "Chờ duyệt",
-    scheduling: "Lên lịch phỏng vấn",
+    scheduling: "Đã duyệt",
     interviewing: "Chờ phỏng vấn",
     reviewed: "Đã phỏng vấn",
     approved: "Đồng ý",
     rejected: "Từ chối",
   };
 
-  const isManager = isShelterManager;
-  const isStaff = shelters?.some((shelter) => {
-    if (shelter._id !== shelterId) return false;
-    return shelter.members?.some(
-      (member: any) =>
-        member._id === userProfile?._id &&
-        (member.roles === "staff" ||
-          (Array.isArray(member.roles) && member.roles.includes("staff")))
-    );
-  });
+
+
+   useEffect(() => {
+  if (showScheduleDialog && isStaff && !isManager) {
+    setScheduleData((prev) => ({
+      ...prev,
+      performedBy: userProfile?._id || "",
+    }));
+  }
+}, [showScheduleDialog, isStaff, isManager, userProfile]);
+
 
   const statusCounts = submissions
   .filter((sub) => {
@@ -886,7 +903,7 @@ export default function PetSubmission() {
                     </AlertDialog>
 
                     {selectedSubmission?.status === "scheduling" &&
-                      isShelterManager && (
+                       (
                         <Button
                           variant="outline"
                           size="lg"
@@ -942,7 +959,8 @@ export default function PetSubmission() {
                               minDate={new Date()}
                             />
                           </div>
-                          <div className="w-full">
+                          {isManager ? (
+                              <div className="w-full">
                             <label>
                               <span className="text-sm font-medium mb-1 block">
                                 Chọn người thực hiện{" "}
@@ -1042,6 +1060,15 @@ export default function PetSubmission() {
                               </PopoverContent>
                             </Popover>
                           </div>
+                          ):(
+<div className="w-full">
+    <p className="text-sm font-medium mb-1 block">
+      Người thực hiện: <span className="text-primary font-semibold">{userProfile?.fullName}</span>
+    </p>
+  </div>
+                          
+                          )}
+                        
                           <div>
                             <label className="text-sm font-medium">
                               Hình thức phỏng vấn{" "}
