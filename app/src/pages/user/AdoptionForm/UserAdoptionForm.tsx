@@ -9,8 +9,10 @@ import Step2_AdoptionForm from "@/components/user/AdoptionForm/Step2_AdoptionFor
 import Step3_SubmissionForm from "@/components/user/AdoptionForm/Step3_SubmissionForm";
 import Step4_ScheduleConfirm from "@/components/user/AdoptionForm/Step4_ScheduleConfirm";
 import Step5_ConsentForm from "@/components/user/AdoptionForm/Step5_ConsentForm";
+import Step6_Result from "@/components/user/AdoptionForm/Step6_Result";
 import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { Question } from "@/types/Question";
+import type { ConsentForm } from "@/types/ConsentForm";
 import {
   Tooltip,
   TooltipContent,
@@ -35,6 +37,8 @@ const UserAdoptionFormPage = () => {
   const [answers, setAnswers] = useState<Record<string, string | string[]>>(getInitialAnswers);
   const [hasCheckedSubmitted, setHasCheckedSubmitted] = useState(false);
   const [hasChecked, setHasChecked] = useState<any>(null);
+  const [consentForm, setConsentForm] = useState<ConsentForm | null>(null);
+
 
 
   const getInitialStep = () => {
@@ -77,21 +81,40 @@ const UserAdoptionFormPage = () => {
 
         if (checkRes.data.submitted) {
           const status = checkRes.data.status;
+const selectedSchedule = checkRes.data.selectedSchedule;
           setSubmissionId(checkRes.data.submissionId);
           setAgreed(true);
           setHasChecked(checkRes.data);
+          
+
+                // Fetch consentForm nếu đã có submission
+      const consentRes = await authAxios.get(`${coreAPI}/consentForms/get-by-user`);
+      const consentFormMatched = consentRes.data.find(
+        (form: ConsentForm) => form?.pet?._id === res.data.pet?._id
+      );
+      if (consentFormMatched) {
+        setConsentForm(consentFormMatched);
+
+        if (
+          consentFormMatched.status === "approved" ||
+          consentFormMatched.status === "rejected"
+        ) {
+          setStep(6);
+          return;
+        }
+      }
+
 
           if (status === "pending" || status === "scheduling") {
             setStep(3);
           } else if (status === "interviewing" || status === "reviewed") {
             setStep(4);
           } else if (status === "rejected") {
-            if (hasChecked?.selectedSchedule) {
-              setStep(5);
+            if (selectedSchedule) {
+              setStep(6);
             } else {
               setStep(3);
             }
-
           } else if (status === "approved") {
             setStep(5);
           } else {
@@ -123,21 +146,23 @@ const UserAdoptionFormPage = () => {
     fetchData();
   }, [id]);
 
-useEffect(() => {
-  const fetchSubmission = async () => {
-    if (!submissionId) return;
-    try {
-      const res = await authAxios.get(`${coreAPI}/adoption-submissions/${submissionId}`);
-      setSubmission(res.data);
-    } catch (err) {
-      console.error("Lỗi khi lấy submission:", err);
-    }
-  };
+  
 
-  if (!submission && submissionId && hasCheckedSubmitted) {
-    fetchSubmission();
-  }
-}, [submissionId, submission, hasCheckedSubmitted]);
+  useEffect(() => {
+    const fetchSubmission = async () => {
+      if (!submissionId) return;
+      try {
+        const res = await authAxios.get(`${coreAPI}/adoption-submissions/${submissionId}`);
+        setSubmission(res.data);
+      } catch (err) {
+        console.error("Lỗi khi lấy submission:", err);
+      }
+    };
+
+    if (!submission && submissionId && hasCheckedSubmitted) {
+      fetchSubmission();
+    }
+  }, [submissionId, submission, hasCheckedSubmitted]);
 
 
   // Ghi lại mỗi khi step thay đổi
@@ -159,9 +184,9 @@ useEffect(() => {
     }
   }, [answers, id, submissionId, hasCheckedSubmitted]);
 
-useEffect(() => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}, [step]);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
 
 
 
@@ -170,8 +195,9 @@ useEffect(() => {
   }
 
 
-  const steps = ["Quy định chung", "Đăng ký nhận nuôi", "Chờ phản hồi", "Xác nhận lịch phỏng vấn", "Đơn cam kết"];
+  const steps = ["Quy định chung", "Đăng ký nhận nuôi", "Chờ phản hồi", "Xác nhận lịch phỏng vấn", "Đơn cam kết", "Kết quả"];
   const status = submission?.status;
+  const consentStatus = consentForm?.status;
 
   let maxStep = step - 1;
 
@@ -181,18 +207,21 @@ useEffect(() => {
     maxStep = 3;
   } else if (status === "rejected") {
     if (hasChecked?.selectedSchedule) {
-      maxStep = 4;
+      maxStep = 5;
     } else {
       maxStep = 2;
     }
   }
-
   else if (status === "approved") {
     maxStep = 4;
   }
+  if (consentStatus === "approved" || consentStatus === "rejected") {
+    maxStep = 5;
+  }
+  
   const renderStepIndicator = () => (
     <TooltipProvider>
-      <div className="flex items-center justify-between w-full max-w-4xl mx-auto px-4 py-4 relative">
+      <div className="flex items-center justify-between w-full max-w-5xl mx-auto px-4 py-4 relative">
         {steps.map((label, index) => {
           const isActive = index === step - 1;
           const isCompleted = index < maxStep;
@@ -221,7 +250,6 @@ useEffect(() => {
             </div>
 
           );
-
 
           return (
             <div
@@ -357,7 +385,14 @@ useEffect(() => {
           }} />;
 
       case 5:
-        return <Step5_ConsentForm onNext={next} onBack={back} submission={submission} />
+        return <Step5_ConsentForm 
+        onNext={next} 
+        onBack={back}
+        submission={submission}
+        onLoadedConsentForm={(form) => setConsentForm(form)}/>
+
+      case 6:
+        return <Step6_Result onNext={next} onBack={back} submission={submission} consentForm={consentForm} />
       default:
         return null;
     }

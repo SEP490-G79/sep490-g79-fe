@@ -63,69 +63,50 @@ const Step3_SubmissionForm = ({ submissionId, onNext, onBack, onLoadedSubmission
 
       <Card className="max-w-3xl mx-auto shadow-lg dark:border-primary">
         <CardHeader className="flex items-center gap-3">
-          {submission.status === "rejected" ? (
-            <>
-              <FileText className="text-red-500 w-6 h-6" />
-              <CardTitle className="text-xl font-semibold text-red-600">
-                Rất tiếc, đơn đăng ký nhận nuôi của bạn đã bị từ chối.
-              </CardTitle>
-            </>
-          ) : (
-            <>
-              <CheckCircle className="text-green-500 w-6 h-6" />
-              <CardTitle className="text-xl font-semibold text-green-700">
-                Đơn đăng ký nhận nuôi đã được gửi thành công!
-              </CardTitle>
-            </>
-          )}
+          <>
+            <CheckCircle className="text-green-500 w-6 h-6" />
+            <CardTitle className="text-xl font-semibold text-green-700">
+              Đơn đăng ký nhận nuôi đã được gửi thành công!
+            </CardTitle>
+          </>
         </CardHeader>
 
 
         <Separator />
 
         <CardContent className="space-y-4">
-  {submission.status === "rejected" && (
-       <div className="bg-red-50 p-4 rounded-md text-red-700 border border-red-300 text-sm">
-      Sau khi xem xét kỹ lưỡng, chúng tôi rất tiếc phải thông báo rằng việc đăng ký nhận nuôi bé{" "}
-      <strong>{submission.adoptionForm?.pet?.name}</strong> đã được{" "}
-      <strong>{submission.adoptionForm?.shelter?.name}</strong> ưu tiên cho một hồ sơ khác.
-      <br />
-      Cảm ơn bạn đã quan tâm và mong rằng bạn sẽ tiếp tục đồng hành, yêu thương và lan tỏa tình yêu
-      thương tới các bé thú cưng khác trong tương lai.
-    </div>
-  )}
 
-  {submission.status !== "approved" && submission.status !== "rejected" && (
-      <div className="bg-yellow-50 p-4 rounded-md text-yellow-700 border border-yellow-300 text-sm">
-      Đơn đăng ký nhận nuôi bé <strong>{submission.adoptionForm?.pet?.name}</strong> hiện đang được{" "}
-      <strong>{submission.adoptionForm?.shelter?.name}</strong> xem xét.
-      <br />
-      Nhân viên của trung tâm sẽ chủ động liên hệ qua số điện thoại hoặc email nếu hồ sơ đạt yêu cầu.
-      Vui lòng kiên nhẫn chờ đợi phản hồi trong thời gian sớm nhất.
-    </div>
-  )}
+          {submission.status !== "approved" && submission.status !== "rejected" && (
+            <div className="bg-yellow-50 p-4 rounded-md text-yellow-700 border border-yellow-300 text-sm">
+              Đơn đăng ký nhận nuôi bé <strong>{submission.adoptionForm?.pet?.name}</strong> hiện đang được{" "}
+              <strong>{submission.adoptionForm?.shelter?.name}</strong> xem xét.
+              <br />
+              Nhân viên của trung tâm sẽ chủ động liên hệ qua số điện thoại hoặc email nếu hồ sơ đạt yêu cầu.
+              Vui lòng kiên nhẫn chờ đợi phản hồi trong thời gian sớm nhất.
+            </div>
+          )}
 
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-      <p>
-        <strong>Ngày gửi:</strong> {dayjs(submission.createdAt).format('DD/MM/YYYY')}
-      </p>
-      {(submission.status === "approved" || submission.status === "rejected") && (
-        <p className="md:col-span-2">
-          <strong>Ngày nhận phản hồi:</strong>{" "}
-          {dayjs(submission.updatedAt).format('DD/MM/YYYY [lúc] HH:mm')}
-        </p>
-      )}
-    </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <p>
+                <strong>Ngày gửi:</strong> {dayjs(submission.createdAt).format('DD/MM/YYYY')}
+              </p>
+              {(submission.status === "approved" || submission.status === "rejected") && (
+                <p className="md:col-span-2">
+                  <strong>Ngày nhận phản hồi:</strong>{" "}
+                  {dayjs(submission.updatedAt).format('DD/MM/YYYY [lúc] HH:mm')}
+                </p>
+              )}
+            </div>
 
-    <p>
-      <strong>Trạng thái:</strong>{" "}
-      <Badge className="capitalize bg-primary text-sm">
-        {statusList[submission.status] || "Không xác định"}
-      </Badge>
-    </p>
-  </div>
-</CardContent>
+            <p>
+              <strong>Trạng thái:</strong>{" "}
+              <Badge className="capitalize bg-primary text-sm">
+                {statusList[submission.status] || "Không xác định"}
+              </Badge>
+            </p>
+          </div>
+        </CardContent>
 
 
         <CardFooter className="flex justify-start">

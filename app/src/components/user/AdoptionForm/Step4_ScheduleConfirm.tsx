@@ -45,6 +45,9 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
     .format("YYYY-MM-DDTHH:mm:ssZ");
   const isScheduleConfirmed = !!submission?.interview?.selectedSchedule;
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const now = dayjs().tz("Asia/Ho_Chi_Minh");
+  const interviewDeadline = dayjs(submission?.interview?.availableTo).tz("Asia/Ho_Chi_Minh");
+  const isExpired = now.isAfter(interviewDeadline, "day");
 
 
   useEffect(() => {
@@ -270,7 +273,7 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
             <CardContent className="flex flex-col items-center">
               <SimpleDateSelector
                 value={selectedTime}
-                onChange={isScheduleConfirmed ? () => { } : setSelectedTime}
+                onChange={isScheduleConfirmed || isExpired ? () => { } : setSelectedTime}
                 minDate={new Date(submission.interview.availableFrom)}
                 maxDate={new Date(submission.interview.availableTo)}
               />
@@ -289,6 +292,12 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
                   </div>
                 </div>
               )}
+              {isExpired && !isScheduleConfirmed && (
+                <div className="mt-4 w-full max-w-sm bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+                  Hạn chọn lịch phỏng vấn đã kết thúc. Bạn không thể chọn lịch nữa.
+                </div>
+              )}
+
 
               {isScheduleConfirmed ? (
                 <div className="mt-6 bg-gradient-to-r from-blue-600 to-purple-600  text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform ">
@@ -300,7 +309,7 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
                     <Button
                       size="lg"
                       className="mt-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
-                      disabled={!isValidDateInRange(selectedTime) || isScheduleConfirmed}
+                      disabled={!isValidDateInRange(selectedTime) || isScheduleConfirmed || isExpired}
                     >
                       <CheckCircle2 className="w-5 h-5 mr-2" />
                       Xác nhận lịch phỏng vấn
@@ -333,7 +342,7 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
         </Button>
         <Button
           onClick={handleNextStep}
-          disabled={!isValidDateInRange(selectedTime)}
+          disabled={!isValidDateInRange(selectedTime) || isExpired}
           className="px-8 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200"
         >
           Tiếp tục →

@@ -25,12 +25,14 @@ import dayjs from "dayjs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sub } from "@radix-ui/react-dropdown-menu";
+import { sub } from "date-fns";
 interface Step4Props {
   onNext: () => void;
   onBack: () => void;
   submission: MissionForm | undefined;
+  onLoadedConsentForm?: (form: ConsentForm) => void;
 }
-const Step5_ConsentForm = ({ submission }: Step4Props) => {
+const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
   const { coreAPI } = useContext(AppContext);
   const authAxios = useAuthAxios();
   const [isLoading, setIsLoading] = React.useState(false);
@@ -47,6 +49,7 @@ const Step5_ConsentForm = ({ submission }: Step4Props) => {
         // console.log(submission);
 
         setConsentForm(consentForm);
+        onLoadedConsentForm?.(consentForm); 
         // const attachments = data.attachments.map((attachment: any) => {
         //   return new File([attachment], attachment.fileName, {
         //     type: attachment.mimeType,
@@ -77,6 +80,7 @@ const Step5_ConsentForm = ({ submission }: Step4Props) => {
   }, [submission]);
 
   
+
 
   const handleChangeStatus = async (status: string) => {
     // console.log(status);
@@ -146,7 +150,32 @@ const Step5_ConsentForm = ({ submission }: Step4Props) => {
   if (!consentForm || (consentForm && consentForm?.status == "draft")) {
     return (
       <div className="w-full flex justify-center items-center py-10">
-        <Card className="max-w-2xl w-full p-6 space-y-4 shadow-md">
+        {submission?.status === "rejected" ? (
+            <Card className="max-w-2xl w-full p-6 space-y-4 shadow-md">
+    <CardHeader>
+      <CardTitle className="text-xl text-destructive">
+        Rất tiếc! Hồ sơ của bạn đã bị từ chối
+      </CardTitle>
+      <CardDescription>
+        Trạm cứu hộ đã xem xét và quyết định không tiếp tục quy trình nhận nuôi với hồ sơ này.
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-3 text-sm text-muted-foreground">
+      <p>
+        Cảm ơn bạn đã quan tâm đến việc nhận nuôi thú cưng. Dưới đây là một số lý do phổ biến có thể dẫn đến việc từ chối hồ sơ:
+      </p>
+      <ul className="list-disc list-inside">
+        <li>Không phù hợp về điều kiện chăm sóc thú cưng.</li>
+        <li>Thiếu thông tin cần thiết hoặc thông tin chưa rõ ràng.</li>
+        <li>Trạm nhận thấy chưa đủ cơ sở để đảm bảo an toàn cho thú cưng.</li>
+      </ul>
+      <p>
+        Cảm ơn bạn đã quan tâm và mong rằng bạn sẽ tiếp tục đồng hành, yêu thương và lan tỏa tình yêu thương tới các bé thú cưng khác trong tương lai.
+      </p>
+    </CardContent>
+  </Card>
+        ):(
+          <Card className="max-w-2xl w-full p-6 space-y-4 shadow-md">
           <CardHeader>
             <CardTitle className="text-xl">
               Bạn đã được chọn là người nhận nuôi!
@@ -171,6 +200,8 @@ const Step5_ConsentForm = ({ submission }: Step4Props) => {
             </ul>
           </CardContent>
         </Card>
+        )}
+        
       </div>
     );
   }
