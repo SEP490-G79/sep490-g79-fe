@@ -50,6 +50,8 @@ export default function ReturnRequestDialog({ open, onOpenChange, pet, shelter }
             await authAxios.post(`${returnRequestAPI}/create`, formData);
             toast.success("Gửi yêu cầu trả thú cưng thành công");
             onOpenChange(false);
+            setReason("");
+            setFiles([]);
         } catch (err: any) {
             toast.error(err?.response?.data?.message || "Gửi yêu cầu thất bại");
         } finally {
@@ -126,7 +128,7 @@ export default function ReturnRequestDialog({ open, onOpenChange, pet, shelter }
                     )}
                 </div>
                 <DialogFooter className="pt-4">
-                    <Button onClick={handleSubmit} disabled={loading}>
+                    <Button onClick={handleSubmit} disabled={loading} className=" cursor-pointer">
                         {loading ? "Đang gửi..." : "Gửi yêu cầu"}
                     </Button>
                 </DialogFooter>

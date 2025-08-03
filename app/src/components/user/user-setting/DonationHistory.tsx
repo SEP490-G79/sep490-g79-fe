@@ -66,9 +66,7 @@ export default function DonationHistory() {
         {
             header: "STT",
             cell: ({ table, row }) =>
-                table
-                    .getSortedRowModel()
-                    .rows.findIndex(r => r.id === row.id) +
+                table.getPaginationRowModel().rows.findIndex(r => r.id === row.id) +
                 1 +
                 table.getState().pagination.pageIndex * table.getState().pagination.pageSize,
             enableSorting: false,
@@ -129,6 +127,12 @@ export default function DonationHistory() {
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
+
+        initialState: {
+            pagination: {
+                pageSize: 10,
+            },
+        },
     });
 
     const totalAmount = donations.reduce((sum, d) => sum + d.amount, 0);
@@ -213,6 +217,7 @@ export default function DonationHistory() {
                     <div className="flex justify-between items-center mt-4">
                         <Button
                             variant="outline"
+                            className="cursor-pointer"
                             size="sm"
                             onClick={() => table.previousPage()}
                             disabled={!table.getCanPreviousPage()}
@@ -225,6 +230,7 @@ export default function DonationHistory() {
                         </span>
                         <Button
                             variant="outline"
+                            className="cursor-pointer"
                             size="sm"
                             onClick={() => table.nextPage()}
                             disabled={!table.getCanNextPage()}

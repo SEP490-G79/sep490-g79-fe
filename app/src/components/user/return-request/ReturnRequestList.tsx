@@ -169,6 +169,7 @@ export default function ReturnRequestList({ userId }: Props) {
                                         variant="outline"
                                         size="sm"
                                         onClick={() => setEditingRequest(request)}
+                                        className="cursor-pointer"
                                     >
                                         Chỉnh sửa
                                     </Button>
@@ -178,6 +179,7 @@ export default function ReturnRequestList({ userId }: Props) {
                                         variant="destructive"
                                         size="sm"
                                         onClick={() => setDeletingRequest(request)}
+                                        className="cursor-pointer"
                                     >
                                         Huỷ yêu cầu
                                     </Button>

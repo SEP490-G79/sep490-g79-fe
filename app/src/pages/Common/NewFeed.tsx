@@ -444,14 +444,20 @@ const Newfeed = () => {
                       <SelectContent>
                         <SelectItem value="user">
                           <div className="flex items-center gap-2">
-                            <img src={userProfile.avatar} className="w-5 h-5 rounded-full" />
+                            <Avatar className="w-5 h-5">
+                              <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
+                              <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                            </Avatar>
                             <span>{userProfile.fullName} (Cá nhân)</span>
                           </div>
                         </SelectItem>
                         {myShelters.map((shelter) => (
                           <SelectItem key={shelter._id} value={shelter._id}>
                             <div className="flex items-center gap-2">
-                              <img src={shelter.avatar} className="w-5 h-5 rounded-full" />
+                              <Avatar className="w-5 h-5">
+                                <AvatarImage src={shelter.avatar || "/placeholder.svg"} alt="shelter avatar" />
+                                <AvatarFallback>{shelter.name.charAt(0).toUpperCase()}</AvatarFallback>
+                              </Avatar>
                               <span>{shelter.name}</span>
                             </div>
                           </SelectItem>
