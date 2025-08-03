@@ -127,7 +127,7 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
     },
     {
       value: "approved",
-      label: "Trung tâm đã xác nhận",
+      label: "Nhận nuôi thành công",
       color: "chart-4",
       icon: <Signature size={"15px"} strokeWidth={"2px"} />,
     },
@@ -497,11 +497,11 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
                 handleChangeStatus("rejected");
               }}
             >
-              Từ chối
+              Yêu cầu sửa
             </Button>
           </>
         )}
-        {consentForm?.status != "cancelled" && (
+        {(consentForm?.status != "cancelled" && consentForm?.status != "approved") && (
           <Button
             variant={"destructive"}
             className="cursor-pointer "
@@ -509,7 +509,7 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
               handleChangeStatus("cancelled");
             }}
           >
-            Dừng nhận nuôi
+            Từ chối nhận nuôi
           </Button>
         )}
       </div>
