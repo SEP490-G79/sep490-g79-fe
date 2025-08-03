@@ -71,7 +71,13 @@ import { fi } from "zod/v4/locales";
 import Preview from "./Preview";
 import type { ConsentForm } from "@/types/ConsentForm";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function ConsentForm() {
   const { shelterId, consentFormId } = useParams();
@@ -331,9 +337,6 @@ export default function ConsentForm() {
     },
   ];
 
-
-
-
   if (isLoading) {
     return (
       <div className="w-full flex flex-wrap animate-pulse">
@@ -491,11 +494,7 @@ export default function ConsentForm() {
                         handleChangeStatus("send");
                       }}
                     >
-                      <Send
-                        className="text-(--primary)"
-                        
-                      />{" "}
-                      Gửi
+                      <Send className="text-(--primary)" /> Gửi
                     </Button>
                   )}
                   {consentForm?.status == "accepted" && (
@@ -506,11 +505,7 @@ export default function ConsentForm() {
                         handleChangeStatus("approved");
                       }}
                     >
-                      <Signature
-                        className="text-(--primary)"
-                        
-                      />{" "}
-                      Xác nhận
+                      <Signature className="text-(--primary)" /> Xác nhận
                     </Button>
                   )}
                   {consentForm?.status == "rejected" && (
@@ -521,11 +516,7 @@ export default function ConsentForm() {
                         handleChangeStatus("draft");
                       }}
                     >
-                      <PenBox
-                        className="text-(--primary)"
-                        
-                      />{" "}
-                      Chỉnh sửa
+                      <PenBox className="text-(--primary)" /> Chỉnh sửa
                     </Button>
                   )}
                 </div>
@@ -663,7 +654,7 @@ export default function ConsentForm() {
                         )}
                       />
 
-                      <FormField
+                      {/* <FormField
                         control={form.control}
                         name="note"
                         render={({ field }) => (
@@ -680,7 +671,22 @@ export default function ConsentForm() {
                             <FormMessage />
                           </FormItem>
                         )}
-                      />
+                      /> */}
+
+                      {consentForm?.note && (
+                        <FormItem className="md:col-span-3 self-start">
+                          <FormLabel>Ghi chú của người nhận nuôi</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Nhập ghi chú"
+                              disabled={true}
+                              value={consentForm?.note}
+                              cols={3}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                       <FormField
                         control={form.control}
                         name="commitments"
