@@ -252,7 +252,7 @@ export default function CreateDialog({ submission, open, onOpenChange }: Props) 
                 )}
               />
 
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="note"
                 render={({ field }) => (
@@ -268,7 +268,7 @@ export default function CreateDialog({ submission, open, onOpenChange }: Props) 
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
 
               {/* <FormItem className="md:col-span-4">
                 <FormLabel>Tệp đính kèm</FormLabel>
