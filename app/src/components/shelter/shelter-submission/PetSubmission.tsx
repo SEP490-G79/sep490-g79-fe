@@ -87,7 +87,7 @@ export default function PetSubmission() {
   const pet = petsList.find((p: Pet) => p._id === petId);
   const submissions = submissionsByPetId[petId ?? ""] || [];
   const [selectedSubmission, setSelectedSubmission] =
-  useState<MissionForm | null>(null);
+    useState<MissionForm | null>(null);
   const navigate = useNavigate();
   const [showAnswers, setShowAnswers] = useState(true);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
@@ -112,6 +112,10 @@ export default function PetSubmission() {
     method: "",
     performedBy: "",
   });
+  const [openConsentDialog, setOpenConsentDialog] = useState(false);
+  const [consentSubmission, setConsentSubmission] = useState<MissionForm | null>(null);
+
+
   const resetForm = () => {
     setScheduleData({
       availableFrom: new Date(),
@@ -130,14 +134,14 @@ export default function PetSubmission() {
     shelters?.some((shelter) => {
       if (shelter._id !== shelterId) return false;
 
-  return shelter.members?.some((member: any) => {
-    const roles = member.roles;
-    return (
-      member._id === userProfile?._id &&
-      (roles === "manager" || (Array.isArray(roles) && roles.includes("manager")))
-    );
-  });
-}) ?? false; 
+      return shelter.members?.some((member: any) => {
+        const roles = member.roles;
+        return (
+          member._id === userProfile?._id &&
+          (roles === "manager" || (Array.isArray(roles) && roles.includes("manager")))
+        );
+      });
+    }) ?? false;
 
 
   const isManager = isShelterManager;
@@ -193,7 +197,9 @@ export default function PetSubmission() {
           toast.error("Vui lòng nhập note trước khi cập nhật trạng thái.");
           return;
         }
+
       }
+
       const updateStatus = await authAxios.patch(
         `${coreAPI}/adoption-submissions/update-submission-status/${shelterId}`,
         { submissionId, status }
@@ -361,7 +367,7 @@ export default function PetSubmission() {
     }
   };
 
- 
+
 
   const uniquePerformers = Array.from(
     new Set(
@@ -391,31 +397,31 @@ export default function PetSubmission() {
 
 
 
-   useEffect(() => {
-  if (showScheduleDialog && isStaff && !isManager) {
-    setScheduleData((prev) => ({
-      ...prev,
-      performedBy: userProfile?._id || "",
-    }));
-  }
-}, [showScheduleDialog, isStaff, isManager, userProfile]);
+  useEffect(() => {
+    if (showScheduleDialog && isStaff && !isManager) {
+      setScheduleData((prev) => ({
+        ...prev,
+        performedBy: userProfile?._id || "",
+      }));
+    }
+  }, [showScheduleDialog, isStaff, isManager, userProfile]);
 
 
   const statusCounts = submissions
-  .filter((sub) => {
-    if (isManager) return true;
-    if (isStaff) {
-      if (["interviewing", "reviewed"].includes(sub.status)) {
-        return sub.interview?.performedBy?._id === userProfile?._id;
+    .filter((sub) => {
+      if (isManager) return true;
+      if (isStaff) {
+        if (["interviewing", "reviewed"].includes(sub.status)) {
+          return sub.interview?.performedBy?._id === userProfile?._id;
+        }
+        return true;
       }
-      return true;
-    }
-    return false;
-  })
-  .reduce<Record<string, number>>((acc, sub) => {
-    acc[sub.status] = (acc[sub.status] || 0) + 1;
-    return acc;
-  }, {});
+      return false;
+    })
+    .reduce<Record<string, number>>((acc, sub) => {
+      acc[sub.status] = (acc[sub.status] || 0) + 1;
+      return acc;
+    }, {});
 
 
   const filteredSubmissions = submissions
@@ -437,7 +443,7 @@ export default function PetSubmission() {
       }
 
       // Các filter theo vai trò
-      if (["pending", "scheduling","approved", "rejected"].includes(sub.status)) return true;
+      if (["pending", "scheduling", "approved", "rejected"].includes(sub.status)) return true;
 
       if (isManager) {
         if (filterByPerformer !== "all") {
@@ -504,11 +510,10 @@ export default function PetSubmission() {
           {statusOptions.map((status) => (
             <button
               key={status}
-              className={`px-3 py-1 rounded-full border text-sm capitalize ${
-                statusFilter === status
-                  ? "bg-primary text-white"
-                  : "bg-white dark:bg-gray-800"
-              }`}
+              className={`px-3 py-1 rounded-full border text-sm capitalize ${statusFilter === status
+                ? "bg-primary text-white"
+                : "bg-white dark:bg-gray-800"
+                }`}
               onClick={() => setStatusFilter(status)}
             >
               {statusLabels[status]} ({statusCounts[status] || 0})
@@ -562,7 +567,7 @@ export default function PetSubmission() {
                   {filterByPerformer === "all"
                     ? "Tất cả nhân viên"
                     : uniquePerformers.find((p) => p._id === filterByPerformer)
-                        ?.fullName || "Không rõ"}
+                      ?.fullName || "Không rõ"}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -717,25 +722,33 @@ export default function PetSubmission() {
                     </CardHeader>
                     <CardContent className="flex items-center justify-between">
                       <button
-                        onClick={() => setSelectedSubmission(submission) }                   
+                        onClick={() => setSelectedSubmission(submission)}
                         className="text-sm underline text-primary ml-auto"
                       >
                         Xem chi tiết
                       </button>
-                    
-           
-                      <DropdownMenu>
-                        <DropdownMenuTrigger>
-                          <EllipsisVertical className="h-4 w-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem  asChild>
-                              <CreateDialog submission= {submission}/>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+
+
+                      {submission.status === "approved" && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger>
+                            <EllipsisVertical className="h-4 w-4" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Hành động</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setConsentSubmission(submission);
+                                setOpenConsentDialog(true);
+                              }}
+                            >
+                              Tạo bản cam kết
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+
                     </CardContent>
                   </Card>
                 </div>
@@ -775,8 +788,8 @@ export default function PetSubmission() {
                     <strong>Ngày sinh:</strong>{" "}
                     {selectedSubmission.performedBy?.dob
                       ? dayjs(selectedSubmission.performedBy?.dob).format(
-                          "DD/MM/YYYY"
-                        )
+                        "DD/MM/YYYY"
+                      )
                       : "Chưa có thông tin"}
                   </p>
                   <p>
@@ -832,13 +845,12 @@ export default function PetSubmission() {
                       onOpenChange={(open) => !open && setPendingStatus(null)}
                     >
                       {currentStatus === "approved" ||
-                      (currentStatus === "reviewed" && !isShelterManager) ? (
+                        (currentStatus === "reviewed" && !isShelterManager) ? (
                         <Badge
-                          className={`text-sm px-2 py-1 font-medium text-foreground rounded ${
-                            currentStatus === "approved"
-                              ? "bg-green-400"
-                              : "bg-primary"
-                          }`}
+                          className={`text-sm px-2 py-1 font-medium text-foreground rounded ${currentStatus === "approved"
+                            ? "bg-green-400"
+                            : "bg-primary"
+                            }`}
                         >
                           {statusLabels[currentStatus]}
                         </Badge>
@@ -886,11 +898,16 @@ export default function PetSubmission() {
                                       pendingStatus
                                     );
                                   if (updatedStatus) {
-                                    setSelectedSubmission({
+                                    const updatedSubmission = {
                                       ...selectedSubmission,
                                       status: updatedStatus,
-                                    });
+                                    };
+                                    setSelectedSubmission(updatedSubmission);
                                     setPendingStatus(null);
+                                    if (updatedStatus === "approved") {
+                                      setConsentSubmission(updatedSubmission);
+                                      setOpenConsentDialog(true);
+                                    }
                                   }
                                 }
                               }}
@@ -903,7 +920,7 @@ export default function PetSubmission() {
                     </AlertDialog>
 
                     {selectedSubmission?.status === "scheduling" &&
-                       (
+                      (
                         <Button
                           variant="outline"
                           size="lg"
@@ -960,115 +977,115 @@ export default function PetSubmission() {
                             />
                           </div>
                           {isManager ? (
-                              <div className="w-full">
-                            <label>
-                              <span className="text-sm font-medium mb-1 block">
-                                Chọn người thực hiện{" "}
-                                <span className="text-red-500">*</span>
-                              </span>
-                            </label>
-                            <p className="text-sm text-muted-foreground italic mb-2">
-                              Danh sách được sắp xếp theo số lịch phỏng vấn (ít
-                              → nhiều)
-                            </p>
+                            <div className="w-full">
+                              <label>
+                                <span className="text-sm font-medium mb-1 block">
+                                  Chọn người thực hiện{" "}
+                                  <span className="text-red-500">*</span>
+                                </span>
+                              </label>
+                              <p className="text-sm text-muted-foreground italic mb-2">
+                                Danh sách được sắp xếp theo số lịch phỏng vấn (ít
+                                → nhiều)
+                              </p>
 
-                            <Popover open={open} onOpenChange={setOpen}>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  role="combobox"
-                                  aria-expanded={open}
-                                  className="w-full justify-between"
-                                >
-                                  {selectedStaff ? (
-                                    <div className="flex items-center gap-2">
-                                      <img
-                                        src={
-                                          selectedStaff.avatar ||
-                                          "/placeholder-avatar.png"
-                                        }
-                                        alt=""
-                                        className="w-5 h-5 rounded-full"
-                                      />
-                                      <span>
-                                        {selectedStaff.fullName} (
-                                        {selectedStaff.interviewCount} lịch)
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    "Chọn nhân viên thực hiện phỏng vấn"
-                                  )}
-                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-full p-0 left-0 "
-                                side="bottom"
-                                align="start"
-                              >
-                                <Command>
-                                  <CommandInput placeholder="Tìm nhân viên..." />
-                                  <CommandList>
-                                    {interviewers.map((staff) => (
-                                      <CommandItem
-                                        key={staff.staffId}
-                                        value={staff.fullName.toLowerCase()}
-                                        onSelect={() => {
-                                          if (
-                                            selectedStaff?.staffId ===
-                                            staff.staffId
-                                          ) {
-                                            // Nếu đang chọn staff này → bỏ chọn
-                                            setSelectedStaff(null);
-                                            setScheduleData({
-                                              ...scheduleData,
-                                              performedBy: "",
-                                            });
-                                          } else {
-                                            // Chọn staff mới
-                                            setSelectedStaff(staff);
-                                            setScheduleData({
-                                              ...scheduleData,
-                                              performedBy: staff.staffId,
-                                            });
+                              <Popover open={open} onOpenChange={setOpen}>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={open}
+                                    className="w-full justify-between"
+                                  >
+                                    {selectedStaff ? (
+                                      <div className="flex items-center gap-2">
+                                        <img
+                                          src={
+                                            selectedStaff.avatar ||
+                                            "/placeholder-avatar.png"
                                           }
-                                          setOpen(false);
-                                        }}
-                                      >
-                                        <div className="flex items-center gap-2">
-                                          <img
-                                            src={
-                                              staff.avatar ||
-                                              "/placeholder-avatar.png"
+                                          alt=""
+                                          className="w-5 h-5 rounded-full"
+                                        />
+                                        <span>
+                                          {selectedStaff.fullName} (
+                                          {selectedStaff.interviewCount} lịch)
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      "Chọn nhân viên thực hiện phỏng vấn"
+                                    )}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className="w-full p-0 left-0 "
+                                  side="bottom"
+                                  align="start"
+                                >
+                                  <Command>
+                                    <CommandInput placeholder="Tìm nhân viên..." />
+                                    <CommandList>
+                                      {interviewers.map((staff) => (
+                                        <CommandItem
+                                          key={staff.staffId}
+                                          value={staff.fullName.toLowerCase()}
+                                          onSelect={() => {
+                                            if (
+                                              selectedStaff?.staffId ===
+                                              staff.staffId
+                                            ) {
+                                              // Nếu đang chọn staff này → bỏ chọn
+                                              setSelectedStaff(null);
+                                              setScheduleData({
+                                                ...scheduleData,
+                                                performedBy: "",
+                                              });
+                                            } else {
+                                              // Chọn staff mới
+                                              setSelectedStaff(staff);
+                                              setScheduleData({
+                                                ...scheduleData,
+                                                performedBy: staff.staffId,
+                                              });
                                             }
-                                            alt=""
-                                            className="w-5 h-5 rounded-full"
-                                          />
-                                          <span className="truncate">
-                                            {staff.fullName} (
-                                            {staff.interviewCount} lịch)
-                                          </span>
-                                        </div>
-                                        {selectedStaff?.staffId ===
-                                          staff.staffId && (
-                                          <Check className="ml-auto h-4 w-4 text-green-500" />
-                                        )}
-                                      </CommandItem>
-                                    ))}
-                                  </CommandList>
-                                </Command>
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                          ):(
-<div className="w-full">
-    <p className="text-sm font-medium mb-1 block">
-      Người thực hiện: <span className="text-primary font-semibold">{userProfile?.fullName}</span>
-    </p>
-  </div>
-                          
+                                            setOpen(false);
+                                          }}
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <img
+                                              src={
+                                                staff.avatar ||
+                                                "/placeholder-avatar.png"
+                                              }
+                                              alt=""
+                                              className="w-5 h-5 rounded-full"
+                                            />
+                                            <span className="truncate">
+                                              {staff.fullName} (
+                                              {staff.interviewCount} lịch)
+                                            </span>
+                                          </div>
+                                          {selectedStaff?.staffId ===
+                                            staff.staffId && (
+                                              <Check className="ml-auto h-4 w-4 text-green-500" />
+                                            )}
+                                        </CommandItem>
+                                      ))}
+                                    </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          ) : (
+                            <div className="w-full">
+                              <p className="text-sm font-medium mb-1 block">
+                                Người thực hiện: <span className="text-primary font-semibold">{userProfile?.fullName}</span>
+                              </p>
+                            </div>
+
                           )}
-                        
+
                           <div>
                             <label className="text-sm font-medium">
                               Hình thức phỏng vấn{" "}
@@ -1130,21 +1147,19 @@ export default function PetSubmission() {
                   </p>
                   <div className="flex gap-2 border-b mb-4">
                     <button
-                      className={`px-4 py-2 text-sm font-medium ${
-                        selectedTab === "answers"
-                          ? "border-b-2 border-primary text-primary"
-                          : "text-muted-foreground"
-                      }`}
+                      className={`px-4 py-2 text-sm font-medium ${selectedTab === "answers"
+                        ? "border-b-2 border-primary text-primary"
+                        : "text-muted-foreground"
+                        }`}
                       onClick={() => setSelectedTab("answers")}
                     >
                       Câu trả lời
                     </button>
                     <button
-                      className={`px-4 py-2 text-sm font-medium ${
-                        selectedTab === "interview"
-                          ? "border-b-2 border-primary text-primary"
-                          : "text-muted-foreground"
-                      }`}
+                      className={`px-4 py-2 text-sm font-medium ${selectedTab === "interview"
+                        ? "border-b-2 border-primary text-primary"
+                        : "text-muted-foreground"
+                        }`}
                       onClick={() => setSelectedTab("interview")}
                     >
                       Thông tin phỏng vấn
@@ -1177,48 +1192,45 @@ export default function PetSubmission() {
                             {(question.type === "SINGLECHOICE" ||
                               question.type === "MULTIPLECHOICE" ||
                               question.type === "YESNO") && (
-                              <div className="space-y-1 pl-2">
-                                {question.options.map((option) => {
-                                  const isSelected = selections.includes(
-                                    option.title
-                                  );
+                                <div className="space-y-1 pl-2">
+                                  {question.options.map((option) => {
+                                    const isSelected = selections.includes(
+                                      option.title
+                                    );
 
-                                  return (
-                                    <div
-                                      key={option._id}
-                                      className={`flex items-center gap-2 text-sm
-                                      ${
-                                        option.isTrue
-                                          ? "text-green-600"
-                                          : isSelected
-                                          ? "text-red-600"
-                                          : "text-muted-foreground"
-                                      }
+                                    return (
+                                      <div
+                                        key={option._id}
+                                        className={`flex items-center gap-2 text-sm
+                                      ${option.isTrue
+                                            ? "text-green-600"
+                                            : isSelected
+                                              ? "text-red-600"
+                                              : "text-muted-foreground"
+                                          }
                                      
                                   `}
-                                    >
-                                      <div
-                                        className={`${
-                                          question.type === "MULTIPLECHOICE"
+                                      >
+                                        <div
+                                          className={`${question.type === "MULTIPLECHOICE"
                                             ? "w-4 h-4 rounded-sm"
                                             : "w-4 h-4 rounded-full"
-                                        }
+                                            }
                                         border
-                                        ${
-                                          isSelected
-                                            ? option.isTrue
-                                              ? "bg-green-500 border-green-500"
-                                              : "bg-red-500 border-red-500"
-                                            : "border-gray-400"
-                                        }
+                                        ${isSelected
+                                              ? option.isTrue
+                                                ? "bg-green-500 border-green-500"
+                                                : "bg-red-500 border-red-500"
+                                              : "border-gray-400"
+                                            }
                                   `}
-                                      />
-                                      <span>{option.title}</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
+                                        />
+                                        <span>{option.title}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
                           </div>
                         );
                       })}
@@ -1250,6 +1262,20 @@ export default function PetSubmission() {
             )}
           </DialogContent>
         </Dialog>
+        {consentSubmission && (
+          <CreateDialog
+            submission={consentSubmission}
+            open={openConsentDialog}
+            onOpenChange={(open) => {
+              if (!open) {
+                setConsentSubmission(null); // reset lại sau khi đóng
+              }
+              setOpenConsentDialog(open);
+            }}
+          />
+        )}
+
+
       </div>
     </div>
   );

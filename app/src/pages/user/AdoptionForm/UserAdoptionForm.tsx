@@ -1,5 +1,6 @@
 import { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+
 import axios from "axios";
 import { toast } from "sonner";
 import AppContext from "@/context/AppContext";
@@ -38,7 +39,7 @@ const UserAdoptionFormPage = () => {
   const [hasCheckedSubmitted, setHasCheckedSubmitted] = useState(false);
   const [hasChecked, setHasChecked] = useState<any>(null);
   const [consentForm, setConsentForm] = useState<ConsentForm | null>(null);
-
+  const navigate = useNavigate();
 
 
   const getInitialStep = () => {
@@ -73,6 +74,7 @@ const UserAdoptionFormPage = () => {
         const res = await authAxios.get(`${coreAPI}/pets/get-adoptionForms-by-petId/${id}`);
         setForm(res.data);
 
+
         // Kiểm tra đã nộp chưa
         const checkRes = await authAxios.post(
           `${coreAPI}/pets/${id}/adoption-submissions/check-user-submitted`,
@@ -81,28 +83,28 @@ const UserAdoptionFormPage = () => {
 
         if (checkRes.data.submitted) {
           const status = checkRes.data.status;
-const selectedSchedule = checkRes.data.selectedSchedule;
+          const selectedSchedule = checkRes.data.selectedSchedule;
           setSubmissionId(checkRes.data.submissionId);
           setAgreed(true);
           setHasChecked(checkRes.data);
-          
 
-                // Fetch consentForm nếu đã có submission
-      const consentRes = await authAxios.get(`${coreAPI}/consentForms/get-by-user`);
-      const consentFormMatched = consentRes.data.find(
-        (form: ConsentForm) => form?.pet?._id === res.data.pet?._id
-      );
-      if (consentFormMatched) {
-        setConsentForm(consentFormMatched);
 
-        if (
-          consentFormMatched.status === "approved" ||
-          consentFormMatched.status === "rejected"
-        ) {
-          setStep(6);
-          return;
-        }
-      }
+          // Fetch consentForm nếu đã có submission
+          const consentRes = await authAxios.get(`${coreAPI}/consentForms/get-by-user`);
+          const consentFormMatched = consentRes.data.find(
+            (form: ConsentForm) => form?.pet?._id === res.data.pet?._id
+          );
+          if (consentFormMatched) {
+            setConsentForm(consentFormMatched);
+
+            if (
+              consentFormMatched.status === "approved" ||
+              consentFormMatched.status === "rejected"
+            ) {
+              setStep(6);
+              return;
+            }
+          }
 
 
           if (status === "pending" || status === "scheduling") {
@@ -146,7 +148,27 @@ const selectedSchedule = checkRes.data.selectedSchedule;
     fetchData();
   }, [id]);
 
-  
+  useEffect(() => {
+    const checkReturned = async () => {
+      try {
+        const res = await authAxios.get(`${coreAPI}/return-requests/get-by-user`);
+        const hasReturned = res.data.some((req: any) =>
+          req.pet?._id === id && req.status === "approved"
+        );
+        if (hasReturned) {
+          toast.error("Bạn đã từng trả lại thú cưng này, không thể nhận nuôi lại.");
+          navigate("/");
+        }
+      } catch (err) {
+        toast.error("Không thể kiểm tra yêu cầu trả thú cưng");
+      }
+    };
+
+    if (form && !submissionId) {
+      checkReturned();
+    }
+  }, [form, submissionId]);
+
 
   useEffect(() => {
     const fetchSubmission = async () => {
@@ -163,6 +185,7 @@ const selectedSchedule = checkRes.data.selectedSchedule;
       fetchSubmission();
     }
   }, [submissionId, submission, hasCheckedSubmitted]);
+
 
 
   // Ghi lại mỗi khi step thay đổi
@@ -218,7 +241,7 @@ const selectedSchedule = checkRes.data.selectedSchedule;
   if (consentStatus === "approved" || consentStatus === "rejected") {
     maxStep = 5;
   }
-  
+
   const renderStepIndicator = () => (
     <TooltipProvider>
       <div className="flex items-center justify-between w-full max-w-5xl mx-auto px-4 py-4 relative">
@@ -385,11 +408,11 @@ const selectedSchedule = checkRes.data.selectedSchedule;
           }} />;
 
       case 5:
-        return <Step5_ConsentForm 
-        onNext={next} 
-        onBack={back}
-        submission={submission}
-        onLoadedConsentForm={(form) => setConsentForm(form)}/>
+        return <Step5_ConsentForm
+          onNext={next}
+          onBack={back}
+          submission={submission}
+          onLoadedConsentForm={(form) => setConsentForm(form)} />
 
       case 6:
         return <Step6_Result onNext={next} onBack={back} submission={submission} consentForm={consentForm} />

@@ -257,10 +257,18 @@ function PetsList({ pet, user, isLoading, }: PetCardProps) {
 
                     <div className="flex">
                         <div className="min-w-[100px] text-sm font-medium text-foreground">
-                            Nơi ở hiện tại:
+                            Trung tâm:
                         </div>
                         <div className="text-sm text-muted-foreground">
-                            {shelterName}, {shelterAddress}
+                            {shelterName}
+                        </div>
+                    </div>
+                    <div className="flex">
+                        <div className="min-w-[100px] text-sm font-medium text-foreground">
+                            Địa chỉ:
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                            {shelterAddress}
                         </div>
                     </div>
 
@@ -283,8 +291,8 @@ function PetsList({ pet, user, isLoading, }: PetCardProps) {
 
                 <div className="mt-auto pt-4">
                     <Button variant="ghost" className="gap-2 pl-0" asChild>
-                        <Link  to={`/pets/${pet._id}`}
-                        onClick={() => window.scrollTo({ top: 0, left: 0, behavior: "smooth" })}
+                        <Link to={`/pets/${pet._id}`}
+                            onClick={() => window.scrollTo({ top: 0, left: 0, behavior: "smooth" })}
                         >Xem thêm <ArrowRight className="w-4 h-4" /></Link>
                     </Button>
                 </div>
@@ -296,7 +304,7 @@ function PetsList({ pet, user, isLoading, }: PetCardProps) {
                     pet={{
                         _id: pet._id,
                         name: pet.name,
-                        petCode: pet.petCode, 
+                        petCode: pet.petCode,
                         photos: pet.photos || [],
                     }}
                     shelter={{

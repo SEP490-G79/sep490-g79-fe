@@ -50,12 +50,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import { toast } from "sonner";
 import type { MissionForm } from "@/types/MissionForm";
+import { set } from "date-fns";
 
 type Props = {
   submission: MissionForm | undefined;
+   open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
-export default function CreateDialog({ submission }: Props) {
+export default function CreateDialog({ submission, open, onOpenChange }: Props) {
   const { coreAPI } = useContext(AppContext);
 
   const { shelterId } = useParams();
@@ -130,7 +133,7 @@ export default function CreateDialog({ submission }: Props) {
   }, []);
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger>
         <span className="text-xs flex items-center gap-2">
           <PlusSquare className="text-(--primary) w-4 h-4 " />

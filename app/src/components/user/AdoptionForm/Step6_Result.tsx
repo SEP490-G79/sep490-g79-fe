@@ -80,7 +80,7 @@ console.log(consentForm);
         Cảm ơn bạn vì đã đồng hành cùng chương trình nhận nuôi!
       </div>
     );
-  } else if (consentForm?.status === "rejected") {
+  } else if (consentForm?.status === "cancelled") {
     return (
       <div className="bg-red-50 p-4 rounded-md text-red-700 border border-red-300 text-sm">
         Sau khi xem xét kỹ lưỡng và không đạt được sự thống nhất về nội dung cam kết, chúng tôi rất tiếc phải thông báo rằng việc nhận nuôi bé{" "}

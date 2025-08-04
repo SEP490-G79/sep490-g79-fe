@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAppContext } from "@/context/AppContext";
 import type { Pet } from "@/types/Pet";
 import useAuthAxios from "@/utils/authAxios";
-import { useParams, useNavigate, Link} from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
     Card,
@@ -34,7 +34,8 @@ export default function SubmissionForms() {
 
     const [currentPageAll, setCurrentPageAll] = useState(1);
     const [currentPageWithSubmissions, setCurrentPageWithSubmissions] = useState(1);
-    const [activeTab, setActiveTab] = useState<"all" | "withSubmissions">("withSubmissions");
+    const [activeTab, setActiveTab] = useState<"all" | "withSubmissions" | "adopted">("withSubmissions");
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -46,7 +47,7 @@ export default function SubmissionForms() {
                     params: {
                         page: 1,
                         limit: 1000, // Lấy tất cả để phân trang client-side
-                        status: ["available", "adopted", "booking", "delivered"], 
+                        status: ["available", "adopted", "booking", "delivered"],
                     },
                 });
 
@@ -101,16 +102,35 @@ export default function SubmissionForms() {
     }, [activeTab]);
 
     const petsWithSubmissions = availablePets.filter(pet => submissionCountByPet[pet._id]);
-    const displayedPets = activeTab === "withSubmissions" ? petsWithSubmissions : availablePets;
+    const adoptedPets = availablePets.filter(pet => pet.status === "adopted");
 
-    const currentPage = activeTab === "withSubmissions" ? currentPageWithSubmissions : currentPageAll;
-    const setCurrentPage = activeTab === "withSubmissions" ? setCurrentPageWithSubmissions : setCurrentPageAll;
+    const displayedPets =
+        activeTab === "withSubmissions"
+            ? petsWithSubmissions
+            : activeTab === "adopted"
+                ? adoptedPets
+                : availablePets;
+
+    const currentPage =
+        activeTab === "withSubmissions"
+            ? currentPageWithSubmissions
+            : activeTab === "adopted"
+                ? currentPageAll
+                : currentPageAll;
+
+    const setCurrentPage =
+        activeTab === "withSubmissions"
+            ? setCurrentPageWithSubmissions
+            : activeTab === "adopted"
+                ? setCurrentPageAll
+                : setCurrentPageAll;
+
 
     const totalPages = Math.ceil(displayedPets.length / petsPerPage);
     const paginatedPets = displayedPets.slice((currentPage - 1) * petsPerPage, currentPage * petsPerPage);
 
 
-   const renderPageNumbers = () => {
+    const renderPageNumbers = () => {
         const pages = [];
 
         if (totalPages <= 5) {
@@ -184,8 +204,15 @@ export default function SubmissionForms() {
                     variant={activeTab === "all" ? "default" : "outline"}
                     onClick={() => setActiveTab("all")}
                 >
-                    Tất cả thú cưng
+                    Sẵn sàng nhận nuôi
                 </Button>
+                <Button
+                    variant={activeTab === "adopted" ? "default" : "outline"}
+                    onClick={() => setActiveTab("adopted")}
+                >
+                    Hoàn thành nhận nuôi
+                </Button>
+
             </div>
 
             {/* Pet list */}
@@ -214,11 +241,11 @@ export default function SubmissionForms() {
                                 <div className="basis-2/3 space-y-1">
                                     <p >Mã thú cưng: {pet.petCode ?? "N/A"}</p>
                                     <h2 >Tên: {pet.name}</h2>
-                                    <h2 >Ngày bắt đầu mở đơn: {pet.name}</h2>
+                                    {/* <h2 >Ngày bắt đầu mở đơn: {pet.name}</h2> */}
                                 </div>
-                                 
-                 
-                
+
+
+
                             </CardContent>
                         </Card>
                     ))}

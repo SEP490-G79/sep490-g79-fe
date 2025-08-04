@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Tabs,
   TabsList,
@@ -78,7 +78,7 @@ export default function AdoptionActivities({ userId }: Props) {
   const [submissions, setSubmissions] = useState<MissionForm[]>([]);
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
-
+  const [returnRequests, setReturnRequests] = useState<any[]>([]);
 
 
   useEffect(() => {
@@ -95,6 +95,34 @@ export default function AdoptionActivities({ userId }: Props) {
   const adoptedPets = petsList.filter((pet: any) => {
     return pet.adopter?._id === userId;
   });
+
+
+
+  useEffect(() => {
+    authAxios
+      .get(`${coreAPI}/return-requests/get-by-user`)
+      .then((res) => {
+        setReturnRequests(res.data);
+      })
+      .catch(() => {
+        toast.error("Không thể lấy thông tin yêu cầu trả lại");
+      });
+  }, [userId]);
+
+  const returnRequestMap = useMemo(() => {
+    const map = new Map();
+    returnRequests.forEach((req) => {
+      map.set(req.pet?._id, req.status);
+    });
+    return map;
+  }, [returnRequests]);
+
+  const getReturnRequestStatus = (submission: MissionForm) => {
+    const petId = submission.adoptionForm?.pet?._id;
+    return returnRequestMap.get(petId) || null;
+  };
+
+
 
 
   const filteredActivities = submissions.filter((item) => {
@@ -154,8 +182,7 @@ export default function AdoptionActivities({ userId }: Props) {
     };
   }, []);
 
-  console.log(petsList);
-  
+
 
   return (
     <Tabs
@@ -246,13 +273,20 @@ export default function AdoptionActivities({ userId }: Props) {
             currentActivities.map((submission) => (
               <Card
                 key={submission._id}
-                onClick={() => handleCardClick(submission)}
+                onClick={() => {
+                  if (!getReturnRequestStatus(submission)) {
+                    handleCardClick(submission);
+                  }
+                }}
                 className="relative cursor-pointer transition hover:shadow-md group"
               >
                 {/* Overlay Layer */}
-                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center text-orange-600 text-sm font-medium transition-opacity duration-300 rounded-lg z-10" >
-                  <div className="-translate-y-3">Click vào để xem chi tiết</div>
-                </div>
+                {!getReturnRequestStatus(submission) && (
+                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center text-orange-600 text-sm font-medium transition-opacity duration-300 rounded-lg z-10">
+                    <div className="-translate-y-3">Click vào để xem chi tiết</div>
+                  </div>
+                )}
+
 
                 {/* Nội dung chính */}
                 <CardHeader className="flex flex-row items-center gap-4 pb-2 z-0">
@@ -290,17 +324,46 @@ export default function AdoptionActivities({ userId }: Props) {
 
                   <div className="flex flex-col">
                     <span className="text-muted-foreground text-xs">Trạng thái</span>
-                    <span
-                      className={`font-semibold ${submission.status === "approved"
-                        ? "text-green-600"
-                        : submission.status === "rejected"
-                          ? "text-red-600"
-                          : "text-yellow-600"
-                        }`}
-                    >
-                      {getStatusLabel(submission.status)}
-                    </span>
+                    {(() => {
+                      const returnStatus = getReturnRequestStatus(submission);
+                      if (returnStatus) {
+                        const statusColor =
+                          returnStatus === "approved"
+                            ? "text-green-600"
+                            : returnStatus === "rejected"
+                              ? "text-red-600"
+                              : returnStatus === "cancelled"
+                                ? "text-gray-500"
+                                : "text-yellow-600";
+
+                        const label =
+                          returnStatus === "pending"
+                            ? "Yêu cầu trả lại - Chờ duyệt"
+                            : returnStatus === "approved"
+                              ? "Yêu cầu trả lại - Đã duyệt"
+                              : returnStatus === "rejected"
+                                ? "Yêu cầu trả lại - Từ chối"
+                                : "Yêu cầu trả lại - Đã huỷ";
+
+                        return <span className={`font-semibold ${statusColor}`}>{label}</span>;
+                      } else {
+                        // Nếu không có return request, hiển thị theo submission status gốc
+                        return (
+                          <span
+                            className={`font-semibold ${submission.status === "approved"
+                              ? "text-green-600"
+                              : submission.status === "rejected"
+                                ? "text-red-600"
+                                : "text-yellow-600"
+                              }`}
+                          >
+                            {getStatusLabel(submission.status)}
+                          </span>
+                        );
+                      }
+                    })()}
                   </div>
+
 
                   <div className="flex flex-col col-span-2">
                     <span className="text-muted-foreground text-xs">Ngày yêu cầu</span>

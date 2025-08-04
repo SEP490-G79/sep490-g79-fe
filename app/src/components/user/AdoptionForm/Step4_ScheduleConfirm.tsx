@@ -107,7 +107,7 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
 
   const handleNextStep = () => {
     if (submission?.status !== "approved" && submission?.status !== "subjected") {
-      toast.error("Bạn chưa thể chuyển bước. Đơn của bạn chưa đủ điều kiện.");
+      toast.error("Đơn đăng kí của bạn đang chờ phỏng vấn, hiện tại chưa thể chuyển đến bước tiếp theo.");
       return;
     }
 

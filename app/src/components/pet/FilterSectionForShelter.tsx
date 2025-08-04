@@ -11,13 +11,8 @@ import { Button } from "@/components/ui/button";
 import type { Pet } from "@/types/Pet";
 import TagCombobox from "./TagCombobox";
 import {
-  MarsStroke,
-  Venus,
   SlidersHorizontal,
   Search,
-  Badge,
-  Scan,
-  Info,
 } from "lucide-react";
 import type { User } from "@/types/User";
 import { Separator } from "@/components/ui/separator";
@@ -40,7 +35,6 @@ export interface FilterState {
   species: string[];
   breed: string[];
   gender: string;
-  shelter: string[];
   color: string[];
   ageRange: [number, number];
   weightRange: [number, number];
@@ -56,7 +50,7 @@ interface FilterSectionProps {
   setIsLoading?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-function FilterSection({
+function FilterSectionForShelter({
   onChange,
   pets,
   userProfile,
@@ -67,7 +61,6 @@ function FilterSection({
     species: [],
     breed: [],
     gender: "",
-    shelter: [],
     color: [],
     ageRange: [0, 100],
     weightRange: [0, 20],
@@ -84,9 +77,6 @@ function FilterSection({
         .flatMap((p) => p.breeds?.map((b) => b.name))
         .filter((n): n is string => !!n)
     )
-  );
-  const shelterOptions = Array.from(
-    new Set(pets.map((p) => p.shelter?.name).filter((n): n is string => !!n))
   );
   const colorOptions = Array.from(
     new Set(pets.map((p) => p.color).filter((c): c is string => !!c))
@@ -111,16 +101,8 @@ function FilterSection({
         range: [1000, 200_000] as [number, number],
       },
       {
-        label: "200,000đ - 500,000đ",
-        range: [200_000, 500_000] as [number, number],
-      },
-      {
-        label: "500,000đ - 1,000,000đ",
-        range: [500_000, 1_000_000] as [number, number],
-      },
-      {
-        label: "Trên 1,000,000đ",
-        range: [1_000_000, Infinity] as [number, number],
+        label: "Trên 200,000đ",
+        range: [200_000, Infinity] as [number, number],
       },
     ]
     : [{ label: "Tất cả", range: [0, Infinity] as [number, number] }];
@@ -136,7 +118,6 @@ function FilterSection({
       species: [],
       breed: [],
       gender: "",
-      shelter: [],
       color: [],
       ageRange: [0, 100],
       weightRange: [0, 20],
@@ -147,19 +128,12 @@ function FilterSection({
   };
 
   return (
-    <div className="relative w-full min-h-[75vh] ">
-      <div className="absolute inset-0 ">
-        <img
-          src={shelterBg}
-          alt="Shelter Background"
-          className="absolute w-full h-full object-cover object-top z-0"
-        />
-      </div>
-      <div className="relative z-10 flex flex-col items-center justify-center px-4 py-16">
-        <div className="text-center mb-4 mt-25 flex  ">
-          {/* Search Bar */}
-          <div className="relative max-w-2xl mx-auto mb-4 min-w-[500px]">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+    <div className="relative w-full ">
+      <div className="relative z-10 flex flex-col items-center justify-center px-4 py-10">
+        <div className="w-full max-w-4xl mx-auto flex items-center gap-2 px-13">
+          {/* Search bar */}
+          <div className="relative flex-1 max-w-xl">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 " />
             <Input
               type="text"
               placeholder="Tìm kiếm những người bạn đồng hành hoàn hảo"
@@ -167,75 +141,29 @@ function FilterSection({
               onChange={(e) =>
                 setFilters({ ...filters, searchTerm: e.target.value })
               }
-              className="pl-12 pr-5 py-5 text-lg border-2 border-gray-200 rounded-2xl
-               shadow-lg focus:border-blue-400 focus:ring-4 focus:ring-blue-100 
-               transition-all duration-200 dark:bg-gray-800/60
+              className="pl-12 pr-5 py-5 text-lg border-2 border-gray-200 rounded-2xl shadow-lg focus:border-blue-400 focus:ring-4 
+              focus:ring-blue-100 transition-all duration-200 bg-gradient-to-br from-white to-purple-100 dark:bg-gray-800/60
               dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900"
             />
           </div>
-          <Dialog>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="px-5 py-5 ml-4">
-                    <Scan />
-                  </Button>
-                </DialogTrigger>
-              </TooltipTrigger>
-              <TooltipContent>Tìm kiếm thú nuôi bằng hình ảnh</TooltipContent>
-            </Tooltip>
-            <DialogContent
-              className="max-w-2xl w-full p-6 shadow-lg"
-              onEscapeKeyDown={(e) => {
-                e.preventDefault();
-              }}
-              onPointerDownOutside={(e) => {
-                e.preventDefault();
-              }}
-            >
-              <DialogHeader className="mb-4">
-                <DialogTitle className="text-md">
-                  Tìm kiếm thú nuôi bằng hình ảnh
-                </DialogTitle>
-                <DialogDescription className="text-sm ">
-                  Tìm kiếm các bé dễ dàng hơn bằng cách tải lên hình ảnh của
-                  chúng. Hãy thử ngay!
-                </DialogDescription>
-              </DialogHeader>
-              <SearchByImage
-                setFilters={setFilters}
-                setIsLoading={setIsLoading}
-              />
-              <DialogFooter className="mt-4">
-                <DialogClose asChild>
-                  <Button variant="outline" size="sm">
-                    Đóng
-                  </Button>
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          {/* Advanced Filter Toggle */}
-          <Tooltip>
-            <TooltipTrigger asChild>
 
-              <Button
-                variant="outline"
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className="px-5 py-5 ml-1"
-              >
-                <SlidersHorizontal />
-                {showAdvancedFilters}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Bộ lọc nâng cao</TooltipContent>
-          </Tooltip>
+          {/* Bộ lọc nâng cao */}
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 rounded-xl px-6 py-3 whitespace-nowrap"
+          >
+            <SlidersHorizontal className="w-5 h-5 mr-2 " />
+            {showAdvancedFilters ? "Ẩn bộ lọc" : "Bộ lọc nâng cao"}
+          </Button>
         </div>
+
 
         {showAdvancedFilters && (
           <div
-            className="transition-all duration-500 w-full max-w-7xl mx-auto py-5 px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 
-            bg-white/70 backdrop-blur-sm rounded-xl shadow-lg dark:bg-black/40 backdrop-blur-sm rounded-xl shadow-lg dark:shadow-black/50   "
+            className="transition-all duration-500 w-full max-w-7xl mt-8 mx-auto py-5 px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 
+bg-white/70 backdrop-blur-md rounded-xl shadow-lg dark:bg-gray-800/60 bg-gradient-to-br from-white to-blue-100 dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900"
           >
             <TagCombobox
               options={speciesOptions}
@@ -243,6 +171,7 @@ function FilterSection({
               onChange={(val) => setFilters({ ...filters, species: val })}
               placeholder="Chọn hoặc thêm loài"
               label="Loài"
+              
             />
 
             <TagCombobox
@@ -253,13 +182,6 @@ function FilterSection({
               label="Giống"
             />
 
-            <TagCombobox
-              options={shelterOptions}
-              selected={filters.shelter}
-              onChange={(val) => setFilters({ ...filters, shelter: val })}
-              placeholder="Chọn hoặc thêm trung tâm"
-              label="Trung tâm"
-            />
 
             <TagCombobox
               options={colorOptions}
@@ -277,8 +199,8 @@ function FilterSection({
               <div className="flex gap-2">
                 <button
                   className={`flex items-center gap-1 px-3 py-1 rounded-md border text-sm transition ${filters.gender === ""
-                    ? "bg-primary text-primary-foreground"
-                    : "border-border"
+                      ? "bg-primary text-primary-foreground"
+                      : "border-border"
                     }`}
                   onClick={() => setFilters({ ...filters, gender: "" })}
                 >
@@ -286,22 +208,20 @@ function FilterSection({
                 </button>
                 <button
                   className={`flex items-center gap-1 px-3 py-1 rounded-md border text-sm transition ${filters.gender === "male"
-                    ? "bg-primary text-primary-foreground"
-                    : "border-border"
+                      ? "bg-primary text-primary-foreground"
+                      : "border-border"
                     }`}
                   onClick={() => setFilters({ ...filters, gender: "male" })}
                 >
-                  <MarsStroke className="w-4 h-4" />
                   Đực
                 </button>
                 <button
                   className={`flex items-center gap-1 px-3 py-1 rounded-md border text-sm transition ${filters.gender === "female"
-                    ? "bg-primary text-primary-foreground"
-                    : "border-border"
+                      ? "bg-primary text-primary-foreground"
+                      : "border-border"
                     }`}
                   onClick={() => setFilters({ ...filters, gender: "female" })}
                 >
-                  <Venus className="w-4 h-4" />
                   Cái
                 </button>
               </div>
@@ -312,7 +232,7 @@ function FilterSection({
               <label className="text-base font-medium text-foreground block mb-1">
                 Độ tuổi
               </label>
-              <span className="text-sm text-muted-foreground dark:text-white">
+              <span className="text-sm text-muted-foreground">
                 {formatAge(filters.ageRange[0])} -{" "}
                 {filters.ageRange[1] >= maxAge
                   ? `${formatAge(maxAge)}+`
@@ -334,7 +254,7 @@ function FilterSection({
               <label className="text-base font-medium text-foreground block mb-1">
                 Cân nặng
               </label>
-              <span className="text-sm text-muted-foreground dark:text-white">
+              <span className="text-sm text-muted-foreground">
                 {filters.weightRange[0]} -{" "}
                 {filters.weightRange[1] >= maxWeight
                   ? `${maxWeight}+`
@@ -425,4 +345,4 @@ function FilterSection({
   );
 }
 
-export default FilterSection;
+export default FilterSectionForShelter;

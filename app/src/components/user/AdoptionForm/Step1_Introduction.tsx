@@ -3,11 +3,13 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { PhotoProvider, PhotoView } from "react-photo-view";
+import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import "react-photo-view/dist/react-photo-view.css";
 import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { Pet } from "@/types/Pet";
@@ -67,7 +69,7 @@ const Step1_Introduction = ({ form, agreed, onAgree, onNext, onBack, setAgreed, 
           maximumFractionDigits: 0,
         }).format(money);
 
-       
+
   return (
     <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
       <Card className="md:col-span-1">
@@ -119,43 +121,63 @@ const Step1_Introduction = ({ form, agreed, onAgree, onNext, onBack, setAgreed, 
         </CardContent>
       </Card>
 
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold">{form.title || "Mẫu nhận nuôi thú cưng"}</CardTitle>
+      <Card className="md:col-span-2 border rounded-md p-4 space-y-4 max-h-[850px]">
+        <CardHeader className="p-0">
+          <CardTitle className="text-xl font-semibold">
+            {form.title || "Mẫu nhận nuôi thú cưng"}
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm text-gray-700 dark:text-gray-300">
+
+        <CardContent className="p-0 space-y-4 text-sm text-gray-700 dark:text-gray-300 overflow-hidden">
           <Separator />
-          <p className="whitespace-pre-line">{form.description}</p>
-          <Separator />
-          {/* Checkbox xác nhận */}
-          <div className="mt-4 space-y-2">
-            <div className="flex items-start space-x-2">
-              <input
-                type="checkbox"
-                id="agree-checkbox"
-                checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-                disabled={readOnly}
-                className="mt-1  "
-              />
-              <label htmlFor="agree-checkbox" className="text-sm">
-                Tôi đồng ý với các điều khoản và điều kiện nhận nuôi thú cưng.
-              </label>
-            </div>
 
-            {!agreed && showAgreementError && (
-              <p className="text-sm text-red-500 italic">
-                Bạn cần đồng ý với điều khoản trước khi tiếp tục.
-              </p>
-            )}
-
-
-            <Button onClick={handleNextClick}>Tiếp theo</Button>
+          {/* Khu vực hiển thị mô tả có thể cuộn */}
+          <div className="overflow-y-auto max-h-[550px] pr-2">
+            <MinimalTiptapEditor
+              throttleDelay={2000}
+              editorContentClassName="description"
+              output="html"
+              content={form.description}
+              immediatelyRender={false}
+              editable={false}
+              hideToolbar
+              injectCSS
+              editorClassName="focus:outline-none"
+              className="border-none w-full h-full"
+            />
           </div>
 
-
+          <Separator />
         </CardContent>
+
+        <CardFooter className="p-0 pt-2 flex flex-col items-start space-y-2">
+          <div className="flex items-start space-x-2">
+            <input
+              type="checkbox"
+              id="agree-checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              disabled={readOnly}
+              className="mt-1"
+            />
+            <label htmlFor="agree-checkbox" className="text-sm leading-snug">
+              Tôi đồng ý với các điều khoản và điều kiện nhận nuôi thú cưng.
+            </label>
+          </div>
+
+          {!agreed && showAgreementError && (
+            <p className="text-sm text-red-500 italic">
+              Bạn cần đồng ý với điều khoản trước khi tiếp tục.
+            </p>
+          )}
+
+          <Button onClick={handleNextClick} className="mt-2">
+            Tiếp theo
+          </Button>
+        </CardFooter>
       </Card>
+
+
     </div>
 
   );

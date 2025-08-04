@@ -62,20 +62,38 @@ const Step3_SubmissionForm = ({ submissionId, onNext, onBack, onLoadedSubmission
     <div className="max-w-4xl mx-auto p-6 space-y-6">
 
       <Card className="max-w-3xl mx-auto shadow-lg dark:border-primary">
-        <CardHeader className="flex items-center gap-3">
-          <>
-            <CheckCircle className="text-green-500 w-6 h-6" />
-            <CardTitle className="text-xl font-semibold text-green-700">
-              Đơn đăng ký nhận nuôi đã được gửi thành công!
-            </CardTitle>
-          </>
+          <CardHeader className="flex items-center gap-3">
+          {submission.status === "rejected" ? (
+            <>
+              <FileText className="text-red-500 w-6 h-6" />
+              <CardTitle className="text-xl font-semibold text-red-600">
+                Rất tiếc, đơn đăng ký nhận nuôi của bạn đã bị từ chối.
+              </CardTitle>
+            </>
+          ) : (
+            <>
+              <CheckCircle className="text-green-500 w-6 h-6" />
+              <CardTitle className="text-xl font-semibold text-green-700">
+                Đơn đăng ký nhận nuôi đã được gửi thành công!
+              </CardTitle>
+            </>
+          )}
         </CardHeader>
 
 
         <Separator />
 
         <CardContent className="space-y-4">
-
+  {submission.status === "rejected" && (
+       <div className="bg-red-50 p-4 rounded-md text-red-700 border border-red-300 text-sm">
+      Sau khi xem xét kỹ lưỡng, chúng tôi rất tiếc phải thông báo rằng việc đăng ký nhận nuôi bé{" "}
+      <strong>{submission.adoptionForm?.pet?.name}</strong> đã được{" "}
+      <strong>{submission.adoptionForm?.shelter?.name}</strong> ưu tiên cho một hồ sơ khác.
+      <br />
+      Cảm ơn bạn đã quan tâm và mong rằng bạn sẽ tiếp tục đồng hành, yêu thương và lan tỏa tình yêu
+      thương tới các bé thú cưng khác trong tương lai.
+    </div>
+  )}
           {submission.status !== "approved" && submission.status !== "rejected" && (
             <div className="bg-yellow-50 p-4 rounded-md text-yellow-700 border border-yellow-300 text-sm">
               Đơn đăng ký nhận nuôi bé <strong>{submission.adoptionForm?.pet?.name}</strong> hiện đang được{" "}
