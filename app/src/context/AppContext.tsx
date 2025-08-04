@@ -121,17 +121,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     []
   );
   const location = useLocation();
+  const base_API = import.meta.env.VITE_BE_API; 
 
   // APIs
-  const coreAPI = "http://localhost:9999";
-  const authAPI = "http://localhost:9999/auth";
-  const userAPI = "http://localhost:9999/users";
-  const shelterAPI = "http://localhost:9999/shelters";
-  const petAPI = "http://localhost:9999/pets";
-  const medicalRecordAPI = "http://localhost:9999/medical-records";
-  const blogAPI = "http://localhost:9999/blogs";
-  const reportAPI = "http://localhost:9999/reports";
-  const returnRequestAPI = "http://localhost:9999/return-requests";
+  const coreAPI = base_API;
+  const authAPI = `${base_API}/auth`;
+  const userAPI = `${base_API}/users`;
+  const shelterAPI = `${base_API}/shelters`;
+  const petAPI = `${base_API}/pets`;
+  const medicalRecordAPI = `${base_API}/medical-records`;
+  const blogAPI = `${base_API}/blogs`;
+  const reportAPI = `${base_API}/reports`;
+  const returnRequestAPI = `${base_API}/return-requests`;
+  
 
   const login = (accessToken: string, userData: User) => {
     setUser(userData);

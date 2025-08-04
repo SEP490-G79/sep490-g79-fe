@@ -1,8 +1,9 @@
 // hooks/usePetApi.ts
 import useAuthAxios from "@/utils/authAxios";
+const base_API = import.meta.env.VITE_BE_API; 
 
-const API_URL = "http://localhost:9999/pets";
-const BASE_URL = "http://localhost:9999";
+const BASE_URL = `${base_API}`;
+const API_URL = `${base_API}/pets`;
 
 export const usePetApi = () => {
   const authAxios = useAuthAxios();

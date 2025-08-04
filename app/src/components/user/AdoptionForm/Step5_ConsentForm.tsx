@@ -23,9 +23,28 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { MissionForm } from "@/types/MissionForm";
 import dayjs from "dayjs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sub } from "@radix-ui/react-dropdown-menu";
-import { sub } from "date-fns";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+  DialogHeader,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+
 interface Step4Props {
   onNext: () => void;
   onBack: () => void;
@@ -37,6 +56,9 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
   const authAxios = useAuthAxios();
   const [isLoading, setIsLoading] = React.useState(false);
   const [consentForm, setConsentForm] = React.useState<ConsentForm>();
+  const [isAgreed, setIsAgreed] = React.useState(false);
+  const [userNote, setUserNote] = React.useState("");
+
   const navigate = useNavigate();
   const fetchConsentForm = async () => {
     setIsLoading(true);
@@ -79,18 +101,18 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
     }
   }, [submission]);
 
-  
+  const handleChangeStatus = async (status: string, note: string) => {
 
-
-  const handleChangeStatus = async (status: string) => {
     // console.log(status);
     setIsLoading(true);
     await authAxios
       .put(`${coreAPI}/consentForms/${consentForm?._id}/change-status-user`, {
-        status,
+        status: status,
+        note: userNote,
       })
       .then((res) => {
         setConsentForm(res.data);
+
         toast.success("Cập nhật trạng thái thành công!");
       })
       .catch((err) => {
@@ -100,6 +122,7 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
         );
       })
       .finally(() => {
+        setUserNote("");
         setTimeout(() => {
           setIsLoading(false);
         }, 200);
@@ -388,44 +411,66 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
       <div className="basis-full flex flex-wrap justify-between gap-1 text-sm p-5">
         <p className="basis-full lg:basis-11/23  flex items-center gap-2">
           <span>Tên người nhận nuôi: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span
+
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.adopter?.fullName}
           </span>
         </p>
         <p className="basis-full lg:basis-11/23  flex items-center gap-2 ">
           <span>Số điện thoại: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span
+
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.adopter?.phoneNumber}
           </span>
         </p>
         <p className="basis-full   flex items-center gap-2">
           <span>Địa chỉ: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span
+
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.adopter?.address}
           </span>
         </p>
         <p className="basis-full lg:basis-11/23  flex items-center gap-2">
           <span>Ngày: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span
+
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.createdAt &&
               dayjs(consentForm.createdAt).format("DD/MM/YYYY")}
           </span>
         </p>
         <p className="basis-full lg:basis-11/23   flex items-center gap-2">
           <span>Có nhận nuôi (tên thú cưng): </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
-            {consentForm?.pet?.name}
+          <span
+
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
+            {consentForm?.pet?.name} {" #"}
+            <span className="italic text-xs">{consentForm?.pet?.petCode} </span>
           </span>
         </p>
         <p className="basis-full lg:basis-11/23  flex items-center gap-2">
           <span>Giới tính: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span
+
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.pet?.isMale == true ? "Đực" : "Cái"}
           </span>
         </p>
         <p className="basis-full lg:basis-11/23   flex items-center gap-2">
           <span>Tình trạng triệt sản: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span
+
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.pet?.sterilizationStatus == true
               ? "Đã triệt sản"
               : "Chưa triệt sản"}
@@ -433,7 +478,10 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
         </p>
         <p className="basis-full   flex items-center gap-2">
           <span>Đặc điểm nhận dạng: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span
+
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.pet?.identificationFeature ||
               "Không có đặc điểm nhận dạng"}
           </span>
@@ -459,7 +507,7 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
         </div>
         {/* <span>{consentForm?.commitments}</span> */}
       </div>
-      {consentForm?.note && (
+      {/* {consentForm?.note && (
         <div className=" flex flex-wrap gap-5 justify-between items-start basis-full px-5">
           <div className="basis-full">
             <p className="font-medium">Ghi chú:</p>
@@ -476,42 +524,99 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
             />
           </div>
         </div>
-      )}
+      )} */}
       <Separator className="my-2" />
+      <div className="basis-full flex items-start gap-3 px-5 mb-2">
+        {consentForm?.status == "send" && (
+          <>
+            <Checkbox
+              id="agree-terms"
+              checked={isAgreed}
+              onCheckedChange={(value) => setIsAgreed(!!value)}
+            />
+            <div className="grid gap-1 leading-tight">
+              <Label htmlFor="agree-terms" className="font-medium text-sm">
+                Tôi đồng ý với tất cả các điều kiện và cam kết trên.
+              </Label>
+              <p className="text-muted-foreground text-xs">
+                Bằng việc đánh dấu vào ô này, bạn xác nhận rằng đã đọc, hiểu và
+                chấp nhận toàn bộ nội dung cam kết nhận nuôi thú cưng từ trạm
+                cứu hộ.
+              </p>
+            </div>
+          </>
+        )}
+      </div>
+
       <div className="basis-full flex justify-end gap-3">
         {consentForm?.status == "send" && (
           <>
             <Button
               variant={"default"}
               className="cursor-pointer bg-(--chart-4)"
+              disabled={!isAgreed}
               onClick={() => {
-                handleChangeStatus("accepted");
+                handleChangeStatus("accepted", "");
               }}
             >
               Chấp nhận
             </Button>
-            <Button
-              variant={"outline"}
-              className="cursor-pointer "
-              onClick={() => {
-                handleChangeStatus("rejected");
-              }}
-            >
-              Yêu cầu sửa
-            </Button>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant={"outline"} className="cursor-pointer ">
+                  Yêu cầu sửa
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Yêu cầu sửa chi tiết bản cam kết</DialogTitle>
+                  <DialogDescription>
+                    Hãy ghi lại những điều cần thay đổi trong bản cam kết này.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-2 py-4">
+                  <Label htmlFor="note">Ghi chú</Label>
+                  <Textarea
+                    id="note"
+                    placeholder="Nhập ghi chú"
+                    value={userNote}
+                    onChange={(e) => setUserNote(e.target.value)}
+                  />
+                </div>
+
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Hủy</Button>
+                  </DialogClose>
+                  <Button
+                    className="cursor-pointer"
+                    disabled={userNote == ""}
+                    onClick={() => {
+                      handleChangeStatus("rejected", userNote);
+                      setUserNote(""); // Reset sau khi gửi
+                    }}
+                  >
+                    Gửi yêu cầu
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </>
         )}
-        {(consentForm?.status != "cancelled" && consentForm?.status != "approved") && (
-          <Button
-            variant={"destructive"}
-            className="cursor-pointer "
-            onClick={() => {
-              handleChangeStatus("cancelled");
-            }}
-          >
-            Từ chối nhận nuôi
-          </Button>
-        )}
+        {consentForm?.status != "cancelled" &&
+          consentForm?.status != "approved" && (
+            <Button
+              variant={"destructive"}
+              className="cursor-pointer "
+              onClick={() => {
+                handleChangeStatus("cancelled", "");
+              }}
+            >
+              Từ chối nhận nuôi
+            </Button>
+          )}
       </div>
     </div>
   );
