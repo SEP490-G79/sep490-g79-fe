@@ -113,7 +113,7 @@ const PetProfilePage = () => {
       </div>
     );
   }
-  console.log(pet);
+  // console.log(pet);
 
 
   if (!pet) {
