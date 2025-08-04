@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, PlusSquare } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -40,23 +40,26 @@ import { toast } from "sonner";
 import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import axios from "axios";
 import type { Species } from "@/types/Species";
+import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 
 
 export default function CreateDialog() {
-  const { coreAPI, shelterTemplates, setShelterTemplates } = useContext(AppContext);
+  const { coreAPI, shelterTemplates, setShelterTemplates } =
+    useContext(AppContext);
   const [speciesList, setSpeciesList] = useState<Species[]>([]);
   const { shelterId } = useParams();
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
   useEffect(() => {
-    axios.get(`${coreAPI}/species/get-all`)
-    .then((res) => {
-      setSpeciesList(res.data);
-    })
-    .catch((err) => { 
-      console.error("Error fetching species:", err);
-      toast.error("Không thể tải danh sách loài. Vui lòng thử lại sau.");
-    });
+    axios
+      .get(`${coreAPI}/species/get-all`)
+      .then((res) => {
+        setSpeciesList(res.data);
+      })
+      .catch((err) => {
+        console.error("Error fetching species:", err);
+        toast.error("Không thể tải danh sách loài. Vui lòng thử lại sau.");
+      });
   }, []);
   const FormSchema = z.object({
     title: z.string().min(5, "Tiêu đề phải trên 5 ký tự."),
@@ -75,7 +78,7 @@ export default function CreateDialog() {
   });
 
   const onSubmit = async (values: FormValues) => {
-    console.log("Form submitted:", values);
+    // console.log("Form submitted:", values);
     await authAxios
       .post(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/create`, {
         title: values.title,
@@ -104,13 +107,13 @@ export default function CreateDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="default" >
-          <Plus />
-          Tạo mẫu
+      <Button variant="ghost" className="text-xs">
+          <PlusSquare className="text-(--primary)" />
+          Tạo mới
         </Button>
       </DialogTrigger>
 
-      <DialogContent>
+      <DialogContent className="sm:min-w-2xl ">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
@@ -127,7 +130,9 @@ export default function CreateDialog() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tiêu đề <span className="text-(--destructive)">*</span></FormLabel>
+                    <FormLabel>
+                      Tiêu đề <span className="text-(--destructive)">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Nhập tiêu đề" {...field} />
                     </FormControl>
@@ -142,14 +147,16 @@ export default function CreateDialog() {
                 name="species"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Loài <span className="text-(--destructive)">*</span></FormLabel>
+                    <FormLabel>
+                      Loài <span className="text-(--destructive)">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                         defaultValue={field.value}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-1/2">
                           <SelectValue placeholder="Chọn loài" />
                         </SelectTrigger>
                         <SelectContent className="max-h-[10rem]">
@@ -173,10 +180,22 @@ export default function CreateDialog() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Mô tả</FormLabel>
-                    <FormControl>
-                      <Textarea
+                    <FormControl className="w-full">
+                      {/* <Textarea
                         placeholder="Thêm mô tả (tùy chọn)"
                         {...field}
+                      /> */}
+                      <MinimalTiptapEditor
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        className="w-full"
+                        editorContentClassName="p-5"
+                        output="html"
+                        placeholder="Enter your description..."
+                        autofocus={true}
+                        editable={true}
+                        hideToolbar={false}
+                        editorClassName="focus:outline-hidden"
                       />
                     </FormControl>
                     <FormMessage />

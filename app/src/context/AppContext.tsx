@@ -12,14 +12,28 @@ import useAuthAxios from "@/utils/authAxios";
 import type { Shelter } from "@/types/Shelter";
 import type { AdoptionTemplate } from "@/types/AdoptionTemplate";
 import type { AdoptionForm } from "@/types/AdoptionForm";
+import type { MissionForm } from "@/types/MissionForm";
+import type { ConsentForm } from "@/types/ConsentForm";
+import { useLocation } from "react-router-dom";
 
-const excludedURLs = ["/", "/login", "/register", "/active-account", "/faq", "/donation", "/donation/success", "/donation/cancel", "/newfeed"];
+const excludedURLs = [
+  "/",
+  "/login",
+  "/register",
+  "/active-account",
+  "/faq",
+  "/donation",
+  "/donation/success",
+  "/donation/cancel",
+  "/newfeed",
+];
 
 interface AppContextType {
   user: User | null;
   shelters: Shelter[] | null;
   shelterTemplates: AdoptionTemplate[];
   shelterForms: AdoptionForm[];
+  shelterConsentForms: ConsentForm[];
   accessToken: string | null;
   coreAPI: string;
   authAPI: string;
@@ -37,9 +51,16 @@ interface AppContextType {
   medicalRecordAPI: string;
   blogAPI: string;
   reportAPI: string;
+  returnRequestAPI: string;
+  shelterId: string | null;
+  setShelterId: (id: string | null) => void;
   setShelters: (shelter: Shelter[]) => void;
   setShelterTemplates: (shelterTemplates: AdoptionTemplate[]) => void;
   setShelterForms: (shelterForms: AdoptionForm[]) => void;
+  refreshUserProfile: () => Promise<void>;
+  submissionsByPetId: Record<string, MissionForm[]>;
+  setSubmissionsByPetId: (data: Record<string, MissionForm[]>) => void;
+  setShelterConsentForms: (shelterConsentForms: ConsentForm[]) => void;
 }
 
 const AppContext = createContext<AppContextType>({
@@ -47,6 +68,7 @@ const AppContext = createContext<AppContextType>({
   shelters: [],
   shelterTemplates: [],
   shelterForms: [],
+  shelterConsentForms: [],
   accessToken: null,
   coreAPI: "",
   authAPI: "",
@@ -64,9 +86,16 @@ const AppContext = createContext<AppContextType>({
   medicalRecordAPI: "",
   blogAPI: "",
   reportAPI: "",
+  returnRequestAPI: "",
   setShelters: () => [],
+  shelterId: null,
+  setShelterId: () => {},
   setShelterTemplates: () => [],
   setShelterForms: () => [],
+  refreshUserProfile: async () => {},
+  submissionsByPetId: {},
+  setSubmissionsByPetId: () => {},
+  setShelterConsentForms: () => [],
 });
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
@@ -74,6 +103,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [shelters, setShelters] = useState<Shelter[]>([]);
+  const [shelterId, setShelterId] = useState<string | null>(null);
+
   const [shelterTemplates, setShelterTemplates] = useState<AdoptionTemplate[]>(
     []
   );
@@ -83,16 +114,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [petsList, setPetsList] = useState([]);
   const authAxios = useAuthAxios();
+  const [submissionsByPetId, setSubmissionsByPetId] = useState<
+    Record<string, MissionForm[]>
+  >({});
+  const [shelterConsentForms, setShelterConsentForms] = useState<ConsentForm[]>(
+    []
+  );
+  const location = useLocation();
+  const base_API = import.meta.env.VITE_BE_API; 
 
   // APIs
-  const coreAPI = "http://localhost:9999";
-  const authAPI = "http://localhost:9999/auth";
-  const userAPI = "http://localhost:9999/users";
-  const shelterAPI = "http://localhost:9999/shelters";
-  const petAPI = "http://localhost:9999/pets";
-  const medicalRecordAPI = "http://localhost:9999/medical-records";
-  const blogAPI = "http://localhost:9999/blogs";
-  const reportAPI = "http://localhost:9999/reports";
+  const coreAPI = base_API;
+  const authAPI = `${base_API}/auth`;
+  const userAPI = `${base_API}/users`;
+  const shelterAPI = `${base_API}/shelters`;
+  const petAPI = `${base_API}/pets`;
+  const medicalRecordAPI = `${base_API}/medical-records`;
+  const blogAPI = `${base_API}/blogs`;
+  const reportAPI = `${base_API}/reports`;
+  const returnRequestAPI = `${base_API}/return-requests`;
+  
 
   const login = (accessToken: string, userData: User) => {
     setUser(userData);
@@ -103,12 +144,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     axios
       .post(`${authAPI}/logout`, { id: user?.id })
       .then((res) => {
-        toast.success("Thoát đăng nhập thành công");
+        // toast.success("Thoát đăng nhập thành công");
         setUser(null);
         localStorage.removeItem("accessToken");
       })
       .catch((err) => {
-        toast.error("Lỗi thoát đăng nhập!");
+        toast.error("Lỗi đăng xuất!");
         setUser(null);
         localStorage.removeItem("accessToken");
       });
@@ -116,26 +157,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
 
   // Check trạng thái login và access token mỗi khi chuyển trang trừ các trang public
 
-useEffect(() => {
-  const token = localStorage.getItem("accessToken");
-  if (token) {
-    authAxios
-      .get(`${coreAPI}/users/get-user`)
-      .then((res) => {
-        setUser(res.data);
-        setUserProfile(res.data);
-      })
-      .catch(() => {
-        setUser(null);
-        setUserProfile(null);
-        localStorage.removeItem("accessToken");
-      });
-  } else {
-    setUser(null);
-    setUserProfile(null); 
-  }
-}, [localStorage.getItem("accessToken")]); 
-
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      authAxios
+        .get(`${coreAPI}/users/get-user`)
+        .then((res) => {
+          setUser(res.data);
+          setUserProfile(res.data);
+        })
+        .catch(() => {
+          setUser(null);
+          setUserProfile(null);
+          localStorage.removeItem("accessToken");
+        });
+    } else {
+      setUser(null);
+      setUserProfile(null);
+    }
+  }, [localStorage.getItem("accessToken"), location.pathname]);
 
   // get pets list
   useEffect(() => {
@@ -145,7 +185,7 @@ useEffect(() => {
         setPetsList(res.data);
       })
       .catch((error) => {
-        toast.error("Không thể lấy danh sách thú cưng");
+        // toast.error("Không thể lấy danh sách thú cưng");
       });
   }, []);
 
@@ -160,6 +200,17 @@ useEffect(() => {
         // console.log(error.response?.data?.message);
       });
   }, []);
+
+  const refreshUserProfile = async () => {
+    try {
+      const res = await authAxios.get(`${coreAPI}/users/get-user`);
+      setUser(res.data);
+      setUserProfile(res.data);
+    } catch (err) {
+      console.error("Lỗi khi refresh user profile:", err);
+      toast.error("Không thể cập nhật thông tin người dùng");
+    }
+  };
 
   return (
     <AppContext.Provider
@@ -183,11 +234,19 @@ useEffect(() => {
         medicalRecordAPI,
         blogAPI,
         reportAPI,
+        returnRequestAPI,
         setShelters,
+        shelterId,
+        setShelterId,
         shelterTemplates,
         setShelterTemplates,
         shelterForms,
         setShelterForms,
+        refreshUserProfile,
+        submissionsByPetId,
+        setSubmissionsByPetId,
+        shelterConsentForms,
+        setShelterConsentForms,
       }}
     >
       {children}

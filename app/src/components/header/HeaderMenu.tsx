@@ -15,7 +15,7 @@ import { Link } from "react-router-dom";
 const intros: { title: string; href: string; description: string }[] = [
   {
     title: "Về PawShelter",
-    href: "#",
+    href: "/about-us",
     description:
       "Tìm hiểu sứ mệnh, tầm nhìn và hành trình mang lại mái ấm cho thú cưng bị bỏ rơi.",
   },
@@ -43,7 +43,7 @@ const adoptions: { title: string; href: string; description: string }[] = [
   },
   {
     title: "Thủ tục nhận nuôi",
-    href: "#",
+    href: "/adoption-procedures",
     description:
       "Tìm hiểu các bước để trở thành người đồng hành cùng thú cưng của PawShelter.",
   },
@@ -65,7 +65,7 @@ const supports: { title: string; href: string; description: string }[] = [
   },
   {
     title: "Danh sách bài viết",
-    href: "#",
+    href: "/blogfeed",
     description:
       "Đọc các câu chuyện, hướng dẫn chăm sóc và thông tin hữu ích về thế giới thú cưng.",
   },

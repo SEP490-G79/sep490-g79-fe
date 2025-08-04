@@ -25,13 +25,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Globe, GlobeLock, ImageIcon, SmileIcon, X } from "lucide-react";
-import { PhotoProvider, PhotoView } from "react-photo-view";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Globe, GlobeLock, ImageIcon, SmileIcon, X, LocateFixed, MapPinIcon } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { useRef, useState, useEffect, useContext } from "react";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { toast } from "sonner";
+import axios from "axios";
 
 interface EditPostDialogProps {
     open: boolean;
@@ -54,6 +56,9 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onOpenChange, pos
     const [loading, setLoading] = useState(false);
     const [showPicker, setShowPicker] = useState(false);
     const emojiPickerRef = useRef<HTMLDivElement>(null);
+    const [address, setAddress] = useState(post.address || "");
+    const [location, setLocation] = useState<{ lat: number; lng: number }>(post.location || { lat: 0, lng: 0 });
+    const [suggestions, setSuggestions] = useState<{ place_id: string; description: string }[]>([]);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -112,6 +117,8 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onOpenChange, pos
             const formData = new FormData();
             formData.append("title", content);
             formData.append("privacy", privacy);
+            formData.append("address", address);
+            formData.append("location", JSON.stringify(location));
             formData.append("existingPhotos", JSON.stringify(existingPhotos));
             newImages.forEach((file) => formData.append("photos", file));
 
@@ -132,6 +139,64 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onOpenChange, pos
         ...previewUrls.map((url, idx) => ({ url, isNew: true, index: idx }))
     ];
 
+
+    //goong api
+    const fetchAddressSuggestions = async (query: string) => {
+        if (!query.trim()) return setSuggestions([]);
+        try {
+            const res = await axios.get("https://rsapi.goong.io/Place/AutoComplete", {
+                params: { input: query, api_key: import.meta.env.VITE_GOONG_API_KEY },
+            });
+            setSuggestions(res.data.predictions || []);
+        } catch (error) {
+            console.error("Autocomplete error:", error);
+        }
+    };
+
+    const fetchPlaceDetail = async (placeId: string) => {
+        try {
+            const res = await axios.get("https://rsapi.goong.io/Place/Detail", {
+                params: { place_id: placeId, api_key: import.meta.env.VITE_GOONG_API_KEY },
+            });
+            const result = res.data.result;
+            if (result?.formatted_address && result?.geometry?.location) {
+                setAddress(result.formatted_address);
+                setLocation({
+                    lat: result.geometry.location.lat,
+                    lng: result.geometry.location.lng,
+                });
+            }
+        } catch (error) {
+            console.error("Place detail error:", error);
+        }
+    };
+
+    const detectCurrentLocation = () => {
+        if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ định vị.");
+        navigator.geolocation.getCurrentPosition(
+            async ({ coords }) => {
+                try {
+                    const res = await axios.get("https://rsapi.goong.io/Geocode", {
+                        params: {
+                            latlng: `${coords.latitude},${coords.longitude}`,
+                            api_key: import.meta.env.VITE_GOONG_API_KEY,
+                            has_deprecated_administrative_unit: true,
+                        },
+                    });
+                    const place = res.data.results?.[0];
+                    if (place) {
+                        setAddress(place.formatted_address);
+                        setLocation({ lat: coords.latitude, lng: coords.longitude });
+                    }
+                } catch (error) {
+                    console.error("Reverse geocode error:", error);
+                }
+            },
+            (err) => console.error("Lỗi định vị:", err),
+            { enableHighAccuracy: true }
+        );
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-2xl max-h-[90vh]">
@@ -150,6 +215,13 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onOpenChange, pos
                         </SelectContent>
                     </Select>
 
+                    {address && (
+                        <div className="text-xs text-primary font-medium bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
+                            <MapPinIcon className="w-3 h-3 mr-1" />
+                            {address}
+                        </div>
+                    )}
+
                     <Textarea
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
@@ -157,26 +229,25 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onOpenChange, pos
                         className="resize-none border border-border text-base placeholder:text-muted-foreground overflow-y-auto max-h-[200px] focus:ring-0"
                     />
 
-                    <PhotoProvider>
-                        <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1">
-                            {allPreviewImages.map((item, idx) => (
-                                <div key={idx} className="relative">
-                                    <PhotoView src={item.url}>
-                                        <img src={item.url} className="w-full h-40 object-cover rounded-lg cursor-pointer" />
-                                    </PhotoView>
-                                    <button
-                                        onClick={() => item.isNew
-                                            ? removeNewImage(item.index)
-                                            : removeExistingPhoto(item.index)
-                                        }
-                                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1"
-                                    >
-                                        <X size={16} />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </PhotoProvider>
+                    <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                        {allPreviewImages.map((item, idx) => (
+                            <div key={idx} className="relative">
+                                <img
+                                    src={item.url}
+                                    alt={`Ảnh ${idx + 1}`}
+                                    className="w-full h-40 object-cover rounded-lg"
+                                />
+                                <button
+                                    onClick={() =>
+                                        item.isNew ? removeNewImage(item.index) : removeExistingPhoto(item.index)
+                                    }
+                                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 cursor-pointer"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
 
                     <div className="flex gap-4 items-center text-muted-foreground relative pl-1">
                         <label htmlFor="edit-image-upload">
@@ -209,7 +280,46 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onOpenChange, pos
                                     />
                                 </div>
                             )}
+
                         </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <MapPinIcon className="w-5 h-5 cursor-pointer" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="p-3 space-y-2 w-[320px]">
+                                <div className="flex gap-2">
+                                    <Input
+                                        value={address}
+                                        onChange={(e: any) => {
+                                            const value = e.target.value;
+                                            setAddress(value);
+                                            fetchAddressSuggestions(value);
+                                        }}
+                                        placeholder="Nhập địa chỉ..."
+                                    />
+                                    <Button size="sm" variant="outline" onClick={detectCurrentLocation}>
+                                        <LocateFixed className="w-4 h-4" />
+                                    </Button>
+                                </div>
+
+                                {suggestions.length > 0 && (
+                                    <div className="border rounded-md shadow-sm bg-background max-h-60 overflow-y-auto">
+                                        {suggestions.map((sug) => (
+                                            <div
+                                                key={sug.place_id}
+                                                className="px-3 py-2 text-sm hover:bg-muted cursor-pointer"
+                                                onClick={() => {
+                                                    fetchPlaceDetail(sug.place_id);
+                                                    setSuggestions([]);
+                                                }}
+                                            >
+                                                {sug.description}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
 

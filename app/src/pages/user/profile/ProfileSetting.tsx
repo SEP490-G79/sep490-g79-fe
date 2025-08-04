@@ -1,9 +1,14 @@
-
+import { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
-import EditProfile from "../../../components/user-profile/EditProfile";
-import ChangePassword from "../../../components/user-profile/ChangePassword";
+import EditProfile from "../../../components/user/user-setting/EditProfile";
+import ChangePassword from "../../../components/user/user-setting/ChangePassword";
+import DonationHistory from "@/components/user/user-setting/DonationHistory";
 
 export default function ProfileSettings() {
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -49,6 +54,10 @@ export default function ProfileSettings() {
 
           <TabsContent value="change-password" className="flex-1">
             <ChangePassword />
+          </TabsContent>
+
+          <TabsContent value="donate-history" className="flex-1">
+            <DonationHistory />
           </TabsContent>
         </Tabs>
       </div>

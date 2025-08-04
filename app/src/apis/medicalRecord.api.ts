@@ -1,6 +1,7 @@
 import axios from "axios";
+const base_API = import.meta.env.VITE_BE_API; 
 
-const BASE_URL = "http://localhost:9999/pets";
+const BASE_URL = `${base_API}/pets`;
 
 export const getMedicalRecordsByPet = async (
   petId: string,
@@ -26,31 +27,39 @@ export const createMedicalRecord = async (
   data: Record<string, any>,
   accessToken: string
 ) => {
-  return axios.post(`${BASE_URL}/${petId}/medical-records`, data, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  return axios.post(
+    `${BASE_URL}/${petId}/medical-records`,
+    { ...data, petId }, // Thêm petId vào body
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
 };
-
 export const updateMedicalRecord = async (
   petId: string,
-  id: string,
+  recordId: string,
   data: Record<string, any>,
   accessToken: string
 ) => {
-  return axios.put(`${BASE_URL}/${petId}/medical-records/${id}`, data, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  return axios.put(
+    `${BASE_URL}/${petId}/medical-records/update`,
+    { ...data, id: recordId, petId },
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
 };
 
 export const deleteMedicalRecord = async (
   petId: string,
-  id: string,
+  recordId: string,
   accessToken: string
 ) => {
-  return axios.delete(`${BASE_URL}/${petId}/medical-records/${id}`, {
+  return axios.delete(`${BASE_URL}/${petId}/medical-records/delete`, {
+    data: { id: recordId, petId }, // gửi dưới dạng body
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 };
 
-export const getMedicalRecords = (petId, page, limit) =>
+export const getMedicalRecords = (petId:any, page:any, limit:any) =>
   axios.get(`${BASE_URL}/${petId}/medical-records?page=${page}&limit=${limit}`);

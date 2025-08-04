@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  getMedicalRecordsByPet,
   createMedicalRecord,
   updateMedicalRecord,
   deleteMedicalRecord,
@@ -33,7 +32,7 @@ interface MedicalRecord {
   description?: string;
   cost?: number;
   procedureDate: string;
-  performedBy?: { fullName: string; email: string };
+  performedBy?: { fullName: string; email: string } | string;
   status: string;
   dueDate?: string;
   photos?: string[];
@@ -63,7 +62,7 @@ const MedicalRecordList: React.FC<Props> = ({ petId }) => {
       setRecords(res.data.records || []);
       setTotal(res.data.total);
     } catch {
-      // handle error
+      toast.error("Không thể tải hồ sơ y tế");
     } finally {
       setLoading(false);
     }
@@ -71,101 +70,120 @@ const MedicalRecordList: React.FC<Props> = ({ petId }) => {
 
   useEffect(() => {
     fetchMedicalRecords();
-  }, [petId, page, limit]);
+  }, [petId, page]);
 
   const handleDelete = async (id: string) => {
     if (!accessToken) return;
-    if (!window.confirm("Delete this record?")) return;
-    await deleteMedicalRecord(petId, id, accessToken);
-    fetchMedicalRecords();
+    if (!window.confirm("Bạn có chắc muốn xoá hồ sơ này?")) return;
+    try {
+      await deleteMedicalRecord(petId, id, accessToken);
+      toast.success("Đã xoá hồ sơ");
+      fetchMedicalRecords();
+    } catch {
+      toast.error("Xoá thất bại");
+    }
   };
 
   return (
-    <div className="mt-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Hồ sơ y tế</h2>
+    <div className="mt-8 space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">📋 Hồ sơ y tế</h2>
         <Button
           onClick={() => {
             setEditRecord(null);
             setShowForm(true);
           }}
         >
-          Thêm hồ sơ y tế
+          ➕ Thêm hồ sơ y tế
         </Button>
       </div>
+
       {loading ? (
-        <p>Loading...</p>
+        <p>Đang tải dữ liệu...</p>
+      ) : records.length === 0 ? (
+        <p className="text-muted-foreground italic">Chưa có hồ sơ nào.</p>
       ) : (
         <ul className="space-y-3">
-          {[...records].map((rec) => (
+          {records.map((rec) => (
             <li
               key={rec._id}
-              className="border rounded p-4 flex justify-between items-start gap-4"
+              className="border rounded-md p-4 flex justify-between items-start shadow-sm bg-background"
             >
-              <div className="flex-1">
-                <div className="font-bold text-lg mb-1">{rec.title}</div>
-                <div className="text-sm text-gray-700 mb-1">
-                  <b>Giá:</b>{" "}
-                  {rec.cost
-                    ? rec.cost.toLocaleString("vi-VN") + " VND"
-                    : "Không có"}
-                </div>
-                <div className="text-sm text-gray-700 mb-1">
-                  <b>Phòng khám/Nơi thực hiện:</b> {String(rec.performedBy)}
+              <div className="flex gap-4 flex-1 items-center">
+                {/* Thumbnail nếu có ảnh */}
+                {rec.photos && rec.photos.length > 0 && (
+                  <img
+                    src={rec.photos[0]}
+                    alt="record thumbnail"
+                    className="w-14 h-14 object-cover rounded-md ring-2 ring-primary"
+                  />
+                )}
+
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-primary mb-1">
+                    {rec.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    <b>Chi phí:</b>{" "}
+                    {rec.cost
+                      ? rec.cost.toLocaleString("vi-VN") + " VND"
+                      : "Không có"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    <b>Nơi thực hiện:</b>{" "}
+                    {typeof rec.performedBy === "string"
+                      ? rec.performedBy
+                      : rec.performedBy?.fullName || "Không rõ"}
+                  </p>
                 </div>
               </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <MoreHorizontal className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="flex flex-col gap-2 p-2 min-w-[160px]"
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <MoreHorizontal className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setViewRecord(rec)}>
+                    👁 Xem chi tiết
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setEditRecord(rec);
+                      setShowForm(true);
+                    }}
                   >
-                    <DropdownMenuItem onClick={() => setViewRecord(rec)}>
-                      Xem chi tiết
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setEditRecord(rec);
-                        setShowForm(true);
-                      }}
-                    >
-                      Chỉnh sửa
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDelete(rec._id)}>
-                      Xoá
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                    ✏️ Chỉnh sửa
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDelete(rec._id)}>
+                    ❌ Xoá
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </li>
           ))}
         </ul>
       )}
 
-      <div className="flex justify-end gap-2 mt-2">
+      <div className="flex justify-end items-center gap-3 mt-4">
         <Button
-          disabled={page === 1}
-          onClick={() => setPage(page - 1)}
           size="sm"
           variant="outline"
+          onClick={() => setPage(page - 1)}
+          disabled={page === 1}
         >
-          Trước
+          ← Trước
         </Button>
-        <span>
+        <span className="text-sm text-gray-700">
           Trang {page} / {Math.ceil(total / limit)}
         </span>
         <Button
-          disabled={page >= Math.ceil(total / limit)}
-          onClick={() => setPage(page + 1)}
           size="sm"
           variant="outline"
+          onClick={() => setPage(page + 1)}
+          disabled={page >= Math.ceil(total / limit)}
         >
-          Sau
+          Sau →
         </Button>
       </div>
 
@@ -177,7 +195,7 @@ const MedicalRecordList: React.FC<Props> = ({ petId }) => {
           if (!val) setEditRecord(null);
         }}
       >
-        <DialogContent className="sm:max-w-md w-full">
+        <DialogContent className="sm:max-w-md w-full max-h-[90vh] overflow-y-auto bg-background text-foreground">
           <MedicalRecordForm
             petId={petId}
             record={editRecord}
@@ -194,9 +212,9 @@ const MedicalRecordList: React.FC<Props> = ({ petId }) => {
 
       {/* Modal for viewing record */}
       <Dialog open={!!viewRecord} onOpenChange={() => setViewRecord(null)}>
-        <DialogContent className="sm:max-w-md w-full">
+        <DialogContent className="">
           <DialogHeader>
-            <DialogTitle>Medical Record Detail</DialogTitle>
+            <DialogTitle>Hồ sơ y tế chi tiết</DialogTitle>
           </DialogHeader>
           {viewRecord && (
             <div className="space-y-2 text-sm">
@@ -320,8 +338,13 @@ const MedicalRecordForm: React.FC<{
       newErrors.procedureDate = "Vui lòng chọn ngày thực hiện";
     else if (new Date(form.procedureDate) > new Date())
       newErrors.procedureDate = "Ngày thực hiện không được lớn hơn hôm nay";
-    if (!form.performedBy.trim())
+    if (
+      typeof form.performedBy !== "string" ||
+      form.performedBy.trim() === ""
+    ) {
       newErrors.performedBy = "Vui lòng nhập nơi thực hiện";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -337,12 +360,21 @@ const MedicalRecordForm: React.FC<{
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
+
+    if (photos.length >= 4) {
+      toast.warning("Chỉ được chọn tối đa 4 ảnh");
+      return;
+    }
+
+    const filesToUpload = Array.from(files).slice(0, 4 - photos.length); // Giới hạn số ảnh upload
+
     const urls: string[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const url = await uploadToCloudinary(files[i]);
+    for (let i = 0; i < filesToUpload.length; i++) {
+      const url = await uploadToCloudinary(filesToUpload[i]);
       urls.push(url);
     }
-    setPhotos((prev) => [...urls, ...prev]);
+
+    setPhotos((prev) => [...prev, ...urls]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -374,130 +406,156 @@ const MedicalRecordForm: React.FC<{
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <DialogHeader>
-        <DialogTitle>
+        <DialogTitle className="text-lg font-semibold">
           {record ? "Chỉnh sửa hồ sơ y tế" : "Thêm hồ sơ y tế"}
         </DialogTitle>
       </DialogHeader>
-      <div className="flex flex-col gap-1 mt-3">
-        <label className="font-medium text-sm mb-1">
-          Loại hồ sơ <span className="text-red-500">*</span>
-        </label>
-        <select
-          name="type"
-          value={form.type}
-          onChange={handleChange}
-          required
-          className="w-full border rounded p-2"
-        >
-          <option value="">Chọn loại</option>
-          <option value="vaccination">Tiêm phòng</option>
-          <option value="surgery">Phẫu thuật</option>
-          <option value="checkup">Khám bệnh</option>
-          <option value="treatment">Điều trị</option>
-          <option value="other">Khác</option>
-        </select>
-        {errors.type && (
-          <div className="text-red-500 text-xs">{errors.type}</div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Type */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium">
+            Loại hồ sơ <span className="text-red-500">*</span>
+          </label>
+          <select
+            name="type"
+            value={form.type}
+            onChange={handleChange}
+            className="border rounded px-3 py-2 text-sm bg-background text-foreground"
+            required
+          >
+            <option value="">Chọn loại</option>
+            <option value="vaccination">Tiêm phòng</option>
+            <option value="surgery">Phẫu thuật</option>
+            <option value="checkup">Khám bệnh</option>
+            <option value="treatment">Điều trị</option>
+            <option value="other">Khác</option>
+          </select>
+
+          {errors.type && (
+            <span className="text-red-500 text-xs">{errors.type}</span>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium">
+            Tiêu đề <span className="text-red-500">*</span>
+          </label>
+          <input
+            name="title"
+            value={form.title}
+            onChange={handleChange}
+            placeholder="Tiêu đề"
+            className="border rounded px-3 py-2 text-sm"
+            required
+          />
+          {errors.title && (
+            <span className="text-red-500 text-xs">{errors.title}</span>
+          )}
+        </div>
+
+        {/* Cost */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium">Chi phí (VND)</label>
+          <input
+            name="cost"
+            type="number"
+            value={form.cost}
+            onChange={handleChange}
+            placeholder="Ví dụ: 200000"
+            className="border rounded px-3 py-2 text-sm"
+          />
+          {errors.cost && (
+            <span className="text-red-500 text-xs">{errors.cost}</span>
+          )}
+        </div>
+
+        {/* Procedure Date */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium">
+            Ngày thực hiện <span className="text-red-500">*</span>
+          </label>
+          <input
+            name="procedureDate"
+            type="date"
+            value={form.procedureDate}
+            onChange={handleChange}
+            className="border rounded px-3 py-2 text-sm"
+            required
+          />
+          {errors.procedureDate && (
+            <span className="text-red-500 text-xs">{errors.procedureDate}</span>
+          )}
+        </div>
+
+        {/* Status (only when edit) */}
+        {record && (
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium">Trạng thái *</label>
+            <select
+              name="status"
+              value={form.status}
+              onChange={handleChange}
+              className="border rounded px-3 py-2 text-sm"
+              required
+            >
+              <option value="availabled">Hiệu lực</option>
+              <option value="disabled">Vô hiệu hóa</option>
+            </select>
+          </div>
         )}
+
+        {/* PerformedBy */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium">
+            Phòng khám/Nơi thực hiện <span className="text-red-500">*</span>
+          </label>
+          <input
+            name="performedBy"
+            value={
+              typeof form.performedBy === "string"
+                ? form.performedBy
+                : form.performedBy?.fullName || ""
+            }
+            onChange={handleChange}
+            placeholder="Nhập tên phòng khám hoặc nơi thực hiện"
+            className="border rounded px-3 py-2 text-sm"
+            required
+          />
+          {errors.performedBy && (
+            <span className="text-red-500 text-xs">{errors.performedBy}</span>
+          )}
+        </div>
       </div>
+
+      {/* Description */}
       <div className="flex flex-col gap-1">
-        <label className="font-medium text-sm mb-1">
-          Tiêu đề <span className="text-red-500">*</span>
-        </label>
-        <input
-          name="title"
-          value={form.title}
-          onChange={handleChange}
-          placeholder="Tiêu đề"
-          required
-          className="w-full border rounded p-2"
-        />
-        {errors.title && (
-          <div className="text-red-500 text-xs">{errors.title}</div>
-        )}
-      </div>
-      <div className="flex flex-col gap-1 col-span-2">
-        <label className="font-medium text-sm mb-1">
+        <label className="text-sm font-medium">
           Mô tả <span className="text-red-500">*</span>
         </label>
         <textarea
           name="description"
           value={form.description}
           onChange={handleChange}
-          placeholder="Mô tả"
-          className="w-full border rounded p-2"
+          placeholder="Nhập mô tả chi tiết..."
+          className="border rounded px-3 py-2 text-sm min-h-[80px]"
         />
         {errors.description && (
-          <div className="text-red-500 text-xs">{errors.description}</div>
+          <span className="text-red-500 text-xs">{errors.description}</span>
         )}
       </div>
-      <div className="flex flex-col gap-1">
-        <label className="font-medium text-sm mb-1">Chi phí</label>
-        <input
-          name="cost"
-          type="number"
-          value={form.cost}
-          onChange={handleChange}
-          placeholder="Chi phí"
-          className="w-full border rounded p-2"
-        />
-        {errors.cost && (
-          <div className="text-red-500 text-xs">{errors.cost}</div>
-        )}
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="font-medium text-sm mb-1">
-          Ngày thực hiện <span className="text-red-500">*</span>
+
+      {/* Image Upload */}
+      {/* Image Upload */}
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-medium">
+          Ảnh minh hoạ (tối đa 4 ảnh)
         </label>
-        <input
-          name="procedureDate"
-          type="date"
-          value={form.procedureDate}
-          onChange={handleChange}
-          required
-          className="w-full border rounded p-2"
-        />
-        {errors.procedureDate && (
-          <div className="text-red-500 text-xs">{errors.procedureDate}</div>
-        )}
-      </div>
-      {record && (
-        <div className="flex flex-col gap-1">
-          <label className="font-medium text-sm mb-1">Trạng thái *</label>
-          <select
-            name="status"
-            value={form.status}
-            onChange={handleChange}
-            required
-            className="w-full border rounded p-2"
-          >
-            <option value="availabled">Hiệu lực</option>
-            <option value="disabled">Vô hiệu hóa</option>
-          </select>
-        </div>
-      )}
-      <div className="flex flex-col gap-1">
-        <label className="font-medium text-sm mb-1">
-          Phòng khám/Nơi thực hiện <span className="text-red-500">*</span>
-        </label>
-        <input
-          name="performedBy"
-          value={form.performedBy}
-          onChange={handleChange}
-          placeholder="Phòng khám/Nơi thực hiện"
-          required
-          className="w-full border rounded p-2"
-        />
-        {errors.performedBy && (
-          <div className="text-red-500 text-xs">{errors.performedBy}</div>
-        )}
-      </div>
-      <div className="col-span-2">
-        <label className="block mb-1 font-medium">
-          Ảnh (có thể chọn nhiều)
-        </label>
+        <p className="text-xs text-muted-foreground">
+          {photos.length}/4 ảnh đã chọn
+        </p>
         <input
           id="file-upload"
           type="file"
@@ -506,34 +564,48 @@ const MedicalRecordForm: React.FC<{
           onChange={handleFileChange}
           className="hidden"
         />
-        <Button
-          type="button"
-          onClick={() => document.getElementById("file-upload")?.click()}
-          className="mb-2"
-        >
-          Chọn ảnh
-        </Button>
-        <div className="flex gap-2 mt-2 flex-wrap">
+        {photos.length < 4 && (
+          <Button
+            type="button"
+            onClick={() => document.getElementById("file-upload")?.click()}
+            className="w-fit"
+            variant="outline"
+          >
+            Chọn ảnh
+          </Button>
+        )}
+        <div className="flex gap-2 flex-wrap mt-2">
           {photos.map((url) => (
-            <img
-              key={url}
-              src={url}
-              alt="preview"
-              style={{ width: 80, borderRadius: 8 }}
-            />
+            <div key={url} className="relative group">
+              <img
+                src={url}
+                alt="Ảnh minh hoạ"
+                className="w-20 h-20 object-cover rounded border"
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  setPhotos((prev) => prev.filter((photo) => photo !== url))
+                }
+                className="absolute top-0 right-0 bg-red-600 text-white text-xs px-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                title="Xoá ảnh"
+              >
+                ×
+              </button>
+            </div>
           ))}
         </div>
       </div>
-      <div className="col-span-2">
-        <DialogFooter>
-          <Button type="submit" disabled={loading}>
-            {record ? "Cập nhật" : "Tạo"}
-          </Button>
-          <Button type="button" variant="outline" onClick={onClose}>
-            Hủy
-          </Button>
-        </DialogFooter>
-      </div>
+
+      {/* Submit/Cancel */}
+      <DialogFooter className="pt-4 gap-2">
+        <Button type="submit" disabled={loading}>
+          {record ? "Cập nhật" : "Tạo"}
+        </Button>
+        <Button type="button" variant="outline" onClick={onClose}>
+          Hủy
+        </Button>
+      </DialogFooter>
     </form>
   );
 };

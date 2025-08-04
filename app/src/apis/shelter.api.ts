@@ -1,6 +1,7 @@
 import axios from "axios";
+const base_API = import.meta.env.VITE_BE_API; 
 
-const BASE_URL = "http://localhost:9999";
+const BASE_URL = `${base_API}`;
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {
@@ -112,5 +113,67 @@ export const getShelterRequestByUserId = async (): Promise<{
   const response = await axios.get(`${BASE_URL}/shelter/get-shelter-request`, {
     headers: getAuthHeaders(),
   });
+  return response.data;
+};
+
+export interface WeeklyAdoptionStat {
+  week: string; // ví dụ: "Tuần 29/2025"
+  count: number; // số lượt nhận nuôi
+}
+
+export const getAdoptedPetsByWeek = async (
+  shelterId: string
+): Promise<WeeklyAdoptionStat[]> => {
+  const response = await axios.get(
+    `${BASE_URL}/shelters/${shelterId}/statistics/adopted-by-week`,
+    { headers: getAuthHeaders() }
+  );
+  return response.data;
+};
+
+export interface WeeklyAdoptionFormStat {
+  week: string; // Ví dụ: "Tuần 30/2025"
+  count: number; // Số lượng AdoptionForm được tạo trong tuần đó
+}
+export const getAdoptionFormsByWeek = async (
+  shelterId: string
+): Promise<WeeklyAdoptionFormStat[]> => {
+  const response = await axios.get(
+    `${BASE_URL}/shelters/${shelterId}/statistics/adoption-forms-by-week`,
+    { headers: getAuthHeaders() }
+  );
+  return response.data;
+};
+
+export interface SubmissionPieData {
+  approved: number;
+  rejected: number;
+  pending: number;
+}
+
+export const getSubmissionStatistics = async (
+  shelterId: string
+): Promise<SubmissionPieData> => {
+  const response = await axios.get(
+    `${BASE_URL}/shelters/${shelterId}/statistics/submission`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  return response.data;
+};
+
+export interface WeeklySubmissionStat {
+  week: string;
+  count: number;
+}
+
+export const getAdoptionSubmissionsByWeek = async (
+  shelterId: string
+): Promise<WeeklySubmissionStat[]> => {
+  const response = await axios.get(
+    `${BASE_URL}/shelters/${shelterId}/statistics/adoption-submissions-by-week`,
+    { headers: getAuthHeaders() }
+  );
   return response.data;
 };

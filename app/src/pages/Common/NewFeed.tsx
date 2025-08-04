@@ -6,7 +6,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
 import { Textarea, } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { SmileIcon, ImageIcon, MapPinIcon, Globe, GlobeLock, X, RefreshCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { SmileIcon, ImageIcon, MapPinIcon, Globe, GlobeLock, X, RefreshCcw, LocateFixed } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import EmojiPicker from "emoji-picker-react";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
@@ -16,6 +27,11 @@ import type { PostType } from "@/types/Post";
 import PostDetailDialog from "@/components/post/PostDetail";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
+import { sortPostsByDistance } from "@/utils/sortByDistance";
+import type { LatLng } from "@/utils/sortByDistance";
+type Location = { lat: number; lng: number };
+type GoongSuggestion = { place_id: string; description: string };
+
 
 const Newfeed = () => {
   const { userProfile, coreAPI, accessToken, setUserProfile } = useContext(AppContext);
@@ -36,7 +52,29 @@ const Newfeed = () => {
   const [detailPostId, setDetailPostId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const postId = searchParams.get("postId");
+  const [visiblePosts, setVisiblePosts] = useState(7);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [address, setAddress] = useState("");
+  const [location, setLocation] = useState<Location>({ lat: 0, lng: 0 });
+  const [suggestions, setSuggestions] = useState<GoongSuggestion[]>([]);
+  const [userLocation, setUserLocation] = useState<LatLng | null>(null);
+  const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [postAs, setPostAs] = useState<"user" | string>("user");
+  const [myShelters, setMyShelters] = useState<{ _id: string; name: string; avatar: string }[]>([]);
+  const [sortOption, setSortOption] = useState<"latest" | "oldest" | "nearest" | "farthest">("latest");
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    description: "",
+    confirmText: "Xác nhận",
+    cancelText: "Hủy",
+    onConfirm: () => { },
+  });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
 
 
   useEffect(() => {
@@ -44,6 +82,35 @@ const Newfeed = () => {
       setDetailPostId(postId);
     }
   }, [postId]);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setUserLocation({
+          lat: coords.latitude,
+          lng: coords.longitude,
+        });
+      },
+      (err) => {
+        console.error("Không lấy được vị trí:", err);
+      },
+      { enableHighAccuracy: true }
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!userProfile?._id) return;
+
+    authAxios.get(`${coreAPI}/shelters/get-all`)
+      .then(res => {
+        const allShelters = res.data || [];
+        const filtered = allShelters.filter((shelter: any) =>
+          shelter.members?.some((member: any) => member._id === userProfile._id)
+        );
+        setMyShelters(filtered.map(({ _id, name, avatar }: any) => ({ _id, name, avatar })));
+      })
+      .catch(err => console.error("Lỗi lấy danh sách shelter:", err));
+  }, [userProfile?._id]);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -57,6 +124,8 @@ const Newfeed = () => {
         title: post.title,
         photos: post.photos,
         privacy: post.privacy || "public",
+        address: post.address || "",
+        location: post.location,
         status: post.status,
         createdAt: post.createdAt,
         updatedAt: post.updatedAt,
@@ -65,6 +134,14 @@ const Newfeed = () => {
           avatar: post.createdBy.avatar,
           fullName: post.createdBy.fullName,
         },
+        shelter: post.shelter
+          ? {
+            _id: post.shelter._id,
+            name: post.shelter.name,
+            avatar: post.shelter.avatar,
+            members: post.shelter.members || [],
+          }
+          : null,
         likedBy: post.likedBy.map((u: any) => u._id),
         latestComment: post.latestComment ? {
           _id: post.latestComment._id,
@@ -98,6 +175,24 @@ const Newfeed = () => {
     fetchPosts();
   }, [accessToken, userProfile, coreAPI, fetchPosts]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = window.scrollY;
+      const clientHeight = window.innerHeight;
+
+      if (scrollTop + clientHeight >= scrollHeight - 200 && !loadingMore && visiblePosts < posts.length) {
+        setLoadingMore(true);
+        setTimeout(() => {
+          setVisiblePosts(prev => Math.min(prev + 7, posts.length));
+          setLoadingMore(false);
+        }, 1000);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loadingMore, visiblePosts, posts.length]);
 
 
   useEffect(() => {
@@ -124,11 +219,20 @@ const Newfeed = () => {
 
   const handlePostSubmit = async () => {
     if (!postContent.trim() && selectedImages.length === 0) return;
+    if (address && !addressConfirmed) {
+      toast.error("Vui lòng chọn địa chỉ từ gợi ý.");
+      return;
+    }
     try {
       setLoading(true);
       const formData = new FormData();
       formData.append("title", postContent);
       formData.append("privacy", privacy);
+      formData.append("address", address);
+      formData.append("location", JSON.stringify(location));
+      if (postAs !== "user") {
+        formData.append("shelter", postAs);
+      }
       selectedImages.forEach(file => formData.append("photos", file));
       await authAxios.post(`${coreAPI}/posts/create`, formData);
       toast.success("Đăng bài thành công");
@@ -179,6 +283,101 @@ const Newfeed = () => {
     }
   };
 
+  const filteredPosts = (() => {
+    if (!posts.length) return [];
+
+    if (sortOption === "latest") {
+      return [...posts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+
+    if (sortOption === "oldest") {
+      return [...posts].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    }
+
+    if ((sortOption === "nearest" || sortOption === "farthest") && userLocation) {
+      const postsWithLocation = posts.filter(post => post.location?.lat && post.location?.lng);
+      const postsWithoutLocation = posts.filter(post => !post.location?.lat || !post.location?.lng);
+
+      const sorted = sortPostsByDistance(postsWithLocation, userLocation);
+      const sortedByDirection = sortOption === "farthest" ? sorted.reverse() : sorted;
+
+      return [
+        ...sortedByDirection,
+        ...postsWithoutLocation.sort((a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ),
+      ];
+    }
+
+    return posts;
+  })();
+
+  //goong
+  const fetchAddressSuggestions = async (query: string) => {
+    if (!query.trim()) return setSuggestions([]);
+    try {
+      const res = await axios.get("https://rsapi.goong.io/Place/AutoComplete", {
+        params: {
+          input: query,
+          api_key: import.meta.env.VITE_GOONG_API_KEY,
+        },
+      });
+      setSuggestions(res.data.predictions || []);
+    } catch (error) {
+      console.error("Autocomplete error:", error);
+    }
+  };
+
+  const fetchPlaceDetail = async (placeId: string) => {
+    try {
+      const res = await axios.get("https://rsapi.goong.io/Place/Detail", {
+        params: {
+          place_id: placeId,
+          api_key: import.meta.env.VITE_GOONG_API_KEY,
+        },
+      });
+      const result = res.data.result;
+      if (result?.formatted_address && result?.geometry?.location) {
+        setAddress(result.formatted_address);
+        setLocation({
+          lat: result.geometry.location.lat,
+          lng: result.geometry.location.lng,
+        });
+        setAddressConfirmed(true);
+      }
+    } catch (error) {
+      console.error("Place detail error:", error);
+    }
+  };
+
+  const detectCurrentLocation = () => {
+    if (!navigator.geolocation) return alert("Trình duyệt không hỗ trợ định vị");
+
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const res = await axios.get("https://rsapi.goong.io/Geocode", {
+            params: {
+              latlng: `${coords.latitude},${coords.longitude}`,
+              api_key: import.meta.env.VITE_GOONG_API_KEY,
+              has_deprecated_administrative_unit: true,
+            },
+          });
+          const place = res.data.results?.[0];
+          if (place) {
+            setAddress(place.formatted_address);
+            setLocation({ lat: coords.latitude, lng: coords.longitude });
+            setAddressConfirmed(true);
+          }
+        } catch (error) {
+          console.error("Reverse geocode error:", error);
+        }
+      },
+      (err) => console.error("Lỗi định vị:", err),
+      { enableHighAccuracy: true }
+    );
+  };
+
   return (
     <div className="space-y-6 max-w-2xl mx-auto py-10 px-4">
       <h1 className="text-2xl font-bold mb-4">Bảng tin</h1>
@@ -186,37 +385,88 @@ const Newfeed = () => {
       {userProfile?._id && (
         <>
           <div
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
+            className="bg-(--card) rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
             onClick={() => setOpenCreateDialog(true)}
           >
-            <img src={userProfile.avatar || "/placeholder.svg"} className="w-10 h-10 rounded-full border" />
+            <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
+              <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
+              <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+            </Avatar>
             <div className="flex-1 bg-gray-100 dark:bg-gray-700 text-muted-foreground px-4 py-2 rounded-full text-sm">
               Bạn đang nghĩ gì?
             </div>
           </div>
 
-          <Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
-            <DialogContent className="sm:max-w-[600px] bg-background rounded-xl overflow-hidden border border-border p-0">
+          <Dialog open={openCreateDialog} onOpenChange={(open) => {
+            setOpenCreateDialog(open);
+            if (!open) {
+              setAddressConfirmed(false);
+              setAddress("");
+              setLocation({ lat: 0, lng: 0 });
+            }
+          }}>
+            <DialogContent className="sm:max-w-[600px] bg-background rounded-xl overflow-visible border border-border p-0">
               <DialogHeader className="bg-background px-6 pt-4 pb-2">
                 <DialogTitle className="text-lg font-semibold">Tạo bài viết</DialogTitle>
               </DialogHeader>
 
               <div className="bg-background px-6 pb-6 pt-4 space-y-4">
-                <div className="flex items-start gap-3">
-                  <img src={userProfile.avatar || "/placeholder.svg"} className="w-12 h-12 rounded-full border" />
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm">{userProfile.fullName}</span>
-                    <Select value={privacy} onValueChange={setPrivacy}>
-                      <SelectTrigger className="w-[140px] h-7 text-xs mt-1">
+                <div className="flex items-start justify-between gap-3 w-full">
+                  <div className="flex gap-3">
+                    <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
+                      <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt="avatar" />
+                      <AvatarFallback>{userProfile.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-sm">{userProfile.fullName}</span>
+                      <Select value={privacy} onValueChange={setPrivacy}>
+                        <SelectTrigger className="w-[140px] h-7 text-xs mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="public">
+                            <Globe className="mr-2 h-4 w-4" /> Công khai
+                          </SelectItem>
+                          <SelectItem value="private">
+                            <GlobeLock className="mr-2 h-4 w-4" /> Riêng tư
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end text-xs">
+                    <span className="mb-1 text-muted-foreground">Đăng bài với tư cách:</span>
+                    <Select value={postAs} onValueChange={setPostAs}>
+                      <SelectTrigger className="w-[200px] h-7 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="public"><Globe className="mr-2 h-4 w-4" />Công khai</SelectItem>
-                        <SelectItem value="private"><GlobeLock className="mr-2 h-4 w-4" />Riêng tư</SelectItem>
+                        <SelectItem value="user">
+                          <div className="flex items-center gap-2">
+                            <img src={userProfile.avatar} className="w-5 h-5 rounded-full" />
+                            <span>{userProfile.fullName} (Cá nhân)</span>
+                          </div>
+                        </SelectItem>
+                        {myShelters.map((shelter) => (
+                          <SelectItem key={shelter._id} value={shelter._id}>
+                            <div className="flex items-center gap-2">
+                              <img src={shelter.avatar} className="w-5 h-5 rounded-full" />
+                              <span>{shelter.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+
+                {address && (
+                  <div className="text-xs text-primary font-medium mb-1 bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
+                    <MapPinIcon className="w-3 h-3 mr-1" />
+                    {address}
+                  </div>
+                )}
 
                 <Textarea
                   value={postContent}
@@ -270,11 +520,84 @@ const Newfeed = () => {
                     )}
                   </div>
 
-                  <MapPinIcon className="w-5 h-5 cursor-pointer" />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <MapPinIcon className="w-5 h-5 cursor-pointer" />
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent className="p-3 space-y-2 w-[320px]">
+                      <div className="flex gap-2">
+                        <Input
+                          value={address}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setAddress(value);
+                            setAddressConfirmed(false);
+                            fetchAddressSuggestions(value);
+                          }}
+                          placeholder="Nhập địa chỉ..."
+                        />
+                        <Button variant="outline" onClick={detectCurrentLocation}>
+                          <LocateFixed className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      {suggestions.length > 0 && (
+                        <div className="border rounded-md shadow-sm bg-background max-h-60 overflow-y-auto">
+                          {suggestions.map((sug) => (
+                            <div
+                              key={sug.place_id}
+                              className="px-3 py-2 text-sm hover:bg-muted cursor-pointer"
+                              onClick={() => {
+                                fetchPlaceDetail(sug.place_id);
+                                setSuggestions([]);
+                                setAddressConfirmed(true);
+                              }}
+                            >
+                              {sug.description}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 <div className="flex justify-end pt-2">
-                  <Button onClick={handlePostSubmit} disabled={loading}>
+                  <Button
+                    variant="ghost"
+                    className="cursor-pointer"
+                    disabled={loading || (!postContent.trim() && selectedImages.length === 0)}
+                    onClick={() => {
+                      setConfirmDialog({
+                        open: true,
+                        title: "Xác nhận huỷ bài viết",
+                        description: "Bạn có chắc muốn huỷ bài viết? Nội dung và ảnh đã nhập sẽ bị xoá.",
+                        confirmText: "Huỷ bài",
+                        cancelText: "Quay lại",
+                        onConfirm: () => {
+                          setPostContent("");
+                          setSelectedImages([]);
+                          setPreviewUrls([]);
+                          setAddress("");
+                          setLocation({ lat: 0, lng: 0 });
+                          setAddressConfirmed(false);
+                          setPrivacy("public");
+                          setPostAs("user");
+                          setShowPicker(false);
+                          setSuggestions([]);
+                          setOpenCreateDialog(false);
+                        },
+                      });
+                    }}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    onClick={handlePostSubmit}
+                    disabled={loading || (!postContent.trim() && selectedImages.length === 0)}
+                    className="cursor-pointer ml-2"
+                  >
                     {loading ? "Đang đăng..." : "Đăng bài"}
                   </Button>
                 </div>
@@ -301,16 +624,33 @@ const Newfeed = () => {
         </div>
       )}
       <div className="flex justify-end">
+        <div className="w-full flex justify-start items-center gap-2 ml-0">
+          <span className="text-sm text-muted-foreground">Sắp xếp:</span>
+          <Select value={sortOption} onValueChange={(value) => setSortOption(value as any)}>
+            <SelectTrigger className="w-[160px] h-8 text-sm cursor-pointer">
+              <SelectValue placeholder="Sắp xếp" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem className="cursor-pointer" value="latest">Mới nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="oldest">Cũ nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="nearest">Gần nhất</SelectItem>
+              <SelectItem className="cursor-pointer" value="farthest">Xa nhất</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <Button
           variant="outline"
           onClick={fetchPosts}
           disabled={loadingPosts}
-          className="flex items-center gap-2 text-sm"
+          className="flex items-center gap-2 text-sm cursor-pointer"
         >
           <RefreshCcw className={`w-4 h-4 ${loadingPosts ? "animate-spin" : ""}`} />
           {loadingPosts ? "Đang tải..." : "Tải lại bài viết"}
         </Button>
       </div>
+
+
 
       {loadingPosts ? (
         <div className="space-y-6">
@@ -337,9 +677,9 @@ const Newfeed = () => {
           ))}
         </div>
       ) : (
-        posts
+        filteredPosts
           .slice()
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, visiblePosts)
           .map((post) => (
             <PostCard
               key={post._id}
@@ -347,6 +687,7 @@ const Newfeed = () => {
               currentUserId={currentUserId}
               onLike={handleLike}
               isGuest={!userProfile?._id}
+              isShelterMember={post.shelter?.members?.some((m: any) => m._id === userProfile?._id)}
               onEdit={(post) => {
                 setEditingPost(post);
                 setIsEditOpen(true);
@@ -356,6 +697,31 @@ const Newfeed = () => {
               onViewDetail={(postId) => setDetailPostId(postId)}
             />
           ))
+      )}
+      {loadingMore && (
+        <div className="space-y-6 mt-4">
+          {[...Array(3)].map((_, idx) => (
+            <div key={idx} className="p-4 border rounded-xl bg-background shadow space-y-4">
+              <div className="flex gap-4 items-center">
+                <Skeleton className="w-12 h-12 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-1/4" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+              <Skeleton className="h-40 w-full rounded" />
+              <div className="flex justify-between mt-4">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {editingPost && (
@@ -378,19 +744,50 @@ const Newfeed = () => {
           if (!open) setDetailPostId(null);
         }}
         onPostUpdated={(updatedPost) => {
-          setPosts(prev =>
-            prev.map(p => {
-              if (p._id !== updatedPost._id) return p;
-              return {
-                ...p,
-                ...updatedPost,
-                createdBy: (updatedPost.createdBy as any)._id || updatedPost.createdBy,
-                latestComment: updatedPost.latestComment ?? p.latestComment,
-              };
-            })
+          console.log("Updated post from dialog:", updatedPost);
+          setPosts((prev) =>
+            prev.map((p) =>
+              p._id === updatedPost._id
+                ? {
+                  ...p,
+                  ...updatedPost,
+                  createdBy: (updatedPost.createdBy as any)._id || updatedPost.createdBy,
+                  latestComment: updatedPost.latestComment ?? p.latestComment,
+                  user: updatedPost.user || p.user,
+                  shelter: updatedPost.shelter || p.shelter,
+                }
+                : p
+            )
           );
         }}
       />
+
+      <AlertDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {confirmDialog.cancelText || "Hủy"}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                confirmDialog.onConfirm();
+                setConfirmDialog((prev) => ({ ...prev, open: false }));
+              }}
+            >
+              {confirmDialog.confirmText || "Xác nhận"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
     </div>
   );

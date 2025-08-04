@@ -23,6 +23,7 @@ import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { Flag } from "lucide-react";
 import { Input } from "../ui/input";
+import { DropdownMenuItem } from "../ui/dropdown-menu";
 
 const predefinedReasons = [
   "Thông tin thú cưng sai sự thật",
@@ -46,37 +47,40 @@ export default function ReportPostDialog({
   const [selectedReason, setSelectedReason] = useState<string>("");
   const [customReason, setCustomReason] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [photos, setPhotos] = useState<File[]>();
+  const [photos, setPhotos] = useState<File[]>([]);
   const {reportAPI} = useContext(AppContext)
 
-   const handleUploadPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      if (e.target.files !== null) {
-        const selectedPhotos: FileList = e.target.files;
-        if (!selectedPhotos) {
+      if (e.target.files) {
+        const selectedPhotos = Array.from(e.target.files);
+
+        // Tính tổng số ảnh hiện tại + mới chọn
+        if (photos.length + selectedPhotos.length > 5) {
+          toast.error("Chỉ được chọn tối đa 5 ảnh.");
           return;
         }
-        const photosArray = Array.from(selectedPhotos);
-        setPhotos(photosArray);
-      }
-      
 
+        setPhotos((prev) => [...prev, ...selectedPhotos]);
+      }
     } catch (error) {
-      console.log(error)
+      console.error("Lỗi khi upload ảnh:", error);
     }
-  }
+  };
 
 
   const handleSubmit = async () => {
-    const reason =
-      selectedReason === "Khác" ? customReason.trim() : selectedReason;
+    try {
+      setLoading(true);
+      const reason =
+        selectedReason === "Khác" ? customReason.trim() : selectedReason;
 
-    if (!reason) {
-      toast.error("Vui lòng chọn hoặc nhập lý do báo cáo.");
-      return;
-    }
+      if (!reason) {
+        toast.error("Vui lòng chọn hoặc nhập lý do báo cáo.");
+        return;
+      }
 
-    const formData = new FormData();
+      const formData = new FormData();
       formData.append("reportType", "post");
       formData.append("postId", postId);
       formData.append("reason", reason);
@@ -88,44 +92,37 @@ export default function ReportPostDialog({
 
       await authAxios.post(`${reportAPI}/report-post`, formData);
 
-    console.log({
-        reportType: "post",
-        post: postId,
-        reason,
-        photos
-      })
-
-    try {
-      setLoading(true);
-    //   await authAxios.post("/report/report-post", {
-    //     reportType: "post",
-    //     post: postId,
-    //     reason,
-    //   });
-
       toast.success("Đã gửi báo cáo thành công.");
       closeRef.current?.click();
+      setPhotos([]);
       setSelectedReason("");
       setCustomReason("");
-    } catch (err) {
-      console.error(err);
-      toast.error("Có lỗi xảy ra khi gửi báo cáo.");
+    } catch (err : any) {
+      toast.error(err?.response.data.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Dialog>
-        <DialogTrigger asChild>
-          <p className="text-xs text-destructive cursor-pointer hover:underline font-semibold flex">
-            <Flag className="w-4 h-4"/> Báo cáo
-        </p>
-        </DialogTrigger>
+    <Dialog onOpenChange={(open) => {
+      if(!open){
+        setPhotos([]);
+        setSelectedReason("");
+        setCustomReason("");
+      }
+    }}>
+      <DialogTrigger asChild>
+        <DropdownMenuItem onSelect={e => e.preventDefault()}>
+          <Flag className="w-4 h-4 mr-2 text-destructive" /> Báo cáo
+        </DropdownMenuItem>
+      </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Báo cáo bài viết</DialogTitle>
-          <DialogDescription>Vui lòng chọn lý do báo cáo phù hợp</DialogDescription>
+          <DialogDescription>
+            Vui lòng chọn lý do báo cáo phù hợp
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -146,7 +143,6 @@ export default function ReportPostDialog({
             </SelectContent>
           </Select>
 
-
           {selectedReason === "Khác" && (
             <Textarea
               placeholder="Nhập lý do cụ thể..."
@@ -157,24 +153,50 @@ export default function ReportPostDialog({
 
           {/* upload photo */}
           <label className="block text-sm font-medium">Ảnh bằng chứng</label>
-          <Input type="file" accept="image/*" multiple  onChange={handleUploadPhoto}/>
-          {photos !== undefined && photos.length > 0 && 
-          <div className="flex gap-2">
-            {photos.map((photo: File, index: number) => {
-              return <img src={URL.createObjectURL(photo)} alt={index +" photo"} key={index} className="max-h-15 max-w-20"/>
-            })}
+          <Input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleUploadPhoto}
+          />
+          <div className="flex gap-2 flex-wrap mt-2">
+            {photos.map((photo: File, index: number) => (
+              <div key={index} className="relative group">
+                <img
+                  src={URL.createObjectURL(photo)}
+                  alt={`${index} photo`}
+                  className="h-24 w-24 object-cover rounded border"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    setPhotos(
+                      (prev) => prev?.filter((_, i) => i !== index) || []
+                    )
+                  }
+                  className="absolute top-1 right-1 h-5 cursor-pointer px-2 py-0 "
+                  title="Xoá ảnh"
+                >
+                  <span className="text-destructive mb-1">x</span>
+                </Button>
+              </div>
+            ))}
           </div>
-          }
-
         </div>
 
         <DialogFooter>
-            <DialogClose asChild>
-                <Button ref={closeRef} variant="outline">
-            Hủy
-          </Button>
-            </DialogClose>
-          <Button type="submit" variant="default" onClick={handleSubmit} disabled={loading}>
+          <DialogClose asChild>
+            <Button ref={closeRef} variant="outline" hidden={loading}>
+              Hủy
+            </Button>
+          </DialogClose>
+          <Button
+            type="submit"
+            variant="default"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
             {loading ? "Đang gửi..." : "Gửi báo cáo"}
           </Button>
         </DialogFooter>

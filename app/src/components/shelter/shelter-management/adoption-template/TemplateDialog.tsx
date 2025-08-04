@@ -41,6 +41,22 @@ import type { Question } from "@/types/Question";
 import { cn } from "@/lib/utils";
 import { Dock, DockIcon } from "@/components/ui/magicui/dock";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
+import { DndContext, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 export default function TemplateDialog() {
   const { shelterId, templateId } = useParams<{
@@ -149,6 +165,38 @@ export default function TemplateDialog() {
     }
   };
 
+  // DND
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 5,
+    },
+  });
+
+  const sensors = useSensors(mouseSensor);
+  const handleDragStart = (event: any) => {
+    const { active } = event;
+    const draggedId = active?.id;
+    const found = questionsList.find((q) => q._id === draggedId);
+  };
+
+  const handleDragEnd = (e: any) => {
+    const { active, over } = e;
+
+    // console.log("Drag Ended:", active.id, "over:", over?.id);
+    if (active.id != over?.id) {
+      setQuestionsList((prev) => {
+        const oldIndex = prev.findIndex((q) => q._id == active.id);
+        const newIndex = prev.findIndex((q) => q._id == over?.id);
+
+        const updatedQuestions = [...prev];
+        const [movedQuestion] = updatedQuestions.splice(oldIndex, 1);
+        updatedQuestions.splice(newIndex, 0, movedQuestion);
+
+        return updatedQuestions;
+      });
+    }
+  };
+
   //
   const DATA = {
     navbar: [
@@ -180,8 +228,13 @@ export default function TemplateDialog() {
   }
 
   return (
-    <div className="w-full flex flex-wrap">
-      {/* <Breadcrumb className="basis-full mb-3">
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="w-full flex flex-wrap">
+        {/* <Breadcrumb className="basis-full mb-3">
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink
@@ -195,8 +248,8 @@ export default function TemplateDialog() {
         </BreadcrumbList>
       </Breadcrumb> */}
 
-      <div className="basis-full">
-        {/* <Tabs defaultValue="edit" className="w-full">
+        <div className="basis-full">
+          {/* <Tabs defaultValue="edit" className="w-full">
           <TabsList>
             <TabsTrigger value="edit">
               <PenLine /> Chỉnh sửa
@@ -207,49 +260,55 @@ export default function TemplateDialog() {
           </TabsList>
 
           <TabsContent value="edit"> */}
-            <div className="basis-full flex mb-3 ">
-              <div className="basis-full sm:basis-2/3 sm:text-left">
-                <h1 className="text-xl font-medium mb-2 hover:text-(--primary)">
-                  <EditDialog
-                    adoptionTemplate={adoptionTemplate}
-                    setAdoptionTemplate={setAdoptionTemplate}
-                  />
-                  Tiêu đề: {adoptionTemplate?.title}
-                </h1>
-                {/* <h1 className="text-md font-medium ml-10 mb-2">
+          <div className="basis-full flex mb-3 ">
+            <div className="basis-full sm:basis-2/3 sm:text-left">
+              <h1 className="text-xl font-medium mb-2 hover:text-(--primary)">
+                <EditDialog
+                  setIsLoading={setIsLoading}
+                  adoptionTemplate={adoptionTemplate}
+                  setAdoptionTemplate={setAdoptionTemplate}
+                />
+                Tiêu đề: {adoptionTemplate?.title}
+              </h1>
+              {/* <h1 className="text-md font-medium ml-10 mb-2">
                   Loài: {adoptionTemplate?.species?.name}
                 </h1> */}
-                <div className=" flex gap-3 ml-10 mb-2 ">
-                  {/* <p className="text-sm">Mô tả: </p> */}
-                  <p className="text-sm text-(--muted-foreground)">
-                    {adoptionTemplate?.description ||
-                      "Mô tả mẫu nhận nuôi chưa được cung cấp."}
-                  </p>
-                </div>
-              </div>
-              <div className="basis-full sm:basis-1/3 sm:text-right">
-                <div className="flex justify-end">
-                  <Button variant={"default"} onClick={handleSave}>
-                    <SaveAllIcon /> Lưu
-                  </Button>
-                </div>
+              <div className=" flex gap-3 ml-10 mb-2 ">
+                <p className="text-sm">Loài vật: </p>
+                <p className="text-sm text-(--muted-foreground)">
+                  {adoptionTemplate?.species?.name || "Chưa chọn loài"}
+                </p>
               </div>
             </div>
+            <div className="basis-full sm:basis-1/3 sm:text-right">
+              <div className="flex justify-end">
+                <Button variant={"default"} onClick={handleSave}>
+                  <SaveAllIcon /> Lưu
+                </Button>
+              </div>
+            </div>
+          </div>
 
-            <Separator />
+          <Separator />
 
-            <div className="basis-full flex flex-wrap ">
+          <div className="basis-full flex flex-wrap ">
+            <SortableContext
+              items={questionsList.map((q) => q._id)}
+              strategy={verticalListSortingStrategy}
+            >
               {questionsList?.map((question: Question) => {
                 return (
                   <QuestionCard
                     key={question._id}
+                    _id={question._id}
                     question={question}
                     setQuestionsList={setQuestionsList}
                   />
                 );
               })}
-              <div className="flex basis-full justify-start my-3">
-                {/* <Tooltip>
+            </SortableContext>
+            <div className="flex basis-full justify-start my-3">
+              {/* <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant={"ghost"}
@@ -263,49 +322,50 @@ export default function TemplateDialog() {
                     <span className="text-sm">Thêm câu hỏi</span>
                   </TooltipContent>
                 </Tooltip> */}
-                <Button
-                  variant={"outline"}
-                  size={"sm"}
-                  onClick={handleCreateQuestion}
-                >
-                  <Plus /> Thêm câu hỏi
-                </Button>
-              </div>
-              <div className="flex flex-col items-center justify-center sticky bottom-4 left-0 right-0 mx-auto">
-                <TooltipProvider>
-                  <Dock
-                    direction="middle"
-                    className="bg-(--background) border-2 border-(--border)"
-                  >
-                    {DATA.navbar.map((item) => (
-                      <DockIcon key={item.label}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              onClick={item.function}
-                              variant="ghost"
-                              className="hover:text-(--primary)"
-                            >
-                              {item.icon}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{item.label}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </DockIcon>
-                    ))}
-                  </Dock>
-                </TooltipProvider>
-              </div>
+              <Button
+                variant={"outline"}
+                size={"sm"}
+                onClick={handleCreateQuestion}
+              >
+                <Plus /> Thêm câu hỏi
+              </Button>
             </div>
+            <div className="flex flex-col items-center justify-center sticky bottom-4 left-0 right-0 mx-auto">
+              <TooltipProvider>
+                <Dock
+                  direction="middle"
+                  className="bg-(--background) border-2 border-(--border)"
+                >
+                  {DATA.navbar.map((item) => (
+                    <DockIcon key={item.label}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={item.function}
+                            variant="ghost"
+                            className="hover:text-(--primary)"
+                          >
+                            {item.icon}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{item.label}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </DockIcon>
+                  ))}
+                </Dock>
+              </TooltipProvider>
+            </div>
+          </div>
           {/* </TabsContent>
 
           <TabsContent value="preview">
             <p>Preview: {adoptionTemplate?.title}</p>
           </TabsContent>
         </Tabs> */}
+        </div>
       </div>
-    </div>
+    </DndContext>
   );
 }

@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
-import PetCard from "@/components/landing-page/PetCard";
+import ReturnRequestList from "@/components/user/return-request/ReturnRequestList";
 import {
   Pagination,
   PaginationContent,
@@ -26,7 +26,6 @@ import type { MissionForm } from "@/types/MissionForm";
 import type { Pet } from '@/types/Pet';
 import { useAppContext } from "@/context/AppContext";
 import PetsList from "@/components/pet/PetsList";
-import type { User } from '@/types/User';
 import useAuthAxios from "@/utils/authAxios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -63,8 +62,14 @@ function PaginationSection({
   );
 }
 
-function AdoptionActivities() {
-  const [activeTab, setActiveTab] = useState("adopted");
+type Props = {
+  userId: string;
+};
+
+export default function AdoptionActivities({ userId }: Props) {
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem("adoptionActivitiesTab") || "adopted";
+  });
   const [adoptedPage, setAdoptedPage] = useState(1);
   const [activityPage, setActivityPage] = useState(1);
   const [selectedShelter, setSelectedShelter] = useState("Tất cả");
@@ -73,22 +78,50 @@ function AdoptionActivities() {
   const [submissions, setSubmissions] = useState<MissionForm[]>([]);
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
+  const [returnRequests, setReturnRequests] = useState<any[]>([]);
+
+
+  useEffect(() => {
+    if (!userId) return;
+    authAxios.get(`${coreAPI}/adoption-submissions/user/${userId}`)
+      .then((res) => {
+        setSubmissions(res.data);
+      })
+      .catch(() => {
+        toast.error("Không thể lấy thông tin hoạt động nhận nuôi");
+      });
+  }, [activeTab, userId]);
+
+  const adoptedPets = petsList.filter((pet: any) => {
+    return pet.adopter?._id === userId;
+  });
 
 
 
   useEffect(() => {
-    authAxios.get(`${coreAPI}/adoption-submissions/get-adoption-request-list`)
+    authAxios
+      .get(`${coreAPI}/return-requests/get-by-user`)
       .then((res) => {
-        setSubmissions(res.data);
-
-      }).catch((error) => {
-        toast.error("Không thể lấy thông tin thú cưng");
+        setReturnRequests(res.data);
       })
-  }, [activeTab])
+      .catch(() => {
+        toast.error("Không thể lấy thông tin yêu cầu trả lại");
+      });
+  }, [userId]);
 
-  const adoptedPets = petsList.filter((pet: any) => {
-    return pet.adopter?._id === userProfile?._id;
-  });
+  const returnRequestMap = useMemo(() => {
+    const map = new Map();
+    returnRequests.forEach((req) => {
+      map.set(req.pet?._id, req.status);
+    });
+    return map;
+  }, [returnRequests]);
+
+  const getReturnRequestStatus = (submission: MissionForm) => {
+    const petId = submission.adoptionForm?.pet?._id;
+    return returnRequestMap.get(petId) || null;
+  };
+
 
 
 
@@ -138,17 +171,32 @@ function AdoptionActivities() {
   };
 
   const handleCardClick = (submission: MissionForm) => {
-    const petId = submission.adoptionForm.pet._id;
-    const submissionId = submission._id;
+    const petId = submission.adoptionForm?.pet?._id;
+    const submissionId = submission?._id;
     navigate(`/adoption-form/${petId}/${submissionId}`);
   };
 
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem("adoptionActivitiesTab");
+    };
+  }, []);
+
+
 
   return (
-    <Tabs defaultValue="adopted" onValueChange={setActiveTab} className="space-y-4 mb-10">
+    <Tabs
+      value={activeTab}
+      onValueChange={(value) => {
+        setActiveTab(value);
+        localStorage.setItem("adoptionActivitiesTab", value);
+      }}
+      className="space-y-4 mb-10"
+    >
       <TabsList className="ml-auto mb-4">
         <TabsTrigger value="adopted">Thú đã nhận nuôi</TabsTrigger>
         <TabsTrigger value="activities">Hoạt động nhận nuôi</TabsTrigger>
+        <TabsTrigger value="return-request">Yêu cầu trả lại</TabsTrigger>
       </TabsList>
 
       <TabsContent value="adopted">
@@ -160,7 +208,7 @@ function AdoptionActivities() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {currentAdoptedPets.map((pet: Pet) => (
-                <PetsList key={pet?._id} pet={pet} user={userProfile} />
+                <PetsList key={pet?._id} pet={pet} user={userProfile} isLoading={false} />
               ))}
             </div>
 
@@ -189,13 +237,15 @@ function AdoptionActivities() {
 
           >
             <option value="Tất cả">Tất cả trung tâm</option>
-            {[...new Set(submissions.map((a) => a.adoptionForm.shelter.name))].map(
-              (shelter) => (
-                <option key={shelter} value={shelter}>
-                  {shelter}
-                </option>
-              )
-            )}
+            {[...new Set(
+              submissions
+                .map((a) => a.adoptionForm?.shelter?.name)
+                .filter((name): name is string => !!name) // chỉ lấy name hợp lệ
+            )].map((shelter) => (
+              <option key={shelter} value={shelter}>
+                {shelter}
+              </option>
+            ))}
           </select>
           <select
             value={selectedStatus}
@@ -222,65 +272,107 @@ function AdoptionActivities() {
           ) : (
             currentActivities.map((submission) => (
               <Card
-  key={submission._id}
-  onClick={() => handleCardClick(submission)}
-  className="relative cursor-pointer transition hover:shadow-md group"
->
-  {/* Overlay Layer */}
-<div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center text-orange-600 text-sm font-medium transition-opacity duration-300 rounded-lg z-10" >
-    <div className="-translate-y-3">Click vào để xem chi tiết</div>
-  </div>
+                key={submission._id}
+                onClick={() => {
+                  if (!getReturnRequestStatus(submission)) {
+                    handleCardClick(submission);
+                  }
+                }}
+                className="relative cursor-pointer transition hover:shadow-md group"
+              >
+                {/* Overlay Layer */}
+                {!getReturnRequestStatus(submission) && (
+                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center text-orange-600 text-sm font-medium transition-opacity duration-300 rounded-lg z-10">
+                    <div className="-translate-y-3">Click vào để xem chi tiết</div>
+                  </div>
+                )}
 
-  {/* Nội dung chính */}
-  <CardHeader className="flex flex-row items-center gap-4 pb-2 z-0">
-    <img
-      src={submission.adoptionForm.pet.photos[0]}
-      alt="Pet Avatar"
-      className="w-16 h-16 rounded object-cover"
-    />
-    <div>
-      <CardTitle className="text-lg">
-        {submission.adoptionForm.pet.name}
-      </CardTitle>
-      <CardDescription className="text-sm">
-        {submission.adoptionForm.shelter.name}
-      </CardDescription>
-    </div>
-  </CardHeader>
 
-  <CardContent className="grid grid-cols-2 gap-1 text-sm  z-0">
-    <div className="flex flex-col">
-      <span className="text-muted-foreground text-xs">Phí nhận nuôi</span>
-      <span className="font-medium">
-        {submission.adoptionForm.pet.tokenMoney > 0
-          ? `${submission.adoptionForm.pet.tokenMoney.toLocaleString()}đ`
-          : "Miễn phí"}
-      </span>
-    </div>
+                {/* Nội dung chính */}
+                <CardHeader className="flex flex-row items-center gap-4 pb-2 z-0">
+                  <img
+                    src={
+                      Array.isArray(submission.adoptionForm?.pet?.photos) && submission.adoptionForm.pet.photos.length > 0
+                        ? submission.adoptionForm.pet.photos[0]
+                        : "/fallback-avatar.png"
+                    }
+                    alt="Pet Avatar"
+                    className="w-16 h-16 rounded object-cover"
+                  />
 
-    <div className="flex flex-col">
-      <span className="text-muted-foreground text-xs">Trạng thái</span>
-      <span
-        className={`font-semibold ${
-          submission.status === "approved"
-            ? "text-green-600"
-            : submission.status === "rejected"
-            ? "text-red-600"
-            : "text-yellow-600"
-        }`}
-      >
-        {getStatusLabel(submission.status)}
-      </span>
-    </div>
+                  <div>
+                    <CardTitle className="text-lg">
+                      {submission.adoptionForm?.pet?.name}
+                    </CardTitle>
+                    <CardDescription className="text-sm">
+                      {submission.adoptionForm?.shelter?.name || "Không rõ trung tâm"}
+                    </CardDescription>
+                  </div>
+                </CardHeader>
 
-    <div className="flex flex-col col-span-2">
-      <span className="text-muted-foreground text-xs">Ngày yêu cầu</span>
-      <span className="font-medium">
-        {new Date(submission.createdAt).toLocaleDateString("vi-VN")}
-      </span>
-    </div>
-  </CardContent>
-</Card>
+                <CardContent className="grid grid-cols-2 gap-1 text-sm  z-0">
+                  <div className="flex flex-col">
+                    <span className="text-muted-foreground text-xs">Phí nhận nuôi</span>
+                    <span className="font-medium">
+                      {typeof submission.adoptionForm?.pet?.tokenMoney === "number" &&
+                        submission.adoptionForm.pet.tokenMoney > 0
+                        ? `${submission.adoptionForm.pet.tokenMoney.toLocaleString()}đ`
+                        : "Miễn phí"}
+
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col">
+                    <span className="text-muted-foreground text-xs">Trạng thái</span>
+                    {(() => {
+                      const returnStatus = getReturnRequestStatus(submission);
+                      if (returnStatus) {
+                        const statusColor =
+                          returnStatus === "approved"
+                            ? "text-green-600"
+                            : returnStatus === "rejected"
+                              ? "text-red-600"
+                              : returnStatus === "cancelled"
+                                ? "text-gray-500"
+                                : "text-yellow-600";
+
+                        const label =
+                          returnStatus === "pending"
+                            ? "Yêu cầu trả lại - Chờ duyệt"
+                            : returnStatus === "approved"
+                              ? "Yêu cầu trả lại - Đã duyệt"
+                              : returnStatus === "rejected"
+                                ? "Yêu cầu trả lại - Từ chối"
+                                : "Yêu cầu trả lại - Đã huỷ";
+
+                        return <span className={`font-semibold ${statusColor}`}>{label}</span>;
+                      } else {
+                        // Nếu không có return request, hiển thị theo submission status gốc
+                        return (
+                          <span
+                            className={`font-semibold ${submission.status === "approved"
+                              ? "text-green-600"
+                              : submission.status === "rejected"
+                                ? "text-red-600"
+                                : "text-yellow-600"
+                              }`}
+                          >
+                            {getStatusLabel(submission.status)}
+                          </span>
+                        );
+                      }
+                    })()}
+                  </div>
+
+
+                  <div className="flex flex-col col-span-2">
+                    <span className="text-muted-foreground text-xs">Ngày yêu cầu</span>
+                    <span className="font-medium">
+                      {new Date(submission.createdAt).toLocaleDateString("vi-VN")}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
 
             ))
           )}
@@ -297,8 +389,12 @@ function AdoptionActivities() {
 
 
       </TabsContent>
+
+      <TabsContent value="return-request">
+        <ReturnRequestList userId={userId} />
+      </TabsContent>
     </Tabs>
   );
 }
 
-export default AdoptionActivities;
+

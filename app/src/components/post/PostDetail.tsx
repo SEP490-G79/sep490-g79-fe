@@ -6,17 +6,19 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { useEffect, useState, useContext } from "react";
 import AppContext from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import type { PostType } from "@/types/Post";
 import type { CommentType } from "@/types/Comment";
-import { Globe, GlobeLock, Heart, Ellipsis, MessageSquare, Pencil, Trash2 } from "lucide-react";
+import { Globe, GlobeLock, Heart, Ellipsis, MessageSquare, Pencil, Trash2, MapPinIcon } from "lucide-react";
 import clsx from "clsx";
 import PhotoViewerDialog from "@/components/post/PhotoViewerDialog";
 import Comment from "@/components/post/Comment";
 import EditPostDialog from "@/components/post/EditPostDialog";
+import ReportPostDialog from "@/components/post/ReportPost";
 import axios from "axios";
 export default function PostDetailDialog({
     postId,
@@ -35,12 +37,13 @@ export default function PostDetailDialog({
     const [post, setPost] = useState<PostType | null>(null);
     const [comments, setComments] = useState<CommentType[]>([]);
     const [isEditOpen, setIsEditOpen] = useState(false);
-    const [isLiked, setIsLiked] = useState(false);
+    const [notFound, setNotFound] = useState(false);
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState(false);
 
     const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+    const isGuest = !userProfile;
 
     const fetchUser = async () => {
         try {
@@ -66,14 +69,24 @@ export default function PostDetailDialog({
             const res = await axios.get(`${coreAPI}/posts/${postId}`, accessToken ? {
                 headers: { Authorization: `Bearer ${accessToken}` }
             } : {});
+
+            if (res.data.status === "deleted") {
+                setNotFound(true);
+                setPost(null);
+                return;
+            }
+
             setPost({
                 ...res.data,
                 likedBy: res.data.likedBy.map((u: any) =>
                     typeof u === "string" ? u : u._id
                 ),
             });
-        } catch {
-            toast.error("Không thể tải bài viết");
+            setNotFound(false);
+        } catch (err) {
+            console.error("Không thể tải bài viết:", err);
+            setNotFound(true);
+            setPost(null);
         } finally {
             setLoading(false);
         }
@@ -141,10 +154,22 @@ export default function PostDetailDialog({
     };
 
     const handlePostUpdated = (updatedPost: PostType) => {
-        setPost(updatedPost);
-        setIsEditOpen(false);
-    };
+        if (!post) return;
 
+        const enrichedPost: PostType = {
+            ...post,
+            ...updatedPost,
+            createdBy: post.createdBy,
+            user: post.user,
+            shelter: post.shelter,
+        };
+
+        setPost(enrichedPost);
+        setIsEditOpen(false);
+
+        // GỌI cập nhật ra ngoài Newfeed
+        onPostUpdated?.(enrichedPost);
+    };
 
 
     if (!open && !post) return null;
@@ -152,25 +177,32 @@ export default function PostDetailDialog({
     return (
         <>
             <Dialog open={open} onOpenChange={onOpenChange}>
-                {post && !loading && (
+                {notFound && !loading ? (
+                    <DialogContent className="w-full max-w-md text-center p-8">
+                        <h2 className="text-lg font-semibold text-red-500 mb-2">Bài viết không khả dụng</h2>
+                        <p className="text-sm text-muted-foreground">
+                            Bài viết có thể đã bị xóa, bị thay đổi quyền riêng tư, hoặc không còn tồn tại.
+                        </p>
+                    </DialogContent>
+                ) : post && !loading ? (
                     <DialogContent className="w-full max-h-[90vh] max-w-[40vw] sm:max-w-[40vw] p-0 overflow-hidden">
                         <ScrollArea className="h-[80vh] relative">
                             <DialogHeader className="border-b p-4 pt-4 items-center">
                                 <DialogTitle className="text-base font-semibold">
-                                    Bài viết của {post.createdBy.fullName}
+                                    Bài viết của {post.shelter ? post.shelter.name : post.createdBy.fullName}
                                 </DialogTitle>
                             </DialogHeader>
 
                             <div className="space-y-4">
-                                <div className="relative bg-white dark:bg-gray-800  shadow-md p-4 space-y-3">
+                                <div className="relative bg-(--card)  shadow-md p-4 space-y-3">
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-center gap-3">
-                                            <img
-                                                src={post.createdBy.avatar}
-                                                className="w-10 h-10 rounded-full border"
-                                            />
-                                            <div>
-                                                <p className="font-semibold">{post.createdBy.fullName}</p>
+                                            <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
+                                                <AvatarImage src={post.shelter?.avatar || post.createdBy.avatar || "/placeholder.svg"} alt="avatar" />
+                                                <AvatarFallback>{post.shelter?.name?.charAt(0).toUpperCase() || post.createdBy.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex flex-col text-sm">
+                                                <p className="font-semibold">{post.shelter?.name || post.createdBy.fullName}</p>
                                                 <div className="text-xs text-muted-foreground flex items-center gap-2">
                                                     <span>{new Date(post.createdAt).toLocaleString()}</span>
                                                     {post.privacy.includes("public") ? (
@@ -182,24 +214,44 @@ export default function PostDetailDialog({
                                             </div>
                                         </div>
 
-                                        {userProfile?._id === post.createdBy._id && (
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <button className="p-2 hover:bg-muted rounded-full">
-                                                        <Ellipsis className="w-5 h-5" />
-                                                    </button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
-                                                        <Pencil className="w-4 h-4 mr-2" /> Chỉnh sửa
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={handleDelete}>
-                                                        <Trash2 className="w-4 h-4 mr-2 text-red-500" /> Xóa
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                        {!isGuest && (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <button className="p-2 hover:bg-muted rounded-full cursor-pointer">
+                                                    <Ellipsis className="w-5 h-5" />
+                                                </button>
+                                            </DropdownMenuTrigger>
+
+                                            <DropdownMenuContent align="end">
+                                                {(
+                                                    userProfile?._id === post.createdBy._id ||
+                                                    (!!post.shelter && userProfile?.shelter?._id === post.shelter._id)
+                                                ) ? (
+                                                    <>
+                                                        <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
+                                                            <Pencil className="w-4 h-4 mr-2" /> Chỉnh sửa
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={handleDelete}>
+                                                            <Trash2 className="w-4 h-4 mr-2 text-red-500" /> Xóa
+                                                        </DropdownMenuItem>
+                                                    </>
+                                                ) : (
+                                                    ( 
+                                                    <ReportPostDialog postId={post._id} key={post._id} />
+                                                    )
+                                                )}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                         )}
+
                                     </div>
+
+                                    {post.address && (
+                                        <div className="text-xs text-primary font-medium mb-1 bg-muted px-2 py-1 rounded-full inline-flex items-center w-fit">
+                                            <MapPinIcon className="w-3 h-3 mr-1" />
+                                            {post.address}
+                                        </div>
+                                    )}
 
                                     {/* Nội dung bài viết */}
                                     <div className="relative">
@@ -258,6 +310,7 @@ export default function PostDetailDialog({
                                             </div>
                                         </div>
                                     )}
+                                    <hr />
                                     {/* Like & comment count */}
                                     <div className="flex items-center justify-between px-1 pt-2 text-sm">
                                         <button
@@ -323,7 +376,7 @@ export default function PostDetailDialog({
                             </div>
                         </ScrollArea>
                     </DialogContent>
-                )}
+                ) : null}
             </Dialog>
 
             {post && post.photos && (
