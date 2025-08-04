@@ -73,13 +73,15 @@ const PetProfilePage = () => {
         setLoading(false);
       });
     axios
-      .get(`${petAPI}/${id}/medicalRecords`)
-      .then((res) => {
-        setMedicalRecords(res.data.records || []);
-      })
-      .catch((err) => {
-        toast.error("Không thể lấy thông tin hồ sơ bệnh án của thú cưng");
-      });
+  .get(`${petAPI}/${id}/medicalRecords`)
+  .then((res) => {
+    setMedicalRecords(Array.isArray(res.data.records) ? res.data.records : []);
+  })
+  .catch((err) => {
+    toast.error("Không thể lấy thông tin hồ sơ bệnh án của thú cưng");
+    setMedicalRecords([]);
+  });
+
 
   }, [id]);
 
@@ -235,9 +237,14 @@ const PetProfilePage = () => {
             </p>
             {pet.status === "available" && (
               <div >
-                <div className="dark:text-white ">
-                  <MedicalRecordBook records={medicalRecords} />
-                </div>
+                {Array.isArray(medicalRecords) && medicalRecords.length > 0 ? (
+  <div className="dark:text-white ">
+    <MedicalRecordBook records={medicalRecords} />
+  </div>
+) : (
+  <p className="text-muted-foreground text-sm italic">Chưa có hồ sơ bệnh án</p>
+)}
+
                 <Button
                   className="px-3 py-3 text-sm mt-4"
                   onClick={() => {
