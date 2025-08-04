@@ -90,8 +90,8 @@ export const SimpleDateSelector = ({ value, onChange, minDate, maxDate }: Props)
                                     disabled
                                         ? "text-gray-300 cursor-not-allowed bg-transparent border-none"
                                         : selected
-                                            ? "bg-blue-600 text-white shadow-lg scale-110"
-                                            : "bg-white hover:bg-blue-100 border border-blue-200 hover:border-blue-400"
+                                            ? "bg-blue-600 text-white shadow-lg scale-110 dark:shadow-none"
+                                            : "bg-white hover:bg-blue-100 border border-blue-200 hover:border-blue-400 dark:bg-input/30 dark:border-input dark:hover:bg-input/50"
                                 )}
                             >
                                 {d.getDate()}

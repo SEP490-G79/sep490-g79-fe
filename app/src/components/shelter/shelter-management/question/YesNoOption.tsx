@@ -13,11 +13,11 @@ type Props = {
 export default function YesNoOption({ question, setSelectedQuestion }: Props) {
   const defaultOptions: Option[] = [
     {
-      title: "Yes",
+      title: "Có",
       isTrue: false,
     },
     {
-      title: "No",
+      title: "Không",
       isTrue: false,
     },
   ];

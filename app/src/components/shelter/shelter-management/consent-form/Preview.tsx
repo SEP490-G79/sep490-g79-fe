@@ -91,7 +91,7 @@ function Preview() {
     },
     {
       value: "approved",
-      label: "Đã xác nhận",
+      label: "Nhận nuôi thành công",
       color: "chart-4",
       icon: <Signature size={"15px"} strokeWidth={"2px"} />,
     },

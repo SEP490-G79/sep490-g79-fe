@@ -306,7 +306,7 @@ export default function CreateDialog({setIsLoading}:Props) {
                 name="adoptionTemplate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Form nhận nuôi</FormLabel>
+                    <FormLabel>Chọn mẫu form nhận nuôi</FormLabel>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild>

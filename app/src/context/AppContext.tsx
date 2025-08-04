@@ -183,7 +183,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         setPetsList(res.data);
       })
       .catch((error) => {
-        toast.error("Không thể lấy danh sách thú cưng");
+        // toast.error("Không thể lấy danh sách thú cưng");
       });
   }, []);
 
