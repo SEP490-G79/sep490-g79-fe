@@ -113,7 +113,7 @@ export default function CreateDialog({ submission, open, onOpenChange }: Props) 
           `Tạo bản đòng ý thành công. Đang chuyển hướng đến bản đòng ý nhận nuôi!`
         );
         navigate(
-          `/shelters/685f5ab190842987ab51901a/management/consent-forms/${res.data._id}`
+          `/shelters/${shelterId}/management/consent-forms/${res.data._id}`
         );
       })
       .catch((error) => {
