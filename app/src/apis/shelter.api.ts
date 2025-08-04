@@ -1,6 +1,7 @@
 import axios from "axios";
+const base_API = import.meta.env.VITE_BE_API; 
 
-const BASE_URL = "http://localhost:9999";
+const BASE_URL = `${base_API}`;
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {
