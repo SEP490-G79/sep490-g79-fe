@@ -16,6 +16,7 @@ import type { FilterState } from "@/components/pet/FilterSection";
 import { color } from "motion/react";
 import { useAppContext } from "@/context/AppContext";
 
+
 function PaginationSection({
   currentPage,
   totalPages,
@@ -192,6 +193,8 @@ function PetsListPage() {
       }
     }
 
+    
+
     // Fallback với các token còn lại
     const fallback = tokens.filter(
       (tok) => !Object.values(locked).includes(tok)
@@ -250,8 +253,15 @@ function PetsListPage() {
         !filters.shelter.includes(p.shelter?.name || "")
       )
         return false;
-      if (filters.color.length && !filters.color.includes(p.color || ""))
-        return false;
+      // if (filters.color.length && !filters.color.includes(p.color || ""))
+      //   return false;
+      if (
+  Array.isArray(filters.color) &&
+  filters.color.length &&
+  !filters.color.map(c => c.toLowerCase()).includes((p.color || "").toLowerCase())
+)
+  return false;
+
 
       const age = p.age ?? 0;
       if (age < filters.ageRange[0] || age > filters.ageRange[1]) return false;
