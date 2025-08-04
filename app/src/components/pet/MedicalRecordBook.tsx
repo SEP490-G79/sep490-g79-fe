@@ -22,6 +22,10 @@ export default function SpiralNotebookMedicalRecord({ records }: SpiralNotebookM
         }
         setIsOpen(open)
     }
+    if (!records || !Array.isArray(records) || records.length === 0) {
+  return <p className="text-muted-foreground italic">Không có hồ sơ bệnh án</p>;
+}
+
     return (
         <Dialog open={isOpen} onOpenChange={handleDialogOpenChange}>
 
