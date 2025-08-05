@@ -280,9 +280,15 @@ export default function PetManagement() {
             toast.error("Không tìm thấy ShelterId");
             return;
           }
-          await disablePet(id, shelterId);
-          toast.success("Xóa thành công");
-          fetchPets();
+          await disablePet(id, shelterId)
+          .then(()=>{
+            toast.success("Xóa thành công");
+            fetchPets();
+          })
+          .catch((err)=>{
+            toast.error(err?.response?.data?.message || "Lỗi khi xóa thú nuôi!")
+          })
+          
         }}
         onView={(pet) => {
           setDetailPet(pet);
