@@ -92,6 +92,7 @@ export function AdoptionForms() {
       .replace(/Đ/g, "D");
 
   const handleDelete = async (formId: string) => {
+    setIsLoading(true)
     await authAxios
       .delete(`${coreAPI}/shelters/${shelterId}/adoptionForms/${formId}/delete`)
       .then(() => {
@@ -100,7 +101,12 @@ export function AdoptionForms() {
         toast.success("Xóa form nhận nuôi thành công");
       })
       .catch((err) => {
-        toast.error(err.data.response.message);
+        toast.error(err?.response?.data?.message || "Xóa thất bại!");
+      })
+      .finally(()=>{
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
       });
   };
   const handleChangeStatus = async (formId: string, status: string) => {
@@ -123,7 +129,7 @@ export function AdoptionForms() {
       .catch((err) => {
         // console.log(err);
         toast.error(
-          err?.data?.response?.message || "Cập nhật trạng thái thất bại"
+          err?.response?.data?.message || "Cập nhật trạng thái thất bại"
         );
       })
       .finally(() => {
@@ -139,7 +145,7 @@ export function AdoptionForms() {
         setShelterForms(res.data);
       })
       .catch((err) => {
-        console.log(err.data.response.message);
+        // console.log(err?.response?.data?.message);
       });
   }, [shelterId]);
   const filteredForms = React.useMemo(() => {
@@ -161,7 +167,6 @@ export function AdoptionForms() {
 
     return shelterForms;
   }, [shelterForms, tabValue]);
-
 
   const columns: ColumnDef<AdoptionForm>[] = [
     {
@@ -337,7 +342,15 @@ export function AdoptionForms() {
               <DropdownMenuItem
                 variant="destructive"
                 disabled={adoptionForm.status.toUpperCase() != "DRAFT"}
-                onClick={() => handleDelete(adoptionForm._id)}
+                onClick={() =>
+                  toast.error("Xác nhận xóa đơn đăng ký nhận nuôi", {
+                    description: "Bạn có chắc muốn xóa đơn đăng ký nhận nuôi này không?",
+                    action: {
+                      label: "Xóa",
+                      onClick: () => handleDelete(adoptionForm._id),
+                    },
+                  })
+                }
               >
                 <Trash /> Xóa form
               </DropdownMenuItem>
@@ -355,7 +368,6 @@ export function AdoptionForms() {
     return columns;
   }, [columns, tabValue]);
 
-
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -370,7 +382,7 @@ export function AdoptionForms() {
       (a: any, b: any) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     ),
-    columns:filteredColumns,
+    columns: filteredColumns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),

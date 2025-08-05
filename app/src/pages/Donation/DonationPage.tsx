@@ -22,6 +22,7 @@ export default function DonationPage() {
   const [errors, setErrors] = useState({ amount: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [amountRaw, setAmountRaw] = useState("");
+  const PAYOS_API = import.meta.env.VITE_PAYOS_API_URL; 
 
   const handleAmountChange = (value: string) => {
     // Xoá dấu chấm, khoảng trắng nếu có
@@ -78,7 +79,7 @@ export default function DonationPage() {
 
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:3030/create-payment-link", {
+      const res = await axios.post(`${PAYOS_API}/create-payment-link`, {
         amount: Number(amountRaw),
         message,
       }, {

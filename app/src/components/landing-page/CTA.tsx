@@ -78,8 +78,8 @@ export function CTA() {
       </p>
 
       <BentoGrid className="grid-rows-3">
-        {features.map((feature) => (
-          <BentoCard key={feature.name} {...feature} />
+        {features.map((feature, index) => (
+          <BentoCard key={index} {...feature} />
         ))}
       </BentoGrid>
     </section>

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --mode development",
+    "prod": "vite --mode production",
     "build": "vite build --mode production",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -115,5 +116,4 @@
   "engines": {
     "node": ">=22.0.0"
   }
-
 }
