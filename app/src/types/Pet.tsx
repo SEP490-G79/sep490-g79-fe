@@ -10,7 +10,7 @@ export interface Pet {
   weight?: number;
   identificationFeature?: string;
   sterilizationStatus?: boolean;
-  species?: Species;
+  species: Species;
   breeds?: Breed[];
   color?: string;
   bio?: string;

@@ -71,7 +71,7 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
         // console.log(submission);
 
         setConsentForm(consentForm);
-        onLoadedConsentForm?.(consentForm); 
+        onLoadedConsentForm?.(consentForm);
         // const attachments = data.attachments.map((attachment: any) => {
         //   return new File([attachment], attachment.fileName, {
         //     type: attachment.mimeType,
@@ -102,7 +102,6 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
   }, [submission]);
 
   const handleChangeStatus = async (status: string, note: string) => {
-
     // console.log(status);
     setIsLoading(true);
     await authAxios
@@ -168,63 +167,66 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
     },
   ];
 
-
-
   if (!consentForm || (consentForm && consentForm?.status == "draft")) {
     return (
       <div className="w-full flex justify-center items-center py-10">
         {submission?.status === "rejected" ? (
-            <Card className="max-w-2xl w-full p-6 space-y-4 shadow-md">
-    <CardHeader>
-      <CardTitle className="text-xl text-destructive">
-        Rất tiếc! Hồ sơ của bạn đã bị từ chối
-      </CardTitle>
-      <CardDescription>
-        Trạm cứu hộ đã xem xét và quyết định không tiếp tục quy trình nhận nuôi với hồ sơ này.
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="space-y-3 text-sm text-muted-foreground">
-      <p>
-        Cảm ơn bạn đã quan tâm đến việc nhận nuôi thú cưng. Dưới đây là một số lý do phổ biến có thể dẫn đến việc từ chối hồ sơ:
-      </p>
-      <ul className="list-disc list-inside">
-        <li>Không phù hợp về điều kiện chăm sóc thú cưng.</li>
-        <li>Thiếu thông tin cần thiết hoặc thông tin chưa rõ ràng.</li>
-        <li>Trạm nhận thấy chưa đủ cơ sở để đảm bảo an toàn cho thú cưng.</li>
-      </ul>
-      <p>
-        Cảm ơn bạn đã quan tâm và mong rằng bạn sẽ tiếp tục đồng hành, yêu thương và lan tỏa tình yêu thương tới các bé thú cưng khác trong tương lai.
-      </p>
-    </CardContent>
-  </Card>
-        ):(
           <Card className="max-w-2xl w-full p-6 space-y-4 shadow-md">
-          <CardHeader>
-            <CardTitle className="text-xl">
-              Bạn đã được chọn là người nhận nuôi!
-            </CardTitle>
-            <CardDescription>
-              Hãy chờ trạm cứu hộ hoàn tất và gửi bản đồng ý nhận nuôi.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>
-              Vui lòng đọc kỹ các cam kết khi nhận nuôi thú cưng. Nếu có điểm
-              nào không phù hợp, bạn có thể yêu cầu sửa đổi, đồng ý với nội dung
-              hoặc hủy nhận nuôi trước khi trạm xác nhận chính thức.
-            </p>
-            <ul className="list-disc list-inside">
-              <li>Chờ bản đồng ý từ trạm cứu hộ.</li>
-              <li>Xem xét kỹ các cam kết.</li>
-              <li>
-                Sau khi nhận bản, bạn có thể chọn <b>chấp nhận</b>,{" "}
-                <b>yêu cầu sửa</b>, hoặc <b>hủy nhận nuôi</b>.
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
+            <CardHeader>
+              <CardTitle className="text-xl text-destructive">
+                Rất tiếc! Hồ sơ của bạn đã bị từ chối
+              </CardTitle>
+              <CardDescription>
+                Trạm cứu hộ đã xem xét và quyết định không tiếp tục quy trình
+                nhận nuôi với hồ sơ này.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                Cảm ơn bạn đã quan tâm đến việc nhận nuôi thú cưng. Dưới đây là
+                một số lý do phổ biến có thể dẫn đến việc từ chối hồ sơ:
+              </p>
+              <ul className="list-disc list-inside">
+                <li>Không phù hợp về điều kiện chăm sóc thú cưng.</li>
+                <li>Thiếu thông tin cần thiết hoặc thông tin chưa rõ ràng.</li>
+                <li>
+                  Trạm nhận thấy chưa đủ cơ sở để đảm bảo an toàn cho thú cưng.
+                </li>
+              </ul>
+              <p>
+                Cảm ơn bạn đã quan tâm và mong rằng bạn sẽ tiếp tục đồng hành,
+                yêu thương và lan tỏa tình yêu thương tới các bé thú cưng khác
+                trong tương lai.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="max-w-2xl w-full p-6 space-y-4 shadow-md">
+            <CardHeader>
+              <CardTitle className="text-xl">
+                Bạn đã được chọn là người nhận nuôi!
+              </CardTitle>
+              <CardDescription>
+                Hãy chờ trạm cứu hộ hoàn tất và gửi bản đồng ý nhận nuôi.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                Vui lòng đọc kỹ các cam kết khi nhận nuôi thú cưng. Nếu có điểm
+                nào không phù hợp, bạn có thể yêu cầu sửa đổi, đồng ý với nội
+                dung hoặc hủy nhận nuôi trước khi trạm xác nhận chính thức.
+              </p>
+              <ul className="list-disc list-inside">
+                <li>Chờ bản đồng ý từ trạm cứu hộ.</li>
+                <li>Xem xét kỹ các cam kết.</li>
+                <li>
+                  Sau khi nhận bản, bạn có thể chọn <b>chấp nhận</b>,{" "}
+                  <b>yêu cầu sửa</b>, hoặc <b>hủy nhận nuôi</b>.
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
         )}
-        
       </div>
     );
   }
@@ -542,6 +544,21 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
                 Bằng việc đánh dấu vào ô này, bạn xác nhận rằng đã đọc, hiểu và
                 chấp nhận toàn bộ nội dung cam kết nhận nuôi thú cưng từ trạm
                 cứu hộ.
+              </p>
+            </div>
+          </>
+        )}
+        {consentForm?.status == "accepted" && (
+          <>
+            <div className="grid gap-1 leading-tight">
+              <Label htmlFor="agree-terms" className="font-medium text-sm">
+                Cảm ơn bạn đã đồng ý nhận nuôi!
+              </Label>
+              <p className="text-muted-foreground text-xs w-1/2 ">
+                Vui lòng chờ trung tâm xác nhận để hoàn tất thủ tục nhận nuôi
+                trực tuyến. Sau khi được xác nhận, bạn có thể đến trực tiếp
+                trung tâm để đón thú cưng hoặc lựa chọn hình thức giao tận nơi
+                nếu đã đăng ký.
               </p>
             </div>
           </>
