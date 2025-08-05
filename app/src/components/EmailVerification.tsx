@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import axios, { AxiosError } from "axios";
+import AppContext from "@/context/AppContext";
 
-export default function EmailVerification(): JSX.Element {
+export default function EmailVerification() {
   const [status, setStatus] = useState<"pending" | "success" | "error">(
     "pending"
   );
   const [message, setMessage] = useState<string>("");
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const {coreAPI} = useContext(AppContext);
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -23,7 +25,7 @@ export default function EmailVerification(): JSX.Element {
     const verifyEmail = async () => {
       try {
         const res = await axios.get<{ message: string }>(
-          `http://localhost:9999/api/auth/verify-email?token=${token}`,
+          `${`${coreAPI}/auth/refresh`}/api/auth/verify-email?token=${token}`,
           { withCredentials: true }
         );
 
