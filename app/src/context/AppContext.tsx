@@ -15,7 +15,6 @@ import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { MissionForm } from "@/types/MissionForm";
 import type { ConsentForm } from "@/types/ConsentForm";
 import { useLocation } from "react-router-dom";
-
 const excludedURLs = [
   "/",
   "/login",
@@ -59,7 +58,8 @@ interface AppContextType {
   setShelterForms: (shelterForms: AdoptionForm[]) => void;
   refreshUserProfile: () => Promise<void>;
   submissionsByPetId: Record<string, MissionForm[]>;
-  setSubmissionsByPetId: (data: Record<string, MissionForm[]>) => void;
+  setSubmissionsByPetId: React.Dispatch<React.SetStateAction<Record<string, MissionForm[]>>>;
+
   setShelterConsentForms: (shelterConsentForms: ConsentForm[]) => void;
 }
 
@@ -74,13 +74,13 @@ const AppContext = createContext<AppContextType>({
   authAPI: "",
   userAPI: "",
   shelterAPI: "",
-  login: () => {},
-  logout: () => {},
+  login: () => { },
+  logout: () => { },
   userProfile: null,
   loginLoading: false,
-  setLoginLoading: (loginLoading: boolean) => {},
-  setUserProfile: () => {},
-  setUser: () => {},
+  setLoginLoading: (loginLoading: boolean) => { },
+  setUserProfile: () => { },
+  setUser: () => { },
   petsList: [],
   petAPI: "",
   medicalRecordAPI: "",
@@ -89,12 +89,12 @@ const AppContext = createContext<AppContextType>({
   returnRequestAPI: "",
   setShelters: () => [],
   shelterId: null,
-  setShelterId: () => {},
+  setShelterId: () => { },
   setShelterTemplates: () => [],
   setShelterForms: () => [],
-  refreshUserProfile: async () => {},
+  refreshUserProfile: async () => { },
   submissionsByPetId: {},
-  setSubmissionsByPetId: () => {},
+  setSubmissionsByPetId: () => { },
   setShelterConsentForms: () => [],
 });
 
@@ -121,7 +121,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     []
   );
   const location = useLocation();
-  const base_API = import.meta.env.VITE_BE_API; 
+  const base_API = import.meta.env.VITE_BE_API;
 
   // APIs
   const coreAPI = base_API;
@@ -133,7 +133,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const blogAPI = `${base_API}/blogs`;
   const reportAPI = `${base_API}/reports`;
   const returnRequestAPI = `${base_API}/return-requests`;
-  
+
 
   const login = (accessToken: string, userData: User) => {
     setUser(userData);

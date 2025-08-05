@@ -64,6 +64,14 @@ import { DateTimePicker } from "./DateTimePicker";
 import PetSubmissionInterviewSection from "./PetSubmissionInterviewSection";
 import CreateDialog from "@/components/shelter/shelter-management/consent-form/CreateDialog";
 import { is } from "date-fns/locale";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 function getColorBarClass(total: number): string {
   if (total <= 29) return "bg-red-500";
@@ -71,6 +79,8 @@ function getColorBarClass(total: number): string {
   if (total >= 60 && total <= 79) return "bg-blue-400";
   return "bg-green-500";
 }
+
+
 
 export default function PetSubmission() {
   const { shelterId, petId } = useParams();
@@ -86,10 +96,8 @@ export default function PetSubmission() {
   const [statusFilter, setStatusFilter] = useState<string>("pending");
   const pet = petsList.find((p: Pet) => p._id === petId);
   const submissions = submissionsByPetId[petId ?? ""] || [];
-  const [selectedSubmission, setSelectedSubmission] =
-    useState<MissionForm | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<MissionForm | null>(null);
   const navigate = useNavigate();
-  const [showAnswers, setShowAnswers] = useState(true);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [filterByPerformer, setFilterByPerformer] = useState<string>("all");
@@ -114,6 +122,16 @@ export default function PetSubmission() {
   });
   const [openConsentDialog, setOpenConsentDialog] = useState(false);
   const [consentSubmission, setConsentSubmission] = useState<MissionForm | null>(null);
+const [currentPage, setCurrentPage] = useState(1);
+const itemsPerPage = 6;
+
+useEffect(() => {
+  if (selectedSubmission?.status === "pending" || selectedSubmission?.status === "scheduling") {
+    setSelectedTab("answers");
+  } else {
+    setSelectedTab("interview");
+  }
+}, [selectedSubmission]);
 
 
   const resetForm = () => {
@@ -125,6 +143,7 @@ export default function PetSubmission() {
     });
     setSelectedStaff(null);
   };
+
 
   const [interviewers, setInterviewers] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
@@ -407,6 +426,7 @@ export default function PetSubmission() {
   }, [showScheduleDialog, isStaff, isManager, userProfile]);
 
 
+
   const statusCounts = submissions
     .filter((sub) => {
       if (isManager) return true;
@@ -491,6 +511,11 @@ export default function PetSubmission() {
     setIsEarlyFeedback(today.isBefore(selectedDate));
     setShowConfirmDialog(true);
   };
+
+  useEffect(() => {
+  setCurrentPage(1);
+}, [statusFilter, interviewingSubFilter, filterByPerformer]);
+
 
   return (
     <div className="space-y-6">
@@ -651,7 +676,9 @@ export default function PetSubmission() {
             Không có đơn
           </p>
         ) : (
-          filteredSubmissions.map((submission) => {
+          filteredSubmissions
+  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  .map((submission) => {
             const total = submission.total ?? 0;
             const colorBar = getColorBarClass(total);
             return (
@@ -1255,6 +1282,15 @@ export default function PetSubmission() {
                       onTrySubmitFeedback={onTrySubmitFeedback}
                       handleSubmitFeedback={handleSubmitFeedback}
                       handleSubmitNote={handleSubmitNote}
+                      availableFrom={scheduleData.availableFrom}
+                      availableTo={scheduleData.availableTo}
+                      shelterId={shelterId!}
+                      coreAPI={coreAPI}
+                      authAxios={authAxios}
+                      setSelectedSubmission={setSelectedSubmission}
+                      setSubmissionsByPetId={setSubmissionsByPetId}
+                      petId={petId!}
+
                     />
                   )}
                 </div>
@@ -1277,6 +1313,47 @@ export default function PetSubmission() {
 
 
       </div>
+      {filteredSubmissions.length > itemsPerPage && (
+  <Pagination className="mt-4">
+    <PaginationContent>
+      <PaginationItem>
+        <PaginationPrevious
+          onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+          className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+        />
+      </PaginationItem>
+
+      {Array.from(
+        { length: Math.ceil(filteredSubmissions.length / itemsPerPage) },
+        (_, i) => (
+          <PaginationItem key={i}>
+            <PaginationLink
+              isActive={currentPage === i + 1}
+              onClick={() => setCurrentPage(i + 1)}
+            >
+              {i + 1}
+            </PaginationLink>
+          </PaginationItem>
+        )
+      )}
+
+      <PaginationItem>
+        <PaginationNext
+          onClick={() =>
+            currentPage < Math.ceil(filteredSubmissions.length / itemsPerPage) &&
+            setCurrentPage(currentPage + 1)
+          }
+          className={
+            currentPage === Math.ceil(filteredSubmissions.length / itemsPerPage)
+              ? "pointer-events-none opacity-50"
+              : ""
+          }
+        />
+      </PaginationItem>
+    </PaginationContent>
+  </Pagination>
+)}
+
     </div>
   );
 }

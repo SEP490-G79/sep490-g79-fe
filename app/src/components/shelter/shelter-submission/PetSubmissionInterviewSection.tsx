@@ -1,4 +1,5 @@
-"use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,6 +13,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   Calendar,
@@ -31,10 +39,26 @@ import {
   Video,
   MapPin,
   Phone,
+  ChevronsUpDown,
+  Check,
+  SquarePen,
 } from "lucide-react"
+import {
+  Command,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import dayjs from "dayjs"
 import "dayjs/locale/vi"
-
+import { toast } from "sonner"
+import type { MissionForm } from "@/types/MissionForm"
+import { is } from "date-fns/locale"
 dayjs.locale("vi")
 
 interface InterviewSectionProps {
@@ -55,6 +79,16 @@ interface InterviewSectionProps {
   onTrySubmitFeedback: () => void
   handleSubmitFeedback: () => Promise<void>
   handleSubmitNote: () => Promise<void>
+  availableFrom: Date
+  availableTo: Date
+  shelterId: string
+  coreAPI: string
+  authAxios: any
+  setSelectedSubmission: (submission: any) => void;
+
+  setSubmissionsByPetId: React.Dispatch<React.SetStateAction<Record<string, MissionForm[]>>>;
+  petId: string;
+
 }
 
 const PetSubmissionInterviewSection = ({
@@ -75,14 +109,55 @@ const PetSubmissionInterviewSection = ({
   onTrySubmitFeedback,
   handleSubmitFeedback,
   handleSubmitNote,
+  setSelectedSubmission,
+  availableFrom,
+  availableTo,
+  shelterId,
+  coreAPI,
+  authAxios,
+  setSubmissionsByPetId,
+  petId,
+
+
+
 }: InterviewSectionProps) => {
   const interview = selectedSubmission?.interview
+  const [interviewers, setInterviewers] = useState<any[]>([]);
+  const [open, setOpen] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<any>(null);
+  const [showChangePerformerDialog, setShowChangePerformerDialog] = useState(false);
+  const [scheduleData, setScheduleData] = useState({
+    availableFrom: new Date(),
+    availableTo: new Date(),
+    method: "",
+    performedBy: "",
+  });
+
+
+  useEffect(() => {
+    if (!isShelterManager || !availableFrom || !availableTo) return;
+
+    const fetchInterviewers = async () => {
+      try {
+        const res = await authAxios.get(
+          `${coreAPI}/adoption-submissions/staff-schedule-count/${shelterId}?from=${availableFrom.toISOString()}&to=${availableTo.toISOString()}`
+        );
+        setInterviewers(res.data);
+      } catch (error) {
+        console.error("Lỗi lấy danh sách nhân viên:", error);
+      }
+    };
+
+    fetchInterviewers();
+  }, [availableFrom, availableTo, isShelterManager]);
+
+
 
   // Permission checks
   const canProvideFeedback =
     selectedSubmission.status === "interviewing" &&
     interview?.selectedSchedule &&
-    interview?.performedBy?._id === userProfile?._id 
+    interview?.performedBy?._id === userProfile?._id
 
   const canProvideNote = selectedSubmission.status === "reviewed" && isShelterManager
 
@@ -145,6 +220,7 @@ const PetSubmissionInterviewSection = ({
     return <Phone className="w-4 h-4 text-orange-600" />
   }
 
+
   if (!interview) {
     return (
       <Card className="border-dashed border-2 border-gray-200">
@@ -162,13 +238,41 @@ const PetSubmissionInterviewSection = ({
       {/* Interview Overview */}
       <Card className="border-0 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-gray-700 dark:to-gray-800 ">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <CardTitle className="flex items-center gap-2 text-lg dark:text-white">
               <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               Thông tin phỏng vấn
             </CardTitle>
-            {getInterviewStatusBadge()}
+           
+            {isShelterManager && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                const currentPerformer = interview?.performedBy;
+                if (currentPerformer) {
+                  setSelectedStaff({
+                    staffId: currentPerformer._id,
+                    fullName: currentPerformer.fullName,
+                    avatar: currentPerformer.avatar,
+                    interviewCount: 0,
+                  });
+                  setScheduleData((prev) => ({
+                    ...prev,
+                    performedBy: currentPerformer._id,
+                  }));
+                }
+                setShowChangePerformerDialog(true);
+              }}
+            >
+               <SquarePen />
+
+            </Button>
+            )}
+            <div className="ml-auto">
+              {getInterviewStatusBadge()}
+            </div>      
           </div>
+
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Staff Assignment */}
@@ -510,6 +614,127 @@ const PetSubmissionInterviewSection = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Dialog open={showChangePerformerDialog} onOpenChange={setShowChangePerformerDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Chọn người thực hiện phỏng vấn</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Danh sách nhân viên được sắp xếp theo số lịch phỏng vấn từ ít đến nhiều
+            </p>
+
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="w-full justify-between">
+                  {selectedStaff ? (
+                    <div className="flex items-center gap-2">
+                      <img src={selectedStaff.avatar || "/placeholder-avatar.png"} className="w-5 h-5 rounded-full" />
+                      <span>{selectedStaff.fullName} ({selectedStaff.interviewCount} lịch)</span>
+                    </div>
+                  ) : (
+                    "Chọn nhân viên thực hiện phỏng vấn"
+                  )}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="Tìm nhân viên..." />
+                  <CommandList>
+                    {interviewers.map((staff) => (
+                      <CommandItem
+                        key={staff.staffId}
+                        value={staff.fullName.toLowerCase()}
+                        onSelect={() => {
+                          if (selectedStaff?.staffId === staff.staffId) {
+                            setSelectedStaff(null);
+                            setScheduleData({ ...scheduleData, performedBy: "" });
+                          } else {
+                            setSelectedStaff(staff);
+                            setScheduleData({ ...scheduleData, performedBy: staff.staffId });
+                          }
+                          setOpen(false);
+                        }}
+                        disabled={staff.staffId === interview?.performedBy?._id}
+                      >
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={staff.avatar || "/placeholder-avatar.png"}
+                            className="w-5 h-5 rounded-full"
+                          />
+                          <span>{staff.fullName} ({staff.interviewCount} lịch)</span>
+                        </div>
+                        {selectedStaff?.staffId === staff.staffId && (
+                          <Check className="ml-auto w-4 h-4 text-green-500" />
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+
+            <div className="flex justify-end">
+              <Button
+                disabled={
+                  !selectedStaff || selectedStaff.staffId === interview?.performedBy?._id
+                }
+
+                onClick={async () => {
+                  if (!selectedSubmission || !selectedStaff) return;
+
+                  try {
+                    await authAxios.put(
+                      `${coreAPI}/adoption-submissions/update-interview-performer/${shelterId}`,
+                      {
+                        submissionId: selectedSubmission._id,
+                        newPerformerId: selectedStaff.staffId,
+                      }
+                    );
+
+                    toast.success("Cập nhật người thực hiện thành công!");
+                    setShowChangePerformerDialog(false);
+
+                    // Cập nhật lại dữ liệu submission sau khi đổi
+                    const updatedSubmission = {
+                      ...selectedSubmission,
+                      interview: {
+                        ...selectedSubmission.interview,
+                        performedBy: {
+                          _id: selectedStaff.staffId,
+                          fullName: selectedStaff.fullName,
+                          avatar: selectedStaff.avatar,
+                        },
+                      },
+                    };
+                    setSelectedStaff(null);
+                    setScheduleData((prev) => ({ ...prev, performedBy: "" }));
+                    setSelectedSubmission(updatedSubmission);
+                    setSubmissionsByPetId((prev) => ({
+                      ...prev,
+                      [petId!]: prev[petId!].map((sub) =>
+                        sub._id === updatedSubmission._id ? updatedSubmission : sub
+                      ),
+                    }));
+
+
+                  } catch (error: any) {
+                    console.error("Lỗi cập nhật performer:", error);
+                    toast.error(
+                      error?.response?.data?.message || "Không thể cập nhật người thực hiện"
+                    );
+                  }
+                }}
+              >
+                Cập nhật
+              </Button>
+
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   )
 }

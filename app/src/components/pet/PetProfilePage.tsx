@@ -17,6 +17,7 @@ import { Link } from "react-router-dom";
 import MedicalRecordBook from "@/components/pet/MedicalRecordBook";
 import { useAppContext } from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
+import type { Pet } from "@/types/Pet";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "../ui/breadcrumb";
 type ReturnRequest = {
   pet?: {
@@ -25,25 +26,6 @@ type ReturnRequest = {
   status: string;
 };
 
-interface Pet {
-  _id: string;
-  name: string;
-  isMale: boolean;
-  age: number;
-  weight: number;
-  identificationFeature: string;
-  sterilizationStatus: boolean;
-  species: { name: string };
-  breeds: { name: string }[];
-  color: string;
-  bio: string;
-  intakeTime: string;
-  foundLocation: string;
-  tokenMoney: number;
-  shelter: { name: string; address: string };
-  status: string;
-  photos: string[];
-}
 
 const PetProfilePage = () => {
   const { id } = useParams();
@@ -73,14 +55,14 @@ const PetProfilePage = () => {
         setLoading(false);
       });
     axios
-  .get(`${petAPI}/${id}/medicalRecords`)
-  .then((res) => {
-    setMedicalRecords(Array.isArray(res.data.records) ? res.data.records : []);
-  })
-  .catch((err) => {
-    toast.error("Không thể lấy thông tin hồ sơ bệnh án của thú cưng");
-    setMedicalRecords([]);
-  });
+      .get(`${petAPI}/${id}/medicalRecords`)
+      .then((res) => {
+        setMedicalRecords(Array.isArray(res.data.records) ? res.data.records : []);
+      })
+      .catch((err) => {
+        toast.error("Không thể lấy thông tin hồ sơ bệnh án của thú cưng");
+        setMedicalRecords([]);
+      });
 
 
   }, [id]);
@@ -105,6 +87,9 @@ const PetProfilePage = () => {
   }, [userProfile?._id, pet?._id]);
 
 
+  const isShelterMember = pet?.shelter?.members?.some(
+    (member) => member._id === userProfile?._id
+  );
 
   if (loading) {
     return (
@@ -115,7 +100,6 @@ const PetProfilePage = () => {
       </div>
     );
   }
-  // console.log(pet);
 
 
   if (!pet) {
@@ -238,12 +222,12 @@ const PetProfilePage = () => {
             {pet.status === "available" && (
               <div >
                 {Array.isArray(medicalRecords) && medicalRecords.length > 0 ? (
-  <div className="dark:text-white ">
-    <MedicalRecordBook records={medicalRecords} />
-  </div>
-) : (
-  <p className="text-muted-foreground text-sm italic">Chưa có hồ sơ bệnh án</p>
-)}
+                  <div className="dark:text-white ">
+                    <MedicalRecordBook records={medicalRecords} />
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm italic">Chưa có hồ sơ bệnh án</p>
+                )}
 
                 <Button
                   className="px-3 py-3 text-sm mt-4"
@@ -261,11 +245,16 @@ const PetProfilePage = () => {
                       return;
                     }
 
+
                     if (hasReturnedThisPet) {
                       toast.error("Bạn đã từng nhận nuôi và trả lại thú cưng này, nên không thể nhận nuôi lại.");
                       return;
                     }
 
+                    if (isShelterMember) {
+                      toast.error("Bạn là thành viên của trung tâm này nên không thể nhận nuôi thú cưng ở đây.");
+                      return;
+                    }
                     navigate(`/adoption-form/${pet._id}`);
                   }}
                 >
