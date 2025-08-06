@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import pawBackground from "@/assets/pawBackground.jpg";
 import donateDog from "@/assets/donateDog.jpg";
+import AppContext from "@/context/AppContext";
 import axios from "axios";
 
 export default function DonationPage() {
@@ -21,6 +22,7 @@ export default function DonationPage() {
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState({ amount: "", message: "" });
   const [loading, setLoading] = useState(false);
+  const { coreAPI } = useContext(AppContext);
 
   const handleAmountChange = (value: string) => {
     // Xoá dấu chấm, khoảng trắng nếu có
@@ -80,7 +82,7 @@ export default function DonationPage() {
 
     try {
       setLoading(true);
-      const res = await axios.post(`${import.meta.env.VITE_PAYOS_API_URL}/create-payment-link`, {
+      const res = await axios.post(`${coreAPI}/donations/create-payment-link`, {
         amount: Number(amount),
         message,
       }, {
@@ -91,7 +93,7 @@ export default function DonationPage() {
           : {},
       });
       window.location.href = res.data.url;
-      console.log("Payment link created:", res.data.url);
+      // console.log("Payment link created:", res.data.url);
     } catch (error: any) {
       toast.error("Đã xảy ra lỗi khi tạo liên kết thanh toán. Vui lòng thử lại sau.");
       console.error("Error creating payment link:", error.message);
@@ -160,7 +162,7 @@ export default function DonationPage() {
               type="text"
               value={
                 amount
-                  ? Number(amount).toLocaleString("vi-VN") // Format theo hàng nghìn
+                  ? Number(amount).toLocaleString("vi-VN")
                   : ""
               }
               onChange={(e) => handleAmountChange(e.target.value)}
