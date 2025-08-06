@@ -285,7 +285,7 @@ export function ConsentForms() {
           {Array.from({ length: 6 }).map((_, idx) => (
             <div
               key={idx}
-              className="relative w-full h-[35vh] bg-white rounded-lg overflow-hidden shadow-sm animate-pulse"
+              className="relative w-full h-4/5 bg-white rounded-lg overflow-hidden shadow-sm animate-pulse"
             >
               <Skeleton className="w-full h-1/2" />
 
@@ -412,7 +412,7 @@ export function ConsentForms() {
                 return (
                   <Card
                     key={consentForm._id}
-                    className=" w-full h-[35vh] p-0 rounded-sm shadow-sm hover:shadow-lg transition-shadow dark:hover:shadow-lg dark:transition-shadow border-0 gap-0"
+                    className=" w-full h-4/5 p-0 rounded-sm shadow-sm hover:shadow-lg transition-shadow dark:hover:shadow-lg dark:transition-shadow border-0 gap-0"
                   >
                     <Avatar
                       onClick={() => navigate(`${consentForm._id}`)}
@@ -593,7 +593,7 @@ export function ConsentForms() {
                 return (
                   <Card
                     key={consentForm._id}
-                    className=" w-full h-[35vh] p-0 rounded-sm shadow-sm hover:shadow-lg transition-shadow dark:hover:shadow-lg dark:transition-shadow border-0 gap-0"
+                    className=" w-full h-4/5 p-0 rounded-sm shadow-sm hover:shadow-lg transition-shadow dark:hover:shadow-lg dark:transition-shadow border-0 gap-0"
                   >
                     <Avatar
                       onClick={() => navigate(`${consentForm._id}`)}
