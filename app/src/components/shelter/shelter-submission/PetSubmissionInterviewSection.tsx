@@ -244,7 +244,7 @@ const PetSubmissionInterviewSection = ({
               Thông tin phỏng vấn
             </CardTitle>
            
-            {isShelterManager && (
+            {isShelterManager && selectedSubmission.status === "interviewing" && (
             <Button
               variant="outline"
               onClick={() => {
@@ -678,7 +678,7 @@ const PetSubmissionInterviewSection = ({
             <div className="flex justify-end">
               <Button
                 disabled={
-                  !selectedStaff || selectedStaff.staffId === interview?.performedBy?._id
+                  !selectedStaff || selectedStaff.staffId === interview?.performedBy?._id || selectedSubmission?.status !== "interviewing"
                 }
 
                 onClick={async () => {
