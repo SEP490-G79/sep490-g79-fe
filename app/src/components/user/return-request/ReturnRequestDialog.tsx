@@ -86,7 +86,7 @@ export default function ReturnRequestDialog({ open, onOpenChange, pet, shelter }
                     <Label>Lý do trả thú cưng</Label>
                     <Textarea value={reason} onChange={(e) => setReason(e.target.value)} />
 
-                    <Label>Ảnh minh chứng (tối đa 5 ảnh)</Label>
+                    <Label>Ảnh tình trạng thú nuôi hiện tại (tối đa 5 ảnh)</Label>
 
                     <div className="relative">
                         <Input

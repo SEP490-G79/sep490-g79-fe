@@ -7,4 +7,5 @@ export interface MedicalRecord {
   dueDate: string;
   status: string;
   photos: string[];
+  type: string;
 }

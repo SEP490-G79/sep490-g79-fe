@@ -306,7 +306,7 @@ export default function CreateDialog({setIsLoading}:Props) {
                 name="adoptionTemplate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Form nhận nuôi</FormLabel>
+                    <FormLabel>Chọn mẫu form nhận nuôi</FormLabel>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild>
@@ -402,7 +402,7 @@ export default function CreateDialog({setIsLoading}:Props) {
 
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline">Hủy</Button>
+                <Button variant="outline" onClick={() => form.reset()}>Hủy</Button>
               </DialogClose>
               <Button className="cursor-pointer" type="submit">
                 Tạo

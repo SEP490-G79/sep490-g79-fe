@@ -1,5 +1,6 @@
-import { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState, useContext, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+
 import axios from "axios";
 import { toast } from "sonner";
 import AppContext from "@/context/AppContext";
@@ -9,8 +10,10 @@ import Step2_AdoptionForm from "@/components/user/AdoptionForm/Step2_AdoptionFor
 import Step3_SubmissionForm from "@/components/user/AdoptionForm/Step3_SubmissionForm";
 import Step4_ScheduleConfirm from "@/components/user/AdoptionForm/Step4_ScheduleConfirm";
 import Step5_ConsentForm from "@/components/user/AdoptionForm/Step5_ConsentForm";
+import Step6_Result from "@/components/user/AdoptionForm/Step6_Result";
 import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { Question } from "@/types/Question";
+import type { ConsentForm } from "@/types/ConsentForm";
 import {
   Tooltip,
   TooltipContent,
@@ -35,6 +38,16 @@ const UserAdoptionFormPage = () => {
   const [answers, setAnswers] = useState<Record<string, string | string[]>>(getInitialAnswers);
   const [hasCheckedSubmitted, setHasCheckedSubmitted] = useState(false);
   const [hasChecked, setHasChecked] = useState<any>(null);
+  const [consentForm, setConsentForm] = useState<ConsentForm | null>(null);
+  const hasShownNotFoundToast = useRef(false);
+
+  const navigate = useNavigate();
+  const showErrorToast = (message: string) => {
+    toast.error(message, {
+      description: "Vui lòng thử lại hoặc liên hệ hỗ trợ.",
+      duration: 5000,
+    });
+  };
 
 
   const getInitialStep = () => {
@@ -67,7 +80,19 @@ const UserAdoptionFormPage = () => {
       setLoading(true);
       try {
         const res = await authAxios.get(`${coreAPI}/pets/get-adoptionForms-by-petId/${id}`);
+        if (!res.data || Object.keys(res.data).length === 0) {
+          if (!hasShownNotFoundToast.current) {
+            showErrorToast("Không tìm thấy đơn xin nhận nuôi cho thú cưng này.");
+            hasShownNotFoundToast.current = true;
+          }
+          navigate("/");
+          return;
+        }
+
+
+
         setForm(res.data);
+
 
         // Kiểm tra đã nộp chưa
         const checkRes = await authAxios.post(
@@ -77,24 +102,41 @@ const UserAdoptionFormPage = () => {
 
         if (checkRes.data.submitted) {
           const status = checkRes.data.status;
+          const selectedSchedule = checkRes.data.selectedSchedule;
           setSubmissionId(checkRes.data.submissionId);
           setAgreed(true);
           setHasChecked(checkRes.data);
-    
-          
+
+
+          // Fetch consentForm nếu đã có submission
+          const consentRes = await authAxios.get(`${coreAPI}/consentForms/get-by-user`);
+          const consentFormMatched = consentRes.data.find(
+            (form: ConsentForm) => form?.pet?._id === res.data.pet?._id
+          );
+          if (consentFormMatched) {
+            setConsentForm(consentFormMatched);
+
+            if (
+              consentFormMatched.status === "approved" ||
+              consentFormMatched.status === "rejected"
+            ) {
+              setStep(6);
+              return;
+            }
+          }
+
 
           if (status === "pending" || status === "scheduling") {
             setStep(3);
           } else if (status === "interviewing" || status === "reviewed") {
             setStep(4);
-          } else if(status === "rejected"){
-              if(hasChecked?.selectedSchedule){
-                setStep(5);
-              }else{
-                setStep(3);
-              }
-          
-          } else if (status === "approved" ) {
+          } else if (status === "rejected") {
+            if (selectedSchedule) {
+              setStep(6);
+            } else {
+              setStep(3);
+            }
+          } else if (status === "approved") {
             setStep(5);
           } else {
             setStep(3);
@@ -115,7 +157,8 @@ const UserAdoptionFormPage = () => {
           setAgreed(savedAgreed ? JSON.parse(savedAgreed) : false);
         }
       } catch (err) {
-        toast.error("Không thể lấy thông tin đơn xin nhận nuôi");
+        showErrorToast("Không thể lấy thông tin đơn xin nhận nuôi");
+
       } finally {
         setLoading(false);
         setHasCheckedSubmitted(true); //  Đánh dấu đã check xong
@@ -124,6 +167,46 @@ const UserAdoptionFormPage = () => {
 
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    const checkReturned = async () => {
+      try {
+        const res = await authAxios.get(`${coreAPI}/return-requests/get-by-user`);
+        const hasReturned = res.data.some((req: any) =>
+          req.pet?._id === id && req.status === "approved"
+        );
+        if (hasReturned) {
+          showErrorToast("Bạn đã từng trả lại thú cưng này, không thể nhận nuôi lại.");
+
+          navigate("/");
+        }
+      } catch (err) {
+        showErrorToast("Không thể kiểm tra yêu cầu trả thú cưng");
+
+      }
+    };
+
+    if (form && !submissionId) {
+      checkReturned();
+    }
+  }, [form, submissionId]);
+
+
+  useEffect(() => {
+    const fetchSubmission = async () => {
+      if (!submissionId) return;
+      try {
+        const res = await authAxios.get(`${coreAPI}/adoption-submissions/${submissionId}`);
+        setSubmission(res.data);
+      } catch (err) {
+        console.error("Lỗi khi lấy submission:", err);
+      }
+    };
+
+    if (!submission && submissionId && hasCheckedSubmitted) {
+      fetchSubmission();
+    }
+  }, [submissionId, submission, hasCheckedSubmitted]);
 
 
 
@@ -146,6 +229,9 @@ const UserAdoptionFormPage = () => {
     }
   }, [answers, id, submissionId, hasCheckedSubmitted]);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
 
 
 
@@ -153,9 +239,9 @@ const UserAdoptionFormPage = () => {
     return <div className="text-center mt-10">Đang tải dữ liệu thú cưng...</div>;
   }
 
-
-  const steps = ["Quy định chung", "Đăng ký nhận nuôi", "Chờ phản hồi", "Xác nhận lịch phỏng vấn", "Đơn cam kết"];
+  const steps = ["Quy định chung", "Đăng ký nhận nuôi", "Chờ phản hồi", "Xác nhận lịch phỏng vấn", "Đơn cam kết", "Kết quả"];
   const status = submission?.status;
+  const consentStatus = consentForm?.status;
 
   let maxStep = step - 1;
 
@@ -164,19 +250,22 @@ const UserAdoptionFormPage = () => {
   } else if (status === "interviewing" || status === "reviewed") {
     maxStep = 3;
   } else if (status === "rejected") {
-    if(hasChecked?.selectedSchedule){
-      maxStep = 4;
-    }else{
+    if (hasChecked?.selectedSchedule) {
+      maxStep = 5;
+    } else {
       maxStep = 2;
     }
   }
-  
-  else if (status === "approved" ) {
+  else if (status === "approved") {
     maxStep = 4;
   }
+  if (consentStatus === "approved" || consentStatus === "rejected") {
+    maxStep = 5;
+  }
+
   const renderStepIndicator = () => (
     <TooltipProvider>
-      <div className="flex items-center justify-between w-full max-w-4xl mx-auto px-4 py-4 relative">
+      <div className="flex items-center justify-between w-full max-w-5xl mx-auto px-4 py-4 relative">
         {steps.map((label, index) => {
           const isActive = index === step - 1;
           const isCompleted = index < maxStep;
@@ -192,20 +281,19 @@ const UserAdoptionFormPage = () => {
 
           const StepCircle = (
             <div
-  className={`
+              className={`
     rounded-full w-12 h-12 flex items-center justify-center text-sm font-semibold
     transition-transform duration-300 ease-in-out
     ${isActive ? "bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white scale-125 shadow-xl z-10" : ""}
     ${isCompleted ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white" : ""}
     ${!isActive && !isCompleted ? "bg-slate-200 text-slate-500" : ""}
   `}
-  style={{ transformOrigin: "center" }}
->
-  {index + 1}
-</div>
+              style={{ transformOrigin: "center" }}
+            >
+              {index + 1}
+            </div>
 
           );
-
 
           return (
             <div
@@ -216,7 +304,8 @@ const UserAdoptionFormPage = () => {
                 if (canNavigate) {
                   if (index + 1 === 4) {
                     if (submission?.status === "pending" || submission?.status === "scheduling") {
-                      toast.error("Bạn chưa thể xác nhận lịch phỏng vấn. Đơn đang chờ xử lý.");
+                      showErrorToast("Bạn chưa thể xác nhận lịch phỏng vấn. Đơn đang chờ xử lý.");
+
                       return;
                     }
                   }
@@ -298,7 +387,8 @@ const UserAdoptionFormPage = () => {
           submissionId={submissionId}
           onNext={() => {
             if (submission?.status === "pending" || submission?.status === "scheduling") {
-              toast.error("Bạn chưa thể xác nhận lịch phỏng vấn. Đơn đang chờ xử lý.");
+              showErrorToast("Bạn chưa thể xác nhận lịch phỏng vấn. Đơn đang chờ xử lý.");
+
               return;
             }
             next();
@@ -341,7 +431,14 @@ const UserAdoptionFormPage = () => {
           }} />;
 
       case 5:
-        return <Step5_ConsentForm onNext={next} onBack={back} submission = {submission} />
+        return <Step5_ConsentForm
+          onNext={next}
+          onBack={back}
+          submission={submission}
+          onLoadedConsentForm={(form) => setConsentForm(form)} />
+
+      case 6:
+        return <Step6_Result onNext={next} onBack={back} submission={submission} consentForm={consentForm} />
       default:
         return null;
     }

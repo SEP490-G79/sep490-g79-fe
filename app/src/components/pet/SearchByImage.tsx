@@ -91,18 +91,41 @@ export function SearchByImage({ setFilters, setIsLoading }: Props) {
       })
       .then((res) => {
         toast.success("Phân tích ảnh thành công!");
+        setFilters({
+          species: [],
+          breed: [],
+          gender: "",
+          shelter: [],
+          color: [],
+          ageRange: [0, 100],
+          weightRange: [0, 100],
+          priceRange: [0, Infinity],
+          inWishlist: false,
+          searchTerm: "",
+        });
         setFilters((prev) => ({
           ...prev,
-          species: res.data.species,
-          breed: res.data.breeds,
-          // colors: res.data.colors,
+          species: Array.from(
+            new Set([
+              ...prev.species,
+              ...(Array.isArray(res.data.species)
+                ? res.data.species
+                : res.data.species
+                  ? [res.data.species]
+                  : []),
+            ])
+          ),
+
+          breed: Array.from(new Set([...prev.breed, ...(res.data.breeds || [])])),
+          // color: Array.from(new Set([...prev.color, ...(res.data.colors || [])])),
         }));
+
       })
       .catch((err) => {
         // console.error(err);
         toast.error(
           err.response.data.message ||
-            "Có lỗi khi phân tích ảnh! Vui lòng thử lại sau."
+          "Có lỗi khi phân tích ảnh! Vui lòng thử lại sau."
         );
       })
       .finally(() => {
@@ -115,9 +138,8 @@ export function SearchByImage({ setFilters, setIsLoading }: Props) {
 
   const onFileReject = React.useCallback((file: File, message: string) => {
     toast(message, {
-      description: `"${
-        file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name
-      }" has been rejected`,
+      description: `"${file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name
+        }" has been rejected`,
     });
   }, []);
 

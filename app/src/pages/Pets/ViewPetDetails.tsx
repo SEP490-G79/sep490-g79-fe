@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import MedicalRecordList from "@/components/shelter/shelterPet/MedicalRecordList";
+import AppContext from "@/context/AppContext";
 
 interface Pet {
   _id: string;
@@ -27,10 +28,11 @@ interface Pet {
 const ViewPetDetails: React.FC = () => {
   const { petId } = useParams();
   const [pet, setPet] = useState<Pet | null>(null);
+  const {petAPI} = useContext(AppContext);
   useEffect(() => {
     const fetchPet = async () => {
       try {
-        const res = await axios.get(`http://localhost:9999/pets/${petId}`);
+        const res = await axios.get(`${petAPI}/pets/${petId}`);
         console.log("Fetched pet data:", res.data);
 
         setPet(res.data);

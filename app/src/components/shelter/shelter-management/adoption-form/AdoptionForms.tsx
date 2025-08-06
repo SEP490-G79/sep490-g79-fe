@@ -13,8 +13,10 @@ import {
   type PaginationState,
 } from "@tanstack/react-table";
 import {
+  Activity,
   ArrowLeftRight,
   ArrowUpDown,
+  CheckSquare,
   ChevronDown,
   List,
   MoreHorizontal,
@@ -71,6 +73,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { set } from "date-fns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function AdoptionForms() {
   const { shelterId } = useParams();
@@ -79,6 +82,7 @@ export function AdoptionForms() {
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [tabValue, setTabValue] = React.useState("active");
 
   const removeDiacritics = (str: string) =>
     str
@@ -88,6 +92,7 @@ export function AdoptionForms() {
       .replace(/Đ/g, "D");
 
   const handleDelete = async (formId: string) => {
+    setIsLoading(true)
     await authAxios
       .delete(`${coreAPI}/shelters/${shelterId}/adoptionForms/${formId}/delete`)
       .then(() => {
@@ -96,7 +101,12 @@ export function AdoptionForms() {
         toast.success("Xóa form nhận nuôi thành công");
       })
       .catch((err) => {
-        toast.error(err.data.response.message);
+        toast.error(err?.response?.data?.message || "Xóa thất bại!");
+      })
+      .finally(()=>{
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
       });
   };
   const handleChangeStatus = async (formId: string, status: string) => {
@@ -118,7 +128,9 @@ export function AdoptionForms() {
       })
       .catch((err) => {
         // console.log(err);
-        toast.error(err?.data?.response?.message || "Cập nhật trạng thái thất bại");
+        toast.error(
+          err?.response?.data?.message || "Cập nhật trạng thái thất bại"
+        );
       })
       .finally(() => {
         setTimeout(() => {
@@ -133,9 +145,29 @@ export function AdoptionForms() {
         setShelterForms(res.data);
       })
       .catch((err) => {
-        console.log(err.data.response.message);
+        // console.log(err?.response?.data?.message);
       });
   }, [shelterId]);
+  const filteredForms = React.useMemo(() => {
+    setIsLoading(true);
+    if (tabValue == "active") {
+      setIsLoading(false);
+
+      return shelterForms.filter((form) =>
+        ["draft", "active"].includes(form.status)
+      );
+    }
+    if (tabValue == "archived") {
+      setIsLoading(false);
+
+      return shelterForms.filter((form) => form?.status == "archived");
+    }
+
+    setIsLoading(false);
+
+    return shelterForms;
+  }, [shelterForms, tabValue]);
+
   const columns: ColumnDef<AdoptionForm>[] = [
     {
       accessorKey: "stt",
@@ -310,7 +342,15 @@ export function AdoptionForms() {
               <DropdownMenuItem
                 variant="destructive"
                 disabled={adoptionForm.status.toUpperCase() != "DRAFT"}
-                onClick={() => handleDelete(adoptionForm._id)}
+                onClick={() =>
+                  toast.error("Xác nhận xóa đơn đăng ký nhận nuôi", {
+                    description: "Bạn có chắc muốn xóa đơn đăng ký nhận nuôi này không?",
+                    action: {
+                      label: "Xóa",
+                      onClick: () => handleDelete(adoptionForm._id),
+                    },
+                  })
+                }
               >
                 <Trash /> Xóa form
               </DropdownMenuItem>
@@ -320,6 +360,14 @@ export function AdoptionForms() {
       },
     },
   ];
+
+  const filteredColumns = React.useMemo(() => {
+    if (tabValue == "archived") {
+      return columns.filter((col) => col.id != "actions");
+    }
+    return columns;
+  }, [columns, tabValue]);
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -330,11 +378,11 @@ export function AdoptionForms() {
     pageSize: 5,
   });
   const table = useReactTable({
-    data: shelterForms.sort(
+    data: filteredForms.sort(
       (a: any, b: any) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     ),
-    columns,
+    columns: filteredColumns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -354,22 +402,18 @@ export function AdoptionForms() {
   if (isLoading) {
     return (
       <div className="w-full">
-
         <div className="flex justify-between items-center py-4">
           <Skeleton className="h-10 w-1/3 rounded" />
           <Skeleton className="h-10 w-24 rounded" />
         </div>
 
-
         <div className="rounded-md border">
-
           <div className="flex px-4 py-2 border-b">
             {Array.from({ length: 6 }).map((_, idx) => (
               <Skeleton key={idx} className="h-6 w-24 mr-4 last:mr-0 rounded" />
             ))}
           </div>
 
-     
           <div>
             {Array.from({ length: 5 }).map((_, rowIdx) => (
               <div
@@ -387,7 +431,6 @@ export function AdoptionForms() {
           </div>
         </div>
 
-
         <div className="flex items-center justify-between py-4">
           <div className="flex space-x-2">
             <Skeleton className="h-8 w-16 rounded" />
@@ -400,93 +443,207 @@ export function AdoptionForms() {
   }
   return (
     <div className="w-full">
-      <div className="flex justify-between items-center py-4">
-        <Input
-          placeholder="Tìm kiếm..."
-          value={(table.getColumn("pet")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("pet")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-        <CreateDialog setIsLoading={setIsLoading} />
-      </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
+      <Tabs
+        value={tabValue}
+        onValueChange={setTabValue}
+        defaultValue="active"
+        className="w-full"
+      >
+        <TabsList>
+          <TabsTrigger value="active">
+            <Activity /> Chờ nhận nuôi
+          </TabsTrigger>
+          <TabsTrigger value="archived">
+            <CheckSquare /> Hoàn thành
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="active">
+          <div className="w-full">
+            <div className="flex justify-between items-center py-4">
+              <Input
+                placeholder="Tìm kiếm..."
+                value={
+                  (table.getColumn("pet")?.getFilterValue() as string) ?? ""
+                }
+                onChange={(event) =>
+                  table.getColumn("pet")?.setFilterValue(event.target.value)
+                }
+                className="max-w-sm"
+              />
+              <CreateDialog setIsLoading={setIsLoading} />
+            </div>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => {
+                        return (
+                          <TableHead key={header.id}>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </TableHead>
+                        );
+                      })}
+                    </TableRow>
                   ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className=" min-h-[200px] text-center"
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && "selected"}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className=" min-h-[200px] text-center"
+                      >
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex items-center justify-between py-4">
+              <div className="space-x-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
                 >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-between py-4">
-        <div className="space-x-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-        <div className="flex items-center space-x-2 text-sm">
-          <span>
-            Page <strong>{pagination.pageIndex + 1}</strong> of{" "}
-            {table.getPageCount()}
-          </span>
-        </div>
-      </div>
+                  Previous
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  Next
+                </Button>
+              </div>
+              <div className="flex items-center space-x-2 text-sm">
+                <span>
+                  Page <strong>{pagination.pageIndex + 1}</strong> of{" "}
+                  {table.getPageCount()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="archived">
+          <div className="w-full">
+            <div className="flex justify-between items-center py-4">
+              <Input
+                placeholder="Tìm kiếm..."
+                value={
+                  (table.getColumn("pet")?.getFilterValue() as string) ?? ""
+                }
+                onChange={(event) =>
+                  table.getColumn("pet")?.setFilterValue(event.target.value)
+                }
+                className="max-w-sm"
+              />
+              {/* <CreateDialog setIsLoading={setIsLoading} /> */}
+            </div>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => {
+                        return (
+                          <TableHead key={header.id}>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </TableHead>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && "selected"}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className=" min-h-[200px] text-center"
+                      >
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex items-center justify-between py-4">
+              <div className="space-x-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  Previous
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  Next
+                </Button>
+              </div>
+              <div className="flex items-center space-x-2 text-sm">
+                <span>
+                  Page <strong>{pagination.pageIndex + 1}</strong> of{" "}
+                  {table.getPageCount()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

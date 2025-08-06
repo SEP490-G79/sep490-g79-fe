@@ -55,6 +55,7 @@ export interface MissionForm {
   };
 
   answers: Answer[];
+  updatedAt: string;
 }
 
 export interface Answer {

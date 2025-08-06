@@ -15,7 +15,6 @@ import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { MissionForm } from "@/types/MissionForm";
 import type { ConsentForm } from "@/types/ConsentForm";
 import { useLocation } from "react-router-dom";
-
 const excludedURLs = [
   "/",
   "/login",
@@ -59,7 +58,8 @@ interface AppContextType {
   setShelterForms: (shelterForms: AdoptionForm[]) => void;
   refreshUserProfile: () => Promise<void>;
   submissionsByPetId: Record<string, MissionForm[]>;
-  setSubmissionsByPetId: (data: Record<string, MissionForm[]>) => void;
+  setSubmissionsByPetId: React.Dispatch<React.SetStateAction<Record<string, MissionForm[]>>>;
+
   setShelterConsentForms: (shelterConsentForms: ConsentForm[]) => void;
 }
 
@@ -74,13 +74,13 @@ const AppContext = createContext<AppContextType>({
   authAPI: "",
   userAPI: "",
   shelterAPI: "",
-  login: () => {},
-  logout: () => {},
+  login: () => { },
+  logout: () => { },
   userProfile: null,
   loginLoading: false,
-  setLoginLoading: (loginLoading: boolean) => {},
-  setUserProfile: () => {},
-  setUser: () => {},
+  setLoginLoading: (loginLoading: boolean) => { },
+  setUserProfile: () => { },
+  setUser: () => { },
   petsList: [],
   petAPI: "",
   medicalRecordAPI: "",
@@ -89,12 +89,12 @@ const AppContext = createContext<AppContextType>({
   returnRequestAPI: "",
   setShelters: () => [],
   shelterId: null,
-  setShelterId: () => {},
+  setShelterId: () => { },
   setShelterTemplates: () => [],
   setShelterForms: () => [],
-  refreshUserProfile: async () => {},
+  refreshUserProfile: async () => { },
   submissionsByPetId: {},
-  setSubmissionsByPetId: () => {},
+  setSubmissionsByPetId: () => { },
   setShelterConsentForms: () => [],
 });
 
@@ -121,17 +121,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     []
   );
   const location = useLocation();
+  const base_API = import.meta.env.VITE_BE_API;
 
   // APIs
-  const coreAPI = "http://localhost:9999";
-  const authAPI = "http://localhost:9999/auth";
-  const userAPI = "http://localhost:9999/users";
-  const shelterAPI = "http://localhost:9999/shelters";
-  const petAPI = "http://localhost:9999/pets";
-  const medicalRecordAPI = "http://localhost:9999/medical-records";
-  const blogAPI = "http://localhost:9999/blogs";
-  const reportAPI = "http://localhost:9999/reports";
-  const returnRequestAPI = "http://localhost:9999/return-requests";
+  const coreAPI = base_API;
+  const authAPI = `${base_API}/auth`;
+  const userAPI = `${base_API}/users`;
+  const shelterAPI = `${base_API}/shelters`;
+  const petAPI = `${base_API}/pets`;
+  const medicalRecordAPI = `${base_API}/medical-records`;
+  const blogAPI = `${base_API}/blogs`;
+  const reportAPI = `${base_API}/reports`;
+  const returnRequestAPI = `${base_API}/return-requests`;
+
 
   const login = (accessToken: string, userData: User) => {
     setUser(userData);
@@ -183,7 +185,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         setPetsList(res.data);
       })
       .catch((error) => {
-        toast.error("Không thể lấy danh sách thú cưng");
+        // toast.error("Không thể lấy danh sách thú cưng");
       });
   }, []);
 

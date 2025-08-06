@@ -12,7 +12,7 @@ export interface AdoptionForm {
   questions: Question[];
   createdBy: string;
   shelter: string;
-  status: "draft" | "active" | "closed";
+  status: string;
   createdAt: string;
   updatedAt: string;
 }

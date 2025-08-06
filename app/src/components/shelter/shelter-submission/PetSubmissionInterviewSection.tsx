@@ -1,4 +1,5 @@
-"use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,6 +13,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   Calendar,
@@ -31,10 +39,26 @@ import {
   Video,
   MapPin,
   Phone,
+  ChevronsUpDown,
+  Check,
+  SquarePen,
 } from "lucide-react"
+import {
+  Command,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import dayjs from "dayjs"
 import "dayjs/locale/vi"
-
+import { toast } from "sonner"
+import type { MissionForm } from "@/types/MissionForm"
+import { is } from "date-fns/locale"
 dayjs.locale("vi")
 
 interface InterviewSectionProps {
@@ -55,6 +79,16 @@ interface InterviewSectionProps {
   onTrySubmitFeedback: () => void
   handleSubmitFeedback: () => Promise<void>
   handleSubmitNote: () => Promise<void>
+  availableFrom: Date
+  availableTo: Date
+  shelterId: string
+  coreAPI: string
+  authAxios: any
+  setSelectedSubmission: (submission: any) => void;
+
+  setSubmissionsByPetId: React.Dispatch<React.SetStateAction<Record<string, MissionForm[]>>>;
+  petId: string;
+
 }
 
 const PetSubmissionInterviewSection = ({
@@ -75,15 +109,55 @@ const PetSubmissionInterviewSection = ({
   onTrySubmitFeedback,
   handleSubmitFeedback,
   handleSubmitNote,
+  setSelectedSubmission,
+  availableFrom,
+  availableTo,
+  shelterId,
+  coreAPI,
+  authAxios,
+  setSubmissionsByPetId,
+  petId,
+
+
+
 }: InterviewSectionProps) => {
   const interview = selectedSubmission?.interview
+  const [interviewers, setInterviewers] = useState<any[]>([]);
+  const [open, setOpen] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<any>(null);
+  const [showChangePerformerDialog, setShowChangePerformerDialog] = useState(false);
+  const [scheduleData, setScheduleData] = useState({
+    availableFrom: new Date(),
+    availableTo: new Date(),
+    method: "",
+    performedBy: "",
+  });
+
+
+  useEffect(() => {
+    if (!isShelterManager || !availableFrom || !availableTo) return;
+
+    const fetchInterviewers = async () => {
+      try {
+        const res = await authAxios.get(
+          `${coreAPI}/adoption-submissions/staff-schedule-count/${shelterId}?from=${availableFrom.toISOString()}&to=${availableTo.toISOString()}`
+        );
+        setInterviewers(res.data);
+      } catch (error) {
+        console.error("Lỗi lấy danh sách nhân viên:", error);
+      }
+    };
+
+    fetchInterviewers();
+  }, [availableFrom, availableTo, isShelterManager]);
+
+
 
   // Permission checks
   const canProvideFeedback =
     selectedSubmission.status === "interviewing" &&
     interview?.selectedSchedule &&
-    interview?.performedBy?._id === userProfile?._id &&
-    !isShelterManager
+    interview?.performedBy?._id === userProfile?._id
 
   const canProvideNote = selectedSubmission.status === "reviewed" && isShelterManager
 
@@ -103,21 +177,21 @@ const PetSubmissionInterviewSection = ({
     if (!interview) return null
 
     if (interview.selectedSchedule) {
-  const hasFeedback = !!interview.feedback;
-  const isUpcoming = dayjs(interview.selectedSchedule).isAfter(dayjs());
+      const hasFeedback = !!interview.feedback;
+      const isUpcoming = dayjs(interview.selectedSchedule).isAfter(dayjs());
 
-  return (
-    <Badge variant={hasFeedback || !isUpcoming ? "secondary" : "default"} className="gap-1">
-      <CalendarCheck className="w-3 h-3" />
-      {hasFeedback || !isUpcoming ? "Đã diễn ra" : "Sắp diễn ra"}
-    </Badge>
-  );
-}
+      return (
+        <Badge variant={hasFeedback || !isUpcoming ? "secondary" : "default"} className="gap-1 dark:text-white dark:bg-gray-500">
+          <CalendarCheck className="w-3 h-3" />
+          {hasFeedback || !isUpcoming ? "Đã diễn ra" : "Sắp diễn ra"}
+        </Badge>
+      );
+    }
 
 
     if (interview.availableFrom && interview.availableTo) {
       return (
-        <Badge variant="outline" className="gap-1">
+        <Badge variant="outline" className="gap-1 dark:text-white dark:bg-gray-500">
           <Clock className="w-3 h-3" />
           Chờ chọn lịch
         </Badge>
@@ -125,7 +199,7 @@ const PetSubmissionInterviewSection = ({
     }
 
     return (
-      <Badge variant="secondary" className="gap-1">
+      <Badge variant="secondary" className="gap-1 bg-gray-400 dark:text-white dark:bg-gray-500">
         <AlertTriangle className="w-3 h-3" />
         Chưa có lịch
       </Badge>
@@ -146,13 +220,14 @@ const PetSubmissionInterviewSection = ({
     return <Phone className="w-4 h-4 text-orange-600" />
   }
 
+
   if (!interview) {
     return (
       <Card className="border-dashed border-2 border-gray-200">
         <CardContent className="flex flex-col items-center justify-center py-12 text-center">
           <Calendar className="w-16 h-16 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-600 mb-2">Chưa có thông tin phỏng vấn</h3>
-          <p className="text-sm text-gray-500">Thông tin phỏng vấn sẽ xuất hiện khi có lịch hẹn được tạo</p>
+          <h3 className="text-lg font-semibold text-gray-600 mb-2 dark:text-gray-300">Chưa có thông tin phỏng vấn</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Thông tin phỏng vấn sẽ xuất hiện khi có lịch hẹn được tạo</p>
         </CardContent>
       </Card>
     )
@@ -161,24 +236,52 @@ const PetSubmissionInterviewSection = ({
   return (
     <div className="space-y-6">
       {/* Interview Overview */}
-      <Card className="border-0 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-50">
+      <Card className="border-0 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-gray-700 dark:to-gray-800 ">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Calendar className="w-5 h-5 text-blue-600" />
+          <div className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg dark:text-white">
+              <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               Thông tin phỏng vấn
             </CardTitle>
-            {getInterviewStatusBadge()}
+           
+            {isShelterManager && selectedSubmission.status === "interviewing" && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                const currentPerformer = interview?.performedBy;
+                if (currentPerformer) {
+                  setSelectedStaff({
+                    staffId: currentPerformer._id,
+                    fullName: currentPerformer.fullName,
+                    avatar: currentPerformer.avatar,
+                    interviewCount: 0,
+                  });
+                  setScheduleData((prev) => ({
+                    ...prev,
+                    performedBy: currentPerformer._id,
+                  }));
+                }
+                setShowChangePerformerDialog(true);
+              }}
+            >
+               <SquarePen />
+
+            </Button>
+            )}
+            <div className="ml-auto">
+              {getInterviewStatusBadge()}
+            </div>      
           </div>
+
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Staff Assignment */}
-          <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+          <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200 dark:bg-gray-800 dark:border-gray-700">
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
               <UserCheck className="w-5 h-5 text-blue-600" />
             </div>
-            <div className="flex-1">
-              <p className="font-medium text-gray-800 text-sm">Nhân viên thực hiện</p>
+            <div className="flex-1 ">
+              <p className="font-medium text-gray-800 text-sm dark:text-white">Nhân viên thực hiện</p>
               {interview.performedBy ? (
                 <div className="flex items-center gap-2 mt-1">
                   <img
@@ -186,80 +289,80 @@ const PetSubmissionInterviewSection = ({
                     alt={interview.performedBy.fullName}
                     className="w-6 h-6 rounded-full"
                   />
-                  <span className="text-sm text-gray-600">{interview.performedBy.fullName}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{interview.performedBy.fullName}</span>
                 </div>
               ) : (
-                <span className="text-sm text-gray-500">Chưa được phân công</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">Chưa được phân công</span>
               )}
             </div>
           </div>
 
           {/* Interview Method */}
           {interview.method && (
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-green-200">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-green-200 dark:bg-gray-800 dark:border-gray-700">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center ">
                 {getMethodIcon(interview.method)}
               </div>
               <div>
-                <p className="font-medium text-gray-800 text-sm">Hình thức phỏng vấn</p>
-                <p className="text-sm text-gray-600 mt-1">{interview.method}</p>
+                <p className="font-medium text-gray-800 text-sm dark:text-white">Hình thức phỏng vấn</p>
+                <p className="text-sm text-gray-600 mt-1 dark:text-gray-400">{interview.method}</p>
               </div>
             </div>
           )}
 
           {/* Schedule Information */}
           <div className="grid gap-3">
-  {!interview.selectedSchedule && interview.availableFrom && interview.availableTo && (
-    <div className="p-3 bg-white rounded-lg border border-yellow-200">
-      <div className="flex items-center gap-2 mb-2">
-        <Clock className="w-4 h-4 text-yellow-600" />
-        <span className="font-medium text-gray-800 text-sm">Khung thời gian có thể phỏng vấn</span>
-      </div>
-      <div className="text-sm text-gray-600 space-y-1">
-        <p>
-          <strong>Từ:</strong> {dayjs(interview.availableFrom).format("DD/MM/YYYY")}
-        </p>
-        <p>
-          <strong>Đến:</strong> {dayjs(interview.availableTo).format("DD/MM/YYYY")}
-        </p>
-      </div>
-    </div>
-  )}
+            {!interview.selectedSchedule && interview.availableFrom && interview.availableTo && (
+              <div className="p-3 bg-white rounded-lg border border-yellow-200 dark:bg-gray-800 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="w-4 h-4 text-yellow-600" />
+                  <span className="font-medium text-gray-800 text-sm dark:text-white" >Khung thời gian có thể phỏng vấn</span>
+                </div>
+                <div className="text-sm text-gray-600 space-y-1 dark:text-gray-400">
+                  <p>
+                    <strong>Từ:</strong> {dayjs(interview.availableFrom).format("DD/MM/YYYY")}
+                  </p>
+                  <p>
+                    <strong>Đến:</strong> {dayjs(interview.availableTo).format("DD/MM/YYYY")}
+                  </p>
+                </div>
+              </div>
+            )}
 
-  {interview.selectedSchedule && (
-    <>
-      <div className="p-3 bg-white rounded-lg border border-purple-200">
-        <div className="flex items-center gap-2 mb-2">
-          <CalendarCheck className="w-4 h-4 text-purple-600" />
-          <span className="font-medium text-gray-800 text-sm">Ngày người nhận nuôi chỉ định</span>
-        </div>
-        <p className="text-sm text-gray-600">
-          {dayjs(interview.selectedSchedule).format("dddd, DD/MM/YYYY")}
-        </p>
-      </div>
+            {interview.selectedSchedule && (
+              <>
+                <div className="p-3 bg-white rounded-lg border border-purple-200 dark:bg-gray-800 dark:border-gray-700">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CalendarCheck className="w-4 h-4 text-purple-600" />
+                    <span className="font-medium text-gray-800 text-sm dark:text-white">Ngày người nhận nuôi chỉ định</span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 ml-6">
+                    {dayjs(interview.selectedSchedule).format("dddd, DD/MM/YYYY")}
+                  </p>
+                </div>
 
-      {interview.scheduleAt && (
-        <div className="p-3 bg-white rounded-lg border border-green-200">
-          <div className="flex items-center gap-2 mb-2">
-            <Calendar className="w-4 h-4 text-green-600" />
-            <span className="font-medium text-gray-800 text-sm">Ngày thực tế thực hiện</span>
+                {interview.scheduleAt && (
+                  <div className="p-3 bg-white rounded-lg border border-green-200 dark:bg-gray-800 dark:border-gray-700">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Calendar className="w-4 h-4 text-green-600" />
+                      <span className="font-medium text-gray-800 text-sm dark:text-white">Ngày thực tế thực hiện</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 ml-6">
+                      {dayjs(interview.scheduleAt).format("dddd, DD/MM/YYYY [lúc] HH:mm")}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-          <p className="text-sm text-gray-600">
-            {dayjs(interview.scheduleAt).format("dddd, DD/MM/YYYY [lúc] HH:mm")}
-          </p>
-        </div>
-      )}
-    </>
-  )}
-</div>
 
         </CardContent>
       </Card>
 
       {/* Feedback Section */}
       {canViewFeedback && (
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-4">
+        <Card className="border-0 shadow-sm dark:bg-gray-800">
+          <CardHeader >
             <CardTitle className="flex items-center gap-2 text-lg">
               <MessageSquare className="w-5 h-5 text-green-600" />
               Phản hồi phỏng vấn
@@ -273,7 +376,7 @@ const PetSubmissionInterviewSection = ({
                     <User className="w-4 h-4 text-green-600" />
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2 ">
                       <p className="font-medium text-green-800 text-sm">
                         Phản hồi từ {interview.performedBy?.fullName}
                       </p>
@@ -281,7 +384,7 @@ const PetSubmissionInterviewSection = ({
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-6 w-6">
-                              <MoreVertical className="w-4 h-4" />
+                              <MoreVertical className="w-4 h-4 dark:text-black" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -358,9 +461,9 @@ const PetSubmissionInterviewSection = ({
 
       {/* Manager Note Section */}
       {(interview.note || canProvideNote) && canViewNote && (
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
+        <Card className="border-0 shadow-sm dark:bg-gray-800">
+          <CardHeader >
+            <CardTitle className="flex items-center gap-2 text-lg ">
               <FileText className="w-5 h-5 text-orange-600" />
               Ghi chú quản lý
             </CardTitle>
@@ -380,8 +483,8 @@ const PetSubmissionInterviewSection = ({
                       {canProvideNote && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6">
-                              <MoreVertical className="w-4 h-4" />
+                            <Button variant="ghost" size="icon" className="h-6 w-6 ">
+                              <MoreVertical className="w-4 h-4 dark:text-black" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -511,6 +614,127 @@ const PetSubmissionInterviewSection = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Dialog open={showChangePerformerDialog} onOpenChange={setShowChangePerformerDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Chọn người thực hiện phỏng vấn</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Danh sách nhân viên được sắp xếp theo số lịch phỏng vấn từ ít đến nhiều
+            </p>
+
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="w-full justify-between">
+                  {selectedStaff ? (
+                    <div className="flex items-center gap-2">
+                      <img src={selectedStaff.avatar || "/placeholder-avatar.png"} className="w-5 h-5 rounded-full" />
+                      <span>{selectedStaff.fullName} ({selectedStaff.interviewCount} lịch)</span>
+                    </div>
+                  ) : (
+                    "Chọn nhân viên thực hiện phỏng vấn"
+                  )}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="Tìm nhân viên..." />
+                  <CommandList>
+                    {interviewers.map((staff) => (
+                      <CommandItem
+                        key={staff.staffId}
+                        value={staff.fullName.toLowerCase()}
+                        onSelect={() => {
+                          if (selectedStaff?.staffId === staff.staffId) {
+                            setSelectedStaff(null);
+                            setScheduleData({ ...scheduleData, performedBy: "" });
+                          } else {
+                            setSelectedStaff(staff);
+                            setScheduleData({ ...scheduleData, performedBy: staff.staffId });
+                          }
+                          setOpen(false);
+                        }}
+                        disabled={staff.staffId === interview?.performedBy?._id}
+                      >
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={staff.avatar || "/placeholder-avatar.png"}
+                            className="w-5 h-5 rounded-full"
+                          />
+                          <span>{staff.fullName} ({staff.interviewCount} lịch)</span>
+                        </div>
+                        {selectedStaff?.staffId === staff.staffId && (
+                          <Check className="ml-auto w-4 h-4 text-green-500" />
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+
+            <div className="flex justify-end">
+              <Button
+                disabled={
+                  !selectedStaff || selectedStaff.staffId === interview?.performedBy?._id || selectedSubmission?.status !== "interviewing"
+                }
+
+                onClick={async () => {
+                  if (!selectedSubmission || !selectedStaff) return;
+
+                  try {
+                    await authAxios.put(
+                      `${coreAPI}/adoption-submissions/update-interview-performer/${shelterId}`,
+                      {
+                        submissionId: selectedSubmission._id,
+                        newPerformerId: selectedStaff.staffId,
+                      }
+                    );
+
+                    toast.success("Cập nhật người thực hiện thành công!");
+                    setShowChangePerformerDialog(false);
+
+                    // Cập nhật lại dữ liệu submission sau khi đổi
+                    const updatedSubmission = {
+                      ...selectedSubmission,
+                      interview: {
+                        ...selectedSubmission.interview,
+                        performedBy: {
+                          _id: selectedStaff.staffId,
+                          fullName: selectedStaff.fullName,
+                          avatar: selectedStaff.avatar,
+                        },
+                      },
+                    };
+                    setSelectedStaff(null);
+                    setScheduleData((prev) => ({ ...prev, performedBy: "" }));
+                    setSelectedSubmission(updatedSubmission);
+                    setSubmissionsByPetId((prev) => ({
+                      ...prev,
+                      [petId!]: prev[petId!].map((sub) =>
+                        sub._id === updatedSubmission._id ? updatedSubmission : sub
+                      ),
+                    }));
+
+
+                  } catch (error: any) {
+                    console.error("Lỗi cập nhật performer:", error);
+                    toast.error(
+                      error?.response?.data?.message || "Không thể cập nhật người thực hiện"
+                    );
+                  }
+                }}
+              >
+                Cập nhật
+              </Button>
+
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   )
 }

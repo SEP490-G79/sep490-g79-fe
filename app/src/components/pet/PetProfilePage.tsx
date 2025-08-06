@@ -15,26 +15,17 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import MedicalRecordBook from "@/components/pet/MedicalRecordBook";
-
-interface Pet {
-  _id: string;
-  name: string;
-  isMale: boolean;
-  age: number;
-  weight: number;
-  identificationFeature: string;
-  sterilizationStatus: boolean;
-  species: { name: string };
-  breeds: { name: string }[];
-  color: string;
-  bio: string;
-  intakeTime: string;
-  foundLocation: string;
-  tokenMoney: number;
-  shelter: { name: string; address: string };
+import { useAppContext } from "@/context/AppContext";
+import useAuthAxios from "@/utils/authAxios";
+import type { Pet } from "@/types/Pet";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "../ui/breadcrumb";
+type ReturnRequest = {
+  pet?: {
+    _id: string;
+  };
   status: string;
-  photos: string[];
-}
+};
+
 
 const PetProfilePage = () => {
   const { id } = useParams();
@@ -43,9 +34,13 @@ const PetProfilePage = () => {
   const { petAPI, medicalRecordAPI } = useContext(AppContext);
   const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const { userProfile } = useContext(AppContext);
+  const { userProfile, coreAPI } = useContext(AppContext);
   const navigate = useNavigate();
   const location = useLocation();
+  const [returnRequests, setReturnRequests] = useState<any[]>([]);
+  const [hasReturnedThisPet, setHasReturnedThisPet] = useState(false);
+  const authAxios = useAuthAxios();
+
   useEffect(() => {
     if (!id) return;
 
@@ -62,15 +57,39 @@ const PetProfilePage = () => {
     axios
       .get(`${petAPI}/${id}/medicalRecords`)
       .then((res) => {
-        setMedicalRecords(res.data.records || []);
+        setMedicalRecords(Array.isArray(res.data.records) ? res.data.records : []);
       })
       .catch((err) => {
         toast.error("Không thể lấy thông tin hồ sơ bệnh án của thú cưng");
+        setMedicalRecords([]);
       });
+
 
   }, [id]);
 
+  useEffect(() => {
+    if (!pet?._id || !userProfile?._id) return;
 
+    authAxios
+      .get(`${coreAPI}/return-requests/get-by-user`)
+      .then((res) => {
+        setReturnRequests(res.data);
+        const matched = res.data.find((req: ReturnRequest) =>
+          req.pet?._id === pet._id && req.status === "approved"
+        );
+        if (matched) {
+          setHasReturnedThisPet(true);
+        }
+      })
+      .catch(() => {
+        toast.error("Không thể lấy thông tin yêu cầu trả lại");
+      });
+  }, [userProfile?._id, pet?._id]);
+
+
+  const isShelterMember = pet?.shelter?.members?.some(
+    (member) => member._id === userProfile?._id
+  );
 
   if (loading) {
     return (
@@ -82,45 +101,32 @@ const PetProfilePage = () => {
     );
   }
 
+
   if (!pet) {
     return <div className="p-6 text-red-500 font-semibold">Không tìm thấy thú cưng</div>;
   }
 
-  const medicalTimelineData = medicalRecords.map((record) => ({
-    title: new Date(record.procedureDate).toLocaleDateString("vi-VN"),
-    content: (
-      <PhotoProvider>
-        <div className="space-y-2">
-          <p className="font-semibold text-base">{record.title}</p>
-          <p className="text-sm text-gray-600 dark:text-gray-300">{record.description}</p>
-          <p className="text-sm text-muted-foreground">Chi phí: {record.cost.toLocaleString()}đ</p>
-          <p className="text-sm text-muted-foreground">
-            Hạn tiếp theo: {record.dueDate ? new Date(record.dueDate).toLocaleDateString("vi-VN") : "Chưa xác định"}
-          </p>
-          <p className="text-sm text-muted-foreground">Trạng thái: {record.status}</p>
-          {record.photos?.length > 0 && (
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              {record.photos.map((url, index) => (
-                <PhotoView key={index} src={url}>
-                  <img
-                    src={url}
-                    alt={`Ảnh hồ sơ y tế ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-md shadow cursor-zoom-in"
-                  />
-                </PhotoView>
-              ))}
-            </div>
-          )}
-
-        </div>
-      </PhotoProvider>
-    ),
-  }));
 
   {/* <CardTitle className="text-2xl">{pet.name}</CardTitle> */ }
   {/* <CardDescription>{pet.bio ?? "Chưa xác định"}</CardDescription> */ }
   return (
     <div className="max-w-6xl mx-auto p-6">
+      <CardHeader>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/pets-list">Danh sách thú cưng</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{pet?.name ?? "Chi tiết thú cưng"}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </CardHeader>
+
       <Card>
         <CardHeader>
           {/* Tiêu đề nếu cần */}
@@ -214,31 +220,48 @@ const PetProfilePage = () => {
               </Badge>
             </p>
             {pet.status === "available" && (
-              <div className="flex gap-2 mt-4">
+              <div >
+                {Array.isArray(medicalRecords) && medicalRecords.length > 0 ? (
+                  <div className="dark:text-white ">
+                    <MedicalRecordBook records={medicalRecords} />
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm italic">Chưa có hồ sơ bệnh án</p>
+                )}
+
                 <Button
-                  className="px-3 py-1 text-sm"
+                  className="px-3 py-3 text-sm mt-4"
                   onClick={() => {
                     if (!userProfile) {
                       toast.warning("Bạn cần đăng nhập để nhận nuôi thú cưng", {
                         action: {
                           label: "Đăng nhập",
-                          onClick: () => navigate(`/login?redirect=${encodeURIComponent(`/adoption-form/${pet._id}`)}`),
+                          onClick: () => {
+                            localStorage.setItem("redirectAfterLogin", `/adoption-form/${pet._id}`);
+                            navigate(`/login`);
+                          },
                         },
                       });
                       return;
                     }
 
+
+                    if (hasReturnedThisPet) {
+                      toast.error("Bạn đã từng nhận nuôi và trả lại thú cưng này, nên không thể nhận nuôi lại.");
+                      return;
+                    }
+
+                    if (isShelterMember) {
+                      toast.error("Bạn là thành viên của trung tâm này nên không thể nhận nuôi thú cưng ở đây.");
+                      return;
+                    }
                     navigate(`/adoption-form/${pet._id}`);
                   }}
                 >
                   Nhận nuôi
                 </Button>
-                <Button
-                  variant="outline"
-                  className="px-3 py-1 text-sm"
-                >
-                  Liên hệ trung tâm
-                </Button>
+
+
               </div>
             )}
             <Separator className="my-2" />
@@ -248,11 +271,7 @@ const PetProfilePage = () => {
           </div>
         </CardContent>
       </Card>
-     {medicalRecords.length > 0 && (
-  <div className="mt-6">
-    <MedicalRecordBook records={medicalRecords} />
-  </div>
-)}
+
 
 
     </div>

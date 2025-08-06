@@ -24,10 +24,6 @@ import { Car, Flag } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
 import { toast } from "sonner";
 import AppContext from "@/context/AppContext";
-
-
-
-
 interface Step2Props {
     questions: Question[];
     answers: Record<string, string | string[]>;
@@ -41,16 +37,15 @@ interface Step2Props {
 
 }
 
-
 const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack, form, userProfile, readOnly, onNextNormal }: Step2Props) => {
     const pet = form.pet;
+    const shelterId = pet?.shelter;
     const activeQuestions = questions.filter((q) => q.status === "active");
     const authAxios = useAuthAxios();
     const { coreAPI } = useContext(AppContext);
     const [errors, setErrors] = useState<Record<string, boolean>>({});
     const [openConfirm, setOpenConfirm] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
     const handleAnswerChange = (qid: string, value: string | string[]) => {
         onAnswerChange(qid, value);
         const question = questions.find(q => q._id === qid);
@@ -92,6 +87,7 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
         return true;
     };
 
+
     const handleSubmit = async () => {
         try {
             setIsSubmitting(true); // bật loading
@@ -106,16 +102,18 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
             };
 
             const res = await authAxios.post(
-                `${coreAPI}/pets/${form.pet._id}/adoption-submissions/create-adoption-submission`,
+                `${coreAPI}/pets/${form.pet._id}/adoption-submissions/create-adoption-submission/${shelterId}`,
                 payload
             );
 
             toast.success("Nộp đơn thành công");
             clearAdoptionFormCache(form.pet._id);
             onNext(res.data._id);
-        } catch (error) {
-            toast.error("Có lỗi xảy ra khi nộp đơn");
+        } catch (error: any) {
+            const message = error?.response?.data?.message || "Có lỗi xảy ra khi nộp đơn";
+            toast.error(message);
             console.error(error);
+
         } finally {
             setIsSubmitting(false); // tắt loading dù thành công hay thất bại
         }
@@ -143,7 +141,9 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
             (
                 (question.type === "TEXT" && (!answer || (answer as string).trim() === "")) ||
                 (question.type === "SINGLECHOICE" && !answer) ||
-                (question.type === "MULTIPLECHOICE" && (!Array.isArray(answer) || answer.length === 0))
+                (question.type === "MULTIPLECHOICE" && (!Array.isArray(answer) || answer.length === 0)) ||
+                (question.type === "YESNO" && !answer)
+
             );
 
         setErrors((prev) => ({
@@ -151,7 +151,6 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
             [question._id]: isEmpty,
         }));
     };
-
 
     return (
         <div className="flex justify-center">
@@ -229,46 +228,79 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                                         {q.type === "MULTIPLECHOICE" && (
                                             <p className="text-sm text-gray-500 italic">Bạn có thể chọn nhiều đáp án</p>
                                         )}
+                                        {q.type === "YESNO" && (
+                                            <p className="text-sm text-gray-500 italic">Chọn "Có" hoặc "Không"</p>
+                                        )}
+
                                     </CardDescription>
                                 </CardHeader>
 
                                 <CardContent>
-                                    {q.options.map((opt, idx) => {
-                                        let checked = false;
-
-                                        if (q.type === "SINGLECHOICE") {
-                                            checked = answers[q._id] === opt.title;
-                                        }
-
-                                        if (q.type === "MULTIPLECHOICE") {
-                                            checked = Array.isArray(answers[q._id]) && answers[q._id].includes(opt.title);
-                                        }
-
-                                        return (
-                                            <label key={idx} className="flex items-center space-x-2 mb-1">
-                                                <input
-                                                    type={q.type === "SINGLECHOICE" ? "radio" : "checkbox"}
-                                                    name={q._id}
-                                                    value={opt.title}
-                                                    checked={checked}
-
-                                                    disabled={readOnly}
-                                                    onChange={() => {
-                                                        if (!readOnly) {
-                                                            if (q.type === "SINGLECHOICE") {
-                                                                handleSingleChange(q._id, opt.title);
-
-                                                            } else if (q.type === "MULTIPLECHOICE") {
-                                                                handleMultipleChange(q._id, opt.title);
-
+                                    {q.type === "YESNO" ? (
+                                        <div className="flex gap-4">
+                                            {["Có", "Không"].map((label) => (
+                                                <label key={label} className="flex items-center space-x-2">
+                                                    <input
+                                                        type="radio"
+                                                        name={q._id}
+                                                        value={label}
+                                                        checked={answers[q._id] === label}
+                                                        disabled={readOnly}
+                                                        onChange={() => {
+                                                            if (!readOnly) {
+                                                                handleSingleChange(q._id, label);
                                                             }
-                                                        }
-                                                    }}
-                                                />
-                                                <span>{opt.title}</span>
-                                            </label>
-                                        );
-                                    })}
+                                                        }}
+                                                    />
+                                                    <span>{label}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    ) : (
+
+
+                                        q.options.map((opt, idx) => {
+                                            let checked = false;
+
+                                            if (q.type === "SINGLECHOICE") {
+                                                checked = answers[q._id] === opt.title;
+                                            }
+
+                                            if (q.type === "MULTIPLECHOICE") {
+                                                const selectedValues = Array.isArray(answers[q._id])
+                                                    ? answers[q._id]
+                                                    : [answers[q._id]];
+
+                                                checked = selectedValues.includes(opt.title);
+
+                                            }
+
+                                            return (
+                                                <label key={idx} className="flex items-center space-x-2 mb-1">
+                                                    <input
+                                                        type={q.type === "SINGLECHOICE" ? "radio" : "checkbox"}
+                                                        name={q._id}
+                                                        value={opt.title}
+                                                        checked={checked}
+
+                                                        disabled={readOnly}
+                                                        onChange={() => {
+                                                            if (!readOnly) {
+                                                                if (q.type === "SINGLECHOICE") {
+                                                                    handleSingleChange(q._id, opt.title);
+
+                                                                } else if (q.type === "MULTIPLECHOICE") {
+                                                                    handleMultipleChange(q._id, opt.title);
+
+                                                                }
+                                                            }
+                                                        }}
+                                                    />
+                                                    <span>{opt.title}</span>
+                                                </label>
+                                            );
+                                        })
+                                    )}
 
 
 

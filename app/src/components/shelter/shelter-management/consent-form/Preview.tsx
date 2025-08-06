@@ -91,7 +91,7 @@ function Preview() {
     },
     {
       value: "approved",
-      label: "Đã xác nhận",
+      label: "Nhận nuôi thành công",
       color: "chart-4",
       icon: <Signature size={"15px"} strokeWidth={"2px"} />,
     },
@@ -291,44 +291,66 @@ function Preview() {
       <div className="basis-full flex flex-wrap justify-between gap-1 text-sm p-5">
         <p className="basis-full lg:basis-11/23  flex items-center gap-2">
           <span>Tên người nhận nuôi: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span 
+          
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.adopter?.fullName}
           </span>
         </p>
         <p className="basis-full lg:basis-11/23  flex items-center gap-2 ">
           <span>Số điện thoại: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span 
+          
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.adopter?.phoneNumber}
           </span>
         </p>
         <p className="basis-full   flex items-center gap-2">
           <span>Địa chỉ: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span 
+          
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.adopter?.address}
           </span>
         </p>
         <p className="basis-full lg:basis-11/23  flex items-center gap-2">
           <span>Ngày: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span 
+          
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.createdAt &&
               dayjs(consentForm.createdAt).format("DD/MM/YYYY")}
           </span>
         </p>
         <p className="basis-full lg:basis-11/23   flex items-center gap-2">
           <span>Có nhận nuôi (tên thú cưng): </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
-            {consentForm?.pet?.name}
+          <span 
+          
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
+            {consentForm?.pet?.name} {" #"}
+            <span className="italic text-xs">{consentForm?.pet?.petCode} </span>
           </span>
         </p>
         <p className="basis-full lg:basis-11/23  flex items-center gap-2">
           <span>Giới tính: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span 
+          
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.pet?.isMale == true ? "Đực" : "Cái"}
           </span>
         </p>
         <p className="basis-full lg:basis-11/23   flex items-center gap-2">
           <span>Tình trạng triệt sản: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span 
+          
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.pet?.sterilizationStatus == true
               ? "Đã triệt sản"
               : "Chưa triệt sản"}
@@ -336,7 +358,10 @@ function Preview() {
         </p>
         <p className="basis-full   flex items-center gap-2">
           <span>Đặc điểm nhận dạng: </span>
-          <span className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1">
+          <span 
+          
+          // className=" flex-1 border-b border-dashed border-(--foreground)/80 min-h-[1.5rem]) line-camp-1"
+          >
             {consentForm?.pet?.identificationFeature ||
               "Không có đặc điểm nhận dạng"}
           </span>

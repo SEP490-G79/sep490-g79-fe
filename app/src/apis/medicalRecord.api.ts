@@ -1,6 +1,7 @@
 import axios from "axios";
+const base_API = import.meta.env.VITE_BE_API; 
 
-const BASE_URL = "http://localhost:9999/pets";
+const BASE_URL = `${base_API}/pets`;
 
 export const getMedicalRecordsByPet = async (
   petId: string,
@@ -60,5 +61,5 @@ export const deleteMedicalRecord = async (
   });
 };
 
-export const getMedicalRecords = (petId, page, limit) =>
+export const getMedicalRecords = (petId:any, page:any, limit:any) =>
   axios.get(`${BASE_URL}/${petId}/medical-records?page=${page}&limit=${limit}`);

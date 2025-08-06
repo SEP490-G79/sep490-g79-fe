@@ -50,14 +50,27 @@ import { useNavigate, useParams } from "react-router-dom";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import { toast } from "sonner";
 import type { MissionForm } from "@/types/MissionForm";
+import { set } from "date-fns";
+import type { GoongSuggestion } from "@/utils/AddressInputWithGoong";
+import axios from "axios";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
+const GOONG_API_KEY = import.meta.env.VITE_GOONG_API_KEY;
 type Props = {
   submission: MissionForm | undefined;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
-export default function CreateDialog({ submission }: Props) {
+export default function CreateDialog({
+  submission,
+  open,
+  onOpenChange,
+}: Props) {
   const { coreAPI } = useContext(AppContext);
-
+  const [addressSuggestions, setAddressSuggestions] = useState<
+    GoongSuggestion[]
+  >([]);
   const { shelterId } = useParams();
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
@@ -90,7 +103,23 @@ export default function CreateDialog({ submission }: Props) {
       address: submission?.performedBy?.address || "",
     },
   });
-
+  const fetchAddressSuggestions = async (query: string) => {
+    if (!query.trim()) {
+      setAddressSuggestions([]);
+      return;
+    }
+    try {
+      const res = await axios.get("https://rsapi.goong.io/Place/AutoComplete", {
+        params: {
+          input: query,
+          api_key: GOONG_API_KEY,
+        },
+      });
+      setAddressSuggestions(res.data.predictions || []);
+    } catch (error) {
+      console.error("Autocomplete failed:", error);
+    }
+  };
   const onSubmit = async (values: FormValues) => {
     console.log("Form submitted:", values);
     await authAxios
@@ -110,7 +139,7 @@ export default function CreateDialog({ submission }: Props) {
           `Tạo bản đòng ý thành công. Đang chuyển hướng đến bản đòng ý nhận nuôi!`
         );
         navigate(
-          `/shelters/685f5ab190842987ab51901a/management/consent-forms/${res.data._id}`
+          `/shelters/${shelterId}/management/consent-forms/${res.data._id}`
         );
       })
       .catch((error) => {
@@ -130,7 +159,7 @@ export default function CreateDialog({ submission }: Props) {
   }, []);
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger>
         <span className="text-xs flex items-center gap-2">
           <PlusSquare className="text-(--primary) w-4 h-4 " />
@@ -138,7 +167,7 @@ export default function CreateDialog({ submission }: Props) {
         </span>
       </DialogTrigger>
 
-      <DialogContent className=" min-w-4xl max-w-4xl max-h-5/6 overflow-y-auto">
+      <DialogContent className=" min-w-4xl max-w-4xl min-h-1/2 max-h-5/6 overflow-y-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader className="items-center">
@@ -214,13 +243,38 @@ export default function CreateDialog({ submission }: Props) {
                 render={({ field }) => (
                   <FormItem className="md:col-span-3 self-start">
                     <FormLabel>Địa chỉ</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        placeholder="Nhập địa chỉ"
-                        {...field}
-                      />
-                    </FormControl>
+                    <Popover open={addressSuggestions.length > 0}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            placeholder="Nhập địa chỉ"
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              fetchAddressSuggestions(e.target.value);
+                            }}
+                          />
+                        </FormControl>
+                      </PopoverTrigger>
+
+                      <PopoverContent className="p-0 w-xl">
+                        <div className="max-h-60 overflow-auto">
+                          {addressSuggestions.map((suggestion, idx) => (
+                            <div
+                              key={idx}
+                              className="px-3 py-2 hover:bg-muted cursor-pointer text-sm"
+                              onClick={() => {
+                                field.onChange(suggestion.description);
+                                setAddressSuggestions([]);
+                              }}
+                            >
+                              {suggestion.description}
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -249,7 +303,7 @@ export default function CreateDialog({ submission }: Props) {
                 )}
               />
 
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="note"
                 render={({ field }) => (
@@ -265,7 +319,7 @@ export default function CreateDialog({ submission }: Props) {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
 
               {/* <FormItem className="md:col-span-4">
                 <FormLabel>Tệp đính kèm</FormLabel>

@@ -45,21 +45,26 @@ export default function PetCard({ pet }: PetCardProps) {
         <Tooltip>
           <TooltipTrigger asChild>
             <div>
-              <Badge className="cursor-pointer ">
+              <Badge className="cursor-pointer">
                 <MapPin className="w-4 h-4" />
                 <span>
-                  {pet?.age >= 12
-                    ? `${Math.floor(pet?.age / 12)} tuổi`
-                    : `${pet?.age} tháng tuổi`}
+                  {pet?.age == null
+                    ? "Chưa xác định tuổi"
+                    : pet.age >= 12
+                      ? `${Math.floor(pet.age / 12)} tuổi`
+                      : `${pet.age} tháng tuổi`}
                 </span>
               </Badge>
+
             </div>
           </TooltipTrigger>
           <TooltipContent className=" bg-(--background) text-(--foreground) border border-(--border)">
             <p>
-              {pet?.age >= 12
-                ? `${Math.floor(pet?.age / 12)} tuổi`
-                : `${pet?.age} tháng tuổi`}
+             {pet?.age == null
+                    ? "Chưa xác định tuổi"
+                    : pet.age >= 12
+                      ? `${Math.floor(pet.age / 12)} tuổi`
+                      : `${pet.age} tháng tuổi`}
             </p>
           </TooltipContent>
         </Tooltip>

@@ -88,7 +88,7 @@ export function AdoptionTemplates() {
         setShelterTemplates(res.data);
       })
       .catch((err) => {
-        console.log(err.data.response.message);
+        console.log(err?.response?.data?.message);
       })
       .finally(()=>{
         setTimeout(() => {
@@ -408,7 +408,15 @@ export function AdoptionTemplates() {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
-                      onClick={() => handleDelete(template._id)}
+                      onClick={() =>
+                        toast.error("Xác nhận xóa mẫu nhận nuôi", {
+                          description: "Bạn có chắc muốn xóa mẫu nhận nuôi này không?",
+                          action: {
+                            label: "Xóa",
+                            onClick:() => handleDelete(template._id),
+                          },
+                        })
+                      }
                     >
                       <Trash /> Xóa mẫu
                     </DropdownMenuItem>

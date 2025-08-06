@@ -14,17 +14,52 @@ export default function SpiralNotebookMedicalRecord({ records }: SpiralNotebookM
     const [pageIndex, setPageIndex] = useState(0)
     const [isOpen, setIsOpen] = useState(false)
     const record = records[pageIndex]
+    const [isGalleryOpen, setIsGalleryOpen] = useState(false)
 
+    const handleDialogOpenChange = (open: boolean) => {
+        if (!open && isGalleryOpen) {
+            return // Don't close dialog if gallery is open
+        }
+        setIsOpen(open)
+    }
+
+    const typeLabels: Record<string, string> = {
+        vaccination: "Tiêm phòng",
+        surgery: "Phẫu thuật",
+        checkup: "Khám sức khỏe",
+        treatment: "Điều trị",
+        other: "Khác",
+    };
+
+    const statusLabels: Record<string, string> = {
+        availabled: "Hoàn thành",
+    };
+
+
+    if (!records || !Array.isArray(records) || records.length === 0) {
+        return <p className="text-muted-foreground italic">Không có hồ sơ bệnh án</p>;
+    }
 
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={handleDialogOpenChange}>
+
             <DialogTrigger asChild>
                 <Button variant="outline" className="gap-2 bg-transparent">
-                    <BookOpen className="w-4 h-4" /> 📔 Xem sổ bệnh án
+                    <BookOpen className="w-4 h-4" /> Xem sổ bệnh án
                 </Button>
             </DialogTrigger>
 
             <DialogContent className="max-w-4xl p-0 bg-transparent border-none [&>button]:hidden"
+                onPointerDownOutside={(e) => {
+                    if (isGalleryOpen) {
+                        e.preventDefault(); // Vẫn chặn khi gallery đang mở
+                    }
+                }}
+                onEscapeKeyDown={(e) => {
+                    if (isGalleryOpen) {
+                        e.preventDefault();
+                    }
+                }}
             >
 
                 <div className="flex items-center justify-center min-h-[90vh] p-4">
@@ -76,19 +111,26 @@ export default function SpiralNotebookMedicalRecord({ records }: SpiralNotebookM
                                                 <InfoRow label="💰 Chi phí" value={`${record.cost.toLocaleString()}đ`} color="text-green-600 font-bold" />
                                             </div>
                                             <div className="space-y-4">
-                                                <InfoRow label="📌 Hạn tiếp theo" value={record.dueDate ? new Date(record.dueDate).toLocaleDateString("vi-VN") : "Chưa xác định"} color="text-orange-600" />
-                                                <div>
-                                                    <span className="font-semibold text-gray-700">⚠️ Trạng thái:</span>
-                                                    <div className="ml-6 mt-1">
-                                                        <span className={cn("px-3 py-1 rounded-full text-xs font-bold", {
-                                                            "bg-green-100 text-green-800": record.status === "Hoàn thành",
-                                                            "bg-yellow-100 text-yellow-800": record.status === "Đang theo dõi",
-                                                            "bg-red-100 text-red-800": record.status === "Cần chú ý",
-                                                        })}>
-                                                            {record.status}
-                                                        </span>
-                                                    </div>
+                                                <InfoRow
+                                                    label="📂 Loại hồ sơ"
+                                                    value={
+                                                        typeLabels[record.type] || record.type || "Chưa xác định"
+                                                    }
+                                                    color="text-purple-600"
+                                                />
+
+                                                <div className="space-y-4">
+                                                    <InfoRow
+                                                        label="⚠️ Loại hồ sơ"
+                                                        value={
+                                                            statusLabels[record.status] || record.status || "Chưa xác định"
+                                                        }
+                                                        color="text-blue-600"
+                                                    />
+
+
                                                 </div>
+
                                             </div>
                                         </div>
 
@@ -102,7 +144,18 @@ export default function SpiralNotebookMedicalRecord({ records }: SpiralNotebookM
                                         {/* Hình ảnh */}
                                         <Section title="📷 Hình ảnh minh họa:">
                                             {record.photos?.length ? (
-                                                <PhotoProvider>
+                                                <PhotoProvider
+                                                    onVisibleChange={(visible) => {
+                                                        setIsGalleryOpen(visible);
+
+                                                        // Khi gallery đóng, cho phép click ra ngoài
+                                                        if (!visible) {
+                                                            setTimeout(() => {
+                                                                setIsGalleryOpen(false);
+                                                            }, 200); // delay nhỏ để tránh race condition
+                                                        }
+                                                    }}
+                                                >
                                                     <div className="grid grid-cols-2 gap-4">
                                                         {record.photos.map((url, idx) => (
                                                             <PhotoView key={idx} src={url}>

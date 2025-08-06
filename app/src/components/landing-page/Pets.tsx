@@ -24,7 +24,7 @@ function Pets() {
         
       </div>
       <Button asChild className="bg-primary text-primary-foreground">
-        <Link to="/pets">
+        <Link to="/pets-list">
           Xem tất cả <ArrowRightIcon className="ml-2 h-4 w-4" />
         </Link>
       </Button>
