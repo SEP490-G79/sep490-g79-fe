@@ -206,7 +206,7 @@ export default function CreateDialog() {
 
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline">Hủy</Button>
+                <Button variant="outline" onClick={() => form.reset()}>Hủy</Button>
               </DialogClose>
               <Button className="cursor-pointer" type="submit">
                 Tạo

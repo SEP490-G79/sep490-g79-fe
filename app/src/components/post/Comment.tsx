@@ -87,10 +87,10 @@ export default function Comment({ comments, postId, fetchComments }: Props) {
             {/* Gửi comment mới */}
             {userProfile?._id ? (
                 // Nếu đã đăng nhập thì hiển thị ô nhập bình luận
-                <div className="flex gap-3 items-start mt-4 relative">
-                    <Avatar>
+                <div className="flex gap-3 items-start mt-4 relative ">
+                    <Avatar className="w-10 h-10 flex-shrink-0 ring-2 ring-(--primary)">
                         <AvatarImage src={userProfile?.avatar || "/placeholder.svg"} />
-                        <AvatarFallback />
+                        <AvatarFallback>{userProfile?.fullName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-3xl px-4 py-2">
                         <Textarea
@@ -141,7 +141,7 @@ export default function Comment({ comments, postId, fetchComments }: Props) {
                 {comments.map((cmt) => (
                     <div key={cmt._id} className="flex items-start gap-3 relative group">
                         <Link to={`/profile/${cmt.commenter._id}`} className="flex-shrink-0">
-                            <Avatar className="w-10 h-10 object-center object-cover ring-2">
+                            <Avatar className="w-10 h-10 object-center object-cover ring-2 ring-(--primary)">
                                 <AvatarImage src={cmt.commenter.avatar || "/placeholder.svg"} />
                                 <AvatarFallback>{cmt.commenter.fullName?.charAt(0)}</AvatarFallback>
                             </Avatar>
