@@ -115,8 +115,8 @@ export default function PetSubmission() {
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [openPerformer, setOpenPerformer] = useState(false);
   const [scheduleData, setScheduleData] = useState({
-    availableFrom: new Date(),
-    availableTo: new Date(),
+     availableFrom: startOfDay(new Date()),
+    availableTo: startOfDay(new Date()),
     method: "",
     performedBy: "",
   });
@@ -136,8 +136,8 @@ useEffect(() => {
 
   const resetForm = () => {
     setScheduleData({
-      availableFrom: new Date(),
-      availableTo: new Date(),
+       availableFrom: startOfDay(new Date()),
+      availableTo: startOfDay(new Date()),
       method: "",
       performedBy: "",
     });
@@ -723,29 +723,28 @@ useEffect(() => {
                       </div>
 
                       <p className="text-xs text-muted-foreground">
-                        {submission.interview?.selectedSchedule ? (
-                          <>
-                            Ngày thực hiện:{" "}
-                            {dayjs(
-                              submission.interview.selectedSchedule
-                            ).format("DD/MM/YYYY")}
-                          </>
-                        ) : submission.interview?.availableFrom &&
-                          submission.interview?.availableTo ? (
-                          <>
-                            Thời gian dự kiến: từ{" "}
-                            {dayjs(submission.interview.availableFrom).format(
-                              "DD/MM/YYYY"
-                            )}{" "}
-                            đến{" "}
-                            {dayjs(submission.interview.availableTo).format(
-                              "DD/MM/YYYY"
-                            )}
-                          </>
-                        ) : (
-                          "Chưa có thời gian phỏng vấn"
-                        )}
-                      </p>
+  {submission.interview?.scheduleAt ? (
+    <>
+      Ngày thực hiện:{" "}
+      {dayjs(submission.interview.scheduleAt).format("DD/MM/YYYY")}
+    </>
+  ) : submission.interview?.selectedSchedule ? (
+    <>
+      Ngày hẹn phỏng vấn:{" "}
+      {dayjs(submission.interview.selectedSchedule).format("DD/MM/YYYY")}
+    </>
+  ) : submission.interview?.availableFrom &&
+    submission.interview?.availableTo ? (
+    <>
+      Thời gian dự kiến: từ{" "}
+      {dayjs(submission.interview.availableFrom).format("DD/MM/YYYY")} đến{" "}
+      {dayjs(submission.interview.availableTo).format("DD/MM/YYYY")}
+    </>
+  ) : (
+    "Chưa có thời gian phỏng vấn"
+  )}
+</p>
+
                     </CardHeader>
                     <CardContent className="flex items-center justify-between">
                       <button
@@ -871,7 +870,7 @@ useEffect(() => {
                       open={!!pendingStatus}
                       onOpenChange={(open) => !open && setPendingStatus(null)}
                     >
-                      {currentStatus === "approved" ||
+                      {currentStatus === "approved" || currentStatus === "rejected" ||
                         (currentStatus === "reviewed" && !isShelterManager) ? (
                         <Badge
                           className={`text-sm px-2 py-1 font-medium text-foreground rounded ${currentStatus === "approved"
