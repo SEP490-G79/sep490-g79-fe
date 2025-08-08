@@ -116,10 +116,18 @@ const ShelterProfile = () => {
       formData.append("email", data.email)
       formData.append("address", data.address)
       formData.append("location", JSON.stringify(location)); 
+
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
       if (data.avatar instanceof File) {
+        if (data.avatar.size > MAX_FILE_SIZE) {
+          return toast.error("Ảnh đại diện trạm cứu hộ không được vượt quá 10MB");
+        }
         formData.append("avatar", data.avatar)
       }
       if (data.background instanceof File) {
+        if (data.background.size > MAX_FILE_SIZE) {
+          return toast.error("Ảnh nền không được vượt quá 10MB");
+        }
         formData.append("background", data.background)
       }
 
@@ -131,12 +139,12 @@ const ShelterProfile = () => {
       setCoverPreview(res.data.background || null)
 
       setTimeout(() => {
-        setLoading(false);
         toast.success("Cập nhập hồ sơ trạm cứu hộ thành công!")
       }, 1500)
     } catch (error: any) {
       console.log(error?.response?.data?.message || error)
       toast.error(error?.response?.data?.message || "Có lỗi xảy ra!")
+    }finally{
       setLoading(false);
     }
   }

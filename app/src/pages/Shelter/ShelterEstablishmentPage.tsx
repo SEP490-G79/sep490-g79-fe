@@ -57,10 +57,16 @@ const shelterEstablishmentSchema = z.object({
   address: z.string().min(3, "Vui lòng nhập địa chỉ đầy đủ"),
   aspiration: z.string().min(10, "Vui lòng nhập nguyện vọng rõ ràng"),
   shelterLicense: z
-    .any()
-    .refine((file) => file instanceof File || (file && file.length > 0), {
-      message: "Vui lòng chọn giấy phép hoạt động",
-    }),
+  .any()
+  .refine((file) => file instanceof File || (file && file.length > 0), {
+    message: "Vui lòng chọn giấy phép hoạt động",
+  })
+  .refine((file) => {
+    const targetFile = file instanceof File ? file : file?.[0];
+    return targetFile && targetFile.size <= 10 * 1024 * 1024;
+  }, {
+    message: "Dung lượng giấy phép không được vượt quá 10MB",
+  }),
   commitment: z.boolean().refine((val) => val === true, {
     message: "Bạn phải đồng ý với cam kết trước khi gửi",
   }),
