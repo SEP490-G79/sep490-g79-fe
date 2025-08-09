@@ -59,8 +59,8 @@ interface AppContextType {
   refreshUserProfile: () => Promise<void>;
   submissionsByPetId: Record<string, MissionForm[]>;
   setSubmissionsByPetId: React.Dispatch<React.SetStateAction<Record<string, MissionForm[]>>>;
-
   setShelterConsentForms: (shelterConsentForms: ConsentForm[]) => void;
+  fetchPetsList: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType>({
@@ -96,6 +96,7 @@ const AppContext = createContext<AppContextType>({
   submissionsByPetId: {},
   setSubmissionsByPetId: () => { },
   setShelterConsentForms: () => [],
+  fetchPetsList: async () => { },
 });
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
@@ -178,16 +179,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   }, [localStorage.getItem("accessToken"), location.pathname]);
 
   // get pets list
-  useEffect(() => {
-    axios
-      .get(`${petAPI}/get-pet-list`)
-      .then((res) => {
-        setPetsList(res.data);
-      })
-      .catch((error) => {
-        // toast.error("Không thể lấy danh sách thú cưng");
-      });
-  }, []);
+const fetchPetsList = async () => {
+  try {
+    const res = await axios.get(`${petAPI}/get-pet-list`);
+    setPetsList(res.data);
+  } catch (error) {
+    toast.error("Không thể lấy danh sách thú cưng");
+  }
+};
+
+useEffect(() => {
+  fetchPetsList();
+}, []);
 
   //Shelter
   useEffect(() => {
@@ -247,6 +250,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         setSubmissionsByPetId,
         shelterConsentForms,
         setShelterConsentForms,
+        fetchPetsList
       }}
     >
       {children}

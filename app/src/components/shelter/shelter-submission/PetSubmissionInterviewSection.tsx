@@ -156,13 +156,11 @@ const PetSubmissionInterviewSection = ({
   // Permission checks
   const canProvideFeedback =
     selectedSubmission.status === "interviewing" &&
-    interview?.selectedSchedule &&
     interview?.performedBy?._id === userProfile?._id
 
   const canProvideNote = selectedSubmission.status === "reviewed" && isShelterManager
 
   const canViewFeedback =
-    interview?.selectedSchedule &&
     ((selectedSubmission.status === "interviewing" && interview?.performedBy?._id === userProfile?._id) ||
       (["reviewed", "approved", "rejected"].includes(selectedSubmission.status) &&
         (isShelterManager || interview?.performedBy?._id === userProfile?._id)))

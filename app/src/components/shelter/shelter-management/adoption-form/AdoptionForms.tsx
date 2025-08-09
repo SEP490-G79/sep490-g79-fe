@@ -77,12 +77,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function AdoptionForms() {
   const { shelterId } = useParams();
-  const { coreAPI, shelterForms, setShelterForms, petsList } =
+  const { coreAPI, shelterForms, setShelterForms, petsList,  setShelterTemplates } =
     React.useContext(AppContext);
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = React.useState(false);
   const [tabValue, setTabValue] = React.useState("active");
+
+
+    React.useEffect(() => {
+      setIsLoading(true)
+      authAxios
+        .get(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/get-all`)
+        .then((res) => {
+          setShelterTemplates(res.data);
+        })
+        .catch((err) => {
+          console.log(err?.response?.data?.message);
+        })
+        .finally(()=>{
+          setTimeout(() => {
+            setIsLoading(false)
+          }, 200);
+        });
+    }, [shelterId]);
 
   const removeDiacritics = (str: string) =>
     str

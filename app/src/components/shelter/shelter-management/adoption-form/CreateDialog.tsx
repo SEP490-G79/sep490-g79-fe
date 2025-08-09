@@ -64,7 +64,7 @@ type Props = {
 };
 
 export default function CreateDialog({setIsLoading}:Props) {
-  const { coreAPI, shelterForms, shelterTemplates, setShelterForms, petsList } =
+  const { coreAPI, shelterForms, shelterTemplates, setShelterForms, petsList, fetchPetsList } =
     useContext(AppContext);
   const { shelterId } = useParams();
   const authAxios = useAuthAxios();
@@ -94,6 +94,10 @@ export default function CreateDialog({setIsLoading}:Props) {
       description: "",
     },
   });
+
+  useEffect(() => {
+    fetchPetsList();
+  },[]);
 
   const onSubmit = async (values: FormValues) => {
     // console.log("Form submitted:", values);
