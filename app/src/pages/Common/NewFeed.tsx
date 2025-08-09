@@ -682,6 +682,10 @@ const Newfeed = () => {
             </div>
           ))}
         </div>
+      ) : filteredPosts.length === 0 ? (
+        <div className="text-center text-muted-foreground py-6">
+          Chưa có bài viết nào.
+        </div>
       ) : (
         filteredPosts
           .slice()
