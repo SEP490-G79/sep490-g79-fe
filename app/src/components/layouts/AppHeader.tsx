@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from "react";
+import React, { useEffect, useContext, useState } from "react";
 import { ModeToggle } from "../ui/mode-toggle";
 import { NavigationMenu } from "@/components/ui/navigation-menu";
 import { HeaderMenu } from "../header/HeaderMenu";
@@ -8,24 +8,62 @@ import UserNav from "../header/UserNav";
 import AppContext from "@/context/AppContext";
 import { Skeleton } from "../ui/skeleton";
 import useAuthAxios from "@/utils/authAxios";
-import logo from "../../assets/logo/bbkzwnb6hyyrmi8jhiwp.jpg"
+import logo from "../../assets/logo/bbkzwnb6hyyrmi8jhiwp.jpg";
 import { Avatar, AvatarImage } from "../ui/avatar";
 function AppHeader() {
-  const { user, setUser, accessToken, coreAPI, loginLoading } = useContext(AppContext);
+  const { user, setUser, accessToken, coreAPI, loginLoading } =
+    useContext(AppContext);
   const authAxios = useAuthAxios();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    setIsLoading(true);
+
     if (!user && accessToken) {
-      authAxios.get(`${coreAPI}/users/get-user`)
+      authAxios
+        .get(`${coreAPI}/users/get-user`)
         .then((res) => {
           setUser(res.data);
         })
         .catch((err) => {
           console.error("Lỗi khi fetch user trong AppHeader:", err);
+        })
+        .finally(() => {
+          setTimeout(() => {
+            setIsLoading(false);
+          }, 200);
         });
     }
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 200);
   }, [user, accessToken]);
-  
+
+  if (isLoading) {
+    return (
+      <header className="md:px-12 sticky top-0 z-50 w-full border-b border-border/40 bg-background/30 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex h-14 justify-between items-center px-4">
+          <div className="basis-1/2">
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </div>
+
+          <div className="basis-1/2 flex justify-end items-center gap-4">
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-20 rounded-md" />
+              <Skeleton className="h-10 w-20 rounded-md" />
+              <Skeleton className="h-10 w-20 rounded-md" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-8 w-8 rounded-full" />
+
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-10 w-10 rounded-full" />
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
   return (
     <header className="md:px-12 sticky top-0 z-50 w-full border-b border-border/40 bg-background/30 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 justify-between items-center px-4">

@@ -71,13 +71,13 @@ export default function AdoptionForm() {
           setAdoptionForm(found);
           setQuestionsList([...found.questions]);
         } else {
-          toast.error("Không tìm thấy form nhận nuôi");
+          toast.error("Không tìm thấy đơn nhận nuôi");
         }
       })
       .catch((err) => {
         // console.error(err);
         toast.error(
-          err?.response?.data?.message || "Lỗi khi tải dữ liệu form nhận nuôi"
+          err?.response?.data?.message || "Lỗi khi tải dữ liệu đơn nhận nuôi"
         );
       })
       .finally(() => {
@@ -140,10 +140,10 @@ export default function AdoptionForm() {
         updatedForm
       );
       handleFetchAdoptionForm();
-      toast.success("Lưu form nhận nuôi thành công!");
+      toast.success("Lưu đơn nhận nuôi thành công!");
     } catch (error: any) {
-      // console.error("Error saving adoption form:", error);
-      toast.error(error?.response?.data?.message ||"Lỗi khi lưu form nhận nuôi. Vui lòng thử lại sau.");
+      // console.error("Error saving adoption đơn:", error);
+      toast.error(error?.response?.data?.message ||"Lỗi khi lưu đơn nhận nuôi. Vui lòng thử lại sau.");
     }
   };
 
@@ -221,10 +221,10 @@ export default function AdoptionForm() {
           <BreadcrumbItem>
             <BreadcrumbLink
               className="hover:text-primary text-(--muted-foreground) flex gap-2"
-              href={`/shelters/${shelterId}/management/adoption-forms`}
+              href={`/shelters/${shelterId}/management/adoption-đơns`}
             >
               <LucideArrowLeft className="w-4 h-4 translate-0.5" />
-              <span className="hover:underline">Quản lý form nhận nuôi</span>
+              <span className="hover:underline">Quản lý đơn nhận nuôi</span>
             </BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>

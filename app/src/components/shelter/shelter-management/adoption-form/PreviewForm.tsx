@@ -56,12 +56,12 @@ function PreviewForm() {
           setAdoptionForm(found);
           setQuestionsList([...found.questions]);
         } else {
-          toast.error("Không tìm thấy form nhận nuôi");
+          toast.error("Không tìm thấy đơn nhận nuôi");
         }
       })
       .catch((err) => {
         console.error(err);
-        toast.error("Lỗi khi tải dữ liệu form nhận nuôi");
+        toast.error("Lỗi khi tải dữ liệu đơn nhận nuôi");
       })
       .finally(() => {
         setTimeout(() => {
@@ -84,9 +84,9 @@ function PreviewForm() {
                   <span className="font-semibold">{adoptionForm?.shelter}</span>
                   {", "}
                   xin chân thành cảm ơn bạn đã quan tâm đến việc nhận nuôi các
-                  bé chó/mèo ở sân. Trước khi điền vào biểu form đăng ký, bạn vui
+                  bé chó/mèo ở sân. Trước khi điền vào biểu đơn đăng ký, bạn vui
                   lòng đọc kỹ các điều kiện nhận nuôi dưới đây. Nếu đồng ý, hãy
-                  cung cấp đầy đủ thông tin theo biểu form. Những thông tin bạn
+                  cung cấp đầy đủ thông tin theo biểu đơn. Những thông tin bạn
                   cung cấp sẽ giúp sân hiểu rõ hơn về nhu cầu và khả năng chăm
                   sóc thú cưng, từ đó hỗ trợ bạn tốt hơn trong quá trình nhận
                   nuôi.
