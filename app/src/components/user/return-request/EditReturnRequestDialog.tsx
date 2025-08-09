@@ -163,7 +163,7 @@ export default function EditReturnRequestDialog({ open, onOpenChange, request, o
                 </div>
 
                 <DialogFooter className="pt-4">
-                    <Button onClick={handleSubmit} disabled={loading}>
+                    <Button onClick={handleSubmit} disabled={loading} className="cursor-pointer">
                         {loading ? "Đang cập nhật..." : "Cập nhật yêu cầu"}
                     </Button>
                 </DialogFooter>

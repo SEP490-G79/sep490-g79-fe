@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import pawBackground from "@/assets/pawBackground.jpg";
 import donateDog from "@/assets/donateDog.jpg";
+import AppContext from "@/context/AppContext";
 import axios from "axios";
 
 export default function DonationPage() {
@@ -21,12 +22,12 @@ export default function DonationPage() {
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState({ amount: "", message: "" });
   const [loading, setLoading] = useState(false);
-  const [amountRaw, setAmountRaw] = useState("");
+  const { coreAPI } = useContext(AppContext);
 
   const handleAmountChange = (value: string) => {
     // Xoá dấu chấm, khoảng trắng nếu có
     const numericValue = value.replace(/\D/g, "");
-    setAmountRaw(numericValue);
+    setAmount(numericValue);
 
     const newErrors = { ...errors };
 
@@ -74,12 +75,15 @@ export default function DonationPage() {
     }
 
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+    if (newErrors.amount || newErrors.message) {
+      toast.error("Vui lòng sửa các lỗi trước khi tiếp tục");
+      return;
+    }
 
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:3030/create-payment-link", {
-        amount: Number(amountRaw),
+      const res = await axios.post(`${coreAPI}/donations/create-payment-link`, {
+        amount: Number(amount),
         message,
       }, {
         headers: localStorage.getItem("accessToken")
@@ -89,6 +93,7 @@ export default function DonationPage() {
           : {},
       });
       window.location.href = res.data.url;
+      // console.log("Payment link created:", res.data.url);
     } catch (error: any) {
       toast.error("Đã xảy ra lỗi khi tạo liên kết thanh toán. Vui lòng thử lại sau.");
       console.error("Error creating payment link:", error.message);
@@ -156,8 +161,8 @@ export default function DonationPage() {
             <Input
               type="text"
               value={
-                amountRaw
-                  ? Number(amountRaw).toLocaleString("vi-VN") // Format theo hàng nghìn
+                amount
+                  ? Number(amount).toLocaleString("vi-VN")
                   : ""
               }
               onChange={(e) => handleAmountChange(e.target.value)}
@@ -180,13 +185,13 @@ export default function DonationPage() {
           </div>
 
           <p className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--primary)] mb-10">
-            {amountRaw ? Number(amountRaw).toLocaleString("vi-VN") : "0"} VND
+            {amount ? Number(amount).toLocaleString("vi-VN") : "0"} VND
           </p>
 
 
           <Button
             onClick={handleDonate}
-            className="w-full"
+            className="w-full cursor-pointer"
             disabled={loading}
           >
             {loading ? (

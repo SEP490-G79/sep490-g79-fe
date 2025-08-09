@@ -118,7 +118,7 @@ export default function CreateDialog({setIsLoading}:Props) {
           )
           .then((res) => {
             toast.success(
-              "Tạo form nhận nuôi thành công! Đang chuyển hướng ..."
+              "Tạo đơn nhận nuôi thành công! Đang chuyển hướng ..."
             );
             setShelterForms([...shelterForms, res.data]);
             form.reset();
@@ -151,7 +151,7 @@ export default function CreateDialog({setIsLoading}:Props) {
           }
         )
         .then((res) => {
-          toast.success("Tạo form nhận nuôi thành công! Đang chuyển hướng ...");
+          toast.success("Tạo đơn nhận nuôi thành công! Đang chuyển hướng ...");
           setShelterForms([...shelterForms, res.data]);
           form.reset();
           document
@@ -164,8 +164,8 @@ export default function CreateDialog({setIsLoading}:Props) {
           // }, 800);
         })
         .catch((err) => {
-          console.error("Error creating adoption form:", err);
-          toast.error("Tạo form nhận nuôi thất bại. Vui lòng thử lại.");
+          console.error("Error creating adoption đơn:", err);
+          toast.error("Tạo đơn nhận nuôi thất bại. Vui lòng thử lại.");
         })
         .finally(()=>{
           setTimeout(() => {
@@ -204,9 +204,9 @@ export default function CreateDialog({setIsLoading}:Props) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>Tạo form nhận nuôi</DialogTitle>
+              <DialogTitle>Tạo đơn nhận nuôi</DialogTitle>
               <DialogDescription>
-                Nhập thông tin cần thiết để tạo form nhận nuôi mới. Bạn có thể
+                Nhập thông tin cần thiết để tạo đơn nhận nuôi mới. Bạn có thể
                 chỉnh sửa sau.
               </DialogDescription>
             </DialogHeader>
@@ -320,14 +320,14 @@ export default function CreateDialog({setIsLoading}:Props) {
                               ? templates.find(
                                   (template) => template.value == field.value
                                 )?.label
-                              : "Chọn form..."}
+                              : "Chọn đơn..."}
                             <ChevronsUpDown className="opacity-50" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[300px] p-0">
                           <Command className="w-full">
                             <Input
-                              placeholder={`Tìm form...`}
+                              placeholder={`Tìm đơn...`}
                               className="
                               placeholder:text-muted-foreground flex h-10 w-full rounded-none
                               bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50 border-0
@@ -402,7 +402,7 @@ export default function CreateDialog({setIsLoading}:Props) {
 
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline">Hủy</Button>
+                <Button variant="outline" onClick={() => form.reset()}>Hủy</Button>
               </DialogClose>
               <Button className="cursor-pointer" type="submit">
                 Tạo

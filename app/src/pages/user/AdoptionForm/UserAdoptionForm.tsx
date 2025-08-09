@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 import axios from "axios";
@@ -39,7 +39,15 @@ const UserAdoptionFormPage = () => {
   const [hasCheckedSubmitted, setHasCheckedSubmitted] = useState(false);
   const [hasChecked, setHasChecked] = useState<any>(null);
   const [consentForm, setConsentForm] = useState<ConsentForm | null>(null);
+  const hasShownNotFoundToast = useRef(false);
+
   const navigate = useNavigate();
+  const showErrorToast = (message: string) => {
+    toast.error(message, {
+      description: "Vui lòng thử lại hoặc liên hệ hỗ trợ.",
+      duration: 5000,
+    });
+  };
 
 
   const getInitialStep = () => {
@@ -72,6 +80,17 @@ const UserAdoptionFormPage = () => {
       setLoading(true);
       try {
         const res = await authAxios.get(`${coreAPI}/pets/get-adoptionForms-by-petId/${id}`);
+        if (!res.data || Object.keys(res.data).length === 0) {
+          if (!hasShownNotFoundToast.current) {
+            showErrorToast("Không tìm thấy đơn xin nhận nuôi cho thú cưng này.");
+            hasShownNotFoundToast.current = true;
+          }
+          navigate("/");
+          return;
+        }
+
+
+
         setForm(res.data);
 
 
@@ -138,7 +157,8 @@ const UserAdoptionFormPage = () => {
           setAgreed(savedAgreed ? JSON.parse(savedAgreed) : false);
         }
       } catch (err) {
-        toast.error("Không thể lấy thông tin đơn xin nhận nuôi");
+        showErrorToast("Không thể lấy thông tin đơn xin nhận nuôi");
+
       } finally {
         setLoading(false);
         setHasCheckedSubmitted(true); //  Đánh dấu đã check xong
@@ -156,11 +176,13 @@ const UserAdoptionFormPage = () => {
           req.pet?._id === id && req.status === "approved"
         );
         if (hasReturned) {
-          toast.error("Bạn đã từng trả lại thú cưng này, không thể nhận nuôi lại.");
+          showErrorToast("Bạn đã từng trả lại thú cưng này, không thể nhận nuôi lại.");
+
           navigate("/");
         }
       } catch (err) {
-        toast.error("Không thể kiểm tra yêu cầu trả thú cưng");
+        showErrorToast("Không thể kiểm tra yêu cầu trả thú cưng");
+
       }
     };
 
@@ -216,7 +238,6 @@ const UserAdoptionFormPage = () => {
   if (loading || !form || !hasCheckedSubmitted) {
     return <div className="text-center mt-10">Đang tải dữ liệu thú cưng...</div>;
   }
-
 
   const steps = ["Quy định chung", "Đăng ký nhận nuôi", "Chờ phản hồi", "Xác nhận lịch phỏng vấn", "Đơn cam kết", "Kết quả"];
   const status = submission?.status;
@@ -283,7 +304,8 @@ const UserAdoptionFormPage = () => {
                 if (canNavigate) {
                   if (index + 1 === 4) {
                     if (submission?.status === "pending" || submission?.status === "scheduling") {
-                      toast.error("Bạn chưa thể xác nhận lịch phỏng vấn. Đơn đang chờ xử lý.");
+                      showErrorToast("Bạn chưa thể xác nhận lịch phỏng vấn. Đơn đang chờ xử lý.");
+
                       return;
                     }
                   }
@@ -365,7 +387,8 @@ const UserAdoptionFormPage = () => {
           submissionId={submissionId}
           onNext={() => {
             if (submission?.status === "pending" || submission?.status === "scheduling") {
-              toast.error("Bạn chưa thể xác nhận lịch phỏng vấn. Đơn đang chờ xử lý.");
+              showErrorToast("Bạn chưa thể xác nhận lịch phỏng vấn. Đơn đang chờ xử lý.");
+
               return;
             }
             next();

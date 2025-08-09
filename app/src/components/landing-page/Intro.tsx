@@ -18,11 +18,12 @@ function Intro() {
     "https://plus.unsplash.com/premium_photo-1675553988173-a5249b5815fe?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     "https://plus.unsplash.com/premium_photo-1675297844586-534b030564e0?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     "https://plus.unsplash.com/premium_photo-1675555581018-7f1a352ff9a6?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "https://i.pinimg.com/736x/e3/68/60/e36860b7202089cc360cb9448514bad2.jpg",
-    "https://i.pinimg.com/736x/e3/68/60/e36860b7202089cc360cb9448514bad2.jpg",
-    "https://i.pinimg.com/736x/e3/68/60/e36860b7202089cc360cb9448514bad2.jpg",
-    "https://i.pinimg.com/736x/e3/68/60/e36860b7202089cc360cb9448514bad2.jpg",
-    "https://i.pinimg.com/736x/e3/68/60/e36860b7202089cc360cb9448514bad2.jpg",
+    "https://res.cloudinary.com/dpaht6o2y/image/upload/v1754202936/return-requests/dedrd7bugrrqvrgyp3kg.jpg",
+    "https://res.cloudinary.com/dpaht6o2y/image/upload/v1754202936/return-requests/dedrd7bugrrqvrgyp3kg.jpg",
+    "https://res.cloudinary.com/dpaht6o2y/image/upload/v1754169198/pets/h9iszvfs4bztdledcjfl.jpg",
+    "https://res.cloudinary.com/dpaht6o2y/image/upload/v1754169198/pets/h9iszvfs4bztdledcjfl.jpg",
+    "https://res.cloudinary.com/dpaht6o2y/image/upload/v1754168698/pets/yziuzijjqrru5drslc7o.jpg",
+    "https://res.cloudinary.com/dpaht6o2y/image/upload/v1754168698/pets/yziuzijjqrru5drslc7o.jpg",
 
   ];
   return (

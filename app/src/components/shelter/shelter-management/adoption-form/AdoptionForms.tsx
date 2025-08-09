@@ -307,8 +307,8 @@ export function AdoptionForms() {
                   </DialogHeader>
                   <DialogDescription>
                     <p className="text-sm">
-                      Khi chuyển đổi trạng thái của form thì bạn thú nuôi sẽ
-                      được chuyển sang trạng thái tương ứng với form này.
+                      Khi chuyển đổi trạng thái của đơn thì bạn thú nuôi sẽ
+                      được chuyển sang trạng thái tương ứng với đơn này.
                     </p>
                   </DialogDescription>
                   <div className="flex flex-col space-y-4 mt-4">
@@ -352,7 +352,7 @@ export function AdoptionForms() {
                   })
                 }
               >
-                <Trash /> Xóa form
+                <Trash /> Xóa đơn 
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
