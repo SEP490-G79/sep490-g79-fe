@@ -42,10 +42,38 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
     const shelterId = pet?.shelter;
     const activeQuestions = questions.filter((q) => q.status === "active");
     const authAxios = useAuthAxios();
-    const { coreAPI } = useContext(AppContext);
+    const { coreAPI, setUserProfile, setUser } = useContext(AppContext);
     const [errors, setErrors] = useState<Record<string, boolean>>({});
     const [openConfirm, setOpenConfirm] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [profileUpdates, setProfileUpdates] = useState({
+        fullName: userProfile?.fullName || "",
+        phoneNumber: userProfile?.phoneNumber || "",
+        address: userProfile?.address || ""
+    });
+    const [profileErrors, setProfileErrors] = useState({
+        fullName: false,
+        phoneNumber: false,
+        address: false,
+    });
+
+    const validateProfile = () => {
+        const errs = {
+            fullName: !(userProfile?.fullName || profileUpdates.fullName?.trim()),
+            phoneNumber: !(userProfile?.phoneNumber || profileUpdates.phoneNumber?.trim()),
+            address: !(userProfile?.address || profileUpdates.address?.trim()),
+        };
+
+        setProfileErrors(errs);
+
+        const hasErr = Object.values(errs).some(Boolean);
+        if (hasErr) {
+            toast.error("Vui lòng điền đầy đủ thông tin cơ bản trước khi gửi yêu cầu.");
+            return false;
+        }
+        return true;
+    };
+
     const handleAnswerChange = (qid: string, value: string | string[]) => {
         onAnswerChange(qid, value);
         const question = questions.find(q => q._id === qid);
@@ -90,7 +118,28 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
 
     const handleSubmit = async () => {
         try {
-            setIsSubmitting(true); // bật loading
+            setIsSubmitting(true);
+            if (!validateProfile() || !validateRequiredQuestions()) {
+                setIsSubmitting(false);
+                return;
+            }
+            // Nếu thiếu thông tin thì update profile
+            const needUpdateProfile =
+                !userProfile?.fullName || !userProfile?.address || !userProfile?.phoneNumber || !userProfile?.email;
+
+            if (needUpdateProfile) {
+                const formData = new FormData();
+                formData.append("fullName", profileUpdates.fullName || userProfile?.fullName || "");
+                formData.append("address", profileUpdates.address || userProfile?.address || "");
+                formData.append("phoneNumber", profileUpdates.phoneNumber || userProfile?.phoneNumber || "");
+
+                await authAxios.put(`${coreAPI}/users/edit-profile`, formData);
+                const updated = await authAxios.get(`${coreAPI}/users/get-user`);
+                setUserProfile(updated.data);
+                setUser(updated.data);
+            }
+
+
             const payload = {
                 adoptionFormId: form._id,
                 answers: Object.entries(answers).map(([questionId, value]) => ({
@@ -115,7 +164,7 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
             console.error(error);
 
         } finally {
-            setIsSubmitting(false); // tắt loading dù thành công hay thất bại
+            setIsSubmitting(false);
         }
     };
 
@@ -182,25 +231,97 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                             </CardHeader>
 
                             <Separator className="dark:bg-primary" />
-
                             <CardContent className="space-y-4">
                                 <h2 className="text-xl font-semibold">Thông tin cơ bản</h2>
-                                {userProfile && (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
-                                        <p className="text-sm">
-                                            <span className="font-semibold">Họ và tên:</span> {userProfile.fullName}
-                                        </p>
-                                        <p className="text-sm">
-                                            <span className="font-semibold">Email:</span> {userProfile.email}
-                                        </p>
-                                        <p className="text-sm">
-                                            <span className="font-semibold">Nơi ở hiện tại:</span> {userProfile.address}
-                                        </p>
-                                        <p className="text-sm">
-                                            <span className="font-semibold">Số điện thoại:</span> {userProfile.phoneNumber}
-                                        </p>
-                                    </div>
-                                )}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+                                    <p className="text-sm">
+                                        <span className="font-semibold">Họ và tên:</span>{" "}
+                                        {userProfile?.fullName ? (
+                                            userProfile.fullName
+                                        ) : (
+                                            <div>
+                                                <input
+                                                    type="text"
+                                                    value={profileUpdates.fullName}
+                                                    onChange={(e) => {
+                                                        const v = e.target.value;
+                                                        setProfileUpdates((prev) => ({ ...prev, fullName: v }));
+                                                        setProfileErrors((prev) => ({ ...prev, fullName: !v.trim() }));
+                                                    }}
+                                                    className={`border rounded px-2 py-1 text-sm ${profileErrors.fullName ? "border-red-500" : "border-gray-300"
+                                                        }`}
+                                                    placeholder="Nhập họ và tên"
+                                                    aria-invalid={profileErrors.fullName}
+                                                    aria-required
+                                                />
+                                                {profileErrors.fullName && (
+                                                    <p className="text-xs text-red-500 mt-1">Vui lòng nhập họ và tên.</p>
+                                                )}
+                                            </div>
+                                        )}
+
+                                    </p>
+
+                                    <p className="text-sm">
+                                        <span className="font-semibold">Email:</span> {userProfile?.email}
+                                    </p>
+                                    <p className="text-sm">
+                                        <span className="font-semibold">Nơi ở hiện tại:</span>{" "}
+                                        {userProfile?.address ? (                                
+                                            userProfile.address
+                                        ) : (
+                                            <div>
+                                                <input
+                                                    type="text"
+                                                    value={profileUpdates.address}
+                                                    onChange={(e) => {
+                                                        const v = e.target.value;
+                                                        setProfileUpdates((prev) => ({ ...prev, address: v }));
+                                                        setProfileErrors((prev) => ({ ...prev, address: !v.trim() }));
+                                                    }}
+                                                    className={`border rounded px-2 py-1 text-sm ${profileErrors.address ? "border-red-500" : "border-gray-300"
+                                                        }`}
+                                                    placeholder="Nhập địa chỉ"
+                                                    aria-invalid={profileErrors.address}
+                                                    aria-required
+                                                />
+                                                {profileErrors.address && (
+                                                    <p className="text-xs text-red-500 mt-1">Vui lòng nhập địa chỉ.</p>
+                                                )}
+                                                    <span className="text-red-500">*</span>
+                                            </div>
+                                            
+                                        )}
+                                    </p>
+                                    <p className="text-sm">
+                                        <span className="font-semibold">Số điện thoại:</span>{" "}
+                                        {userProfile?.phoneNumber ? (
+                                            userProfile.phoneNumber
+                                        ) : (
+                                            <div>
+                                                <input
+                                                    type="text"
+                                                    value={profileUpdates.phoneNumber}
+                                                    onChange={(e) => {
+                                                        const v = e.target.value;
+                                                        setProfileUpdates((prev) => ({ ...prev, phoneNumber: v }));
+                                                        setProfileErrors((prev) => ({ ...prev, phoneNumber: !v.trim() }));
+                                                    }}
+                                                    className={`border rounded px-2 py-1 text-sm ${profileErrors.phoneNumber ? "border-red-500" : "border-gray-300"
+                                                        }`}
+                                                    placeholder="Nhập số điện thoại"
+                                                    aria-invalid={profileErrors.phoneNumber}
+                                                    aria-required
+                                                />
+                                                {profileErrors.phoneNumber && (
+                                                    <p className="text-xs text-red-500 mt-1">Vui lòng nhập số điện thoại.</p>
+                                                )}
+                                                <span className="text-red-500">*</span>
+                                            </div>
+                                        )}
+                                    </p>
+                                </div>
+
                             </CardContent>
 
                             <Separator className="dark:bg-primary" />
@@ -209,9 +330,6 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                                 <p className="text-sm text-red-500 italic">* Biểu thị câu hỏi bắt buộc</p>
                             </CardFooter>
                         </Card>
-
-
-
                         {activeQuestions.map((q) => (
                             <Card key={q._id} className="space-y-2 dark:border-primary ">
                                 <CardHeader>
@@ -258,7 +376,6 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                                         </div>
                                     ) : (
 
-
                                         q.options.map((opt, idx) => {
                                             let checked = false;
 
@@ -301,9 +418,6 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                                             );
                                         })
                                     )}
-
-
-
                                     {q.type === "TEXT" && (
                                         readOnly ? (
                                             <p className="text-sm dark:text-white whitespace-pre-line">
@@ -323,7 +437,6 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                                         )
                                     )}
 
-
                                     {errors[q._id] && (
                                         <p className="text-sm text-red-500 mt-1 italic">Đây là một câu hỏi bắt buộc</p>
                                     )}
@@ -333,9 +446,6 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                         ))}
 
                     </div>
-
-
-
                     {/* Navigation Buttons */}
                     <div className="flex justify-between ">
                         <Button variant="outline" onClick={onBack}>
@@ -347,14 +457,10 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                             <Button variant="outline" className="bg-primary" onClick={onNextNormal}>
                                 Tiếp theo
                             </Button>
-                        )
-
-                        }
-
-
+                        ) }
                         {!readOnly && (
                             <Button onClick={() => {
-                                if (validateRequiredQuestions()) {
+                                if (validateRequiredQuestions() && validateProfile()) {
                                     setOpenConfirm(true);
                                 }
                             }}>
@@ -388,9 +494,6 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
-
-
-
                 </div>
             </div>
         </div>
