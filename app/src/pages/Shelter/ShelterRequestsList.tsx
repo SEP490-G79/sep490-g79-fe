@@ -714,8 +714,7 @@ const ShelterRequestsList = () => {
             {/* Nếu là request và chưa hết hạn, chưa duyệt, chưa bị huỷ → hiển thị nút */}
             {detailDialog.detail?.requestType === "invitation" &&
             detailDialog.detail?.requestStatus === "pending" &&
-            new Date(detailDialog.detail?.expireAt) > new Date() &&
-            detailDialog.detail?.requestStatus !== "cancelled" ? (
+            new Date(detailDialog.detail?.expireAt) > new Date() ? (
               <div className="flex gap-2">
                 {loadingButton ? (
                   <Button disabled>
