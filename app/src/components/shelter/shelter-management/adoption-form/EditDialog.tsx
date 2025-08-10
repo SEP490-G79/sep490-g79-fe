@@ -113,7 +113,7 @@ export default function EditDialog({
         }
       )
       .then((res) => {
-        toast.success("Chỉnh sửa form nhận nuôi thành công!");
+        toast.success("Chỉnh sửa đơn nhận nuôi thành công!");
         const updatedForm: AdoptionForm = res.data;
         setAdoptionForm(updatedForm);
         const updatedForms = shelterForms.map((form) =>
@@ -149,7 +149,7 @@ export default function EditDialog({
           </DialogTrigger>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Chỉnh sửa thông tin form</p>
+          <p>Chỉnh sửa thông tin đơn</p>
         </TooltipContent>
       </Tooltip>
 
@@ -159,7 +159,7 @@ export default function EditDialog({
             <DialogHeader>
               <DialogTitle>Chỉnh sửa form nhận nuôi</DialogTitle>
               <DialogDescription>
-                Tạo form nhận nuôi cho từng loài! Giảm bớt thời gian quản lý.
+                Tạo đơn nhận nuôi cho từng loài! Giảm bớt thời gian quản lý.
               </DialogDescription>
             </DialogHeader>
 

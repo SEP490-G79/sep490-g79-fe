@@ -37,6 +37,7 @@ console.log(consentForm);
     approved: "Đã được chấp nhận",
     rejected: "Bị từ chối",
     reviewed: "Đã phỏng vấn",
+    cancelled: "Đã huỷ",
   };
 
 

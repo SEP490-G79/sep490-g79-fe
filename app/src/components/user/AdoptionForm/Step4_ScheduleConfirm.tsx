@@ -50,6 +50,20 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
   const isExpired = now.isAfter(interviewDeadline, "day");
 
 
+
+const availableToTz = dayjs(submission?.interview?.availableTo).tz("Asia/Ho_Chi_Minh");
+const selectedScheduleTz = submission?.interview?.selectedSchedule
+  ? dayjs(submission.interview.selectedSchedule).tz("Asia/Ho_Chi_Minh")
+  : null;
+
+// Quá hạn chọn lịch 
+const isChooseDeadlinePassed =
+  !isScheduleConfirmed && now.isAfter(availableToTz.endOf("day"));  
+
+// Đã qua ngày phỏng vấn
+const isInterviewDatePassed =
+  isScheduleConfirmed && selectedScheduleTz && now.isAfter(selectedScheduleTz.endOf("day"));
+
   useEffect(() => {
     if (!submissionId) return;
     const fetchSubmission = async () => {
@@ -125,13 +139,34 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
   deadline.setDate(deadline.getDate());
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 py-12">
+    <div className="max-w-6xl mx-auto space-y-8 py-6">
+
       <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Hãy xác nhân lịch phỏng vấn!</h1>
-        <p className="text-gray-600 max-w-2xl mx-auto dark:text-gray-400">
-          Chúng tôi rất vui khi bạn quan tâm đến việc nhận nuôi. Hãy chọn thời gian phù hợp để chúng ta có thể trò chuyện.
-        </p>
-      </div>
+  {isChooseDeadlinePassed ? (
+    // Banner – hạn chọn lịch đã kết thúc
+    <div className="mt-4 w-full max-w-xl  mx-auto bg-red-50 border border-red-200 rounded-xl p-4 text-lg text-red-700">
+      Hạn chọn lịch phỏng vấn đã kết thúc. Bạn không thể chọn lịch nữa.
+    </div>
+  ) : isInterviewDatePassed ? (
+    // Banner – buổi phỏng vấn đã qua
+    <div className="mt-4 w-full max-w-xl mx-auto bg-amber-50 border border-amber-200 rounded-xl p-4 text-lg text-amber-800">
+      Buổi phỏng vấn vào{" "}
+      <strong>{dayjs(submission.interview.selectedSchedule).format("DD/MM/YYYY")}</strong>{" "}
+      đã diễn ra. Nếu bạn bỏ lỡ buổi phỏng vấn, vui lòng liên hệ trung tâm để sắp xếp lại.
+    </div>
+  ) : (
+    // Mặc định – phần chọn lịch
+    <>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        Hãy xác nhận lịch phỏng vấn!
+      </h1>
+      <p className="text-gray-600 max-w-2xl mx-auto dark:text-gray-400">
+        Chúng tôi rất vui khi bạn quan tâm đến việc nhận nuôi. Hãy chọn thời gian phù hợp để chúng ta có thể trò chuyện.
+      </p>
+    </>
+  )}
+</div>
+
 
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="space-y-6">

@@ -109,21 +109,29 @@ const UserAdoptionFormPage = () => {
 
 
           // Fetch consentForm nếu đã có submission
-          const consentRes = await authAxios.get(`${coreAPI}/consentForms/get-by-user`);
-          const consentFormMatched = consentRes.data.find(
-            (form: ConsentForm) => form?.pet?._id === res.data.pet?._id
-          );
-          if (consentFormMatched) {
-            setConsentForm(consentFormMatched);
 
-            if (
-              consentFormMatched.status === "approved" ||
-              consentFormMatched.status === "rejected"
-            ) {
-              setStep(6);
-              return;
-            }
-          }
+try {
+  const consentRes = await authAxios.get(`${coreAPI}/consentForms/get-by-user`);
+  if (Array.isArray(consentRes.data)) {
+    const consentFormMatched = consentRes.data.find(
+      (form: ConsentForm) => form?.pet?._id === res.data.pet?._id
+    );
+    if (consentFormMatched) {
+      setConsentForm(consentFormMatched);
+
+      if (
+        consentFormMatched.status === "approved" ||
+        consentFormMatched.status === "rejected"
+      ) {
+        setStep(6);
+        return;
+      }
+    }
+  }
+} catch (error) {
+  // Không toast lỗi vì việc không tìm thấy consent form là bình thường
+  console.warn("Không tìm thấy consent form hoặc lỗi khi fetch:", error);
+}
 
 
           if (status === "pending" || status === "scheduling") {

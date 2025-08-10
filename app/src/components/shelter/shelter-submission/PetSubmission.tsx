@@ -115,28 +115,28 @@ export default function PetSubmission() {
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [openPerformer, setOpenPerformer] = useState(false);
   const [scheduleData, setScheduleData] = useState({
-     availableFrom: startOfDay(new Date()),
+    availableFrom: startOfDay(new Date()),
     availableTo: startOfDay(new Date()),
     method: "",
     performedBy: "",
   });
   const [openConsentDialog, setOpenConsentDialog] = useState(false);
   const [consentSubmission, setConsentSubmission] = useState<MissionForm | null>(null);
-const [currentPage, setCurrentPage] = useState(1);
-const itemsPerPage = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
-useEffect(() => {
-  if (selectedSubmission?.status === "pending" || selectedSubmission?.status === "scheduling") {
-    setSelectedTab("answers");
-  } else {
-    setSelectedTab("interview");
-  }
-}, [selectedSubmission]);
+  useEffect(() => {
+    if (selectedSubmission?.status === "pending" || selectedSubmission?.status === "scheduling") {
+      setSelectedTab("answers");
+    } else {
+      setSelectedTab("interview");
+    }
+  }, [selectedSubmission]);
 
 
   const resetForm = () => {
     setScheduleData({
-       availableFrom: startOfDay(new Date()),
+      availableFrom: startOfDay(new Date()),
       availableTo: startOfDay(new Date()),
       method: "",
       performedBy: "",
@@ -257,6 +257,7 @@ useEffect(() => {
       });
       resetForm();
     } catch (err: any) {
+      
       toast.error(err?.response?.data?.message || "Lỗi tạo lịch phỏng vấn");
     }
   };
@@ -503,18 +504,24 @@ useEffect(() => {
   const currentStatus = selectedSubmission?.status || "";
   const options = statusOptionsMap[currentStatus] || statusOptions;
   const onTrySubmitFeedback = () => {
-    if (!selectedSubmission?.interview?.selectedSchedule) return;
-    const selectedDate = dayjs(
-      selectedSubmission.interview.selectedSchedule
-    ).startOf("day");
+  const selected = selectedSubmission?.interview?.selectedSchedule;
+
+  if (selected) {
+    const selectedDate = dayjs(selected).startOf("day");
     const today = dayjs().startOf("day");
     setIsEarlyFeedback(today.isBefore(selectedDate));
-    setShowConfirmDialog(true);
-  };
+  } else {
+    // Không có selectedSchedule vẫn cho gửi, không cảnh báo “feedback sớm”
+    setIsEarlyFeedback(false);
+  }
+
+  setShowConfirmDialog(true);
+};
+
 
   useEffect(() => {
-  setCurrentPage(1);
-}, [statusFilter, interviewingSubFilter, filterByPerformer]);
+    setCurrentPage(1);
+  }, [statusFilter, interviewingSubFilter, filterByPerformer]);
 
 
   return (
@@ -677,110 +684,110 @@ useEffect(() => {
           </p>
         ) : (
           filteredSubmissions
-  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-  .map((submission) => {
-            const total = submission.total ?? 0;
-            const colorBar = getColorBarClass(total);
-            return (
-              <div
-                key={submission._id}
-                className="flex rounded-md shadow-sm overflow-hidden border"
-              >
-                <div className={`w-2 ${colorBar}`} />
-                <div className="flex-1 bg-white">
-                  <Card className="shadow-none border-none">
-                    <CardHeader>
-                      <CardTitle className="text-base">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            Người đăng ký nhận nuôi:{" "}
-                            <span className="text-primary font-medium">
-                              {submission.performedBy?.fullName || "Ẩn danh"}
-                            </span>
+            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+            .map((submission) => {
+              const total = submission.total ?? 0;
+              const colorBar = getColorBarClass(total);
+              return (
+                <div
+                  key={submission._id}
+                  className="flex rounded-md shadow-sm overflow-hidden border"
+                >
+                  <div className={`w-2 ${colorBar}`} />
+                  <div className="flex-1 bg-white">
+                    <Card className="shadow-none border-none">
+                      <CardHeader>
+                        <CardTitle className="text-base">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              Người đăng ký nhận nuôi:{" "}
+                              <span className="text-primary font-medium">
+                                {submission.performedBy?.fullName || "Ẩn danh"}
+                              </span>
+                            </div>
+                            <Badge className="text-xs uppercase bg-primary text-white">
+                              {getStatusLabel(submission.status)}
+                            </Badge>
                           </div>
-                          <Badge className="text-xs uppercase bg-primary text-white">
-                            {getStatusLabel(submission.status)}
-                          </Badge>
+                        </CardTitle>
+
+                        <p className="text-xs text-muted-foreground">
+                          Nộp lúc:{" "}
+                          {format(
+                            new Date(submission.createdAt),
+                            "HH:mm dd/MM/yyyy"
+                          )}
+                        </p>
+                        <div>
+                          <span className="font-medium">
+                            {" "}
+                            Nhân viên thực hiện:{" "}
+                          </span>
+                          <span className="text-primary font-medium">
+                            {submission.interview?.performedBy?.fullName ||
+                              "Chưa xác định"}
+                          </span>
                         </div>
-                      </CardTitle>
 
-                      <p className="text-xs text-muted-foreground">
-                        Nộp lúc:{" "}
-                        {format(
-                          new Date(submission.createdAt),
-                          "HH:mm dd/MM/yyyy"
+                        <p className="text-xs text-muted-foreground">
+                          {submission.interview?.scheduleAt ? (
+                            <>
+                              Ngày thực hiện:{" "}
+                              {dayjs(submission.interview.scheduleAt).format("DD/MM/YYYY")}
+                            </>
+                          ) : submission.interview?.selectedSchedule ? (
+                            <>
+                              Ngày hẹn phỏng vấn:{" "}
+                              {dayjs(submission.interview.selectedSchedule).format("DD/MM/YYYY")}
+                            </>
+                          ) : submission.interview?.availableFrom &&
+                            submission.interview?.availableTo ? (
+                            <>
+                              Thời gian dự kiến: từ{" "}
+                              {dayjs(submission.interview.availableFrom).format("DD/MM/YYYY")} đến{" "}
+                              {dayjs(submission.interview.availableTo).format("DD/MM/YYYY")}
+                            </>
+                          ) : (
+                            "Chưa có thời gian phỏng vấn"
+                          )}
+                        </p>
+
+                      </CardHeader>
+                      <CardContent className="flex items-center justify-between">
+                        <button
+                          onClick={() => setSelectedSubmission(submission)}
+                          className="text-sm underline text-primary ml-auto"
+                        >
+                          Xem chi tiết
+                        </button>
+
+
+                        {submission.status === "approved" && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger>
+                              <EllipsisVertical className="h-4 w-4" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Hành động</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setConsentSubmission(submission);
+                                  setOpenConsentDialog(true);
+                                }}
+                              >
+                                Tạo bản cam kết
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
-                      </p>
-                      <div>
-                        <span className="font-medium">
-                          {" "}
-                          Nhân viên thực hiện:{" "}
-                        </span>
-                        <span className="text-primary font-medium">
-                          {submission.interview?.performedBy?.fullName ||
-                            "Chưa xác định"}
-                        </span>
-                      </div>
 
-                      <p className="text-xs text-muted-foreground">
-  {submission.interview?.scheduleAt ? (
-    <>
-      Ngày thực hiện:{" "}
-      {dayjs(submission.interview.scheduleAt).format("DD/MM/YYYY")}
-    </>
-  ) : submission.interview?.selectedSchedule ? (
-    <>
-      Ngày hẹn phỏng vấn:{" "}
-      {dayjs(submission.interview.selectedSchedule).format("DD/MM/YYYY")}
-    </>
-  ) : submission.interview?.availableFrom &&
-    submission.interview?.availableTo ? (
-    <>
-      Thời gian dự kiến: từ{" "}
-      {dayjs(submission.interview.availableFrom).format("DD/MM/YYYY")} đến{" "}
-      {dayjs(submission.interview.availableTo).format("DD/MM/YYYY")}
-    </>
-  ) : (
-    "Chưa có thời gian phỏng vấn"
-  )}
-</p>
-
-                    </CardHeader>
-                    <CardContent className="flex items-center justify-between">
-                      <button
-                        onClick={() => setSelectedSubmission(submission)}
-                        className="text-sm underline text-primary ml-auto"
-                      >
-                        Xem chi tiết
-                      </button>
-
-
-                      {submission.status === "approved" && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger>
-                            <EllipsisVertical className="h-4 w-4" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setConsentSubmission(submission);
-                                setOpenConsentDialog(true);
-                              }}
-                            >
-                              Tạo bản cam kết
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })
         )}
         <Dialog
           open={!!selectedSubmission}
@@ -1313,45 +1320,45 @@ useEffect(() => {
 
       </div>
       {filteredSubmissions.length > itemsPerPage && (
-  <Pagination className="mt-4">
-    <PaginationContent>
-      <PaginationItem>
-        <PaginationPrevious
-          onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-          className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-        />
-      </PaginationItem>
+        <Pagination className="mt-4">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
 
-      {Array.from(
-        { length: Math.ceil(filteredSubmissions.length / itemsPerPage) },
-        (_, i) => (
-          <PaginationItem key={i}>
-            <PaginationLink
-              isActive={currentPage === i + 1}
-              onClick={() => setCurrentPage(i + 1)}
-            >
-              {i + 1}
-            </PaginationLink>
-          </PaginationItem>
-        )
+            {Array.from(
+              { length: Math.ceil(filteredSubmissions.length / itemsPerPage) },
+              (_, i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink
+                    isActive={currentPage === i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              )
+            )}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  currentPage < Math.ceil(filteredSubmissions.length / itemsPerPage) &&
+                  setCurrentPage(currentPage + 1)
+                }
+                className={
+                  currentPage === Math.ceil(filteredSubmissions.length / itemsPerPage)
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
-
-      <PaginationItem>
-        <PaginationNext
-          onClick={() =>
-            currentPage < Math.ceil(filteredSubmissions.length / itemsPerPage) &&
-            setCurrentPage(currentPage + 1)
-          }
-          className={
-            currentPage === Math.ceil(filteredSubmissions.length / itemsPerPage)
-              ? "pointer-events-none opacity-50"
-              : ""
-          }
-        />
-      </PaginationItem>
-    </PaginationContent>
-  </Pagination>
-)}
 
     </div>
   );

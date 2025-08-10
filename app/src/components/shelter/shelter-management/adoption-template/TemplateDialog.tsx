@@ -93,7 +93,7 @@ export default function TemplateDialog() {
       })
       .catch((err) => {
         console.error(err);
-        toast.error("Lỗi khi tải dữ liệu mẫu nhận nuôi");
+        toast.error(err?.response?.data.messge ||"Lỗi khi tải dữ liệu mẫu nhận nuôi");
       })
       .finally(() => {
         setTimeout(() => {
@@ -159,9 +159,9 @@ export default function TemplateDialog() {
       );
       handleRefresh();
       toast.success("Lưu mẫu nhận nuôi thành công!");
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error saving adoption template:", error);
-      toast.error("Lỗi khi lưu mẫu nhận nuôi. Vui lòng thử lại sau.");
+      toast.error(error.response?.data?.message ||"Lỗi khi lưu mẫu nhận nuôi. Vui lòng thử lại sau.");
     }
   };
 

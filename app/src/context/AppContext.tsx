@@ -15,6 +15,7 @@ import type { AdoptionForm } from "@/types/AdoptionForm";
 import type { MissionForm } from "@/types/MissionForm";
 import type { ConsentForm } from "@/types/ConsentForm";
 import { useLocation } from "react-router-dom";
+import { socketClient } from "@/lib/socket.io";
 const excludedURLs = [
   "/",
   "/login",
@@ -58,9 +59,11 @@ interface AppContextType {
   setShelterForms: (shelterForms: AdoptionForm[]) => void;
   refreshUserProfile: () => Promise<void>;
   submissionsByPetId: Record<string, MissionForm[]>;
+
   setSubmissionsByPetId: React.Dispatch<React.SetStateAction<Record<string, MissionForm[]>>>;
 
   setShelterConsentForms: (shelterConsentForms: ConsentForm[]) => void;
+  fetchPetsList: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType>({
@@ -74,13 +77,13 @@ const AppContext = createContext<AppContextType>({
   authAPI: "",
   userAPI: "",
   shelterAPI: "",
-  login: () => { },
-  logout: () => { },
+  login: () => {},
+  logout: () => {},
   userProfile: null,
   loginLoading: false,
-  setLoginLoading: (loginLoading: boolean) => { },
-  setUserProfile: () => { },
-  setUser: () => { },
+  setLoginLoading: (loginLoading: boolean) => {},
+  setUserProfile: () => {},
+  setUser: () => {},
   petsList: [],
   petAPI: "",
   medicalRecordAPI: "",
@@ -89,13 +92,14 @@ const AppContext = createContext<AppContextType>({
   returnRequestAPI: "",
   setShelters: () => [],
   shelterId: null,
-  setShelterId: () => { },
+  setShelterId: () => {},
   setShelterTemplates: () => [],
   setShelterForms: () => [],
-  refreshUserProfile: async () => { },
+  refreshUserProfile: async () => {},
   submissionsByPetId: {},
-  setSubmissionsByPetId: () => { },
+  setSubmissionsByPetId: () => {},
   setShelterConsentForms: () => [],
+  fetchPetsList: async () => { },
 });
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
@@ -134,7 +138,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const reportAPI = `${base_API}/reports`;
   const returnRequestAPI = `${base_API}/return-requests`;
 
-
   const login = (accessToken: string, userData: User) => {
     setUser(userData);
     localStorage.setItem("accessToken", accessToken);
@@ -154,6 +157,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         localStorage.removeItem("accessToken");
       });
   };
+
+  useEffect(() => {
+    if (!accessToken) {
+      socketClient.disconnect();
+      return;
+    }
+    socketClient.connect();
+    return () => socketClient.disconnect();
+  }, [accessToken]);
 
   // Check trạng thái login và access token mỗi khi chuyển trang trừ các trang public
 
@@ -178,16 +190,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   }, [localStorage.getItem("accessToken"), location.pathname]);
 
   // get pets list
-  useEffect(() => {
-    axios
-      .get(`${petAPI}/get-pet-list`)
-      .then((res) => {
-        setPetsList(res.data);
-      })
-      .catch((error) => {
-        // toast.error("Không thể lấy danh sách thú cưng");
-      });
-  }, []);
+const fetchPetsList = async () => {
+  try {
+    const res = await axios.get(`${petAPI}/get-pet-list`);
+    setPetsList(res.data);
+  } catch (error) {
+    toast.error("Không thể lấy danh sách thú cưng");
+  }
+};
+
+useEffect(() => {
+  fetchPetsList();
+}, []);
 
   //Shelter
   useEffect(() => {
@@ -247,6 +261,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         setSubmissionsByPetId,
         shelterConsentForms,
         setShelterConsentForms,
+        fetchPetsList
       }}
     >
       {children}
