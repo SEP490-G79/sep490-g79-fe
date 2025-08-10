@@ -16,6 +16,8 @@ import AppContext from "@/context/AppContext";
 import { Bell, Dot } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
 import { type Notification } from "@/types/Notification";
+import { toast } from "sonner";
+import { socketClient } from "@/lib/socket.io";
 function UserNav() {
   const { user, logout, shelters, coreAPI } = useContext(AppContext);
   const authAxios = useAuthAxios();
@@ -24,8 +26,8 @@ function UserNav() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unseenCount, setUnseenCount] = useState(0);
 
-  const hasShelter = shelters?.filter(shelter =>
-    shelter.members.some(member => member._id === user?._id)
+  const hasShelter = shelters?.filter((shelter) =>
+    shelter.members.some((member) => member._id === user?._id)
   );
 
   useEffect(() => {
@@ -42,7 +44,9 @@ function UserNav() {
           ...n,
           createdAt: new Date(n.createdAt),
         }))
-        .sort((a: any, b: any) => b.createdAt.getTime() - a.createdAt.getTime());
+        .sort(
+          (a: any, b: any) => b.createdAt.getTime() - a.createdAt.getTime()
+        );
 
       setNotifications(mapped);
       setUnseenCount(mapped.filter((n: any) => !n.seen).length);
@@ -52,16 +56,75 @@ function UserNav() {
     }
   };
 
-  const handleNotificationClick = async (notificationId: string, redirectUrl: string) => {
+  const addNotification = (raw: Notification) => {
+    const n: Notification = {
+      ...raw,
+      createdAt:
+        raw.createdAt instanceof Date
+          ? raw.createdAt
+          : new Date(raw.createdAt as any),
+    };
+
+    setNotifications((prev) => {
+      // Nếu đã có -> bỏ qua (tránh trùng khi vừa fetch vừa realtime)
+      const existed = prev.find((x) => x._id == n._id);
+      if (existed) {
+        // nếu muốn, có thể merge cập nhật field mới:
+        return prev.map((x) => (x._id == n._id ? { ...x, ...n } : x));
+      }
+      const next = [n, ...prev];
+      next.sort(
+        (a, b) =>
+          new Date(b.createdAt as any).getTime() -
+          new Date(a.createdAt as any).getTime()
+      );
+      
+      return next;
+    });
+
+    if (!n.seen) setUnseenCount((c) => c + 1);
+  };
+
+  const displayToastNotification = (notification: Notification) => {
+    const { _id } = notification;
+
+    toast("Thông báo mới!", {
+      description: notification.content,
+      action: {
+        label: "Xem",
+        onClick: async () => {
+          await handleNotificationClick(_id, notification.redirectUrl);
+        },
+      },
+    });
+  };
+  useEffect(() => {
+    if (!socketClient?.connected) return;
+    socketClient.subscribe("notification", (notification: Notification) => {
+      console.log(">>> receive notification", notification);
+      addNotification(notification);
+      displayToastNotification(notification);
+    });
+
+    return () => {
+      socketClient.unsubscribe("notification");
+    };
+  }, [socketClient?.connected]);
+
+  const handleNotificationClick = async (
+    notificationId: string,
+    redirectUrl: string
+  ) => {
     try {
-      await authAxios.put(`${coreAPI}/notifications/${notificationId}/mark-seen`);
+      await authAxios.put(
+        `${coreAPI}/notifications/${notificationId}/mark-seen`
+      );
       fetchNotifications();
       navigate(redirectUrl);
     } catch (err) {
       console.error("Lỗi khi đánh dấu đã đọc:", err);
     }
   };
-
 
   return (
     <>
@@ -85,7 +148,10 @@ function UserNav() {
                 <div
                   key={notification._id}
                   onClick={() =>
-                    handleNotificationClick(notification._id, notification.redirectUrl)
+                    handleNotificationClick(
+                      notification._id,
+                      notification.redirectUrl
+                    )
                   }
                   className="cursor-pointer"
                 >
@@ -93,20 +159,30 @@ function UserNav() {
                     <DropdownMenuItem className="pl-0">
                       <div className="flex justify-start items-center w-full gap-2">
                         {!notification.seen && (
-                          <Dot size={40} strokeWidth={4} className="text-primary" />
+                          <Dot
+                            size={40}
+                            strokeWidth={4}
+                            className="text-primary"
+                          />
                         )}
                         <Avatar className="w-[40px] h-[40px] border border-primary">
-                          <AvatarImage src={notification.from.avatar} alt="avatar" />
+                          <AvatarImage
+                            src={notification.from.avatar}
+                            alt="avatar"
+                          />
                           <AvatarFallback>
                             {notification.from.fullName?.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
                         <div
-                          className={`flex flex-col text-sm ${notification.seen ? "text-muted-foreground" : ""
-                            }`}
+                          className={`flex flex-col text-sm ${
+                            notification.seen ? "text-muted-foreground" : ""
+                          }`}
                         >
                           <div>
-                            <span className="font-bold">{notification.from.fullName}</span>
+                            <span className="font-bold">
+                              {notification.from.fullName}
+                            </span>
                             <span className="ml-1">{notification.content}</span>
                           </div>
                           <div className="text-xs text-gray-400">
@@ -120,7 +196,9 @@ function UserNav() {
                 </div>
               ))
             ) : (
-              <div className="flex items-center justify-center h-[17rem]">Không có thông báo</div>
+              <div className="flex items-center justify-center h-[17rem]">
+                Không có thông báo
+              </div>
             )}
           </ScrollArea>
         </DropdownMenuContent>
@@ -150,38 +228,42 @@ function UserNav() {
               </p>
             </div>
           </DropdownMenuLabel>
-          {hasShelter !== undefined && hasShelter?.length >= 1 &&
+          {hasShelter !== undefined && hasShelter?.length >= 1 && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link to={`/shelters/${hasShelter[0]?._id}`}>Trung tâm cứu hộ</Link>
+                  <Link to={`/shelters/${hasShelter[0]?._id}`}>
+                    Trung tâm cứu hộ
+                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
             </>
-          }
-          {hasShelter !== undefined && hasShelter?.length < 1 &&
+          )}
+          {hasShelter !== undefined && hasShelter?.length < 1 && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link to={"/shelter-establishment"}>Thành lập trạm cứu hộ</Link>
+                  <Link to={"/shelter-establishment"}>
+                    Thành lập trạm cứu hộ
+                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem asChild className="cursor-pointer">
-
-                  <Link to={"/shelter-request"}>Danh sách yêu cầu gia nhập và lời mời</Link>
+                  <Link to={"/shelter-request"}>
+                    Danh sách yêu cầu gia nhập và lời mời
+                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
             </>
-          }
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
               <Link to={`/profile`}>Hồ sơ cá nhân</Link>
-
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
