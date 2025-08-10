@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import type { Blog } from "@/types/Blog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
-import {useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";import useAuthAxios from "@/utils/authAxios";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod"; import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
@@ -17,82 +17,82 @@ import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 
 
 type EditBlogProps = {
-    blog: Blog | undefined;
+  blog: Blog | undefined;
 }
 
-const EditBlog = ({ blog}: EditBlogProps) => {
-    const [selectedImage, setSelectedImage] = useState<File>();
-    const authAxios = useAuthAxios();
-    const {blogAPI} = useContext(AppContext);
-    const {shelterId} = useParams();
-    const [loading, setLoading] = useState<boolean>(false);
-    const {stripHtml} = htmlUtils;
+const EditBlog = ({ blog }: EditBlogProps) => {
+  const [selectedImage, setSelectedImage] = useState<File>();
+  const authAxios = useAuthAxios();
+  const { blogAPI } = useContext(AppContext);
+  const { shelterId } = useParams();
+  const [loading, setLoading] = useState<boolean>(false);
+  const { stripHtml } = htmlUtils;
 
-    const FormSchema = z.object({
-          thumbnail_url: z.string(),
-          title: z
-            .string()
-            .trim()
-            .min(2, "Vui lòng nhập tiêu đề")
-            .max(100, "Tiêu đề không được dài hơn 100 ký tự"),
-          description: z
-            .string()
-            .trim()
-            .min(10, "Vui lòng nhập miêu tả đầy đủ")
-            .max(300, "Miêu tả không được dài hơn 300 ký tự"),
-          content: z
-            .string()
-            .refine((value) => stripHtml(value).trim().length >= 50, {
-              message: "Nội dung phải có ít nhất 50 ký tự thực tế",
-            })
-            .refine((value) => stripHtml(value).trim().length <= 10000, {
-              message: "Nội dung không được vượt quá 10000 ký tự",
-            }),
-        });
-type FormValues = z.infer<typeof FormSchema>;
+  const FormSchema = z.object({
+    thumbnail_url: z.string(),
+    title: z
+      .string()
+      .trim()
+      .min(2, "Vui lòng nhập tiêu đề")
+      .max(100, "Tiêu đề không được dài hơn 100 ký tự"),
+    description: z
+      .string()
+      .trim()
+      .min(10, "Vui lòng nhập miêu tả đầy đủ")
+      .max(300, "Miêu tả không được dài hơn 300 ký tự"),
+    content: z
+      .string()
+      .refine((value) => stripHtml(value).trim().length >= 50, {
+        message: "Nội dung phải có ít nhất 50 ký tự thực tế",
+      })
+      .refine((value) => stripHtml(value).trim().length <= 10000, {
+        message: "Nội dung không được vượt quá 10000 ký tự",
+      }),
+  });
+  type FormValues = z.infer<typeof FormSchema>;
 
-    const form = useForm<FormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-        thumbnail_url: blog?.thumbnail_url,
-        title: blog?.title,
-        description: blog?.description,
-        content: blog?.content,
+      thumbnail_url: blog?.thumbnail_url,
+      title: blog?.title,
+      description: blog?.description,
+      content: blog?.content,
     },
   });
 
-  
+
   useEffect(() => {
     form.reset({
-        thumbnail_url: blog?.thumbnail_url,
-        title: blog?.title,
-        description: blog?.description,
-        content: blog?.content,
+      thumbnail_url: blog?.thumbnail_url,
+      title: blog?.title,
+      description: blog?.description,
+      content: blog?.content,
     })
   }, []);
 
-  const handeUploadImage = (e : React.ChangeEvent<HTMLInputElement>) => {
+  const handeUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setSelectedImage(file)
   }
 
   const handleSave = async (values: FormValues) => {
     try {
-        if(!values){
-            return;
-        }
-        setLoading(true)
-        const formData = new FormData();
-        formData.append("title", values.title);
-        formData.append("description", values.description);
-        formData.append("content", values.content);
-        selectedImage && formData.append("thumbnail_url", selectedImage)
+      if (!values) {
+        return;
+      }
+      setLoading(true)
+      const formData = new FormData();
+      formData.append("title", values.title);
+      formData.append("description", values.description);
+      formData.append("content", values.content);
+      selectedImage && formData.append("thumbnail_url", selectedImage)
 
-        await authAxios.put(`${blogAPI}/${blog?._id}/update/${shelterId}`, formData)
-        toast.success("Cập nhập blog thành công!")
-    } catch (error : any) {
-        toast.error(error?.response.data.message);
-    } finally{
+      await authAxios.put(`${blogAPI}/${blog?._id}/update/${shelterId}`, formData)
+      toast.success("Cập nhập blog thành công!")
+    } catch (error: any) {
+      toast.error(error?.response.data.message);
+    } finally {
       setLoading(false)
     }
   };
@@ -175,6 +175,7 @@ type FormValues = z.infer<typeof FormSchema>;
                   <FormLabel>Nội dung <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <MinimalTiptapEditor
+                      hideToolbar={false}
                       value={field.value || ""}
                       onChange={field.onChange}
                       className="w-full mb-2"

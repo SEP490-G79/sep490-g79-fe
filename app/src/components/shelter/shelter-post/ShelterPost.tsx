@@ -535,7 +535,7 @@ function ShelterPosts() {
 
             <div className="space-y-4 mt-4">
                 {postsData.length === 0 && !loading && (
-                    <p className="text-muted-foreground text-sm">Chưa có bài viết nào.</p>
+                    <p className="text-muted-foreground text-sm text-center">Chưa có bài viết nào.</p>
                 )}
                 {loadingPosts ? (
                     <div className="space-y-6 mt-4">

@@ -15,6 +15,8 @@ import FilterSection from "@/components/pet/FilterSection";
 import type { FilterState } from "@/components/pet/FilterSection";
 import { color } from "motion/react";
 import { useAppContext } from "@/context/AppContext";
+import { Button } from "@/components/ui/button";
+import { RefreshCcw } from "lucide-react";
 
 
 function PaginationSection({
@@ -66,7 +68,24 @@ function PetsListPage() {
 
   const [page, setPage] = useState(1);
   const itemsPerPage = 8;
-  const { petsList, userProfile } = useAppContext();
+  const { petsList, userProfile, fetchPetsList } = useAppContext();
+  const [loadingPosts, setLoadingPosts] = useState(false);
+
+  useEffect(() => {
+    fetchPetsList();
+  }, []);
+
+  const handleRefresh = async () => {
+    setLoadingPosts(true);
+    try {
+      await fetchPetsList();
+    } finally {
+      setTimeout(() => {
+        setLoadingPosts(false);
+      }, 500);
+    }
+  };
+
 
   const handleFiltersChange = (newFilters: FilterState) => {
     setFilters(newFilters);
@@ -193,7 +212,7 @@ function PetsListPage() {
       }
     }
 
-    
+
 
     // Fallback với các token còn lại
     const fallback = tokens.filter(
@@ -256,11 +275,11 @@ function PetsListPage() {
       // if (filters.color.length && !filters.color.includes(p.color || ""))
       //   return false;
       if (
-  Array.isArray(filters.color) &&
-  filters.color.length &&
-  !filters.color.map(c => c.toLowerCase()).includes((p.color || "").toLowerCase())
-)
-  return false;
+        Array.isArray(filters.color) &&
+        filters.color.length &&
+        !filters.color.map(c => c.toLowerCase()).includes((p.color || "").toLowerCase())
+      )
+        return false;
 
 
       const age = p.age ?? 0;
@@ -289,6 +308,17 @@ function PetsListPage() {
         pets={petsList}
         userProfile={userProfile}
       />
+      <div className="flex justify-end mt-4 mr-4">
+        <Button
+          variant="outline"
+          onClick={handleRefresh}
+          disabled={loadingPosts}
+          className="flex items-center gap-2 text-sm cursor-pointer bg-primary hover:bg-primary/60 border "
+        >
+          <RefreshCcw className={`w-4 h-4 ${loadingPosts ? "animate-spin" : ""}`} />
+          {loadingPosts ? "Đang tải..." : "Làm mới danh sách thú cưng"}
+        </Button>
+      </div>
 
       <div className="max-w-7xl mx-auto pt-10 min-h-[300px]">
         {currentPets?.length > 0 ? (

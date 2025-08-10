@@ -26,7 +26,8 @@ export default function SubmissionForms() {
     const { coreAPI, setSubmissionsByPetId } = useAppContext();
     const authAxios = useAuthAxios();
     const { shelterId } = useParams();
-    const [submissions, setSubmissions] = useState([]);
+    const [submissions, setSubmissions] = useState<MissionForm[]>([]);
+
     const [availablePets, setAvailablePets] = useState<Pet[]>([]);
     const [submissionCountByPet, setSubmissionCountByPet] = useState<Record<string, number>>({});
     const [totalAvailablePets, setTotalAvailablePets] = useState(0);
@@ -60,6 +61,7 @@ export default function SubmissionForms() {
 
         fetchPets();
     }, [shelterId]);
+
 
     useEffect(() => {
         if (!availablePets.length) return;
@@ -95,21 +97,46 @@ export default function SubmissionForms() {
         fetchSubmissions();
     }, [availablePets]);
 
+
+
     // Reset page khi đổi tab
     useEffect(() => {
         setCurrentPageAll(1);
         setCurrentPageWithSubmissions(1);
     }, [activeTab]);
 
-    const petsWithSubmissions = availablePets.filter(pet => submissionCountByPet[pet._id]);
-    const adoptedPets = availablePets.filter(pet => pet.status === "adopted");
+    // Lấy danh sách petId theo form status
+    const activePetIds = submissions
+        .filter(sub => sub.adoptionForm?.status === "active")
+        .map(sub => sub.adoptionForm?.pet?._id)
+        .filter(Boolean);
 
+    const archivedPetIds = submissions
+        .filter(sub => sub.adoptionForm?.status === "archived")
+        .map(sub => sub.adoptionForm?.pet?._id)
+        .filter(Boolean);
+
+    // Lọc cho từng tab
+    const petsWithActiveForms = availablePets.filter(
+        pet => pet.status !== "adopted" && activePetIds.includes(pet._id)
+    );
+
+    const allPetsNotAdopted = availablePets.filter(
+        pet => pet.status !== "adopted" && activePetIds.includes(pet._id)
+    );
+
+    const adoptedPets = availablePets.filter(
+        pet => pet.status === "adopted" || archivedPetIds.includes(pet._id)
+    );
+
+    // Chọn danh sách hiển thị dựa trên tab
     const displayedPets =
         activeTab === "withSubmissions"
-            ? petsWithSubmissions
+            ? petsWithActiveForms
             : activeTab === "adopted"
                 ? adoptedPets
-                : availablePets;
+                : allPetsNotAdopted;
+
 
     const currentPage =
         activeTab === "withSubmissions"
@@ -200,17 +227,17 @@ export default function SubmissionForms() {
                 >
                     Đang xử lý yêu cầu
                 </Button>
-                <Button
+                {/* <Button
                     variant={activeTab === "all" ? "default" : "outline"}
                     onClick={() => setActiveTab("all")}
                 >
                     Sẵn sàng nhận nuôi
-                </Button>
+                </Button> */}
                 <Button
                     variant={activeTab === "adopted" ? "default" : "outline"}
                     onClick={() => setActiveTab("adopted")}
                 >
-                    Hoàn thành nhận nuôi
+                    Lịch sử nhận nuôi
                 </Button>
 
             </div>
