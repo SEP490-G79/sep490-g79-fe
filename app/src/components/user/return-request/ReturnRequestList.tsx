@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import { Button } from "@/components/ui/button";
 import EditReturnRequestDialog from "./EditReturnRequestDialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     AlertDialog,
     AlertDialogContent,
@@ -101,9 +102,9 @@ export default function ReturnRequestList({ userId }: Props) {
                             className="w-16 h-16 object-cover rounded-md"
                         />
                         <div>
-                            <CardTitle>{request.pet.name}</CardTitle>
+                            <CardTitle>{request.pet?.name}</CardTitle>
                             <CardDescription className="text-sm">
-                                {request.shelter.name}
+                                {request.shelter?.name}
                             </CardDescription>
                         </div>
                     </CardHeader>
@@ -162,6 +163,57 @@ export default function ReturnRequestList({ userId }: Props) {
                                 </PhotoProvider>
                             </div>
                         )}
+                        {request.status === "rejected" && (
+                            <div className="rounded-md border p-2 bg-red-50 dark:bg-red-950/20 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground">Người từ chối</span>
+                                    <div className="flex items-center gap-1">
+                                        <Avatar>
+                                            <AvatarImage
+                                                src={request.approvedBy?.avatar}
+                                                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                                                alt=""
+                                                className="w-8 h-8 rounded-full object-cover border"
+                                            />
+                                            <AvatarFallback>
+                                                {request.approvedBy?.fullName?.charAt(0) || "?"}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <span className="font-medium">
+                                            {request.approvedBy?.fullName || "Không xác định"}
+                                        </span>
+                                    </div>
+                                </div>
+                                {request.shelter?.name && (
+                                    <div className="flex items-center gap-1">
+                                        <Avatar>
+                                            <AvatarImage
+                                                src={request.shelter?.avatar}
+                                                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                                                alt=""
+                                                className="w-8 h-8 rounded-full object-cover border"
+                                            />
+                                            <AvatarFallback>
+                                                {request.shelter?.name?.charAt(0) || "?"}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <span className="font-medium text-xs ">
+                                            Shelter: {request.shelter.name}
+                                        </span>
+                                    </div>
+                                )}
+                                <div>
+                                    <span className="text-xs text-muted-foreground">Lý do từ chối</span>
+                                    <p className="whitespace-pre-wrap">
+                                        {request.rejectReason || "—"}
+                                    </p>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                    Ngày từ chối: {new Date(request.updatedAt).toLocaleString("vi-VN")}
+                                </div>
+                            </div>
+                        )}
+
                         {request.status === "pending" && !isUser && (
                             <div className="flex justify-between gap-2 mt-3">
                                 {request.status === "pending" && (
