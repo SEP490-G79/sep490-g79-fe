@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, Loader2Icon, MoreHorizontal, RefreshCcw } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
@@ -9,11 +9,11 @@ import { DialogClose } from "@radix-ui/react-dialog";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { ShelterStaffRequestInvitation } from "@/types/ShelterStaffRequestInvitation";
 import { useParams } from "react-router-dom";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { DataTableShelterInvitationAndRequest } from "@/components/data-table-shelter-invitation-request";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DataTable } from "@/components/data-table";
 
 
 type detailDialogData = {
@@ -109,45 +109,15 @@ const ShelterStaffRequestManagement = () => {
          cell: ({ row }) => {
            return (
              <p className="px-2 flex flex-row gap-2">
-               <img
-                 src={row.original.user.avatar}
-                 alt={row.original.user.fullName}
-                 className="h-10 w-10 rounded-full object-cover"
-               />
+              <Avatar className="ring ring-2 ring-primary">
+                <AvatarImage src={row.original.user.avatar} alt={row.original.user.fullName} />
+                <AvatarFallback>{row.original.user.fullName && row.original.user.fullName[0]}</AvatarFallback>
+              </Avatar>
                <span className="my-auto truncate whitespace-nowrap overflow-hidden max-w-[20vw]">{row.original.user.fullName}</span>
              </p>
            );
          },
        },
-       //  {
-       //    accessorKey: "receiver",
-       //    header: ({ column }) => {
-       //      return (
-       //        <Button
-       //          variant="ghost"
-       //          onClick={() =>
-       //            column.toggleSorting(column.getIsSorted() === "asc")
-       //          }
-       //          className="cursor-pointer"
-       //        >
-       //          Người nhận
-       //          <ArrowUpDown className="ml-2 h-4 w-4" />
-       //        </Button>
-       //      );
-       //    },
-       //    cell: ({ row }) => {
-       //      return (
-       //        <p className="px-2 flex flex-row gap-2">
-       //          <img
-       //            src={row.original.receiver.avatar}
-       //            alt={row.original.receiver.fullName}
-       //            className="h-10 w-10 rounded-full object-cover"
-       //          />
-       //          <span className="my-auto">{row.original.receiver.fullName}</span>
-       //        </p>
-       //      );
-       //    },
-       //  },
        {
          accessorKey: "requestType",
          header: ({ column }) => {
@@ -176,33 +146,6 @@ const ShelterStaffRequestManagement = () => {
            return <p className="px-2 font-semibold">{formatted}</p>;
          },
        },
-       //  {
-       //    accessorKey: "roles",
-       //    header: ({ column }) => {
-       //      return (
-       //        <Button
-       //          variant="ghost"
-       //          onClick={() =>
-       //            column.toggleSorting(column.getIsSorted() === "asc")
-       //          }
-       //          className="cursor-pointer"
-       //        >
-       //          Vai trò
-       //          <ArrowUpDown className="ml-2 h-4 w-4" />
-       //        </Button>
-       //      );
-       //    },
-       //    cell: ({ row }) => {
-       //      return row.original.roles.map((role) => {
-       //        const vaiTro = role === "member" ? "Thành viên" : "Quản lý";
-       //        return (
-       //          <Badge variant={role === "member" ? "secondary" : "destructive"}>
-       //            {vaiTro}
-       //          </Badge>
-       //        );
-       //      });
-       //    },
-       //  },
        {
          accessorKey: "status",
          header: ({ column }) => {
@@ -358,8 +301,16 @@ const ShelterStaffRequestManagement = () => {
                  }}
                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
                >
-                  Xem/duyệt yêu cầu
+                  {row.original.requestStatus !== "pending" ? "Xem chi tiết" : (row.original.requestType === "request" ? "Duyệt yêu cầu" : "Xem chi tiết")}
                </DropdownMenuItem>
+              {row.original.requestStatus === "pending" && row.original.requestType === "invitation" &&
+              <DropdownMenuItem
+                 onSelect={handleCancelInvitation}
+                 className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
+               >
+                  Hủy lời mời
+               </DropdownMenuItem>
+              }
              </DropdownMenuContent>
            </DropdownMenu>
          ),
@@ -404,6 +355,14 @@ const ShelterStaffRequestManagement = () => {
              }
         }
 
+        function handleCancelInvitation(){
+          try {
+            console.log("Cancel invitation!")
+          } catch (error) {
+            
+          }
+        }
+
 
   return (
     <div className="flex flex-1 flex-col py-6">
@@ -436,7 +395,7 @@ const ShelterStaffRequestManagement = () => {
           </div>
         </div>
         <div className="col-span-12 px-5">
-          <DataTableShelterInvitationAndRequest
+          <DataTable
             columns={columns}
             data={filtererdInvitationsList ?? []}
           />
@@ -553,8 +512,7 @@ const ShelterStaffRequestManagement = () => {
             {/* Nếu là request và chưa hết hạn, chưa duyệt, chưa bị huỷ → hiển thị nút */}
             {detailDialog.detail?.requestType === "request" &&
             detailDialog.detail?.requestStatus === "pending" &&
-            new Date(detailDialog.detail?.expireAt) > new Date() &&
-            detailDialog.detail?.requestStatus !== "cancelled" ? (
+            new Date(detailDialog.detail?.expireAt) > new Date() ? (
               <div className="flex gap-2">
                 {loadingButton ? (
                   <Button disabled>

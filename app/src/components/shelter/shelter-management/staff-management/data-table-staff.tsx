@@ -28,11 +28,11 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
 }
 
-export function DataTableReverse<TData, TValue>({
+export function DataTableStaff<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([{ id: "status", desc: true }])
+  const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   )
@@ -54,9 +54,9 @@ export function DataTableReverse<TData, TValue>({
 
   return (
     <div>
-      <div className="rounded-md border">
+      <div className="rounded-md">
       <Table>
-        <TableHeader>
+        <TableHeader className="border-0">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -105,7 +105,7 @@ export function DataTableReverse<TData, TValue>({
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          Previous
+          Trước
         </Button>
         <Button
           variant="outline"
@@ -113,7 +113,7 @@ export function DataTableReverse<TData, TValue>({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          Next
+          Sau
         </Button>
       </div> 
     </div>

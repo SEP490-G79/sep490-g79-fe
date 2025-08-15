@@ -11,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";import useAuthAxios from "
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
+import { Plus, PlusSquare } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import htmlUtils from "@/utils/htmlUtils";
@@ -103,17 +103,15 @@ type FormValues = z.infer<typeof FormSchema>;
         }
       }}
     >
-      <Button variant="default" onClick={() => setIsOpen(true)}>
-        <Plus /> Tạo blog mới
+      <Button variant="ghost" className="text-xs cursor-pointer" onClick={() => setIsOpen(true)}>
+        <PlusSquare className="text-(--primary)" />Tạo blog mới
       </Button>
       <DialogContent className="min-w-[60vw] max-w-[90vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-semibold">
-            Tạo blog
+            Tạo bài viết blog mới
           </DialogTitle>
           <DialogDescription>
-            Blog khi mới sẽ được đưa vào danh sách chờ duyệt trước khi được đăng
-            lên hệ thống
           </DialogDescription>
         </DialogHeader>
 
@@ -129,7 +127,7 @@ type FormValues = z.infer<typeof FormSchema>;
                 <FormItem>
                   <FormLabel>Tiêu đề <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Tiêu đề của bài viết"/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -157,6 +155,7 @@ type FormValues = z.infer<typeof FormSchema>;
                       type="file"
                       accept="image/*"
                       onChange={handeUploadImage}
+                      placeholder="Upload ảnh thumbnail của bài viết"
                     />
                   </FormControl>
                   <FormMessage />
@@ -171,7 +170,7 @@ type FormValues = z.infer<typeof FormSchema>;
                 <FormItem>
                   <FormLabel>Miêu tả <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea {...field}  placeholder="Miêu tả ngắn gọn của bài viết"/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -191,10 +190,11 @@ type FormValues = z.infer<typeof FormSchema>;
                       className="w-full mb-2"
                       editorContentClassName="p-5"
                       output="html"
-                      placeholder="Viết nội dung bài blog ở đây..."
+                      placeholder="Viết nội dung của bài viết ở đây..."
                       autofocus={true}
                       editable={true}
                       editorClassName="focus:outline-hidden"
+                      hideToolbar={false}
                     />
                   </FormControl>
                   <FormMessage />

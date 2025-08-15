@@ -8,23 +8,37 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { ClipboardList, Settings } from "lucide-react";
+import { ClipboardList, HandHelping, Settings } from "lucide-react";
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import type { Shelter } from "@/types/Shelter";
 import AppContext from "@/context/AppContext";
+import useAuthAxios from "@/utils/authAxios";
+import { toast } from "sonner";
 
 interface ShelterBgProps {
   shelter: Shelter;
 }
 
 export const ShelterBg: React.FC<ShelterBgProps> = ({ shelter }) => {
+  const authAxios = useAuthAxios();
   const foundation = new Date(shelter.foundationDate).toLocaleDateString();
-  const { user } = useContext(AppContext);
+  const { user, shelterAPI } = useContext(AppContext);
   const isShelterMember = shelter.members?.some(
     (member) => member?._id == user?._id
   );
+
+  const handleSendRequest = async (emailString: string) => {
+    try {
+      await authAxios.put(`${shelterAPI}/send-staff-request/${emailString}`);
+      setTimeout(() => {
+        toast.success("Gửi yêu cầu gia nhập thành công!");
+      }, 1000);
+    } catch (error: any) {
+      toast.error(error?.response.data.message);
+    }
+  };
+
   return (
     <>
       <Breadcrumb className="basis-full mb-1">
@@ -100,7 +114,7 @@ export const ShelterBg: React.FC<ShelterBgProps> = ({ shelter }) => {
           </div>
         </div>
 
-        {isShelterMember && (
+        {isShelterMember ? (
           <Button variant="ghost" className="text-xs" asChild>
             <Link
               to={`/shelters/${shelter._id}/management`}
@@ -111,7 +125,10 @@ export const ShelterBg: React.FC<ShelterBgProps> = ({ shelter }) => {
               <ClipboardList className="text-(--primary)" /> Quản lý trung tâm
             </Link>
           </Button>
-        )}
+        ) :
+        <Button variant="ghost" className="text-xs cursor-pointer" onClick={() => handleSendRequest(shelter.email)}>
+            <HandHelping className="text-primary"/> Yêu cầu làm tình nguyện viên
+        </Button>}
       </div>
 
       {/* <Separator /> */}

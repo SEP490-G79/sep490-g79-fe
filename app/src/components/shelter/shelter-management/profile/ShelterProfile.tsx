@@ -27,14 +27,7 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form"
-import axios from "axios"
 import AddressInputWithGoong from "@/utils/AddressInputWithGoong"
-
-type GoongSuggestion = {
-  place_id: string;
-  description: string;
-};
-const GOONG_API_KEY = import.meta.env.VITE_GOONG_API_KEY;
 
 
 const shelterProfileSchema = z.object({
@@ -67,10 +60,6 @@ const ShelterProfile = () => {
   const { shelterId } = useParams()
   const [loading, setLoading] = useState<boolean>(false);
   const [location, setLocation] = useState({ lat: 0, lng: 0 });
-  const [openBackgroundModal, setOpenBackgroundModal] = useState(false);
-  const [addressSuggestions, setAddressSuggestions] = useState<GoongSuggestion[]>([]);
-  const [placeId, setPlaceId] = useState("");
-
   const currentShelter = shelters?.find(shelter => String(shelter._id) === String(shelterId));
   const member = currentShelter?.members?.find(m => String(m._id) === String(user?._id));
   const isManager = member?.roles?.includes("manager") || false;
@@ -116,10 +105,18 @@ const ShelterProfile = () => {
       formData.append("email", data.email)
       formData.append("address", data.address)
       formData.append("location", JSON.stringify(location)); 
+
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
       if (data.avatar instanceof File) {
+        if (data.avatar.size > MAX_FILE_SIZE) {
+          return toast.error("Ảnh đại diện trạm cứu hộ không được vượt quá 10MB");
+        }
         formData.append("avatar", data.avatar)
       }
       if (data.background instanceof File) {
+        if (data.background.size > MAX_FILE_SIZE) {
+          return toast.error("Ảnh nền không được vượt quá 10MB");
+        }
         formData.append("background", data.background)
       }
 
@@ -131,12 +128,12 @@ const ShelterProfile = () => {
       setCoverPreview(res.data.background || null)
 
       setTimeout(() => {
-        setLoading(false);
         toast.success("Cập nhập hồ sơ trạm cứu hộ thành công!")
       }, 1500)
     } catch (error: any) {
       console.log(error?.response?.data?.message || error)
       toast.error(error?.response?.data?.message || "Có lỗi xảy ra!")
+    }finally{
       setLoading(false);
     }
   }
@@ -173,83 +170,6 @@ const ShelterProfile = () => {
 
 
   const currentValues = watch()
-
-   const fetchAddressSuggestions = async (query: string) => {
-    if (!query.trim()) {
-      setAddressSuggestions([]);
-      return;
-    }
-    try {
-      const res = await axios.get("https://rsapi.goong.io/Place/AutoComplete", {
-        params: {
-          input: query,
-          api_key: GOONG_API_KEY,
-        },
-      });
-      setAddressSuggestions(res.data.predictions || []);
-    } catch (error) {
-      console.error("Autocomplete failed:", error);
-    }
-  };
-
-  const fetchPlaceDetail = async (place_id: string) => {
-    try {
-      const res = await axios.get("https://rsapi.goong.io/Place/Detail", {
-        params: {
-          place_id,
-          api_key: GOONG_API_KEY,
-        },
-      });
-      const result = res.data.result;
-      if (result?.formatted_address && result?.geometry?.location) {
-        // set địa chỉ vào trong react-hook-form
-        console.log(result.formatted_address);
-        setPlaceId(place_id);
-        setLocation({
-          lat: result.geometry.location.lat,
-          lng: result.geometry.location.lng,
-        });
-        setValue("address", result.formatted_address);
-      }
-    } catch (error) {
-      console.error("Place Detail error:", error);
-    }
-  };
-
-  const detectCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      return alert("Trình duyệt không hỗ trợ định vị.");
-    }
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords }) => {
-        try {
-          const res = await axios.get("https://rsapi.goong.io/Geocode", {
-            params: {
-              latlng: `${coords.latitude},${coords.longitude}`,
-              api_key: GOONG_API_KEY,
-              has_deprecated_administrative_unit: true,
-            },
-          });
-          const place = res.data.results?.[0];
-          if (place) {
-            // set địa chỉ vào trong react-hook-form
-            setValue("address", place.formatted_address);
-            setLocation({
-              lat: coords.latitude,
-              lng: coords.longitude,
-            });
-            setPlaceId(""); // reverse không có place_id
-          }
-        } catch (error) {
-          console.error("Reverse geocode error:", error);
-        }
-      },
-      (err) => {
-        console.error("Lỗi truy cập vị trí:", err);
-      },
-      { enableHighAccuracy: true }
-    );
-  };
 
   return (
     <Form {...form}>

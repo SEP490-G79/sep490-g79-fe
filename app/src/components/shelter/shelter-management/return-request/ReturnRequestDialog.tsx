@@ -1,21 +1,17 @@
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
+  Dialog, DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogTrigger
 } from "@/components/ui/dialog";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Loader2Icon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import type { ReturnRequest } from "@/types/ReturnRequest";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { PhotoView } from "react-photo-view";
 
 const ReturnRequestDialog = ({
   dialogDetail,
@@ -73,10 +69,10 @@ const ReturnRequestDialog = ({
           <div className="col-span-12">
             <h3 className="font-semibold text-base mb-2">Thú nuôi</h3>
             <div className="flex gap-4 items-center bg-muted p-4 rounded-lg">
-              <img
-                src={dialogDetail?.pet.photos && dialogDetail.pet.photos[0]}
-                className="w-24 h-20 rounded object-cover border"
-              />
+              <Avatar className="w-24 h-20 rounded object-cover border ring ring-1">
+                <AvatarImage src={dialogDetail?.pet.photos && dialogDetail.pet.photos[0]} alt={dialogDetail?.pet && dialogDetail.pet.petCode} />
+                <AvatarFallback>{dialogDetail?.pet.name && dialogDetail?.pet.name[0]}</AvatarFallback>
+              </Avatar>
               <div>
                 <p className="font-semibold">{dialogDetail?.pet.name}</p>
                 <p className="text-muted-foreground text-sm">
@@ -90,13 +86,14 @@ const ReturnRequestDialog = ({
           <div className="col-span-6">
             <h3 className="font-semibold text-base mb-2">Người gửi yêu cầu</h3>
             <div className="flex items-center gap-2 bg-muted p-4 rounded-lg">
-              <Avatar className="w-10 h-10">
+              <Avatar className="w-10 h-10 ring ring-2 ring-primary">
                 <AvatarImage
                   src={
                     dialogDetail?.requestedBy &&
                     dialogDetail?.requestedBy.avatar
                   }
                 />
+                <AvatarFallback>{dialogDetail?.requestedBy.fullName && dialogDetail?.requestedBy.fullName[0]}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="font-semibold">
@@ -122,13 +119,14 @@ const ReturnRequestDialog = ({
             {dialogDetail?.status !== "pending" && (
               <>
                 <div className="flex items-center justify-end gap-2">
-                  <Avatar className="w-8 h-8">
+                  <Avatar className="w-8 h-8 ring ring-2 ring-primary">
                     <AvatarImage
                       src={
                         dialogDetail?.approvedBy &&
                         dialogDetail?.approvedBy.avatar
                       }
                     />
+                    <AvatarFallback>{dialogDetail?.approvedBy?.fullName && dialogDetail?.approvedBy?.fullName[0]}</AvatarFallback>
                   </Avatar>
                   <p>
                     Duyệt bởi:{" "}
@@ -214,17 +212,17 @@ const ReturnRequestDialog = ({
               <p className="font-medium mb-1">Ảnh</p>
               <div className="flex flex-wrap gap-3 p-2 border rounded-md">
                 {dialogDetail?.photos.map((photo, idx) => (
-                    <img
-                    onSelect={(e) => e.preventDefault()}
+                    <Avatar  className="h-24 w-36 object-cover rounded cursor-pointer border hover:scale-105 transition-transform">
+                      <AvatarImage onSelect={(e) => e.preventDefault()}
                     key={idx}
                     src={photo}
-                    className="h-24 w-36 object-cover rounded cursor-pointer border hover:scale-105 transition-transform"
                     onClick={() => {
                           setCurrentIndex(idx);
                           setIsPreview(true);
                     }}
-                    alt={`proof-${idx}`}
-                  />
+                    alt={`proof-${idx}`} />
+                      <AvatarFallback>Ảnh</AvatarFallback>
+                    </Avatar>
                 ))}
               </div>
             </div>

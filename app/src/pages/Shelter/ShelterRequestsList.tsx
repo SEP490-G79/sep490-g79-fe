@@ -1,26 +1,13 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+  Form, FormField
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ArrowUpDown, Ban, Loader2Icon, MoreHorizontal, RefreshCcw, RotateCcwKey } from "lucide-react";
+import { ArrowUpDown, Loader2Icon, MoreHorizontal, PlusSquare, RefreshCcw, Search } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
@@ -28,20 +15,16 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DialogClose } from "@radix-ui/react-dialog";
 import { DataTable } from "@/components/data-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { ShelterEstablishmentRequest } from "@/types/ShelterEstablishmentRequest";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import type { ShelterMember } from "@/types/ShelterMember";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { ShelterStaffRequestInvitation } from "@/types/ShelterStaffRequestInvitation";
-import { useParams } from "react-router-dom";
-import { SearchFilter } from "@/components/SearchFilter";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import {type  Shelter } from "@/types/Shelter";
-import { EmailSelector } from "@/components/EmailSelector";
+import { type Shelter } from "@/types/Shelter";
 import { EmailRadioSelector } from "@/components/EmailRadioSelector";
-import { DataTableShelterInvitationAndRequest } from "@/components/data-table-shelter-invitation-request";
+import { Input } from "@/components/ui/input";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 
 
@@ -103,29 +86,39 @@ const ShelterRequestsList = () => {
     });
     const authAxios = useAuthAxios();
     const {shelterAPI} = useContext(AppContext)
-    const [invitationRefresh, setInvitationRefresh] = useState<boolean>(false);
     const [submitLoading, setSubmitLoading] = useState<boolean>(false);
     const [eligibleShelters, setEligibleShelter] = useState<Shelter[]>([]);
-    const [eligibleSheltersRefresh, setEligibleShelterRefresh] = useState<boolean>(false);
+    const [refresh, setRefresh] = useState<boolean>(false);
+    const [searchValue, setSearchValue] = useState<string>("");
 
     useEffect(() => {
       authAxios.get(`${shelterAPI}/get-user-invitations-and-requests`)
       .then(({data}) => {
-        // console.log(data)
         setInvitationsList(data);
         setFiltererdInvitationsList(data);
       })
       .catch(err => console.log(err?.response.data.message))
-    }, [invitationRefresh])
 
-    useEffect(() => {
       authAxios.get(`${shelterAPI}/eligible-shelters`)
       .then(({data}) => {
-        console.log(data)
         setEligibleShelter(data);
       })
       .catch(err => console.log(err?.response.data.message))
-    }, [eligibleSheltersRefresh])
+    }, [refresh])
+
+    function handleSearch (value : string){
+    if(value.trim().length < 1){
+      setFiltererdInvitationsList(invitationsList);
+    }else{
+      const searchedList = invitationsList.filter(invitation => {
+        if(invitation.shelter.name && invitation.shelter.name.toLowerCase().includes(value.toLowerCase()) ||
+          invitation.shelter.email && invitation.shelter.email.toLowerCase().includes(value.toLowerCase())){
+          return invitation;
+        }
+      })
+      setFiltererdInvitationsList(searchedList);
+    }
+  }
 
     const form = useForm<z.infer<typeof shelterRequest>>({
         resolver: zodResolver(shelterRequest),
@@ -159,45 +152,18 @@ const ShelterRequestsList = () => {
          cell: ({ row }) => {
            return (
              <p className="px-2 flex flex-row gap-2">
-               <img
-                 src={row.original.shelter.avatar}
-                 alt={row.original.shelter.name}
-                 className="h-10 w-10 rounded-full object-cover"
-               />
+               <Avatar className="ring ring-2 ring-primary">
+                 <AvatarImage
+                   src={row.original.shelter.avatar}
+                   alt={row.original.shelter.name}
+                 />
+                 <AvatarFallback>{row.original.shelter.name[0]}</AvatarFallback>
+               </Avatar>
                <span className="my-auto">{row.original.shelter.name}</span>
              </p>
            );
          },
        },
-       //  {
-       //    accessorKey: "receiver",
-       //    header: ({ column }) => {
-       //      return (
-       //        <Button
-       //          variant="ghost"
-       //          onClick={() =>
-       //            column.toggleSorting(column.getIsSorted() === "asc")
-       //          }
-       //          className="cursor-pointer"
-       //        >
-       //          Người nhận
-       //          <ArrowUpDown className="ml-2 h-4 w-4" />
-       //        </Button>
-       //      );
-       //    },
-       //    cell: ({ row }) => {
-       //      return (
-       //        <p className="px-2 flex flex-row gap-2">
-       //          <img
-       //            src={row.original.receiver.avatar}
-       //            alt={row.original.receiver.fullName}
-       //            className="h-10 w-10 rounded-full object-cover"
-       //          />
-       //          <span className="my-auto">{row.original.receiver.fullName}</span>
-       //        </p>
-       //      );
-       //    },
-       //  },
        {
          accessorKey: "requestType",
          header: ({ column }) => {
@@ -226,33 +192,6 @@ const ShelterRequestsList = () => {
            return <p className="px-2 font-semibold">{formatted}</p>;
          },
        },
-       //  {
-       //    accessorKey: "roles",
-       //    header: ({ column }) => {
-       //      return (
-       //        <Button
-       //          variant="ghost"
-       //          onClick={() =>
-       //            column.toggleSorting(column.getIsSorted() === "asc")
-       //          }
-       //          className="cursor-pointer"
-       //        >
-       //          Vai trò
-       //          <ArrowUpDown className="ml-2 h-4 w-4" />
-       //        </Button>
-       //      );
-       //    },
-       //    cell: ({ row }) => {
-       //      return row.original.roles.map((role) => {
-       //        const vaiTro = role === "member" ? "Thành viên" : "Quản lý";
-       //        return (
-       //          <Badge variant={role === "member" ? "secondary" : "destructive"}>
-       //            {vaiTro}
-       //          </Badge>
-       //        );
-       //      });
-       //    },
-       //  },
        {
          accessorKey: "status",
          header: ({ column }) => {
@@ -407,8 +346,49 @@ const ShelterRequestsList = () => {
                  }}
                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
                >
-                  Xem/duyệt yêu cầu
+                 {row.original.requestType === "request" && "Xem yêu cầu"}
+                 {row.original.requestType === "invitation"
+                   ? row.original.requestStatus === "pending"
+                     ? "Xem/duyệt yêu cầu"
+                     : "Xem yêu cầu"
+                   : ""}
                </DropdownMenuItem>
+               {row.original.requestType === "request" &&
+                 row.original.requestStatus === "pending" && (
+                   <AlertDialog>
+                     <AlertDialogTrigger asChild>
+                       <DropdownMenuItem
+                         onSelect={(e) => {
+                           e.preventDefault();
+                         }}
+                         className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
+                       >
+                         Hủy yêu cầu
+                       </DropdownMenuItem>
+                     </AlertDialogTrigger>
+                     <AlertDialogContent>
+                       <AlertDialogHeader>
+                         <AlertDialogTitle>Hủy yêu cầu ?</AlertDialogTitle>
+                         <AlertDialogDescription>
+                           Bạn có chắc chắn muốn hủy yêu cầu không ?
+                         </AlertDialogDescription>
+                       </AlertDialogHeader>
+                       <AlertDialogFooter>
+                         <AlertDialogCancel>Đóng</AlertDialogCancel>
+                         <AlertDialogAction
+                           onClick={() => {
+                             handleCancelRequest(
+                               row.original.shelter.id,
+                               row.original.requestId
+                             );
+                           }}
+                         >
+                           Hủy yêu cầu
+                         </AlertDialogAction>
+                       </AlertDialogFooter>
+                     </AlertDialogContent>
+                   </AlertDialog>
+                 )}
              </DropdownMenuContent>
            </DropdownMenu>
          ),
@@ -417,168 +397,195 @@ const ShelterRequestsList = () => {
 
 
      const handleApprove = async () => {
-        try {
-          setLoadingButton(true);
-          const response = await authAxios.put(`${shelterAPI}/review-shelter-invitation`, {
-            shelterId: detailDialog.detail.shelter.id, 
-            decision: "approve"
-          })
-          setTimeout(() => {
-            toast.success("Chấp nhận yêu cầu gia nhập thành công!")
-            setInvitationRefresh(prev => !prev);
-            setLoadingButton(false);
-            setDetailDialog({...detailDialog, isOpen: false});
-          }, 1000)
-        } catch (error : any) {
-          console.log(error?.response.data.message)
-        }
-     }
+       try {
+         setLoadingButton(true);
+         await authAxios.put(
+           `${shelterAPI}/review-shelter-invitation`,
+           {
+             shelterId: detailDialog.detail.shelter.id,
+             decision: "approve",
+           }
+         );
+         toast.success("Chấp nhận yêu cầu gia nhập thành công!");
+         setRefresh((prev) => !prev);
+         setDetailDialog({ ...detailDialog, isOpen: false });
+       } catch (error: any) {
+         console.log(error?.response.data.message);
+       } finally {
+         setLoadingButton(false);
+       }
+     };
 
      const handleReject = async () => {
-      try {
-          setLoadingButton(true);
-          const response = await authAxios.put(`${shelterAPI}/review-shelter-invitation`, {
-            shelterId: detailDialog.detail.shelter.id, 
-            decision: "reject"
-          })
-          setTimeout(() => {
-            toast.success("Từ chối yêu cầu gia nhập thành công!")
-            setInvitationRefresh(prev => !prev);
-            setLoadingButton(false);
-            setDetailDialog({...detailDialog, isOpen: false});
-          }, 1000)
-        } catch (error : any) {
-          console.log(error?.response.data.message)
-        }
-     }
+       try {
+         setLoadingButton(true);
+         await authAxios.put(`${shelterAPI}/review-shelter-invitation`, {
+           shelterId: detailDialog.detail.shelter.id,
+           decision: "reject",
+         });
+         toast.success("Từ chối yêu cầu gia nhập thành công!");
+         setRefresh((prev) => !prev);
+         setDetailDialog({ ...detailDialog, isOpen: false });
+       } catch (error: any) {
+         console.log(error?.response.data.message);
+       } finally {
+         setLoadingButton(false);
+       }
+     };
 
-     const handleSendRequest = async (value: z.infer<typeof shelterRequest>) => {
-      try {
-          setSubmitLoading(true);
-          await authAxios.put(`${shelterAPI}/send-staff-request/${value.email}`)
-          setTimeout(() => {
-            toast.success("Gửi yêu cầu gia nhập thành công!")
-            setInvitationRefresh(prev => !prev);
-            setSubmitLoading(false);
-          }, 1000)
-        } catch (error : any) {
-          console.log(error?.response.data.message)
-          setSubmitLoading(false);
-        }
-     }
+     const handleSendRequest = async (
+       value: z.infer<typeof shelterRequest>
+     ) => {
+       try {
+         setSubmitLoading(true);
+         await authAxios.put(`${shelterAPI}/send-staff-request/${value.email}`);
+         toast.success("Gửi yêu cầu gia nhập thành công!");
+         setRefresh((prev) => !prev);
+       } catch (error: any) {
+        console.log(error?.response.data.message || "Lỗi tạo yêu cầu gia nhập trạm cứu hộ");
+        toast.error(error?.response.data.message || "Lỗi tạo yêu cầu gia nhập trạm cứu hộ");
+       } finally {
+         setSubmitLoading(false);
+       }
+     };
+
+     const handleCancelRequest = async (shelterId: string, requestId : string) => {
+       try {
+         await authAxios.put(`${shelterAPI}/${shelterId}/cancel-staff-request/${requestId}`);
+         toast.success("Hủy yêu cầu gia nhập thành công!");
+         setRefresh((prev) => !prev);
+       } catch (error: any) {
+         console.log(error?.response.data.message);
+       } 
+     };
 
 
   return (
-    <div className="flex flex-1 flex-col py-6 px-10">
-            <Breadcrumb className="container mb-3 py-1 px-2">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/home">Trang chủ</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="#">
-                    Yêu cầu gia nhập hoặc lời mời vào trạm cứu hộ
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+    <div className="flex flex-1 flex-col py-6 px-40">
+      <Breadcrumb className="container mb-3 py-1 px-2">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/home">Trang chủ</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="#">
+              Yêu cầu gia nhập hoặc lời mời vào trạm cứu hộ
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="col-span-12 px-5 flex flex-col gap-5">
           <h4 className="scroll-m-20 min-w-40 text-xl font-semibold tracking-tight text-center">
             Danh sách các yêu cầu gia nhập và lời mời vào trạm cứu hộ
           </h4>
           <div className="flex flex-row justify-between">
-            {/* <SearchFilter<ShelterStaffRequestInvitation>
-              data={invitationsList}
-              searchFields={["sender", "receiver"]}
-              onResultChange={setFiltererdInvitationsList}
-              placeholder="Tìm theo tên người gửi hoặc người nhận"
-            /> */}
-            {invitationsList.find((invitation) =>
-              ["active", "pending"].includes(invitation.requestStatus)
-            ) ? (
-              <p>Bạn đang lời mời hoặc yêu cầu gia nhập đang chờ xử lý</p>
-            ) : (
-              <Dialog
-                onOpenChange={(open) => {
-                  if (!open) {
-                    form.reset();
+            <div className="flex gap-2">
+              <Input
+                className="w-80 pr-9"
+                type="string"
+                placeholder="Tìm kiếm theo tên, email trạm cứu hộ"
+                onChange={(e) => setSearchValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleSearch(searchValue);
                   }
                 }}
+              />
+              <Button
+                variant="outline"
+                onClick={() => handleSearch(searchValue)}
+                className="cursor-pointer"
               >
-                <DialogTrigger asChild>
-                  <Button className="cursor-pointer">
-                    Gửi yêu cầu tình nguyện trạm cứu hộ
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="w-full max-w-xl !max-w-xl">
-                  <DialogHeader>
-                    <DialogTitle className="text-center">
-                      Đơn tình nguyện trạm cứu hộ
-                    </DialogTitle>
-                    <DialogDescription>
-                      Vui lòng lựa chọn một trạm cứu hộ để tham gia làm tình
-                      nguyện viên !
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="px-5 py-3">
-                    <Form {...form}>
-                      <form
-                        onSubmit={form.handleSubmit(handleSendRequest)}
-                        className="space-y-6"
-                      >
-                        {/* Left column */}
-                        <div className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                              <EmailRadioSelector
-                                value={field.value}
-                                onChange={field.onChange}
-                                label="Trạm cứu hộ"
-                                suggestions={eligibleShelters}
-                              />
+                <Search /> Tìm kiếm
+              </Button>
+              {invitationsList.find((invitation) =>
+                ["pending"].includes(invitation.requestStatus)
+              ) ? (
+                <p className="text-md text-destructive my-auto">Bạn đang lời mời hoặc yêu cầu gia nhập đang chờ xử lý</p>
+              ) : (
+                <Dialog
+                  onOpenChange={(open) => {
+                    if (!open) {
+                      form.reset();
+                    }
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" className="text-xs cursor-pointer">
+                      <PlusSquare className="text-(--primary)" />
+                      Tạo yêu cầu mới
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="w-full max-w-xl !max-w-xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-center">
+                        Đơn tình nguyện trạm cứu hộ
+                      </DialogTitle>
+                      <DialogDescription>
+                        Vui lòng lựa chọn một trạm cứu hộ để tham gia làm tình
+                        nguyện viên !
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="px-5 py-3">
+                      <Form {...form}>
+                        <form
+                          onSubmit={form.handleSubmit(handleSendRequest)}
+                          className="space-y-6"
+                        >
+                          {/* Left column */}
+                          <div className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="email"
+                              render={({ field }) => (
+                                <EmailRadioSelector
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  label="Trạm cứu hộ"
+                                  suggestions={eligibleShelters}
+                                />
+                              )}
+                            />
+                          </div>
+                          {/* Footer */}
+                          <DialogFooter className="pt-4">
+                            <DialogClose asChild>
+                              <Button
+                                variant="secondary"
+                                className="cursor-pointer"
+                              >
+                                Đóng
+                              </Button>
+                            </DialogClose>
+                            {submitLoading ? (
+                              <Button disabled>
+                                <>
+                                  <Loader2Icon className="animate-spin mr-2" />
+                                  Vui lòng chờ
+                                </>
+                              </Button>
+                            ) : (
+                              <Button type="submit" className="cursor-pointer">
+                                Gửi yêu cầu
+                              </Button>
                             )}
-                          />
-                        </div>
-                        {/* Footer */}
-                        <DialogFooter className="pt-4">
-                          <DialogClose asChild>
-                            <Button
-                              variant="secondary"
-                              className="cursor-pointer"
-                            >
-                              Đóng
-                            </Button>
-                          </DialogClose>
-                          {submitLoading ? (
-                            <Button disabled>
-                              <>
-                                <Loader2Icon className="animate-spin mr-2" />
-                                Vui lòng chờ
-                              </>
-                            </Button>
-                          ) : (
-                            <Button type="submit" className="cursor-pointer">
-                              Gửi yêu cầu
-                            </Button>
-                          )}
-                        </DialogFooter>
-                      </form>
-                    </Form>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
-
+                          </DialogFooter>
+                        </form>
+                      </Form>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant={"ghost"}
                   className="cursor-pointer"
-                  onClick={() => setInvitationRefresh((prev) => !prev)}
+                  onClick={() => setRefresh((prev) => !prev)}
                 >
                   <RefreshCcw />
                 </Button>
@@ -590,7 +597,7 @@ const ShelterRequestsList = () => {
           </div>
         </div>
         <div className="col-span-12 px-5">
-          <DataTableShelterInvitationAndRequest columns={columns} data={filtererdInvitationsList ?? []} />
+          <DataTable columns={columns} data={filtererdInvitationsList ?? []} />
         </div>
       </div>
       {/* Dialog chi tiet */}
@@ -623,24 +630,15 @@ const ShelterRequestsList = () => {
 
             <div className="flex flex-row gap-2">
               <span className="my-auto font-medium">Trạm cứu hộ:</span>
-              <Avatar>
+              <Avatar className="ring ring-2 ring-primary">
                 <AvatarImage src={detailDialog.detail?.shelter?.avatar} />
+                <AvatarFallback>{detailDialog.detail.shelter.name[0]}</AvatarFallback>
               </Avatar>
               <span className="my-auto">
                 {detailDialog.detail?.shelter?.name} (
                 {detailDialog.detail?.shelter?.email})
               </span>
             </div>
-
-            {/* <div className="flex flex-row gap-2">
-              <span className="my-auto font-medium">Trạm cứu hộ:</span>
-              <Avatar>
-                <AvatarImage src={detailDialog.detail?.shelter?.avatar} />
-              </Avatar>
-              <span className="my-auto">
-                {detailDialog.detail?.shelter?.name}
-              </span>
-            </div> */}
 
             <div className="flex flex-row gap-2">
               <span className="font-medium my-auto">Vai trò:</span>{" "}
