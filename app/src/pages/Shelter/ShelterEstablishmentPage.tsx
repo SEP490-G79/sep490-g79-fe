@@ -1,9 +1,7 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
-
 import {
   Form,
   FormControl,
@@ -14,19 +12,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ArrowUpDown, Loader2Icon, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, Loader2Icon, MoreHorizontal, PlusSquare, RefreshCcw, Search, X } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DialogClose } from "@radix-ui/react-dialog";
-import { DataTable } from "@/components/data-table";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { ShelterEstablishmentRequest } from "@/types/ShelterEstablishmentRequest";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
@@ -35,8 +26,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import generateCodename from "@/utils/shelterCodeGenerator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { DataTableReverse } from "@/components/data-table-reverse";
 import AddressInputWithGoong from "@/utils/AddressInputWithGoong";
+import { DataTable } from "@/components/data-table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 const shelterEstablishmentSchema = z.object({
@@ -94,12 +86,11 @@ type detailDialogData = {
   };
 };
 
-const ShelterEstablishmentPage: React.FC = () => {
+const ShelterEstablishmentPage = () => {
     const [eligibleToRequest, setEligibleToRequest] = useState<eligibleToRequest>(); // du dieu kien de gui request
     const [requestList, setRequestList] = useState<ShelterEstablishmentRequest[]>([]);
     const [filteredRequestList, setFilteredRequestList] = useState<ShelterEstablishmentRequest[]>([]);
     const [submitLoading, setSubmitLoading] = useState<Boolean>(false);
-    const [submittedData, setSubmittedData] = useState<any>(null);
     const authAxios = useAuthAxios();
     const {shelterAPI} = useContext(AppContext)
     const [detailDialog, setDetailDialog] = useState<detailDialogData>({
@@ -119,6 +110,8 @@ const ShelterEstablishmentPage: React.FC = () => {
       },
     });
     const [location, setLocation] = useState({ lat: 0, lng: 0 });
+    const [refresh, setRefresh] = useState<boolean>(false);
+    const [searchValue, setSearchValue] = useState<string>("");
 
   const form = useForm<z.infer<typeof shelterEstablishmentSchema>>({
     resolver: zodResolver(shelterEstablishmentSchema),
@@ -134,32 +127,47 @@ const ShelterEstablishmentPage: React.FC = () => {
     },
   });
 
-  const { handleSubmit, reset, setValue, watch } = form
+  const { setValue } = form
 
   useEffect(() => {
     authAxios
       .get(`${shelterAPI}/get-shelter-request`)
-      .then(({data}) => {
-            console.log(data?.shelterRequest)
-            setRequestList(data?.shelterRequest);
-            setFilteredRequestList(data?.shelterRequest);
-            setEligibleToRequest({
-              isEligible: data?.isEligible,
-              reason: data?.reason
-            })
+      .then(({ data }) => {
+        setRequestList(data?.shelterRequest);
+        setFilteredRequestList(data?.shelterRequest);
+        setEligibleToRequest({
+          isEligible: data?.isEligible,
+          reason: data?.reason,
+        });
       })
       .catch((err) => {
-        console.log(err)
+        console.log(err);
       });
-  }, []);
+  }, [refresh]);
 
   // tu dong gen shelter code
-const nameValue = useWatch({ control: form.control, name: "name" });
-useEffect(() => {
-  if (nameValue) {
-    form.setValue("shelterCode", generateCodename(nameValue));
+  const nameValue = useWatch({ control: form.control, name: "name" });
+  useEffect(() => {
+    if (nameValue) {
+      form.setValue("shelterCode", generateCodename(nameValue));
+    }
+  }, [nameValue]);
+
+  function handleSearch (value : string){
+    if(value.trim().length < 1){
+      setFilteredRequestList(requestList);
+    }else{
+      const searchedList = requestList.filter(request => {
+        if(request.name && request.name.toLowerCase().includes(value.toLowerCase()) ||
+          request.email && request.email.toLowerCase().includes(value.toLowerCase())  ||
+          request.hotline && request.hotline.toLowerCase().includes(value.toLowerCase())  ||
+          request.address &&  request.address.toLowerCase().includes(value.toLowerCase()) ){
+          return request;
+        }
+      })
+      setFilteredRequestList(searchedList);
+    }
   }
-}, [nameValue]);
 
 
   const columns: ColumnDef<ShelterEstablishmentRequest>[] = [
@@ -262,7 +270,6 @@ useEffect(() => {
       },
       cell: ({ row }) => {
         const status = row.original.status;
-        console.log(status);
         let statusTiengViet = "";
         if (status === "active") {
           statusTiengViet = "Chấp thuận";
@@ -396,99 +403,42 @@ useEffect(() => {
     },
   ];
 
-  function searchShelter(
-        shelterData: ShelterEstablishmentRequest[],
-        keyword: string
-      ) {
-        const trimmedKeyword = keyword.trim().toLowerCase();
-    
-        // Nếu keyword rỗng thì trả về toàn bộ danh sách ban đầu
-        if (trimmedKeyword === "") {
-          setFilteredRequestList(shelterData);
-          return;
-        }
-    
-        const result: ShelterEstablishmentRequest[] = shelterData.filter((shelter) => {
-          return (
-            shelter.name.toLowerCase().includes(trimmedKeyword) ||
-            shelter.email.toLowerCase().includes(trimmedKeyword) ||
-            shelter.address.toLowerCase().includes(trimmedKeyword) ||
-            shelter.hotline.toString().includes(trimmedKeyword)
-          );
-        });
-        setFilteredRequestList(result);
-      }
 
-  const onSubmit = async (values: z.infer<typeof shelterEstablishmentSchema>) => {
-    const formData = new FormData();
-    formData.append("name", values.name);
-    formData.append("shelterCode", values.shelterCode);
-    formData.append("hotline", values.hotline);
-    formData.append("email", values.email);
-    formData.append("address", values.address);
-    formData.append("shelterLicense", values.shelterLicense);
-    formData.append("aspiration", values.aspiration);
-    formData.append("location", JSON.stringify(location)); 
-
+  const handleSubmitRequest = async (
+    values: z.infer<typeof shelterEstablishmentSchema>
+  ) => {
     try {
-        // formData.forEach((value, key) => {
-        //   console.log(key, value);
-
-        //   if (value instanceof File) {
-        //     console.log("Tên file:", value.name);
-        //     console.log("Loại file:", value.type);
-        //     console.log("Kích thước:", value.size, "bytes");
-        //   }
-        // });
-        setSubmitLoading(true);
-        const response = await authAxios.post(`${shelterAPI}/send-shelter-request`, formData);
-        if(response.status === 200){
-            setTimeout(() => {
-                setSubmitLoading(false)
-                toast.success(response?.data.message || "Gửi yêu cầu thành công")
-                authAxios
-                  .get(`${shelterAPI}/get-shelter-request`)
-                  .then(({ data }) => {
-                    setRequestList(data?.shelterRequest);
-                    setEligibleToRequest({
-                      isEligible: data?.isEligible,
-                      reason: data?.reason,
-                    });
-                  })
-                  .catch((err) => {
-                    console.log(err);
-                  });
-            }, 700)
-        }
-    } catch (err : any) {
-      toast.error(err?.response.data.message || err);
+      setSubmitLoading(true);
+      const formData = new FormData();
+      formData.append("name", values.name);
+      formData.append("shelterCode", values.shelterCode);
+      formData.append("hotline", values.hotline);
+      formData.append("email", values.email);
+      formData.append("address", values.address);
+      formData.append("shelterLicense", values.shelterLicense);
+      formData.append("aspiration", values.aspiration);
+      formData.append("location", JSON.stringify(location));
+      const response = await authAxios.post(`${shelterAPI}/send-shelter-request`, formData);
+      toast.success(response?.data.message || "Gửi yêu cầu thành công");
+      setRefresh((prev) => !prev);
+      form.reset();
+    } catch (err: any) {
+      toast.error(err?.response.data.message || "Lỗi gửi yêu cầu thành lập trạm cứu hộ");
+    } finally {
       setSubmitLoading(false);
     }
   };
 
-  const handleCancelRequest = async (shelterId : string) => {
+  const handleCancelRequest = async (shelterId: string) => {
     try {
-        await authAxios.put(`${shelterAPI}/cancel-shelter-request/${shelterId}`);
-        setTimeout(() => {
-          toast.success("Hủy yêu cầu thành công")
-          authAxios
-                  .get(`${shelterAPI}/get-shelter-request`)
-                  .then(({ data }) => {
-                    setRequestList(data?.shelterRequest);
-                    setEligibleToRequest({
-                      isEligible: data?.isEligible,
-                      reason: data?.reason,
-                    });
-                  })
-                  .catch((err) => {
-                    console.log(err);
-                  });
-        }, 2000)
-        
+      await authAxios.put(`${shelterAPI}/cancel-shelter-request/${shelterId}`);
+      toast.success("Hủy yêu cầu thành công");
+      setRefresh((prev) => !prev);
     } catch (error: any) {
-      console.log(error?.response.data.message)
+      console.log(error?.response.data.message);
+      toast.error(error?.response.data.message || "Lỗi hủy yêu cầu");
     }
-  }
+  };
 
   return (
     <div className="flex flex-1 flex-col py-6 px-40">
@@ -512,341 +462,358 @@ useEffect(() => {
             Yêu cầu thành lập trạm cứu hộ của bạn
           </h4>
           <div className="flex justify-between">
-            <Input
-              className="max-w-1/3"
-              type="string"
-              placeholder="Tìm kiếm theo tên, email, hotline, địa chỉ"
-              onChange={(e) => searchShelter(requestList, e.target.value)}
-            />
-            {eligibleToRequest?.isEligible ? (
-              <Dialog
-                onOpenChange={(open) => {
-                  if (!open) {
-                    form.reset();
+            <div className="flex gap-2">
+              <Input
+                className="w-80 pr-9"
+                type="string"
+                placeholder="Tìm kiếm theo tên, email, hotline, địa chỉ"
+                onChange={(e) => setSearchValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleSearch(searchValue);
                   }
                 }}
+              />
+              <Button
+                variant="outline"
+                onClick={() => handleSearch(searchValue)}
+                className="cursor-pointer"
               >
-                <DialogTrigger asChild>
-                  <Button className="cursor-pointer">
-                    Tạo yêu cầu thành lập trạm cứu hộ
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="w-full max-w-3xl !max-w-3xl">
-                  <DialogHeader>
-                    <DialogTitle className="text-center">
-                      Đơn yêu cầu thành lập trạm cứu hộ
-                    </DialogTitle>
-                    <DialogDescription>
-                      Vui lòng nhập thông tin chính xác và kiểm tra kĩ trước khi
-                      gửi đơn. Sau khi gửi sẽ không chỉnh sửa đơn được.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="px-5 py-3">
-                    <Form {...form}>
-                      <form
-                        onSubmit={form.handleSubmit(onSubmit)}
-                        className="space-y-6"
-                        encType="multipart/form-data"
-                      >
-                        {/* Grid 2 columns */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {/* Left column */}
-                          <div className="space-y-4">
-                            <FormField
-                              control={form.control}
-                              name="name"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Tên trạm cứu hộ</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      placeholder="Nhập tên trạm"
-                                      {...field}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="shelterCode"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Mã trạm cứu hộ</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      // disabled
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="hotline"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Hotline</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      placeholder="Nhập số hotline"
-                                      {...field}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="email"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Email</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      placeholder="example@email.com"
-                                      {...field}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                <Search /> Tìm kiếm
+              </Button>
+              {eligibleToRequest?.isEligible ? (
+                <Dialog
+                  onOpenChange={(open) => {
+                    if (!open) {
+                      form.reset();
+                    }
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" className="text-xs cursor-pointer">
+                      <PlusSquare className="text-(--primary)" />
+                      Tạo yêu cầu mới
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="w-full max-w-3xl !max-w-3xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-center">
+                        Đơn yêu cầu thành lập trạm cứu hộ
+                      </DialogTitle>
+                      <DialogDescription>
+                        Vui lòng nhập thông tin chính xác và kiểm tra kĩ trước
+                        khi gửi đơn. Sau khi gửi sẽ không chỉnh sửa đơn được.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="px-5 py-3">
+                      <Form {...form}>
+                        <form
+                          onSubmit={form.handleSubmit(handleSubmitRequest)}
+                          className="space-y-6"
+                          encType="multipart/form-data"
+                        >
+                          {/* Grid 2 columns */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Left column */}
+                            <div className="space-y-4">
+                              <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Tên trạm cứu hộ</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        placeholder="Nhập tên trạm"
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="shelterCode"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Mã trạm cứu hộ</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        // disabled
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="hotline"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Hotline</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        placeholder="Nhập số hotline"
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        placeholder="example@email.com"
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            {/* Right column */}
+                            <div className="space-y-4">
+                              <FormField
+                                control={form.control}
+                                name="address"
+                                render={({ field }) => (
+                                  <AddressInputWithGoong
+                                    value={field.value}
+                                    onChange={(val) => {
+                                      field.onChange(val);
+                                      setValue("address", val);
+                                    }}
+                                    onLocationChange={(loc) => setLocation(loc)}
+                                    error={
+                                      form.formState.errors.address?.message
+                                    }
+                                  />
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="aspiration"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Nguyện vọng thành lập</FormLabel>
+                                    <FormControl>
+                                      <Textarea
+                                        placeholder="Tôi muốn thành lập để..."
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="shelterLicense"
+                                render={({ field: { onChange } }) => (
+                                  <FormItem>
+                                    <FormLabel>Giấy phép hoạt động</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type="file"
+                                        accept="image/*,.pdf"
+                                        onChange={(e) => {
+                                          if (
+                                            e.target.files &&
+                                            e.target.files.length > 0
+                                          ) {
+                                            onChange(e.target.files[0]);
+                                          }
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
                           </div>
-
-                          {/* Right column */}
-                          <div className="space-y-4">
-                            <FormField
-                              control={form.control}
-                              name="address"
-                              render={({ field }) => (
-                                <AddressInputWithGoong
-                                  value={field.value}
-                                  onChange={(val) => {
-                                    field.onChange(val);
-                                    setValue("address", val);
-                                  }}
-                                  onLocationChange={(loc) => setLocation(loc)}
-                                  error={form.formState.errors.address?.message}
-                                />
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="aspiration"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Nguyện vọng thành lập</FormLabel>
-                                  <FormControl>
-                                    <Textarea
-                                      placeholder="Tôi muốn thành lập để..."
-                                      {...field}
-                                    />
-                                  </FormControl>
+                          {/* Commitment */}
+                          <FormField
+                            control={form.control}
+                            name="commitment"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start gap-2 mt-4">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    id="commitment"
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel htmlFor="commitment">
+                                    Tôi đã xem và cam kết tuân thủ nội dung
+                                    trong bản cam kết.{" "}
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button
+                                          variant="link"
+                                          className="text-blue-600 p-0 h-auto"
+                                        >
+                                          Xem cam kết
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent className="w-full max-w-4xl !max-w-4xl">
+                                        <DialogHeader>
+                                          <DialogTitle className="text-xl font-semibold text-center">
+                                            Nội dung cam kết
+                                          </DialogTitle>
+                                          <DialogDescription className="mt-4 max-h-[60vh] overflow-y-auto space-y-4 text-sm text-gray-700 leading-relaxed pr-2">
+                                            <p className="font-medium">
+                                              1. Cam kết về thông tin cung cấp:
+                                            </p>
+                                            <ul className="list-disc list-inside pl-4">
+                                              <li>
+                                                Tôi chịu trách nhiệm hoàn toàn
+                                                về tính chính xác, trung thực và
+                                                đầy đủ của tất cả các thông tin
+                                                đã khai báo trong biểu mẫu yêu
+                                                cầu thành lập trạm cứu hộ.
+                                              </li>
+                                              <li>
+                                                Tôi hiểu rằng việc cung cấp
+                                                thông tin sai lệch, giả mạo có
+                                                thể dẫn đến việc từ chối yêu cầu
+                                                và/hoặc bị xử lý theo quy định
+                                                của pháp luật hiện hành.
+                                              </li>
+                                            </ul>
+                                            <p className="font-medium">
+                                              2. Cam kết về mục đích hoạt động:
+                                            </p>
+                                            <ul className="list-disc list-inside pl-4">
+                                              <li>
+                                                Mục tiêu thành lập trạm cứu hộ
+                                                là vì mục đích nhân đạo, bảo vệ
+                                                và chăm sóc động vật bị bỏ rơi,
+                                                bị thương hoặc trong tình trạng
+                                                nguy cấp.
+                                              </li>
+                                              <li>
+                                                Trạm hoạt động phi lợi nhuận,
+                                                không thực hiện các hoạt động
+                                                mua bán động vật trái phép.
+                                              </li>
+                                            </ul>
+                                            <p className="font-medium">
+                                              3. Cam kết về pháp lý và đạo đức:
+                                            </p>
+                                            <ul className="list-disc list-inside pl-4">
+                                              <li>
+                                                Tôi cam kết tuân thủ đầy đủ các
+                                                quy định của pháp luật liên quan
+                                                đến quyền động vật, an toàn sinh
+                                                học và môi trường.
+                                              </li>
+                                              <li>
+                                                Tôi không sử dụng hình ảnh, danh
+                                                nghĩa trạm cứu hộ cho các mục
+                                                đích lừa đảo, quảng bá sai sự
+                                                thật hoặc các hoạt động gây ảnh
+                                                hưởng tiêu cực đến cộng đồng.
+                                              </li>
+                                            </ul>
+                                            <p className="font-medium">
+                                              4. Cam kết phối hợp và kiểm tra:
+                                            </p>
+                                            <ul className="list-disc list-inside pl-4">
+                                              <li>
+                                                Tôi sẵn sàng hợp tác với cơ quan
+                                                quản lý, tổ chức kiểm tra, thanh
+                                                tra trong quá trình hoạt động
+                                                của trạm.
+                                              </li>
+                                              <li>
+                                                Nếu được yêu cầu, tôi sẽ cung
+                                                cấp thêm giấy tờ chứng minh năng
+                                                lực, điều kiện hoạt động và hồ
+                                                sơ liên quan khác.
+                                              </li>
+                                            </ul>
+                                            <p>
+                                              Nếu vi phạm bất kỳ điều khoản nào
+                                              trong cam kết này, sẽ phải chịu
+                                              mọi hình thức xử lý theo quy định
+                                              của hệ thống và pháp luật.
+                                            </p>
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                      </DialogContent>
+                                    </Dialog>
+                                  </FormLabel>
                                   <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="shelterLicense"
-                              render={({ field: { onChange, ...rest } }) => (
-                                <FormItem>
-                                  <FormLabel>Giấy phép hoạt động</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      type="file"
-                                      accept="image/*,.pdf"
-                                      onChange={(e) => {
-                                        if (
-                                          e.target.files &&
-                                          e.target.files.length > 0
-                                        ) {
-                                          onChange(e.target.files[0]);
-                                        }
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Commitment */}
-                        <FormField
-                          control={form.control}
-                          name="commitment"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-start gap-2 mt-4">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  id="commitment"
-                                />
-                              </FormControl>
-                              <div className="space-y-1 leading-none">
-                                <FormLabel htmlFor="commitment">
-                                  Tôi đã xem và cam kết tuân thủ nội dung trong
-                                  bản cam kết.{" "}
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <Button
-                                        variant="link"
-                                        className="text-blue-600 p-0 h-auto"
-                                      >
-                                        Xem cam kết
-                                      </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="w-full max-w-4xl !max-w-4xl">
-                                      <DialogHeader>
-                                        <DialogTitle className="text-xl font-semibold text-center">
-                                          Nội dung cam kết
-                                        </DialogTitle>
-                                        <DialogDescription className="mt-4 max-h-[60vh] overflow-y-auto space-y-4 text-sm text-gray-700 leading-relaxed pr-2">
-                                          <p className="font-medium">
-                                            1. Cam kết về thông tin cung cấp:
-                                          </p>
-                                          <ul className="list-disc list-inside pl-4">
-                                            <li>
-                                              Tôi chịu trách nhiệm hoàn toàn về
-                                              tính chính xác, trung thực và đầy
-                                              đủ của tất cả các thông tin đã
-                                              khai báo trong biểu mẫu yêu cầu
-                                              thành lập trạm cứu hộ.
-                                            </li>
-                                            <li>
-                                              Tôi hiểu rằng việc cung cấp thông
-                                              tin sai lệch, giả mạo có thể dẫn
-                                              đến việc từ chối yêu cầu và/hoặc
-                                              bị xử lý theo quy định của pháp
-                                              luật hiện hành.
-                                            </li>
-                                          </ul>
-
-                                          <p className="font-medium">
-                                            2. Cam kết về mục đích hoạt động:
-                                          </p>
-                                          <ul className="list-disc list-inside pl-4">
-                                            <li>
-                                              Mục tiêu thành lập trạm cứu hộ là
-                                              vì mục đích nhân đạo, bảo vệ và
-                                              chăm sóc động vật bị bỏ rơi, bị
-                                              thương hoặc trong tình trạng nguy
-                                              cấp.
-                                            </li>
-                                            <li>
-                                              Trạm hoạt động phi lợi nhuận,
-                                              không thực hiện các hoạt động mua
-                                              bán động vật trái phép.
-                                            </li>
-                                          </ul>
-
-                                          <p className="font-medium">
-                                            3. Cam kết về pháp lý và đạo đức:
-                                          </p>
-                                          <ul className="list-disc list-inside pl-4">
-                                            <li>
-                                              Tôi cam kết tuân thủ đầy đủ các
-                                              quy định của pháp luật liên quan
-                                              đến quyền động vật, an toàn sinh
-                                              học và môi trường.
-                                            </li>
-                                            <li>
-                                              Tôi không sử dụng hình ảnh, danh
-                                              nghĩa trạm cứu hộ cho các mục đích
-                                              lừa đảo, quảng bá sai sự thật hoặc
-                                              các hoạt động gây ảnh hưởng tiêu
-                                              cực đến cộng đồng.
-                                            </li>
-                                          </ul>
-
-                                          <p className="font-medium">
-                                            4. Cam kết phối hợp và kiểm tra:
-                                          </p>
-                                          <ul className="list-disc list-inside pl-4">
-                                            <li>
-                                              Tôi sẵn sàng hợp tác với cơ quan
-                                              quản lý, tổ chức kiểm tra, thanh
-                                              tra trong quá trình hoạt động của
-                                              trạm.
-                                            </li>
-                                            <li>
-                                              Nếu được yêu cầu, tôi sẽ cung cấp
-                                              thêm giấy tờ chứng minh năng lực,
-                                              điều kiện hoạt động và hồ sơ liên
-                                              quan khác.
-                                            </li>
-                                          </ul>
-
-                                          <p>
-                                            Nếu vi phạm bất kỳ điều khoản nào
-                                            trong cam kết này, sẽ phải chịu mọi
-                                            hình thức xử lý theo quy định của hệ
-                                            thống và pháp luật.
-                                          </p>
-                                        </DialogDescription>
-                                      </DialogHeader>
-                                    </DialogContent>
-                                  </Dialog>
-                                </FormLabel>
-                                <FormMessage />
-                              </div>
-                            </FormItem>
-                          )}
-                        />
-
-                        {/* Footer */}
-                        <DialogFooter className="pt-4">
-                          <DialogClose asChild>
-                            <Button
-                              variant="secondary"
-                              className="cursor-pointer"
-                            >
-                              Đóng
-                            </Button>
-                          </DialogClose>
-                          {submitLoading ? (
-                            <Button disabled>
-                              <>
-                                <Loader2Icon className="animate-spin mr-2" />
-                                Vui lòng chờ
-                              </>
-                            </Button>
-                          ) : (
-                            <Button type="submit" className="cursor-pointer">
-                              Gửi yêu cầu
-                            </Button>
-                          )}
-                        </DialogFooter>
-                      </form>
-                    </Form>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            ) : (
-              <p className="scroll-m-20 text-md font-semibold tracking-tight text-destructive my-auto">
-                {eligibleToRequest?.reason}
-              </p>
-            )}
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+                          {/* Footer */}
+                          <DialogFooter className="pt-4">
+                            <DialogClose asChild>
+                              <Button
+                                variant="secondary"
+                                className="cursor-pointer"
+                              >
+                                Đóng
+                              </Button>
+                            </DialogClose>
+                            {submitLoading ? (
+                              <Button disabled>
+                                <>
+                                  <Loader2Icon className="animate-spin mr-2" />
+                                  Vui lòng chờ
+                                </>
+                              </Button>
+                            ) : (
+                              <Button type="submit" className="cursor-pointer">
+                                Gửi yêu cầu
+                              </Button>
+                            )}
+                          </DialogFooter>
+                        </form>
+                      </Form>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              ) : (
+                <p className="scroll-m-20 text-md font-semibold tracking-tight text-destructive my-auto">
+                  {eligibleToRequest?.reason}
+                </p>
+              )}
+            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={"ghost"}
+                  className="cursor-pointer"
+                  onClick={() => setRefresh((prev) => !prev)}
+                >
+                  <RefreshCcw />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Refresh</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
         <div className="col-span-12 px-5">
-          <DataTableReverse
-            columns={columns}
-            data={filteredRequestList ?? []}
-          />
+          <DataTable columns={columns} data={filteredRequestList ?? []} />
         </div>
       </div>
 

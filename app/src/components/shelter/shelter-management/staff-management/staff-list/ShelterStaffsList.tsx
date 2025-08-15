@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,26 +11,21 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Ban, ChevronDown, Loader2Icon, MoreHorizontal, RotateCcwKey, UserRoundCog } from "lucide-react";
+import { Loader, Loader2Icon, LoaderCircle, Search } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
-import type { ColumnDef } from "@tanstack/react-table";
 import type { ShelterMember } from "@/types/ShelterMember";
 import { useParams } from "react-router-dom";
-import { DataTableStaff } from "@/components/data-table-staff";
 import { Separator } from "@/components/ui/separator";
-import { SearchFilter } from "@/components/SearchFilter";
 import { Command, CommandItem } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { EmailSelector } from "@/components/EmailSelector";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import StaffTable from "./StaffTable";
+import { Input } from "@/components/ui/input";
 
 
 const inviteSchema = z.object({
@@ -57,7 +52,7 @@ const ShelterStaffsList = () => {
     const [shelterMembersList, setShelterMembersList] = useState<ShelterMember[]>([]);
      const [filteredMembers, setFilteredMembers] = useState<ShelterMember[]>();
      const [eligibleEmails, setEligibleEmails] = useState<eligibleEmail>([]);
-    const [loadingButton, setLoadingButton] = useState<Boolean>(false);
+    const [loadingButton, setLoadingButton] = useState<boolean>(false);
     const authAxios = useAuthAxios();
     const {shelterAPI, user} = useContext(AppContext)
     const {shelterId} = useParams();
@@ -65,6 +60,7 @@ const ShelterStaffsList = () => {
     const [memberRefresh, setMemberRefresh] = useState<boolean>(false);
     const [openDialog, setOpenDialog] = useState(false);
     const isManager = shelterMembersList.find(member => member.id === user?._id)?.shelterRoles.includes("manager");
+    const [search, setSearch] = useState<string>("");
 
     const form = useForm<InviteFormData>({
     resolver: zodResolver(inviteSchema),
@@ -103,8 +99,27 @@ const ShelterStaffsList = () => {
       .catch(err => console.log(err?.response.data.message))
     },[emailRefresh])
 
-  const handleInviteMember = (data: InviteFormData) => {
+    function searchMember(searchValue: string){
+      const searchedMembers = shelterMembersList.filter((member) => {
+        if (
+          (member.fullName &&
+            member.fullName.toLowerCase().includes(searchValue.toLowerCase())) ||
+          (member.email &&
+            member.email.toLowerCase().includes(searchValue.toLowerCase()))
+        ) {
+          return member;
+        }
+      });
+      if (searchValue.trim().length === 0) {
+        setFilteredMembers(shelterMembersList);
+      } else {
+        setFilteredMembers(searchedMembers);
+      }
+    }
+
+  const handleInviteMember = async (data: InviteFormData) => {
     try {
+      setLoadingButton(true)
       if (data.email.length < 1 || data.email[0].trim().length < 3) {
         setError("email", {
           type: "manual",
@@ -112,21 +127,18 @@ const ShelterStaffsList = () => {
         });
         return;
       }
-      authAxios.post(`${shelterAPI}/invite-members/${shelterId}`, {
+      await authAxios.post(`${shelterAPI}/invite-members/${shelterId}`, {
         emailsList: data.email, 
         roles: data.role
       })
-      .then(({data}) => {
-        console.log(data);
-        setTimeout(() => {
-          toast.success(`Gửi lời mời thành công`);
-          setEmailRefresh(prev => !prev);
-          reset();
-        })
-      })
-      .catch(err => console.log(err?.response.data.message))
+      toast.success(`Gửi lời mời thành công`);
+      setEmailRefresh(prev => !prev);
+      reset();
     } catch (error : any) {
-      console.log(error?.response.data.message);
+      toast.error(error?.response.data.message || "Lỗi khi gửi lời mời thành viên")
+      console.log(error?.response.data.message || "Lỗi khi gửi lời mời thành viên");
+    } finally{
+      setLoadingButton(false);
     }
   };
 
@@ -175,10 +187,10 @@ const ShelterStaffsList = () => {
 
   if(shelterMembersList.find(member => member.id === user?._id)?.shelterRoles.includes("manager")){
     return (
-    <div className="flex flex-1 flex-col py-6 px-10">
+    <div className="flex flex-1 flex-col py-6">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="col-span-12 px-5 flex flex-col gap-5">
-          <h4 className="scroll-m-20 min-w-40 text-xl font-semibold tracking-tight text-center">
+          <h4 className="scroll-m-20 min-w-50 text-xl font-semibold tracking-tight text-center">
             Quản lý thành viên của trạm cứu hộ
           </h4>
           <div className="col-span-12">
@@ -270,7 +282,16 @@ const ShelterStaffsList = () => {
                   )}
                 />
                 <div className="flex justify-start">
-                  <Button type="submit">Mời thành viên</Button>
+                  <Button type="submit" 
+                    className="cursor-pointer"
+                    disabled={loadingButton}
+                  >
+                    {loadingButton ? 
+                    <span className="flex gap-1">
+                      <LoaderCircle className="animate-spin" /> Vui lòng chờ
+                    </span> : 
+                    "Mời thành viên"}
+                    </Button>
                 </div>
               </form>
             </Form>
@@ -278,12 +299,14 @@ const ShelterStaffsList = () => {
         </div>
         <div className="col-span-12 px-5">
           <Separator className="my-4" />
-          <SearchFilter<ShelterMember>
-            data={shelterMembersList}
-            searchFields={["fullName"]}
-            onResultChange={setFilteredMembers}
-            placeholder="Tìm theo tên"
-          />
+          <div className="flex gap-1">
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(event) =>
+                event.key === "Enter" && searchMember(search)}
+                placeholder='Tìm kiếm...' className="max-w-90"/>
+              <Button variant="outline" className="text-xs cursor-pointer" onClick={() => searchMember(search)}>
+                  <Search className="text-(--primary)" />Tìm kiếm
+              </Button>
+          </div>
           <StaffTable user={user} 
           isManager={isManager || false} 
           handleKickMember={handleKickMember} 
@@ -354,12 +377,14 @@ const ShelterStaffsList = () => {
             Danh sách thành viên của trạm cứu hộ
           </h4>
           <Separator className="my-4" />
-          <SearchFilter<ShelterMember>
-            data={shelterMembersList}
-            searchFields={["fullName"]}
-            onResultChange={setFilteredMembers}
-            placeholder="Tìm theo tên"
-          />
+          <div className="flex gap-1">
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(event) =>
+                event.key === "Enter" && searchMember(search)}
+                placeholder='Tìm kiếm...' className="max-w-90"/>
+              <Button variant="outline" className="text-xs cursor-pointer" onClick={() => searchMember(search)}>
+                  <Search className="text-(--primary)" />Tìm kiếm
+              </Button>
+          </div>
           <StaffTable user={user} 
           isManager={isManager || false} 
           handleKickMember={handleKickMember} 

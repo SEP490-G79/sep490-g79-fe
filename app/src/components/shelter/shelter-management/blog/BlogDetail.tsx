@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import type { Blog } from "@/types/Blog";
 import { Calendar } from "lucide-react";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const BlogDetail = ({blog}: {blog: Blog | undefined}) => {
 
@@ -14,8 +14,9 @@ const BlogDetail = ({blog}: {blog: Blog | undefined}) => {
             {blog.title}
           </h1>
           <div className='flex gap-2 mb-2'>
-            <Avatar>
+            <Avatar className="ring ring-2 ring-primary">
               <AvatarImage src={blog.createdBy.avatar} alt={`avatar cua ${blog.createdBy.fullName}`} />
+              <AvatarFallback>{blog.createdBy?.fullName && blog.createdBy.fullName[0]}</AvatarFallback>
             </Avatar>
             <p className='my-auto truncate max-w-[10vw]'>{blog.createdBy.fullName}</p>
           </div>
