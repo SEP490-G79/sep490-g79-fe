@@ -50,16 +50,32 @@ interface Step4Props {
   onBack: () => void;
   submission: MissionForm | undefined;
   onLoadedConsentForm?: (form: ConsentForm) => void;
+  consentForm?: ConsentForm | null;  
 }
-const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
+const Step5_ConsentForm = ({ submission, onLoadedConsentForm, consentForm }: Step4Props) => {
   const { coreAPI } = useContext(AppContext);
   const authAxios = useAuthAxios();
   const [isLoading, setIsLoading] = React.useState(false);
-  const [consentForm, setConsentForm] = React.useState<ConsentForm>();
+  // const [consentForm, setConsentForm] = React.useState<ConsentForm>();
   const [isAgreed, setIsAgreed] = React.useState(false);
   const [userNote, setUserNote] = React.useState("");
-
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (consentForm || !submission) return;
+    (async () => {
+      setIsLoading(true);
+      try {
+        const res = await authAxios.get(`${coreAPI}/consentForms/get-by-user`);
+        const found = res.data?.find((c: ConsentForm) => c?.pet?._id === submission?.adoptionForm?.pet?._id);
+        if (found) onLoadedConsentForm?.(found); 
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [submission, consentForm, coreAPI, authAxios, onLoadedConsentForm]);
+
+
   const fetchConsentForm = async () => {
     setIsLoading(true);
     await authAxios
@@ -70,7 +86,6 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
         );
         // console.log(submission);
 
-        setConsentForm(consentForm);
         onLoadedConsentForm?.(consentForm);
         // const attachments = data.attachments.map((attachment: any) => {
         //   return new File([attachment], attachment.fileName, {
@@ -110,8 +125,7 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm }: Step4Props) => {
         note: userNote,
       })
       .then((res) => {
-        setConsentForm(res.data);
-
+        onLoadedConsentForm?.(res.data);
         toast.success("Cập nhật trạng thái thành công!");
       })
       .catch((err) => {

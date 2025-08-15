@@ -96,7 +96,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import { socketClient } from "@/lib/socket.io";
+import { useRef } from "react";
 export function ConsentForms() {
   const { shelterId } = useParams();
   const { coreAPI, shelterConsentForms, setShelterConsentForms } =
@@ -141,6 +142,27 @@ export function ConsentForms() {
   useEffect(() => {
     fetchShelterConsentForms();
   }, [shelterId, coreAPI]);
+
+   const fetchRef = useRef(fetchShelterConsentForms);
+  useEffect(() => { fetchRef.current = fetchShelterConsentForms; }, [fetchShelterConsentForms]);
+  useEffect(() => {
+    if (!shelterId) return;
+    const onChange = (payload: { consentFormId: string; petId: string; status: string }) => {
+      setShelterConsentForms(prev => {
+        const idx = prev.findIndex(f => f._id === payload.consentFormId);
+        if (idx === -1) {
+          fetchRef.current();
+          return prev;
+        }
+        const next = [...prev];
+        next[idx] = { ...next[idx], status: payload.status };
+        return next;
+      });
+    };
+
+    socketClient.subscribe("consentForm:statusChanged", onChange);
+    return () => socketClient.unsubscribe("consentForm:statusChanged");
+  }, [shelterId, setShelterConsentForms]);
 
   const handleDeleteConsentForm = async (selectedId: string) => {
     if (!selectedId) {

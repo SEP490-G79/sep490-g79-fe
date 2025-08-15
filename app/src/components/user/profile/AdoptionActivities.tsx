@@ -74,11 +74,15 @@ export default function AdoptionActivities({ userId }: Props) {
   const [activityPage, setActivityPage] = useState(1);
   const [selectedShelter, setSelectedShelter] = useState("Tất cả");
   const [selectedStatus, setSelectedStatus] = useState("Tất cả");
-  const { petsList, userProfile, coreAPI } = useAppContext();
+  const { petsList, userProfile, coreAPI, fetchPetsList } = useAppContext();
   const [submissions, setSubmissions] = useState<MissionForm[]>([]);
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
   const [returnRequests, setReturnRequests] = useState<any[]>([]);
+
+ useEffect(() => {
+    fetchPetsList();
+  }, []);
 
 
   useEffect(() => {
@@ -88,7 +92,7 @@ export default function AdoptionActivities({ userId }: Props) {
         setSubmissions(res.data);
       })
       .catch(() => {
-        toast.error("Không thể lấy thông tin hoạt động nhận nuôi");
+        // toast.error("Không thể lấy thông tin hoạt động nhận nuôi");
       });
   }, [activeTab, userId]);
 
