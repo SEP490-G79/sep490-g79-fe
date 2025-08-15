@@ -102,13 +102,13 @@ export default function PetTable({
         </Button>
       ),
       cell: ({ row }) => (
-        <Avatar className="w-10 h-10 rounded ring-2 ring-(--primary)">
+        <Avatar className="w-10 h-10 rounded-sm ring-2 ring-(--primary)">
           <AvatarImage
             src={row.original.photos?.[0]}
             alt={row.original.name}
-            className="object-cover "
+            className="object-cover object-center rounded-sm"
           />
-          <AvatarFallback>
+          <AvatarFallback className="object-cover object-center rounded-sm">
             {row.original.name?.charAt(0).toUpperCase() || "?"}
           </AvatarFallback>
         </Avatar>
@@ -204,10 +204,12 @@ export default function PetTable({
             <DropdownMenuItem
               onClick={() =>
                 toast.error("Xác nhận xóa thú nuôi!", {
-                  description: "Bạn có chắc muốn xóa bạn này không? Không thể hoàn tác!",
+                  description:
+                    "Bạn có chắc muốn xóa bạn này không? Không thể hoàn tác!",
                   action: {
                     label: "Xóa",
-                    onClick: () => row.original._id && onDelete(row.original._id),
+                    onClick: () =>
+                      row.original._id && onDelete(row.original._id),
                   },
                 })
               }
