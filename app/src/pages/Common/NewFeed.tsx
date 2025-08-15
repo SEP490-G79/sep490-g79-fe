@@ -274,7 +274,7 @@ const Newfeed = () => {
   };
   const handleDeletePost = async (postId: string | number) => {
     try {
-      await authAxios.delete(`${coreAPI}/posts/${postId}`);
+      await authAxios.delete(`${coreAPI}/posts/${postId}/delete`);
       toast.success("Xoá bài viết thành công");
       setPosts((prev) => prev.filter((p) => p._id !== postId));
     } catch (err) {

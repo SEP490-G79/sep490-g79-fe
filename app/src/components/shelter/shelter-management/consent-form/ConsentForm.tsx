@@ -78,7 +78,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
+import { socketClient } from "@/lib/socket.io";
+import { useRef } from "react";
 export default function ConsentForm() {
   const { shelterId, consentFormId } = useParams();
   const { coreAPI, shelterConsentForms, setShelterConsentForms } =
@@ -173,6 +174,32 @@ export default function ConsentForm() {
       fetchConsentForm();
     }
   }, [shelterId, consentFormId]);
+
+  
+  const consentFormIdRef = useRef<string | undefined>(consentFormId);
+  useEffect(() => { consentFormIdRef.current = consentFormId; }, [consentFormId]);
+
+  const softRefresh = async () => {
+    await fetchConsentForm();
+  };
+
+  useEffect(() => {
+    if (!shelterId || !consentFormId) return;
+    let debounce: ReturnType<typeof setTimeout> | null = null;
+    const onChange = (payload: { consentFormId: string; petId: string; status: string }) => {
+      if (payload.consentFormId !== consentFormIdRef.current) return;
+      setConsentForm(prev => (prev ? { ...prev, status: payload.status } : prev));
+      if (debounce) clearTimeout(debounce);
+      debounce = setTimeout(() => softRefresh().catch(() => {}), 150);
+    };
+
+    socketClient.subscribe("consentForm:statusChanged", onChange);
+    return () => {
+      socketClient.unsubscribe("consentForm:statusChanged");
+      if (debounce) clearTimeout(debounce);
+    };
+  }, [shelterId, consentFormId]);
+
 
   const fetchAddressSuggestions = async (query: string) => {
     if (!query.trim()) {

@@ -26,10 +26,6 @@ consentForm: ConsentForm | undefined | null;
 }
 
 const Step6_Result = ({  onBack, submission , consentForm }: Step6Props) => {
-
-console.log(consentForm);
-
-
   const statusList: Record<string, string> = {
     pending: "Đang chờ xét duyệt",
     scheduling: "Đang lên lịch phỏng vấn",
@@ -44,27 +40,34 @@ console.log(consentForm);
   if (!submission) {
     return <div className="text-center mt-10">Đang tải thông tin đơn nhận nuôi...</div>;
   }
+  const isNegative =
+  submission.status === "rejected" ||
+  consentForm?.status === "rejected" ||
+  consentForm?.status === "cancelled";
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
 
       <Card className="max-w-3xl mx-auto shadow-lg dark:border-primary">
         <CardHeader className="flex items-center gap-3">
-          {submission.status === "rejected" || consentForm?.status === "rejected" ? (
-            <>
-              <FileText className="text-red-500 w-6 h-6" />
-              <CardTitle className="text-xl font-semibold text-red-600">
-                Rất tiếc, đơn đăng ký nhận nuôi của bạn đã bị từ chối.
-              </CardTitle>
-            </>
-          ) : (
-            <>
-              <CheckCircle className="text-green-500 w-6 h-6" />
-              <CardTitle className="text-xl font-semibold text-green-700">
-                Đăng kí nhận nuôi thành công!
-              </CardTitle>
-            </>
-          )}
-        </CardHeader>
+  {isNegative ? (
+    <>
+      <FileText className="text-red-500 w-6 h-6" />
+      <CardTitle className="text-xl font-semibold text-red-600">
+        {consentForm?.status === "cancelled"
+          ? "Bạn đã hủy yêu cầu nhận nuôi."
+          : "Rất tiếc, đơn đăng ký nhận nuôi của bạn đã bị từ chối."}
+      </CardTitle>
+    </>
+  ) : (
+    <>
+      <CheckCircle className="text-green-500 w-6 h-6" />
+      <CardTitle className="text-xl font-semibold text-green-700">
+        Đăng kí nhận nuôi thành công!
+      </CardTitle>
+    </>
+  )}
+</CardHeader>
 
 
         <Separator />

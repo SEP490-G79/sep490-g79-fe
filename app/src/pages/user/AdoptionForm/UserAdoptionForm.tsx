@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext, useRef } from "react";
+import { useEffect, useState, useContext, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 import axios from "axios";
@@ -20,6 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { socketClient } from "@/lib/socket.io"; 
 
 
 const UserAdoptionFormPage = () => {
@@ -88,12 +89,7 @@ const UserAdoptionFormPage = () => {
           navigate("/");
           return;
         }
-
-
-
         setForm(res.data);
-
-
         // Kiểm tra đã nộp chưa
         const checkRes = await authAxios.post(
           `${coreAPI}/pets/${id}/adoption-submissions/check-user-submitted`,
@@ -106,8 +102,6 @@ const UserAdoptionFormPage = () => {
           setSubmissionId(checkRes.data.submissionId);
           setAgreed(true);
           setHasChecked(checkRes.data);
-
-
           // Fetch consentForm nếu đã có submission
 
 try {
@@ -216,6 +210,132 @@ try {
     }
   }, [submissionId, submission, hasCheckedSubmitted]);
 
+useEffect(() => {
+  setStep(computeStep(submission, consentForm, hasChecked));
+}, [submission?.status, consentForm?.status, hasChecked?.selectedSchedule]);
+const computeStep = (
+  sub: any | null,
+  consent: ConsentForm | null,
+  hasChecked: any
+) => {
+  const s = sub?.status;
+  const consentStatus = consent?.status;
+
+  if (consentStatus === "approved" || consentStatus === "rejected" || consentStatus === "cancelled") return 6;
+
+  if (s === "pending" || s === "scheduling") return 3;
+  if (s === "interviewing" || s === "reviewed") return 4;
+  if (s === "approved") return 5;
+  if (s === "rejected") return hasChecked?.selectedSchedule ? 6 : 3;
+
+  return 3;
+};
+
+// giữ id hiện hành để tránh stale closure
+const petIdRef = useRef<string | null>(null);
+const submissionIdRef = useRef<string | null>(null);
+useEffect(() => { petIdRef.current = id ?? null; }, [id]);
+useEffect(() => { submissionIdRef.current = submissionId ?? null; }, [submissionId]);
+
+// refetch consent form (get-by-user) và cập nhật step
+const fetchAndApplyConsent = useCallback(async () => {
+  const consentRes = await authAxios.get(`${coreAPI}/consentForms/get-by-user`);
+  if (Array.isArray(consentRes.data)) {
+    const matched = consentRes.data.find((f: ConsentForm) => f?.pet?._id === petIdRef.current);
+    if (matched) setConsentForm(matched);
+    // tính step mới dựa trên submission/consent hiện tại
+    setStep((prev) => computeStep(submission, matched ?? null, hasChecked));
+  }
+}, [authAxios, coreAPI, submission, hasChecked]);
+
+// đã có sẵn:
+const fetchAndApplySubmission = useCallback(async (sid: string) => {
+  const res = await authAxios.get(`${coreAPI}/adoption-submissions/${sid}`);
+  const fresh = res.data;
+  setSubmission(fresh);
+
+  // map answers
+  const parsed: Record<string, string | string[]> = {};
+  fresh.answers.forEach((item: any) => {
+    const qid = typeof item.questionId === "string" ? item.questionId : item.questionId?._id;
+    if (!qid) return;
+    parsed[qid] = item.selections.length === 1 ? item.selections[0] : item.selections;
+  });
+  setAnswers(parsed);
+
+  // cập nhật step (không đụng consent ở đây)
+  setStep(computeStep(fresh, consentForm, hasChecked));
+}, [authAxios, coreAPI, consentForm, hasChecked]);
+
+// debounce nhẹ để tránh spam refetch khi bắn nhiều event
+const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+useEffect(() => {
+  if (!id) return;
+
+  const onSocketEvent = (eventName: string) => async (payload: any) => {
+    // lọc theo pet đang xem
+    if (payload?.petId && payload.petId !== petIdRef.current) return;
+
+    // optimistic step khi biết status ngay trong payload
+    if (eventName !== "consentForm:statusChanged") {
+      const sid = submissionIdRef.current;
+      if (sid && payload?.submissionId === sid) {
+        // Nếu backend gửi kèm status thì dựa vào đó chuyển step nhanh
+        if (payload?.status) {
+          // tự tính step tạm từ status
+          const status = payload.status as string;
+          const tmpSubmission = { ...submission, status };
+          setStep(computeStep(tmpSubmission, consentForm, hasChecked));
+        }
+      }
+    } else {
+      // consentForm:statusChanged ⇒ nếu là send/approved/rejected, đẩy step ngay
+      if (payload?.status === "approved" || payload?.status === "rejected" || payload?.status === "cancelled") {
+        setStep(6);
+      } else if (payload?.status === "send") {
+        setStep((prev) => (prev < 5 ? 5 : prev));
+      }
+    }
+
+    // debounce refetch: submission/consent chạy song song khi cần
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const sid = submissionIdRef.current;
+
+      await Promise.allSettled([
+        // Khi là event liên quan submission ⇒ refetch submission (nếu đang xem đúng submission)
+        (eventName === "adoptionSubmission:interviewSchedule" ||
+         eventName === "adoptionSubmission:statusChanged") && sid && payload?.submissionId === sid
+          ? fetchAndApplySubmission(sid)
+          : Promise.resolve(),
+
+        // Khi là event consent ⇒ refetch consent
+        eventName === "consentForm:statusChanged"
+          ? fetchAndApplyConsent()
+          : Promise.resolve(),
+      ]);
+    }, 150);
+  };
+
+  // đăng ký một lần cho tất cả event liên quan user
+  const bindings: Array<[string, (p: any) => void]> = [
+    ["adoptionSubmission:interviewSchedule", onSocketEvent("adoptionSubmission:interviewSchedule")],
+    // nếu sau này bạn bắn statusChanged về user thì đã sẵn sàng:
+    ["adoptionSubmission:statusChanged",   onSocketEvent("adoptionSubmission:statusChanged")],
+    ["consentForm:statusChanged",          onSocketEvent("consentForm:statusChanged")],
+  ];
+
+  // đảm bảo không nhân bản listener
+  bindings.forEach(([ev]) => socketClient.unsubscribe(ev));
+  bindings.forEach(([ev, cb]) => socketClient.subscribe(ev, cb));
+
+  return () => {
+    bindings.forEach(([ev]) => socketClient.unsubscribe(ev));
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+  };
+}, [id, fetchAndApplySubmission, fetchAndApplyConsent, submission, consentForm, hasChecked]);
+
 
 
   // Ghi lại mỗi khi step thay đổi
@@ -267,7 +387,7 @@ try {
   else if (status === "approved") {
     maxStep = 4;
   }
-  if (consentStatus === "approved" || consentStatus === "rejected") {
+  if (consentStatus === "approved" || consentStatus === "rejected" ||   consentStatus === "cancelled") {
     maxStep = 5;
   }
 
@@ -443,8 +563,10 @@ try {
           onNext={next}
           onBack={back}
           submission={submission}
-          onLoadedConsentForm={(form) => setConsentForm(form)} />
-
+          onLoadedConsentForm={(f) => setConsentForm(f)} 
+          consentForm={consentForm}  
+          />
+          
       case 6:
         return <Step6_Result onNext={next} onBack={back} submission={submission} consentForm={consentForm} />
       default:

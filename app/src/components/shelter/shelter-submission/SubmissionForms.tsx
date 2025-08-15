@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAppContext } from "@/context/AppContext";
 import type { Pet } from "@/types/Pet";
 import useAuthAxios from "@/utils/authAxios";
@@ -21,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { MissionForm } from "@/types/MissionForm";
 import { ArrowRight } from 'lucide-react';
+import { socketClient } from "@/lib/socket.io"; 
 
 export default function SubmissionForms() {
     const { coreAPI, setSubmissionsByPetId } = useAppContext();
@@ -97,6 +98,45 @@ export default function SubmissionForms() {
         fetchSubmissions();
     }, [availablePets]);
 
+const upsertSubmissionsForPet = useCallback(async (petId: string) => {
+  try {
+    if (!petId) return;
+    const resOne = await authAxios.post(`${coreAPI}/adoption-submissions/by-pet-ids`, { petIds: [petId] });
+    const listForPet: MissionForm[] = resOne.data || [];
+
+    setSubmissionsByPetId(prev => {
+      const next = { ...(prev || {}) };
+      next[petId] = listForPet;
+      return next;
+    });
+
+    setSubmissions(prev => {
+      const rest = (prev || []).filter(s => s?.adoptionForm?.pet?._id !== petId);
+      return [...listForPet, ...rest];
+    });
+
+    setSubmissionCountByPet(prev => ({
+      ...prev,
+      [petId]: listForPet.length || 0,
+    }));
+  } catch (e) {
+    console.error("upsertSubmissionsForPet failed", e);
+  }
+}, [authAxios, coreAPI, setSubmissionsByPetId, setSubmissions, setSubmissionCountByPet]);
+
+useEffect(() => {
+  if (!socketClient) return;
+
+  const handler = ({ petId }: { petId: string }) => {
+    upsertSubmissionsForPet(petId);
+  };
+
+  socketClient.subscribe("adoptionSubmission:created", handler);
+
+  return () => {
+   socketClient.unsubscribe("adoptionSubmission:created");
+  };
+}, [socketClient, upsertSubmissionsForPet]);
 
 
     // Reset page khi đổi tab

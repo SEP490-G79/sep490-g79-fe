@@ -89,7 +89,7 @@ function UserNav() {
     const { _id } = notification;
 
     toast("Thông báo mới!", {
-      description: notification.content,
+      description: notification.from.fullName + ": " + notification.content,
       action: {
         label: "Xem",
         onClick: async () => {
