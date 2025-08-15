@@ -77,30 +77,34 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function AdoptionForms() {
   const { shelterId } = useParams();
-  const { coreAPI, shelterForms, setShelterForms, petsList,  setShelterTemplates } =
-    React.useContext(AppContext);
+  const {
+    coreAPI,
+    shelterForms,
+    setShelterForms,
+    petsList,
+    setShelterTemplates,
+  } = React.useContext(AppContext);
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = React.useState(false);
   const [tabValue, setTabValue] = React.useState("active");
 
-
-    React.useEffect(() => {
-      setIsLoading(true)
-      authAxios
-        .get(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/get-all`)
-        .then((res) => {
-          setShelterTemplates(res.data);
-        })
-        .catch((err) => {
-          console.log(err?.response?.data?.message);
-        })
-        .finally(()=>{
-          setTimeout(() => {
-            setIsLoading(false)
-          }, 200);
-        });
-    }, [shelterId]);
+  React.useEffect(() => {
+    setIsLoading(true);
+    authAxios
+      .get(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/get-all`)
+      .then((res) => {
+        setShelterTemplates(res.data);
+      })
+      .catch((err) => {
+        console.log(err?.response?.data?.message);
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
+      });
+  }, [shelterId]);
 
   const removeDiacritics = (str: string) =>
     str
@@ -110,7 +114,7 @@ export function AdoptionForms() {
       .replace(/Đ/g, "D");
 
   const handleDelete = async (formId: string) => {
-    setIsLoading(true)
+    setIsLoading(true);
     await authAxios
       .delete(`${coreAPI}/shelters/${shelterId}/adoptionForms/${formId}/delete`)
       .then(() => {
@@ -121,7 +125,7 @@ export function AdoptionForms() {
       .catch((err) => {
         toast.error(err?.response?.data?.message || "Xóa thất bại!");
       })
-      .finally(()=>{
+      .finally(() => {
         setTimeout(() => {
           setIsLoading(false);
         }, 200);
@@ -208,7 +212,18 @@ export function AdoptionForms() {
         const keyword = removeDiacritics(filterValue ?? "").toLowerCase();
         return removeDiacritics(cell).toLowerCase().includes(keyword);
       },
-      cell: ({ row }) => <span>{row.getValue("title")}</span>,
+      cell: ({ row }) => {
+        const adoptionForm = row.original;
+        return (
+          // <span>{row.getValue("title")}</span>;
+          <Link
+            to={adoptionForm._id}
+            className="hover:text-(--primary) hover:underline"
+          >
+            {row.getValue("title")}
+          </Link>
+        );
+      },
     },
     {
       accessorKey: "pet",
@@ -325,8 +340,8 @@ export function AdoptionForms() {
                   </DialogHeader>
                   <DialogDescription>
                     <p className="text-sm">
-                      Khi chuyển đổi trạng thái của đơn thì bạn thú nuôi sẽ
-                      được chuyển sang trạng thái tương ứng với đơn này.
+                      Khi chuyển đổi trạng thái của đơn thì bạn thú nuôi sẽ được
+                      chuyển sang trạng thái tương ứng với đơn này.
                     </p>
                   </DialogDescription>
                   <div className="flex flex-col space-y-4 mt-4">
@@ -362,7 +377,8 @@ export function AdoptionForms() {
                 disabled={adoptionForm.status.toUpperCase() != "DRAFT"}
                 onClick={() =>
                   toast.error("Xác nhận xóa đơn đăng ký nhận nuôi", {
-                    description: "Bạn có chắc muốn xóa đơn đăng ký nhận nuôi này không?",
+                    description:
+                      "Bạn có chắc muốn xóa đơn đăng ký nhận nuôi này không?",
                     action: {
                       label: "Xóa",
                       onClick: () => handleDelete(adoptionForm._id),
@@ -370,7 +386,7 @@ export function AdoptionForms() {
                   })
                 }
               >
-                <Trash /> Xóa đơn 
+                <Trash /> Xóa đơn
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
