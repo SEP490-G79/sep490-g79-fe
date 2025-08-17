@@ -1,5 +1,4 @@
 import React from 'react'
-import { DataTableBlogs } from './data-table-blogs';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { Blog } from '@/types/Blog';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,8 @@ import { ArrowUpDown, Ban, Eye, MoreHorizontal, Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Avatar, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DataTable } from '@/components/data-table';
 
 type BlogTableProps = {
     filteredBlogs: Blog[];
@@ -35,15 +35,10 @@ const BlogTable = ({filteredBlogs,setViewBlogMode, setEditBlogMode, setSelectedB
           );
         },
         cell: ({ row }) => {
-          return (
-            row.original.thumbnail_url && (
-              <img
-                src={row.original.thumbnail_url}
-                alt={row.original._id}
-                className="h-10 w-10 rounded-full object-cover mx-auto"
-              />
-            )
-          );
+          return <Avatar className='ring ring-2 ring-primary mx-auto'>
+            <AvatarImage src={row.original.thumbnail_url} alt={row.original._id}/>
+            <AvatarFallback>{row.original.title && row.original?.title[0].toUpperCase()}</AvatarFallback>
+          </Avatar>
         },
       },
       {
@@ -84,8 +79,9 @@ const BlogTable = ({filteredBlogs,setViewBlogMode, setEditBlogMode, setSelectedB
         },
         cell: ({ row }) => {
           return <span className='flex gap-2'>
-            <Avatar>
+            <Avatar className='ring ring-2 ring-primary'>
               <AvatarImage src={row.original.createdBy.avatar} alt={`avatar cua ${row.original.createdBy.fullName}`} />
+              <AvatarFallback>{row.original.createdBy.fullName && row.original.createdBy.fullName[0]}</AvatarFallback>
             </Avatar>
             <p className='my-auto truncate max-w-[10vw]'>{row.original.createdBy.fullName}</p>
           </span>;
@@ -119,6 +115,7 @@ const BlogTable = ({filteredBlogs,setViewBlogMode, setEditBlogMode, setSelectedB
                   ? "destructive"
                   : "default"
               }
+              className='ms-3'
             >
               {isModerating ? "Chờ duyệt" : isRejected ? "Từ chối" : "Đã đăng"}
             </Badge>
@@ -142,9 +139,9 @@ const BlogTable = ({filteredBlogs,setViewBlogMode, setEditBlogMode, setSelectedB
           );
         },
         cell: ({ row }) => {
-          return new Date(row.original.createdAt).toLocaleString("vi-VN", {
+          return <p className='ms-4'>{new Date(row.original.createdAt).toLocaleString("vi-VN", {
             dateStyle: "short",
-          });
+          })}</p>
         },
       },
       {
@@ -153,7 +150,7 @@ const BlogTable = ({filteredBlogs,setViewBlogMode, setEditBlogMode, setSelectedB
         cell: ({ row }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer">
+              <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer ms-4">
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -218,7 +215,7 @@ const BlogTable = ({filteredBlogs,setViewBlogMode, setEditBlogMode, setSelectedB
     ];
 
   return (
-    <DataTableBlogs columns={columns} data={filteredBlogs ?? []} />
+    <DataTable columns={columns} data={filteredBlogs ?? []} />
   )
 }
 

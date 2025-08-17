@@ -131,11 +131,11 @@ export default function AddressInputWithGoong({
 
       {/* Gợi ý địa chỉ */}
       {suggestions.length > 0 && (
-        <div className="border mt-1 rounded-md shadow-sm bg-white z-50 max-h-60 overflow-y-auto">
+        <div className="border mt-1 rounded-md shadow-sm z-50 max-h-60 overflow-y-auto">
           {suggestions.map((sug) => (
             <div
               key={sug.place_id}
-              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+              className="px-3 py-2 hover:bg-primary hover:text-primary-foreground cursor-pointer text-sm"
               onClick={() => {
                 fetchPlaceDetail(sug.place_id);
                 setSuggestions([]);

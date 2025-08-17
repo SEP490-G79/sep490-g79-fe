@@ -1,6 +1,6 @@
-import { DataTableStaff } from "@/components/data-table-staff";
+import { DataTableStaff } from "@/components/shelter/shelter-management/staff-management/data-table-staff";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -55,12 +55,35 @@ const StaffTable = ({user, isManager, handleKickMember, changeRoleForm, setOpenD
          cell: ({ row }) => {
            return (
              <p className="px-2 flex flex-row gap-2">
-               <img
-                 src={row.original.avatar}
-                 alt={row.original.fullName}
-                 className="h-10 w-10 rounded-full object-cover"
-               />
+              <Avatar className="ring ring-2 ring-primary">
+                <AvatarImage src={row.original.avatar} alt={row.original.fullName}/>
+                <AvatarFallback>{row.original.fullName && row.original.fullName[0]}</AvatarFallback>
+              </Avatar>
                <span className="my-auto">{row.original.fullName}</span>
+             </p>
+           );
+         },
+       },
+       {
+         accessorKey: "fullName",
+         header: ({ column }) => {
+           return (
+             <Button
+               variant="ghost"
+               onClick={() =>
+                 column.toggleSorting(column.getIsSorted() === "asc")
+               }
+               className="cursor-pointer"
+             >
+               Email
+               <ArrowUpDown className="ml-2 h-4 w-4" />
+             </Button>
+           );
+         },
+         cell: ({ row }) => {
+           return (
+             <p className="px-2 flex flex-row gap-2">
+               {row.original.email}
              </p>
            );
          },

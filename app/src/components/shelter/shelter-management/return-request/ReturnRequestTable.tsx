@@ -1,9 +1,8 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, Ban, Eye, MoreHorizontal, Pencil } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { ReturnRequest } from '@/types/ReturnRequest';
 import { DataTable } from '@/components/data-table';
@@ -38,12 +37,12 @@ const ReturnRequestTable = ({filteredReturnRequest, setDialogDetail}: ReturnRequ
         cell: ({ row }) => {
           return (
             <div className='flex gap-2'>
-              <Avatar>
+              <Avatar className='ring ring-2 ring-primary'>
                 <AvatarImage
                   src={row.original.pet.photos[0]}
                   alt={row.original.pet.petCode}
                 />
-                <AvatarFallback>Thú cưng</AvatarFallback>
+                <AvatarFallback>{row.original.pet.name && row.original.pet.name[0]}</AvatarFallback>
               </Avatar>
               <p className='my-auto'>{row.original.pet.name}</p>
             </div>
@@ -89,11 +88,12 @@ const ReturnRequestTable = ({filteredReturnRequest, setDialogDetail}: ReturnRequ
         cell: ({ row }) => {
           return (
             <span className="flex gap-2">
-              <Avatar>
+              <Avatar className='ring ring-2 ring-primary'>
                 <AvatarImage
                   src={row.original.requestedBy.avatar}
                   alt={`avatar cua ${row.original.requestedBy.fullName}`}
                 />
+                <AvatarFallback>{row.original.requestedBy.fullName && row.original.requestedBy.fullName[0]}</AvatarFallback>
               </Avatar>
               <p className="my-auto truncate max-w-[10vw]">
                 {row.original.requestedBy.fullName}
@@ -145,7 +145,7 @@ const ReturnRequestTable = ({filteredReturnRequest, setDialogDetail}: ReturnRequ
               label = "Không rõ";
           }
 
-          return <Badge variant={badgeVariant}>{label}</Badge>;
+          return <Badge variant={badgeVariant} className='ms-2'>{label}</Badge>;
         },
       },
       {
@@ -165,9 +165,9 @@ const ReturnRequestTable = ({filteredReturnRequest, setDialogDetail}: ReturnRequ
           );
         },
         cell: ({ row }) => {
-          return new Date(row.original.createdAt).toLocaleString("vi-VN", {
+          return <p className='ms-3'>{new Date(row.original.createdAt).toLocaleString("vi-VN", {
             dateStyle: "short",
-          });
+          })}</p>
         },
       },
       {
@@ -189,7 +189,7 @@ const ReturnRequestTable = ({filteredReturnRequest, setDialogDetail}: ReturnRequ
               <DropdownMenuItem className="flex items-center py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
               onSelect={() => setDialogDetail(row.original)}
               >
-                Chi tiết/duyệt
+                {row.original.status !== "pending" ? "Chi tiết" : "Duyệt yêu cầu"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
