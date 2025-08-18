@@ -111,21 +111,22 @@ export function SearchByImage({ setFilters, setIsLoading }: Props) {
               ...(Array.isArray(res.data.species)
                 ? res.data.species
                 : res.data.species
-                  ? [res.data.species]
-                  : []),
+                ? [res.data.species]
+                : []),
             ])
           ),
 
-          breed: Array.from(new Set([...prev.breed, ...(res.data.breeds || [])])),
+          breed: Array.from(
+            new Set([...prev.breed, ...(res.data.breeds || [])])
+          ),
           // color: Array.from(new Set([...prev.color, ...(res.data.colors || [])])),
         }));
-
       })
       .catch((err) => {
         // console.error(err);
         toast.error(
           err.response.data.message ||
-          "Có lỗi khi phân tích ảnh! Vui lòng thử lại sau."
+            "Có lỗi khi phân tích ảnh! Vui lòng thử lại sau."
         );
       })
       .finally(() => {
@@ -138,8 +139,9 @@ export function SearchByImage({ setFilters, setIsLoading }: Props) {
 
   const onFileReject = React.useCallback((file: File, message: string) => {
     toast(message, {
-      description: `"${file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name
-        }" has been rejected`,
+      description: `"${
+        file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name
+      }" has been rejected`,
     });
   }, []);
 
@@ -152,6 +154,8 @@ export function SearchByImage({ setFilters, setIsLoading }: Props) {
       maxFiles={1}
       className="w-full max-w-md"
       multiple
+      accept=".png,.jpg,.jpeg"
+      maxSize={10 * 1024 * 1024}
     >
       <FileUploadDropzone>
         <div className="flex flex-col items-center gap-1 text-center">
@@ -165,7 +169,7 @@ export function SearchByImage({ setFilters, setIsLoading }: Props) {
           <p className="text-muted-foreground text-xs">(Tối đa 1 ảnh)</p>
         </div>
         <FileUploadTrigger asChild>
-          <Button variant="outline" size="sm" className="mt-2 w-fit" >
+          <Button variant="outline" size="sm" className="mt-2 w-fit">
             Tải ảnh lên
           </Button>
         </FileUploadTrigger>
@@ -196,7 +200,12 @@ export function SearchByImage({ setFilters, setIsLoading }: Props) {
               )}
 
               <FileUploadItemDelete asChild>
-                <Button variant="ghost" size="icon" className="size-7" disabled={btnLoading}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  disabled={btnLoading}
+                >
                   <X />
                 </Button>
               </FileUploadItemDelete>

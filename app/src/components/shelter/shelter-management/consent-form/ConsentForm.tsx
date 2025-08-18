@@ -8,6 +8,7 @@ import {
   FileUploadItemPreview,
   FileUploadList,
   FileUploadTrigger,
+  type FileUploadProps,
 } from "@/components/ui/file-upload";
 import {
   Form,
@@ -49,6 +50,7 @@ import { set } from "date-fns";
 import {
   CheckSquare,
   Eye,
+  File,
   MessageCircleX,
   NotepadTextDashed,
   PenBox,
@@ -59,6 +61,7 @@ import {
   SquareChevronDown,
   SquareChevronUp,
   SquareX,
+  Trash,
   Upload,
   X,
 } from "lucide-react";
@@ -80,6 +83,8 @@ import {
 } from "@/components/ui/card";
 import { socketClient } from "@/lib/socket.io";
 import { useRef } from "react";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { AvatarFallback } from "@radix-ui/react-avatar";
 export default function ConsentForm() {
   const { shelterId, consentFormId } = useParams();
   const { coreAPI, shelterConsentForms, setShelterConsentForms } =
@@ -89,7 +94,7 @@ export default function ConsentForm() {
   const [consentForm, setConsentForm] = React.useState<ConsentForm>();
   const [isLoading, setIsLoading] = React.useState(false);
   const [btnLoading, setBtnLoading] = React.useState(false);
-  const [files, setFiles] = React.useState<File[]>([]);
+  const [files, setFiles] = React.useState<any[]>([]);
   const [addressSuggestions, setAddressSuggestions] = useState<
     GoongSuggestion[]
   >([]);
@@ -127,6 +132,7 @@ export default function ConsentForm() {
 
   const fetchConsentForm = async () => {
     setIsLoading(true);
+    setBtnLoading(true);
     await authAxios
       .get(`${coreAPI}/shelters/${shelterId}/consentForms/get-by-shelter`)
       .then((res) => {
@@ -143,7 +149,7 @@ export default function ConsentForm() {
         // });
         // console.log(attachments);
 
-        // setFiles(attachments);
+        setFiles(data.attachments);
         // console.log(data);
 
         form.reset({
@@ -165,6 +171,7 @@ export default function ConsentForm() {
       .finally(() => {
         setTimeout(() => {
           setIsLoading(false);
+          setBtnLoading(false);
         }, 200);
       });
   };
@@ -175,9 +182,10 @@ export default function ConsentForm() {
     }
   }, [shelterId, consentFormId]);
 
-  
   const consentFormIdRef = useRef<string | undefined>(consentFormId);
-  useEffect(() => { consentFormIdRef.current = consentFormId; }, [consentFormId]);
+  useEffect(() => {
+    consentFormIdRef.current = consentFormId;
+  }, [consentFormId]);
 
   const softRefresh = async () => {
     await fetchConsentForm();
@@ -186,9 +194,15 @@ export default function ConsentForm() {
   useEffect(() => {
     if (!shelterId || !consentFormId) return;
     let debounce: ReturnType<typeof setTimeout> | null = null;
-    const onChange = (payload: { consentFormId: string; petId: string; status: string }) => {
+    const onChange = (payload: {
+      consentFormId: string;
+      petId: string;
+      status: string;
+    }) => {
       if (payload.consentFormId !== consentFormIdRef.current) return;
-      setConsentForm(prev => (prev ? { ...prev, status: payload.status } : prev));
+      setConsentForm((prev) =>
+        prev ? { ...prev, status: payload.status } : prev
+      );
       if (debounce) clearTimeout(debounce);
       debounce = setTimeout(() => softRefresh().catch(() => {}), 150);
     };
@@ -199,7 +213,6 @@ export default function ConsentForm() {
       if (debounce) clearTimeout(debounce);
     };
   }, [shelterId, consentFormId]);
-
 
   const fetchAddressSuggestions = async (query: string) => {
     if (!query.trim()) {
@@ -223,7 +236,7 @@ export default function ConsentForm() {
     toast(message, {
       description: `"${
         file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name
-      }" không được chấp nhận.`,
+      }" không được tải lên.`,
     });
   }, []);
   const onSubmit = async (values: FormValues) => {
@@ -268,6 +281,70 @@ export default function ConsentForm() {
         }, 200);
       });
   };
+
+  const handleDeleteFile = async (fileId: string) => {
+    setBtnLoading(true);
+
+    await authAxios
+      .put(
+        `${coreAPI}/shelters/${shelterId}/consentForms/${consentFormId}/deleteFile`,
+        { fileId }
+      )
+      .then((res) => {
+        const updatedConsentForm = res.data;
+        setConsentForm(updatedConsentForm);
+        setFiles(updatedConsentForm.attachments);
+        toast.success("Xóa tệp thành công!");
+      })
+      .catch((err) => {
+        // console.error("Error updating consent form:", err);
+        toast.error(
+          err.response?.data?.message ||
+            "Lỗi khi xóa tệp. Vui lòng thử lại sau!"
+        );
+        form.reset();
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setBtnLoading(false);
+          setIsLoading(false);
+        }, 200);
+      });
+  };
+
+  const handleUpload: NonNullable<FileUploadProps["onUpload"]> =
+    React.useCallback(async (files) => {
+      // console.log("Form submitted:", values);
+      setBtnLoading(true);
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append("attachments", file);
+      });
+
+      // console.log(files);
+
+      await authAxios
+        .put(
+          `${coreAPI}/shelters/${shelterId}/consentForms/${consentFormId}/uploadConsent`,
+          formData
+        )
+        .then((res) => {
+          const updatedConsentForm = res.data;
+          setConsentForm(updatedConsentForm);
+          setFiles(updatedConsentForm.attachments);
+          toast.success("Tải tệp lên thành công");
+        })
+        .catch((err) => {
+          // console.error("Error updating consent form:", err);
+          toast.error(err.response?.data?.message || "Lỗi khi tải tệp");
+          setFiles([]);
+        })
+        .finally(() => {
+          setTimeout(() => {
+            setBtnLoading(false);
+          }, 200);
+        });
+    }, []);
 
   const handleChangeStatus = async (status: string) => {
     // console.log(status);
@@ -363,6 +440,23 @@ export default function ConsentForm() {
       icon: <SquareX size={"15px"} strokeWidth={"2px"} />,
     },
   ];
+
+  // block
+
+
+  const isDirty = form.formState.isDirty ;
+
+  useEffect(() => {
+    if (!(isDirty && !isLoading)) return;
+
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = ""; 
+    };
+
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [ isDirty, isLoading]);
 
   if (isLoading) {
     return (
@@ -738,43 +832,49 @@ export default function ConsentForm() {
                         )}
                       />
 
-                      {/* <FormItem className="md:col-span-4">
+                      <FormItem className="md:col-span-4">
                         <FormLabel>Tệp đính kèm</FormLabel>
                         <div className="flex justify-center">
                           <FileUpload
                             value={files}
                             onValueChange={setFiles}
                             onFileReject={onFileReject}
-                            maxFiles={2}
+                            onUpload={handleUpload}
+                            maxFiles={1}
                             className="w-full"
                             multiple
+                            accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                            maxSize={10 * 1024 * 1024}
                           >
-                            <FileUploadDropzone>
-                              <div className="flex flex-col items-center gap-1 text-center">
-                                <div className="flex items-center justify-center rounded-full border p-2.5">
-                                  <Upload className="size-6 text-muted-foreground" />
+                            {files.length == 0 && (
+                              <FileUploadDropzone>
+                                <div className="flex flex-col items-center gap-1 text-center">
+                                  <div className="flex items-center justify-center rounded-full border p-2.5">
+                                    <Upload className="size-6 text-muted-foreground" />
+                                  </div>
+                                  <p className="font-medium text-sm">
+                                    Kéo thả tệp đính kèm ở đây!
+                                  </p>
+                                  <p className="text-muted-foreground text-xs">
+                                    Hoặc tải tệp đính kèm lên từ thiết bị của
+                                    bạn
+                                  </p>
+                                  <p className="text-muted-foreground text-xs">
+                                    (Tối đa 1 tệp đính kèm)
+                                  </p>
                                 </div>
-                                <p className="font-medium text-sm">
-                                  Kéo thả tệp đính kèm ở đây!
-                                </p>
-                                <p className="text-muted-foreground text-xs">
-                                  Hoặc tải tệp đính kèm lên từ thiết bị của bạn
-                                </p>
-                                <p className="text-muted-foreground text-xs">
-                                  (Tối đa 2 tệp đính kèm)
-                                </p>
-                              </div>
-                              <FileUploadTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="mt-2 w-fit"
-                                >
-                                  Tải tệp đính kèm lên
-                                </Button>
-                              </FileUploadTrigger>
-                            </FileUploadDropzone>
-                            <FileUploadList>
+                                <FileUploadTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-2 w-fit"
+                                  >
+                                    Tải tệp đính kèm lên
+                                  </Button>
+                                </FileUploadTrigger>
+                              </FileUploadDropzone>
+                            )}
+                            {/* <FileUploadList>
                               {files.map((file, index) => (
                                 <FileUploadItem
                                   key={index}
@@ -799,10 +899,83 @@ export default function ConsentForm() {
                                   </div>
                                 </FileUploadItem>
                               ))}
-                            </FileUploadList>
+                            </FileUploadList> */}
+                            <div className="flex flex-wrap gap-3">
+                              {btnLoading ? (
+                                // skeleton giả lập danh sách 2 file
+                                <>
+                                  <Skeleton className="h-20 w-full rounded-md" />
+                                  <Skeleton className="h-20 w-full rounded-md" />
+                                </>
+                              ) : (
+                                files.map((file) => {
+                                  const isImage =
+                                    file.mimeType?.startsWith("image/");
+                                  const fileUrl = file.url;
+                                  const iconUrl =
+                                    "https://cdn-icons-png.flaticon.com/512/888/888108.png";
+
+                                  return (
+                                    <div
+                                      key={file.fileName}
+                                      className="basis-full h-20 px-5 
+                                        inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all
+                                        border bg-background shadow-xsd dark:bg-input/30 dark:border-input
+                                        hover:bg-accent hover:text-accent-foreground  dark:hover:bg-input/50
+                                        "
+                                    >
+                                      <div className="basis-full sm:basis-2/11">
+                                        <Avatar
+                                          onClick={() =>
+                                            window.open(fileUrl, "_blank")
+                                          }
+                                          className={`rounded-none w-2/3 h-2/3 p-3 cursor-pointer
+                                          
+                                           `}
+                                        >
+                                          <AvatarImage
+                                            className="object-center object-cover"
+                                            src={isImage ? fileUrl : iconUrl}
+                                          />
+                                          <AvatarFallback className="rounded-none"></AvatarFallback>
+                                        </Avatar>
+                                      </div>
+
+                                      <div className="basis-full sm:basis-9/11 text-start overflow-hidden">
+                                        <span className="block w-full truncate text-sm font-medium">
+                                          {file.fileName}
+                                        </span>
+                                      </div>
+
+                                      <div className="basis-full sm:basis-1/11">
+                                        <Button
+                                          variant="ghost"
+                                          type="button"
+                                          className="text-(--destructive) hover:text-(--destructive) cursor-pointer"
+                                          onClick={() =>
+                                            toast.warning("Xóa tệp này?", {
+                                              description: file.fileName,
+                                              duration: 8000,
+                                              action: {
+                                                label: "Xóa",
+                                                onClick: () => {
+                                                  handleDeleteFile(file._id);
+                                                },
+                                              },
+                                            })
+                                          }
+                                        >
+                                          <Trash />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                              )}
+                            </div>
                           </FileUpload>
                         </div>
-                      </FormItem> */}
+                      </FormItem>
                     </div>
                   </form>
                 </Form>

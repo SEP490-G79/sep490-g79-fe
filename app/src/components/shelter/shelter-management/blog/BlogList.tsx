@@ -1,17 +1,16 @@
-import React, { useContext, useEffect, useState } from 'react'
+import  { useContext, useEffect, useState } from 'react'
 import BlogTable from './BlogTable';
 import { useParams } from 'react-router-dom';
 import AppContext from '@/context/AppContext';
 import type { Blog } from '@/types/Blog';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import EditBlog from './EditBlog';
 import BlogDetail from './BlogDetail';
 import CreateBlog from './CreateBlog';
 import useAuthAxios from '@/utils/authAxios';
 import { toast } from 'sonner';
-import { SearchFilter } from '@/components/SearchFilter';
+import { Button } from '@/components/ui/button';
 
 const BlogList = () => {
     const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -36,25 +35,28 @@ const BlogList = () => {
 
     }, [editBlogMode, isOpen, refresh])
 
-    useEffect(() => {
+
+    function searchBlog(searchValue: string){
       const searchedBlogs = blogs.filter((blog) => {
         if (
           (blog.title &&
-            blog.title.toLowerCase().includes(search.toLowerCase())) ||
+            blog.title.toLowerCase().includes(searchValue.toLowerCase())) ||
           (blog.description &&
-            blog.description.toLowerCase().includes(search.toLowerCase())) ||
+            blog.description.toLowerCase().includes(searchValue.toLowerCase())) ||
           (blog.content &&
-            blog.content.toLowerCase().includes(search.toLowerCase()))
+            blog.content.toLowerCase().includes(searchValue.toLowerCase()))
         ) {
           return blog;
         }
       });
-      if (search.trim().length === 0) {
+      if (searchValue.trim().length === 0) {
         setFilteredBlogs(blogs);
       } else {
         setFilteredBlogs(searchedBlogs);
       }
-    }, [search]);
+    }
+      
+
 
     async function deleteBlog(blogId: string){
       try {
@@ -98,7 +100,12 @@ const BlogList = () => {
       {!viewBlogMode && !editBlogMode && (
         <>
           <div className="flex justify-between mb-2 gap-2">
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder='Tìm kiếm...'/>
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(event) => 
+              event.key === "Enter" && searchBlog(search)} 
+              placeholder='Tìm kiếm...'/>
+            <Button variant="outline" className="text-xs cursor-pointer" onClick={() => searchBlog(search)}>
+                <Search className="text-(--primary)" />Tìm kiếm
+            </Button>
             <CreateBlog open={isOpen} setIsOpen={setIsOpen} />
           </div>
           <BlogTable
