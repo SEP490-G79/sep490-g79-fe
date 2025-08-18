@@ -213,12 +213,22 @@ export function AdoptionForms() {
         return removeDiacritics(cell).toLowerCase().includes(keyword);
       },
       cell: ({ row }) => {
-        const adoptionForm = row.original;
+        const form = row.original;
+        const canOpen = form.status?.toLowerCase() === "draft";
         return (
           // <span>{row.getValue("title")}</span>;
           <Link
-            to={adoptionForm._id}
-            className="hover:text-(--primary) hover:underline"
+            to={canOpen ? `${form._id}` : "#"}
+            onClick={(e) => {
+              if (!canOpen) {
+                e.preventDefault();
+              }
+            }}
+            className={`hover:underline ${
+              canOpen
+                ? "hover:text-(--primary) cursor-pointer"
+                : "opacity-50 cursor-not-allowed"
+            }`}
           >
             {row.getValue("title")}
           </Link>
@@ -320,9 +330,15 @@ export function AdoptionForms() {
               <DropdownMenuLabel>Hành động</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
-                <Link to={`${adoptionForm._id}`} className="flex gap-1">
-                  <Pen /> Chỉnh sửa
-                </Link>
+                {adoptionForm.status?.toLowerCase() == "draft" ? (
+                  <Link to={`${adoptionForm._id}`} className="flex gap-1">
+                    <Pen /> Chỉnh sửa
+                  </Link>
+                ) : (
+                  <span className="flex gap-1 opacity-50 cursor-not-allowed">
+                    <Pen /> Chỉnh sửa
+                  </span>
+                )}
               </DropdownMenuItem>
               <Dialog>
                 <DialogTrigger asChild>

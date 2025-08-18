@@ -186,6 +186,8 @@ const PetPhotoUpload = ({
         onFileReject={onFileReject}
         onUpload={handleUpload}
         className="w-full"
+        accept=".png,.jpg,.jpeg"
+        maxSize={10 * 1024 * 1024}
       >
         <FileUploadDropzone>
           <div className="flex flex-col items-center gap-1 text-center">
