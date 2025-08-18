@@ -342,6 +342,9 @@ export function ConsentForms() {
       </div>
     );
   }
+ 
+
+
   if (!shelterConsentForms) {
     return (
       <Tabs defaultValue="active" className="w-full">
@@ -412,6 +415,24 @@ export function ConsentForms() {
       </Tabs>
     );
   }
+  const SearchHeader = (
+  <div className="flex justify-between items-center py-4">
+    <div className="flex basis-1/3 gap-5">
+      <Input
+        placeholder="Tìm kiếm ..."
+        className="max-w-sm"
+        value={searchTerm}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setPage(1);
+        }}
+      />
+    </div>
+    <div className="basis-1/3 flex justify-center">
+      {/* <CreateDialog /> */}
+    </div>
+  </div>
+);
 
   return (
     <Tabs defaultValue="active" className="w-full">
@@ -425,7 +446,7 @@ export function ConsentForms() {
       </TabsList>
       <TabsContent value="active">
         <div className="w-full">
-          {/* ... ô tìm kiếm ... */}
+             {SearchHeader}
           {processingForms.length === 0 ? (
             <div className="flex flex-col items-center flex-wrap mt-30">
               <h2 className="basis-1 text-xl font-semibold text-(--primary)">
@@ -599,7 +620,7 @@ export function ConsentForms() {
       </TabsContent>
       <TabsContent value="approved">
         <div className="w-full">
-          {/* ... ô tìm kiếm ... */}
+             {SearchHeader}
           {doneForms.length === 0 ? (
             <div className="flex flex-col items-center flex-wrap mt-30">
               <h2 className="basis-1 text-xl font-semibold text-(--primary)">
