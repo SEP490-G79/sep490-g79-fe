@@ -69,8 +69,8 @@ function FilterSection({
     gender: "",
     shelter: [],
     color: [],
-    ageRange: [0, 100],
-    weightRange: [0, 20],
+    ageRange: [0, Infinity],
+    weightRange: [0, Infinity],
     priceRange: [0, Infinity],
     inWishlist: false,
   });
@@ -138,8 +138,8 @@ function FilterSection({
       gender: "",
       shelter: [],
       color: [],
-      ageRange: [0, 100],
-      weightRange: [0, 20],
+      ageRange: [0, Infinity],
+      weightRange: [0, Infinity],
       priceRange: [0, Infinity],
     };
     setFilters(defaultFilter);

@@ -13,7 +13,7 @@ import bg1 from "../../assets/blogs/pexels-edd1egalaxy-3628100.jpg"
 import bg2 from "../../assets/blogs/pexels-fox-58267-1386422.jpg"
 import bg3 from "../../assets/blogs/pexels-francesco-ungaro-96428.jpg"
 import bg4 from "../../assets/blogs/pexels-nancy-guth-269359-850602.jpg"
-import logo from "../../assets/logo/bbkzwnb6hyyrmi8jhiwp.jpg"
+import logo from "../../assets/logo/logo.png"
 
 export default function BlogsFeed() {
   const [blogs, setBlogs] = useState<Blog[]>([]);

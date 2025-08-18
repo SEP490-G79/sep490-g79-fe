@@ -47,19 +47,16 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
     const [openConfirm, setOpenConfirm] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [profileUpdates, setProfileUpdates] = useState({
-        fullName: userProfile?.fullName || "",
         phoneNumber: userProfile?.phoneNumber || "",
         address: userProfile?.address || ""
     });
     const [profileErrors, setProfileErrors] = useState({
-        fullName: false,
         phoneNumber: false,
         address: false,
     });
 
     const validateProfile = () => {
         const errs = {
-            fullName: !(userProfile?.fullName || profileUpdates.fullName?.trim()),
             phoneNumber: !(userProfile?.phoneNumber || profileUpdates.phoneNumber?.trim()),
             address: !(userProfile?.address || profileUpdates.address?.trim()),
         };
@@ -129,7 +126,6 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
 
             if (needUpdateProfile) {
                 const formData = new FormData();
-                formData.append("fullName", profileUpdates.fullName || userProfile?.fullName || "");
                 formData.append("address", profileUpdates.address || userProfile?.address || "");
                 formData.append("phoneNumber", profileUpdates.phoneNumber || userProfile?.phoneNumber || "");
 
@@ -234,7 +230,7 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                             <CardContent className="space-y-4">
                                 <h2 className="text-xl font-semibold">Thông tin cơ bản</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
-                                    <p className="text-sm">
+                                    {/* <p className="text-sm">
                                         <span className="font-semibold">Họ và tên:</span>{" "}
                                         {userProfile?.fullName ? (
                                             userProfile.fullName
@@ -260,8 +256,10 @@ const Step2_AdoptionForm = ({ questions, answers, onAnswerChange, onNext, onBack
                                             </div>
                                         )}
 
+                                    </p> */}
+                                        <p className="text-sm">
+                                        <span className="font-semibold">Họ và tên:</span> {userProfile?.fullName}
                                     </p>
-
                                     <p className="text-sm">
                                         <span className="font-semibold">Email:</span> {userProfile?.email}
                                     </p>
