@@ -21,28 +21,21 @@ interface Step3Props {
   onNext: () => void;
   onBack: () => void;
   onLoadedSubmission?: (submission: any) => void;
+  submission?: any;  
 }
 
-const Step3_SubmissionForm = ({ submissionId, onNext, onBack, onLoadedSubmission }: Step3Props) => {
-  const [submission, setSubmission] = useState<any>(null);
+const Step3_SubmissionForm = ({ submissionId, onNext, onBack, onLoadedSubmission, submission }: Step3Props) => {
+  // const [submission, setSubmission] = useState<any>(null);
   const authAxios = useAuthAxios();
   const { coreAPI } = useContext(AppContext);
 
   useEffect(() => {
-    if (!submissionId) return;
-
-    const fetchSubmission = async () => {
-      try {
-        const res = await authAxios.get(`${coreAPI}/adoption-submissions/${submissionId}`);
-        setSubmission(res.data);
-        onLoadedSubmission?.(res.data);
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu đơn nhận nuôi", error);
-      }
-    };
-
-    fetchSubmission();
-  }, [submissionId]);
+    if (submission || !submissionId) return;
+    (async () => {
+      const res = await authAxios.get(`${coreAPI}/adoption-submissions/${submissionId}`);
+      onLoadedSubmission?.(res.data); 
+    })().catch(console.error);
+  }, [submissionId, submission]);
 
 
   const statusList: Record<string, string> = {

@@ -73,6 +73,8 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { socketClient } from "@/lib/socket.io";
+import { Avatar } from "@radix-ui/react-avatar";
+import { AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function getColorBarClass(total: number): string {
   if (total <= 29) return "bg-red-500";
@@ -794,17 +796,20 @@ export default function PetSubmission() {
 
                       </CardHeader>
                       <CardContent className="flex items-center justify-between">
-                        <button
-                          onClick={() => setSelectedSubmission(submission)}
-                          className="text-sm underline text-primary ml-auto"
-                        >
-                          Xem chi tiết
-                        </button>
+                        {submission.status !== "approved" && (
+                          <button
+                            onClick={() => setSelectedSubmission(submission)}
+                            className="text-sm underline text-primary ml-auto"
+                          >
+                            Xem chi tiết
+                          </button>
+                        )}
+
 
 
                         {submission.status === "approved" && (
                           <DropdownMenu>
-                            <DropdownMenuTrigger>
+                            <DropdownMenuTrigger className="ml-auto">
                               <EllipsisVertical className="h-4 w-4" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -817,6 +822,11 @@ export default function PetSubmission() {
                                 }}
                               >
                                 Tạo bản cam kết
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => setSelectedSubmission(submission)}
+                              >
+                                Xem chi tiết
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -844,14 +854,15 @@ export default function PetSubmission() {
               <div className="flex gap-8 h-[calc(90vh-110px)] ">
                 <div className="w-1/3 space-y-2">
                   <div className="flex items-center justify-center mb-6">
-                    <img
-                      src={
-                        selectedSubmission.performedBy?.avatar ||
-                        "/placeholder.svg"
-                      }
-                      alt="Avatar"
-                      className="w-35 h-35 rounded-full border-1 border-gray-100 shadow-md object-cover object-center "
-                    />
+                    <Avatar className="">
+                      <AvatarImage
+                        src={selectedSubmission.performedBy?.avatar}
+                        className="w-35 h-35 rounded-full border-1 border-gray-100 shadow-md object-cover object-center "
+                      />
+                      <AvatarFallback className=" w-35 h-35 bg-(--secondary) text-(--foreground) text-6xl font-bold rounded-full border-1 border-gray-100 shadow-md object-cover object-center">
+                        {selectedSubmission.performedBy?.fullName?.charAt(0).toUpperCase() || "N"}
+                      </AvatarFallback>
+                    </Avatar>
                   </div>
                   <p>
                     <strong>Người yêu cầu:</strong>{" "}

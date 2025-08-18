@@ -63,7 +63,7 @@ function FilterSectionForShelter({
     gender: "",
     color: [],
     ageRange: [0, 100],
-    weightRange: [0, 20],
+    weightRange: [0, 100],
     priceRange: [0, Infinity],
     inWishlist: false,
   });
@@ -120,7 +120,7 @@ function FilterSectionForShelter({
       gender: "",
       color: [],
       ageRange: [0, 100],
-      weightRange: [0, 20],
+      weightRange: [0, 100],
       priceRange: [0, Infinity],
     };
     setFilters(defaultFilter);

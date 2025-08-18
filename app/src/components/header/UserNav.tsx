@@ -101,7 +101,7 @@ function UserNav() {
   useEffect(() => {
     if (!socketClient?.connected) return;
     socketClient.subscribe("notification", (notification: Notification) => {
-      console.log(">>> receive notification", notification);
+      // console.log(">>> receive notification", notification);
       addNotification(notification);
       displayToastNotification(notification);
     });
@@ -267,12 +267,12 @@ function UserNav() {
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuGroup>
+          {/* <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
               <Link to="/donation-history">Lịch sử ủng hộ</Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator /> */}
           <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
               <Link to="/profile-setting">Cài đặt</Link>
