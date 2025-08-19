@@ -118,7 +118,7 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 w-full overflow-x-hidden">
           <label className="block text-sm font-medium">Lý do báo cáo</label>
           <Select
             value={selectedReason}
@@ -139,6 +139,8 @@ export default function ReportUserDialog({ userId }: { userId: string }) {
           {selectedReason === "Khác" && (
             <Textarea
               placeholder="Nhập lý do cụ thể..."
+              className="w-full overflow-y-auto"
+              maxLength={500}
               value={customReason}
               onChange={(e) => setCustomReason(e.target.value)}
             />

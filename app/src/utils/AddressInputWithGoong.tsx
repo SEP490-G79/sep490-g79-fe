@@ -28,6 +28,7 @@ interface AddressInputWithGoongProps {
   onLocationChange: (location: Location) => void;
   label?: string;
   error?: string;
+  isRequired?: boolean;
 }
 
 export default function AddressInputWithGoong({
@@ -36,6 +37,7 @@ export default function AddressInputWithGoong({
   onLocationChange,
   label = "Địa chỉ",
   error,
+  isRequired,
 }: AddressInputWithGoongProps) {
   const [suggestions, setSuggestions] = useState<GoongSuggestion[]>([]);
 
@@ -99,7 +101,7 @@ export default function AddressInputWithGoong({
 
   return (
     <FormItem>
-      <FormLabel>{label}</FormLabel>
+      <FormLabel>{label} {isRequired && <span className="text-destructive">*</span>}</FormLabel>
 
       {/* Flex container cho input + button */}
       <div className="flex items-center space-x-2">

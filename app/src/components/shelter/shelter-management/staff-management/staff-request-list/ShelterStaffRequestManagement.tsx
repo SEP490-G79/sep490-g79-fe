@@ -14,6 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DataTable } from "@/components/data-table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 
 type detailDialogData = {
@@ -109,11 +110,18 @@ const ShelterStaffRequestManagement = () => {
          cell: ({ row }) => {
            return (
              <p className="px-2 flex flex-row gap-2">
-              <Avatar className="ring ring-2 ring-primary">
-                <AvatarImage src={row.original.user.avatar} alt={row.original.user.fullName} />
-                <AvatarFallback>{row.original.user.fullName && row.original.user.fullName[0]}</AvatarFallback>
-              </Avatar>
-               <span className="my-auto truncate whitespace-nowrap overflow-hidden max-w-[20vw]">{row.original.user.fullName}</span>
+               <Avatar className="ring ring-2 ring-primary">
+                 <AvatarImage
+                   src={row.original.user.avatar}
+                   alt={row.original.user.fullName}
+                 />
+                 <AvatarFallback>
+                   {row.original.user.fullName && row.original.user.fullName[0]}
+                 </AvatarFallback>
+               </Avatar>
+               <span className="my-auto truncate whitespace-nowrap overflow-hidden max-w-[20vw]">
+                 {row.original.user.fullName}
+               </span>
              </p>
            );
          },
@@ -277,7 +285,7 @@ const ShelterStaffRequestManagement = () => {
                    setDetailDialog({
                      isOpen: true,
                      detail: {
-                      requestId: row.original.requestId,
+                       requestId: row.original.requestId,
                        requestType: row.original.requestType,
                        user: {
                          id: row.original.user.id,
@@ -301,16 +309,39 @@ const ShelterStaffRequestManagement = () => {
                  }}
                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
                >
-                  {row.original.requestStatus !== "pending" ? "Xem chi tiết" : (row.original.requestType === "request" ? "Duyệt yêu cầu" : "Xem chi tiết")}
+                 {row.original.requestStatus !== "pending"
+                   ? "Xem chi tiết"
+                   : row.original.requestType === "request"
+                   ? "Duyệt yêu cầu"
+                   : "Xem chi tiết"}
                </DropdownMenuItem>
-              {row.original.requestStatus === "pending" && row.original.requestType === "invitation" &&
-              <DropdownMenuItem
-                 onSelect={handleCancelInvitation}
-                 className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
-               >
-                  Hủy lời mời
-               </DropdownMenuItem>
-              }
+               {row.original.requestStatus === "pending" &&
+                 row.original.requestType === "invitation" && (
+                   <AlertDialog>
+                     <AlertDialogTrigger asChild>
+                       <DropdownMenuItem
+                         onSelect={(e) => e.preventDefault()}
+                         className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded"
+                       >
+                         Hủy lời mời
+                       </DropdownMenuItem>
+                     </AlertDialogTrigger>
+                     <AlertDialogContent>
+                       <AlertDialogHeader>
+                         <AlertDialogTitle>
+                           Xác nhận hủy lời mời?
+                         </AlertDialogTitle>
+                         <AlertDialogDescription>
+                           Lời mời gia nhập trạm cứu hộ đến tài khoản <b>{row.original.user.fullName} ({row.original.user.email})</b> sẽ bị hủy.
+                         </AlertDialogDescription>
+                       </AlertDialogHeader>
+                       <AlertDialogFooter>
+                         <AlertDialogCancel>Đóng</AlertDialogCancel>
+                         <AlertDialogAction onClick={() => handleCancelInvitation(row.original.requestId)}>Hủy lời mời</AlertDialogAction>
+                       </AlertDialogFooter>
+                     </AlertDialogContent>
+                   </AlertDialog>
+                 )}
              </DropdownMenuContent>
            </DropdownMenu>
          ),
@@ -328,11 +359,13 @@ const ShelterStaffRequestManagement = () => {
                setTimeout(() => {
                  toast.success("Chấp nhận yêu cầu gia nhập thành công!")
                  setRefreshRequest(prev => !prev);
-                 setLoadingButton(false);
                  setDetailDialog({...detailDialog, isOpen: false});
                }, 1000)
              } catch (error : any) {
-               console.log(error?.response.data.message)
+               console.log(error?.response.data.message || "Lỗi chấp nhận yêu cầu vào trạm cứu hộ")
+               toast.error(error?.response.data.message || "Lỗi chấp nhận yêu cầu vào trạm cứu hộ")
+             } finally{
+              setLoadingButton(false);
              }
           }
      
@@ -347,19 +380,25 @@ const ShelterStaffRequestManagement = () => {
                setTimeout(() => {
                  toast.success("Từ chối yêu cầu gia nhập thành công!")
                  setRefreshRequest(prev => !prev);
-                 setLoadingButton(false);
                  setDetailDialog({...detailDialog, isOpen: false});
                }, 1000)
              } catch (error : any) {
-               console.log(error?.response.data.message)
+               console.log(error?.response.data.message || "Lỗi từ chối yêu cầu vào trạm cứu hộ")
+               toast.error(error?.response.data.message || "Lỗi từ chối yêu cầu vào trạm cứu hộ")
+             } finally{
+                setLoadingButton(false);
              }
         }
 
-        function handleCancelInvitation(){
+        async function handleCancelInvitation(invitationId : string){
           try {
-            console.log("Cancel invitation!")
-          } catch (error) {
-            
+            // console.log("Cancel invitation!: "+ invitationId)
+            const response = await authAxios.put(`${shelterAPI}/${shelterId}/cancel-invitation/${invitationId}`)
+            toast.success(response?.data.message || "Hủy lời mời vào trạm cứu hộ thành công!")
+            setRefreshRequest(prev => !prev);
+          } catch (error : any) {
+            console.log(error?.response.data.message || "Lỗi hủy lời mời vào trạm cứu hộ")
+            toast.error(error?.response.data.message || "Lỗi hủy lời mời vào trạm cứu hộ")
           }
         }
 
@@ -426,8 +465,9 @@ const ShelterStaffRequestManagement = () => {
 
             <div className="flex flex-row gap-2">
               <span className="my-auto font-medium">Trạm cứu hộ:</span>
-              <Avatar>
+              <Avatar className="ring ring-2 ring-primary">
                 <AvatarImage src={detailDialog.detail?.shelter?.avatar} />
+                <AvatarFallback>{detailDialog.detail?.shelter?.name || "Shelter"}</AvatarFallback>
               </Avatar>
               <span className="my-auto">
                 {detailDialog.detail?.shelter?.name} (
@@ -442,8 +482,9 @@ const ShelterStaffRequestManagement = () => {
                   : "Người gửi"}
                 :
               </span>
-              <Avatar>
+              <Avatar className="ring ring-2 ring-primary">
                 <AvatarImage src={detailDialog.detail?.user?.avatar} />
+                <AvatarFallback>{detailDialog.detail?.user?.fullName || "User"}</AvatarFallback>
               </Avatar>
               <span className="my-auto">
                 {detailDialog.detail?.user?.fullName} (

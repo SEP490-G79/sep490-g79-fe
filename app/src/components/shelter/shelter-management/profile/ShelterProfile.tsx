@@ -178,7 +178,7 @@ const ShelterProfile = () => {
         className="min-h-screen px-10 py-5"
       >
         <Card className="max-w-4xl mx-auto overflow-hidden shadow-lg">
-          <h4 className="text-xl font-bold text-center text-gray-800">
+          <h4 className="text-xl font-bold text-center text-foreground">
             Hồ sơ trạm cứu hộ
           </h4>
 
