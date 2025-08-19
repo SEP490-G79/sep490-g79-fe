@@ -16,6 +16,7 @@ import PetPhotoUpload from "./PetPhotoUpload";
 import PetImageAIButton from "./PetImageAIButton";
 import type { Species, Breed, PetFormState } from "@/types/pet.types";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PetFormProps {
   form: PetFormState;
@@ -27,6 +28,7 @@ interface PetFormProps {
   onSubmit: (e: React.FormEvent) => void;
   onCreateSpecies: (inputValue: string) => void;
   isEditing: boolean;
+  isLoading: boolean;
 }
 
 export default function PetForm({
@@ -39,7 +41,9 @@ export default function PetForm({
   onSubmit,
   onCreateSpecies,
   isEditing,
+  isLoading,
 }: PetFormProps) {
+  
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   const [selectedBreedTemp, setSelectedBreedTemp] = useState<
     string | undefined
@@ -107,13 +111,107 @@ export default function PetForm({
     colorSuggestions.filter((color) =>
       color.toLowerCase().includes(value.toLowerCase())
     );
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto">
+        {/* Tên thú nuôi */}
+        <div className="md:col-span-1 flex flex-col gap-1">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-9 w-full" />
+        </div>
 
+        {/* Tuổi */}
+        <div className="md:col-span-1 flex flex-col gap-1">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-9 w-full" />
+        </div>
+
+        {/* Giới tính */}
+        <div className="md:col-span-1 flex flex-col gap-1">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-9 w-full" />
+        </div>
+
+        {/* Cân nặng */}
+        <div className="md:col-span-1 flex flex-col gap-1">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-9 w-full" />
+        </div>
+
+        {/* Loài */}
+        <div className="md:col-span-1 flex flex-col gap-1">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-9 w-full" />
+        </div>
+
+        {/* Giống */}
+        <div className="md:col-span-1 flex flex-col gap-1">
+          <Skeleton className="h-4 w-28" />
+          <div className="flex gap-2 flex-wrap">
+            <Skeleton className="h-7 w-16 rounded-full" />
+            <Skeleton className="h-7 w-20 rounded-full" />
+          </div>
+          <Skeleton className="h-9 w-full" />
+        </div>
+
+        {/* Màu lông */}
+        <div className="md:col-span-1 flex flex-col gap-1">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-9 w-full" />
+        </div>
+
+        {/* Đặc điểm nhận dạng */}
+        <div className="md:col-span-2 flex flex-col gap-1">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-9 w-full" />
+        </div>
+
+        {/* Triệt sản */}
+        <div className="md:col-span-1 flex flex-col gap-1">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-9 w-full" />
+        </div>
+
+        {/* Phí nhận nuôi */}
+        <div className="md:col-span-1 flex flex-col gap-1">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-9 w-full" />
+        </div>
+
+        {/* Trạng thái (nếu editing) */}
+        <div className="md:col-span-1 flex flex-col gap-1">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-9 w-full" />
+        </div>
+
+        {/* Tiểu sử */}
+        <div className="col-span-full flex flex-col gap-1">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+
+        {/* Upload ảnh */}
+        <div className="col-span-full flex flex-col gap-1">
+          <Skeleton className="h-4 w-28" />
+          <div className="flex gap-2">
+            <Skeleton className="h-24 w-24 rounded-md" />
+            <Skeleton className="h-24 w-24 rounded-md" />
+            <Skeleton className="h-24 w-24 rounded-md" />
+          </div>
+        </div>
+
+        <div className="col-span-full flex justify-end">
+          <Skeleton className="h-10 w-40" />
+        </div>
+      </div>
+    );
+  }
   return (
     <form
       onSubmit={onSubmit}
-      className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto pr-2"
+      className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto "
     >
-      <div className="flex flex-col gap-1">
+      <div className="md:col-span-1 flex flex-col gap-1">
         <label className="text-sm font-medium">Tên thú nuôi *</label>
         <Input
           value={form.name}
@@ -121,22 +219,22 @@ export default function PetForm({
           placeholder="Nhập tên thú nuôi"
         />
       </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium">Tuổi (tháng) *</label>
+      <div className="md:col-span-1 flex flex-col gap-1">
+        <label className="text-sm font-medium">Tuổi (tháng)</label>
         <Input
-          type="number"
+          type="text"
           value={form.age}
           onChange={(e) => setForm({ ...form, age: e.target.value })}
           placeholder="Tuổi"
         />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="md:col-span-1 flex flex-col gap-1">
         <label className="text-sm font-medium">Giới tính</label>
         <Select
           value={String(form.isMale)}
-          onValueChange={(v) => setForm({ ...form, isMale: v === "true" })}
+          onValueChange={(v) => setForm({ ...form, isMale: v == "true" })}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Chọn giới tính" />
           </SelectTrigger>
           <SelectContent>
@@ -145,113 +243,16 @@ export default function PetForm({
           </SelectContent>
         </Select>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="md:col-span-1  flex flex-col gap-1">
         <label className="text-sm font-medium">Cân nặng (kg) *</label>
         <Input
-          type="number"
+          type="text"
           value={form.weight}
           onChange={(e) => setForm({ ...form, weight: e.target.value })}
           placeholder="Nhập cân nặng"
         />
       </div>
-      <div className="flex flex-col gap-1 col-span-full md:col-span-1">
-        <label className="text-sm font-medium">Màu lông *</label>
-        <Autosuggest
-          suggestions={suggestions}
-          onSuggestionsFetchRequested={({ value }) =>
-            setSuggestions(getSuggestions(value))
-          }
-          onSuggestionsClearRequested={() => setSuggestions([])}
-          getSuggestionValue={(s) => s}
-          renderSuggestion={(s) => <span>{s}</span>}
-          onSuggestionSelected={(_, { suggestion }) =>
-            setForm((prev: PetFormState) => ({ ...prev, color: suggestion }))
-          }
-          inputProps={{
-            placeholder: "Nhập màu lông...",
-            value: form.color,
-            onChange: (_: unknown, { newValue }: { newValue: string }) =>
-              setForm((prev: PetFormState) => ({ ...prev, color: newValue })),
-          }}
-          theme={{
-            input:
-              "w-full px-3 py-2 rounded-md border border-input bg-background text-sm text-foreground",
-            suggestionsContainer:
-              "z-50 absolute border mt-1 rounded shadow-md bg-white border-gray-300 dark:bg-[#1f2937] dark:border-gray-700",
-            suggestion:
-              "px-4 py-2 cursor-pointer hover:bg-gray-100 text-black dark:hover:bg-[#374151] dark:text-white",
-            suggestionHighlighted: "bg-blue-500 text-white dark:bg-blue-600",
-          }}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium">Phí nhận nuôi (VNĐ)</label>
-        <Input
-          type="number"
-          min={0}
-          value={form.tokenMoney}
-          onChange={(e) =>
-            setForm({ ...form, tokenMoney: Number(e.target.value) })
-          }
-          placeholder="Ví dụ: 200000"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium">Đặc điểm nhận dạng</label>
-        <Input
-          value={form.identificationFeature}
-          onChange={(e) =>
-            setForm({ ...form, identificationFeature: e.target.value })
-          }
-          placeholder="Nhập đặc điểm..."
-        />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium">Triệt sản</label>
-        <Select
-          value={String(form.sterilizationStatus)}
-          onValueChange={(v) =>
-            setForm({ ...form, sterilizationStatus: v === "true" })
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Chọn tình trạng" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="true">Đã triệt sản</SelectItem>
-            <SelectItem value="false">Chưa triệt sản</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      {isEditing && ["available", "unavailable"].includes(form.status) && (
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium">Trạng thái *</label>
-          <Select
-            value={form.status}
-            onValueChange={(v) => {
-              setForm({ ...form, status: v });
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Chọn trạng thái" />
-            </SelectTrigger>
-            <SelectContent>
-              {PET_STATUSES.map(({ value, label }) => (
-                <SelectItem
-                  key={value}
-                  value={value}
-                  disabled={!["unavailable", "available"].includes(value)}
-                >
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-      <div className="flex flex-col gap-1">
+      <div className="md:col-span-1  flex flex-col gap-1">
         <label className="text-sm font-medium">Loài *</label>
         <Select
           value={form.species}
@@ -266,7 +267,7 @@ export default function PetForm({
             }
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Chọn loài..." />
           </SelectTrigger>
           <SelectContent>
@@ -278,11 +279,11 @@ export default function PetForm({
           </SelectContent>
         </Select>
       </div>
-      <div className="flex flex-col gap-1 col-span-full">
+      <div className=" md:col-span-1 flex flex-col gap-1 ">
         <label className="text-sm font-medium">Giống (tối đa 2)</label>
 
         {/* Hiển thị giống đã chọn */}
-        <div className="flex flex-wrap gap-2 mb-2">
+        <div className="flex flex-wrap gap-2">
           {form.breeds.map((breedId) => {
             const breed = breedList.find((b) => b._id === breedId);
             return (
@@ -318,7 +319,7 @@ export default function PetForm({
               if (form.breeds.includes(value)) return;
               setForm((f) => ({ ...f, breeds: [...f.breeds, value] }));
               setSelectedBreedTemp(undefined);
-              setBreedSelectKey((k) => k + 1); // 👉 force re-render Select
+              setBreedSelectKey((k) => k + 1);
             }}
             disabled={!form.species}
           >
@@ -347,9 +348,112 @@ export default function PetForm({
           </Select>
         )}
       </div>
+      <div className="flex flex-col gap-1 col-span-full md:col-span-1">
+        <label className="text-sm font-medium">Màu lông *</label>
+        <Autosuggest
+          suggestions={suggestions}
+          onSuggestionsFetchRequested={({ value }) =>
+            setSuggestions(getSuggestions(value))
+          }
+          onSuggestionsClearRequested={() => setSuggestions([])}
+          getSuggestionValue={(s) => s}
+          renderSuggestion={(s) => <span>{s}</span>}
+          onSuggestionSelected={(_, { suggestion }) =>
+            setForm((prev: PetFormState) => ({ ...prev, color: suggestion }))
+          }
+          inputProps={{
+            placeholder: "Nhập màu lông...",
+            value: form.color,
+            onChange: (_: unknown, { newValue }: { newValue: string }) =>
+              setForm((prev: PetFormState) => ({ ...prev, color: newValue })),
+          }}
+          theme={{
+            input:
+              "w-full px-3 py-2 rounded-md border border-input bg-background text-sm text-foreground",
+            suggestionsContainer:
+              "z-50 absolute border mt-1 rounded shadow-md bg-white border-gray-300 dark:bg-[#1f2937] dark:border-gray-700",
+            suggestion:
+              "px-4 py-2 cursor-pointer hover:bg-gray-100 text-black dark:hover:bg-[#374151] dark:text-white",
+            suggestionHighlighted: "bg-blue-500 text-white dark:bg-blue-600",
+          }}
+        />
+      </div>
+      <div className="md:col-span-2 flex flex-col gap-1">
+        <label className="text-sm font-medium">Đặc điểm nhận dạng</label>
+        <Input
+          value={form.identificationFeature}
+          onChange={(e) =>
+            setForm({ ...form, identificationFeature: e.target.value })
+          }
+          placeholder="Nhập đặc điểm..."
+        />
+      </div>
+
+      <div className=" md:col-span-1 flex flex-col gap-1">
+        <label className="text-sm font-medium">Triệt sản</label>
+        <Select
+          value={String(form.sterilizationStatus)}
+          onValueChange={(v) =>
+            setForm({ ...form, sterilizationStatus: v === "true" })
+          }
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Chọn tình trạng" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="true">Đã triệt sản</SelectItem>
+            <SelectItem value="false">Chưa triệt sản</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="md:col-span-1 flex flex-col gap-1">
+        <label className="text-sm font-medium">Phí nhận nuôi (VNĐ)</label>
+        <Input
+          type="number"
+          min={0}
+          value={form.tokenMoney}
+          onChange={(e) =>
+            setForm({ ...form, tokenMoney: Number(e.target.value) })
+          }
+          onBlur={(e) => {
+            const cleaned = e.target.value.replace(/^0+(?!$)/, "");
+            const finalValue = cleaned ? Number(cleaned) : 0;
+            setForm({ ...form, tokenMoney: finalValue });
+          }}
+          placeholder="Ví dụ: 200000"
+        />
+      </div>
+
+      {isEditing && ["available", "unavailable"].includes(form.status) && (
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium">Trạng thái *</label>
+          <Select
+            value={form.status}
+            onValueChange={(v) => {
+              setForm({ ...form, status: v });
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              {PET_STATUSES.map(({ value, label }) => (
+                <SelectItem
+                  key={value}
+                  value={value}
+                  disabled={!["unavailable", "available"].includes(value)}
+                >
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="col-span-full">
-        <label className="text-sm font-medium">Mô tả</label>
+        <label className="text-sm font-medium">Tiểu sử</label>
         <Textarea
           value={form.bio}
           onChange={(e) => setForm({ ...form, bio: e.target.value })}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -57,26 +57,75 @@ export default function PetManagement() {
   const [isEditing, setIsEditing] = React.useState(false);
   const [detailPet, setDetailPet] = React.useState<Pet | null>(null);
   const [searchKeyword, setSearchKeyword] = React.useState("");
-
+  const [isLoading, setIsloading] = useState(false);
   const validateForm = () => {
-    if (!form.name.trim())
-      return toast.error("Tên thú nuôi không được để trống");
+    // --- Name ---
+    const name = (form.name ?? "").trim();
+    if (!name) return toast.error("Tên thú nuôi không được để trống");
 
-    if (!form.species || form.species === "")
+    // Regex: chỉ cho phép chữ cái (có dấu tiếng Việt) và khoảng trắng
+    const nameRegex = /^[\p{L}\s]+$/u;
+    if (!nameRegex.test(name)) {
+      return toast.error("Tên thú nuôi chỉ được chứa chữ cái và khoảng trắng");
+    }
+
+    if (name.length < 2)
+      return toast.error("Tên thú nuôi phải có ít nhất 2 ký tự");
+    if (name.length > 60) return toast.error("Tên thú nuôi tối đa 60 ký tự");
+
+    // --- Species ---
+    if (!form.species || String(form.species).trim() === "")
       return toast.error("Vui lòng chọn hoặc thêm loài");
 
-    if (!form.color.trim()) return toast.error("Màu lông không được để trống");
+    // --- Breeds
+    if (Array.isArray(form.breeds) && form.breeds.length > 2)
+      return toast.error("Bạn chỉ có thể chọn tối đa 2 giống");
 
-    if (/^\d+$/.test(form.color.trim()))
+    // --- Color
+    const colorRaw = (form.color ?? "").trim();
+    if (!colorRaw) return toast.error("Màu lông không được để trống");
+    if (/^\d+$/.test(colorRaw))
       return toast.error("Màu lông không được chỉ là số");
+    const colors = colorRaw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (colors.length > 2)
+      return toast.error("Chỉ chọn tối đa 2 màu (ngăn cách bằng dấu phẩy)");
 
-    if (!form.age || Number(form.age) < 0)
-      return toast.error("Tuổi không hợp lệ");
+    // --- Age (tháng)
+    const hasAge =
+      form.age !== undefined &&
+      form.age !== null &&
+      String(form.age).trim() !== "";
+    if (hasAge) {
+      const ageNum = Number(form.age);
+      if (!Number.isInteger(ageNum))
+        return toast.error("Tuổi (tháng) phải là số nguyên");
+      if (ageNum < 0) return toast.error("Tuổi (tháng) phải lớn hơn 0!");
+    }
 
-    if (!form.weight || Number(form.weight) <= 0)
-      return toast.error("Cân nặng không hợp lệ");
+    // --- Weight (kg)
+    if (
+      form.weight === undefined ||
+      form.weight === null ||
+      String(form.weight).trim() === ""
+    )
+      return toast.error("Thiếu cân nặng");
+    const weightNum = Number(form.weight);
+    if (!Number.isFinite(weightNum)) return toast.error("Cân nặng phải là số");
+    if (weightNum <= 0) return toast.error("Cân nặng không hợp lệ ");
 
-    if (form.photos.length === 0)
+    // --- Token Money ---
+    const tokenMoneyNum = Number(form.tokenMoney);
+    if (tokenMoneyNum && !Number.isFinite(tokenMoneyNum))
+      return toast.error("Số tiền đặt cọc phải là số");
+    if (tokenMoneyNum && tokenMoneyNum < 0) return toast.error("Số tiền đặt cọc không được âm");
+    if (tokenMoneyNum && tokenMoneyNum > 1_000_000_000)
+      return toast.error("Số tiền đặt cọc vượt quá giới hạn cho phép");
+
+    // --- Photos ---
+    if (!Array.isArray(form.photos) || form.photos.length === 0)
       return toast.error("Vui lòng chọn ít nhất 1 ảnh");
 
     return true;
@@ -141,7 +190,7 @@ export default function PetManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm() !== true) return;
-
+ 
     const payload = {
       ...form,
       shelter:
@@ -150,7 +199,7 @@ export default function PetManagement() {
       age: Number(form.age),
       weight: Number(form.weight),
     };
-
+    setIsloading(true);
     try {
       if (!shelterId) {
         toast.error("Không tìm thấy ShelterId");
@@ -196,6 +245,10 @@ export default function PetManagement() {
       }
 
       toast.error(message);
+    }finally{
+      setTimeout(() => {
+        setIsloading(false);
+      }, 200);
     }
   };
   return (
@@ -281,21 +334,22 @@ export default function PetManagement() {
             return;
           }
           await disablePet(id, shelterId)
-          .then(()=>{
-            toast.success("Xóa thành công");
-            fetchPets();
-          })
-          .catch((err)=>{
-            toast.error(err?.response?.data?.message || "Lỗi khi xóa thú nuôi!")
-          })
-          
+            .then(() => {
+              toast.success("Xóa thành công");
+              fetchPets();
+            })
+            .catch((err) => {
+              toast.error(
+                err?.response?.data?.message || "Lỗi khi xóa thú nuôi!"
+              );
+            });
         }}
         onView={(pet) => {
           setDetailPet(pet);
         }}
       />
 
-      <Dialog open={showForm}  modal={false} onOpenChange={setShowForm}>
+      <Dialog open={showForm} modal={false} onOpenChange={setShowForm}>
         <DialogContent className="max-w-4xl min-w-3xl  w-full bg-background text-foreground">
           <DialogHeader>
             <DialogTitle className="text-2xl font-semibold text-center">
@@ -315,6 +369,7 @@ export default function PetManagement() {
                 onSubmit={handleSubmit}
                 onCreateSpecies={handleCreateSpecies}
                 isEditing={isEditing}
+                isLoading={isLoading}
               />
             )}
           </div>
