@@ -399,7 +399,10 @@ const PetSubmissionInterviewSection = ({
                         </DropdownMenu>
                       )}
                     </div>
-                    <p className="text-gray-700 leading-relaxed text-sm">{interview.feedback}</p>
+                    <p className="text-gray-700 leading-relaxed text-sm whitespace-pre-wrap break-words break-all">
+  {interview.feedback}
+</p>
+
                   </div>
                 </div>
               </div>
@@ -412,13 +415,22 @@ const PetSubmissionInterviewSection = ({
                       {isEditingFeedback ? "Chỉnh sửa phản hồi" : "Gửi phản hồi phỏng vấn"}
                     </span>
                   </div>
-                  <Textarea
-                    rows={3}
-                    value={feedback}
-                    onChange={(e) => setFeedback(e.target.value)}
-                    placeholder="Nhập nội dung phản hồi về buổi phỏng vấn..."
-                    className="bg-white border-blue-200 focus:border-blue-400 focus:ring-blue-100 text-sm"
-                  />
+      <Textarea
+  rows={3}
+  value={feedback}
+  onChange={(e) => {
+    if (e.target.value.length <= 700) setFeedback(e.target.value)
+  }}
+  placeholder="Nhập nội dung phản hồi về buổi phỏng vấn..."
+  className="bg-white border-blue-200 focus:border-blue-400 focus:ring-blue-100 text-sm
+             whitespace-pre-wrap break-words break-all resize-y max-h-64 overflow-auto"
+/>
+<p className="text-xs text-muted-foreground mt-1">{feedback.length}/700 ký tự</p>
+{feedback.length >= 700 && (
+  <p className="text-xs text-red-500 mt-1">⚠️ Nội dung phản hồi không được vượt quá 500 ký tự</p>
+)}
+
+
                 </div>
 
                 <div className="flex gap-3 justify-end">
@@ -437,14 +449,15 @@ const PetSubmissionInterviewSection = ({
                     </Button>
                   )}
                   <Button
-                    size="sm"
-                    onClick={onTrySubmitFeedback}
-                    disabled={feedback.trim() === ""}
-                    className="gap-2 bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Send className="w-4 h-4" />
-                    {isEditingFeedback ? "Cập nhật nhận xét" : "Gửi nhận xét"}
-                  </Button>
+  size="sm"
+  onClick={onTrySubmitFeedback}
+  disabled={feedback.trim() === "" || feedback.length > 500}
+  className="gap-2 bg-blue-600 hover:bg-blue-700"
+>
+  <Send className="w-4 h-4" />
+  {isEditingFeedback ? "Cập nhật nhận xét" : "Gửi nhận xét"}
+</Button>
+
                 </div>
               </div>
             ) : (
@@ -499,7 +512,10 @@ const PetSubmissionInterviewSection = ({
                         </DropdownMenu>
                       )}
                     </div>
-                    <p className="text-gray-700 leading-relaxed text-sm">{interview.note}</p>
+                   <p className="text-gray-700 leading-relaxed text-sm whitespace-pre-wrap break-words break-all">
+  {interview.note}
+</p>
+
                   </div>
                 </div>
               </div>
@@ -512,13 +528,21 @@ const PetSubmissionInterviewSection = ({
                       {isEditingNote ? "Chỉnh sửa ghi chú" : "Thêm ghi chú phỏng vấn"}
                     </span>
                   </div>
-                  <Textarea
-                    rows={3}
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="Nhập ghi chú về buổi phỏng vấn..."
-                    className="bg-white border-orange-200 focus:border-orange-400 focus:ring-orange-100 text-sm"
-                  />
+                <Textarea
+  rows={3}
+  value={note}
+  onChange={(e) => {
+    if (e.target.value.length <= 300) setNote(e.target.value)
+  }}
+  placeholder="Nhập ghi chú về đơn yêu cầu nhận nuôi..."
+  className="bg-white border-orange-200 focus:border-orange-400 focus:ring-orange-100 text-sm
+             whitespace-pre-wrap break-words break-all resize-y max-h-64 overflow-auto"
+/>
+<p className="text-xs text-muted-foreground mt-1">{note.length}/300 ký tự</p>
+{note.length >= 300 && (
+  <p className="text-xs text-red-500 mt-1">⚠️ Nội dung phản hồi không được vượt quá 300 ký tự</p>
+)}
+
                 </div>
 
                 <div className="flex gap-3 justify-end">
@@ -536,15 +560,16 @@ const PetSubmissionInterviewSection = ({
                       Hủy
                     </Button>
                   )}
-                  <Button
-                    size="sm"
-                    onClick={handleSubmitNote}
-                    disabled={note.trim() === ""}
-                    className="gap-2 bg-orange-600 hover:bg-orange-700"
-                  >
-                    <Save className="w-4 h-4" />
-                    {isEditingNote ? "Cập nhật ghi chú" : "Lưu ghi chú"}
-                  </Button>
+                 <Button
+  size="sm"
+  onClick={handleSubmitNote}
+  disabled={note.trim() === "" || note.length > 300}
+  className="gap-2 bg-orange-600 hover:bg-orange-700"
+>
+  <Save className="w-4 h-4" />
+  {isEditingNote ? "Cập nhật ghi chú" : "Lưu ghi chú"}
+</Button>
+
                 </div>
               </div>
             ) : null}
@@ -554,64 +579,90 @@ const PetSubmissionInterviewSection = ({
 
       {/* Confirmation Dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <AlertDialogContent className="max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-blue-600" />
-              Xác nhận gửi phản hồi
-            </AlertDialogTitle>
-          </AlertDialogHeader>
-          <div className="space-y-4">
-            {isEarlyFeedback ? (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-yellow-800 mb-1 text-sm">Cảnh báo: Feedback sớm</p>
-                    <p className="text-sm text-yellow-700">
-                      Bạn đang gửi nhận xét <strong>sớm hơn</strong> lịch phỏng vấn đã chọn (
-                      {dayjs(selectedSubmission?.interview?.selectedSchedule).format("DD/MM/YYYY")}).
-                    </p>
-                    <p className="text-sm text-yellow-700 mt-1">Vui lòng đảm bảo buổi phỏng vấn đã diễn ra.</p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-blue-800 mb-1 text-sm">Xác nhận gửi phản hồi</p>
-                    <p className="text-sm text-blue-700">
-                      {isEditingFeedback
-                        ? "Bạn chắc chắn muốn cập nhật phản hồi?"
-                        : "Bạn chắc chắn muốn gửi phản hồi cuộc phỏng vấn?"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+  <AlertDialogContent className="max-w-md w-full overflow-hidden">
+    <AlertDialogHeader>
+      <AlertDialogTitle className="flex items-center gap-2">
+        <MessageSquare className="w-5 h-5 text-blue-600" />
+        Xác nhận gửi phản hồi
+      </AlertDialogTitle>
+    </AlertDialogHeader>
 
-            <div className="bg-gray-50 rounded-lg p-3 border">
-              <p className="text-sm font-medium text-gray-700 mb-1">Nội dung phản hồi:</p>
-              <p className="text-sm text-gray-600 italic">"{feedback}"</p>
+    <div className="space-y-4">
+      {isEarlyFeedback ? (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0"> {/* cho phép nội dung co */}
+              <p className="font-medium text-yellow-800 mb-1 text-sm break-words">
+                Cảnh báo: Feedback sớm
+              </p>
+              <p className="text-sm text-yellow-700 break-words">
+                Bạn đang gửi nhận xét <strong>sớm hơn</strong> lịch phỏng vấn đã chọn (
+                {dayjs(selectedSubmission?.interview?.selectedSchedule).format("DD/MM/YYYY")}).
+              </p>
+              <p className="text-sm text-yellow-700 mt-1 break-words">
+                Vui lòng đảm bảo buổi phỏng vấn đã diễn ra.
+              </p>
             </div>
           </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                await handleSubmitFeedback()
-                setShowConfirmDialog(false)
-              }}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Send className="w-4 h-4 mr-2" />
-              {isEditingFeedback ? "Cập nhật" : "Gửi feedback"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        </div>
+      ) : (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <CheckCircle2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="font-medium text-blue-800 mb-1 text-sm break-words">
+                Xác nhận gửi phản hồi
+              </p>
+              <p className="text-sm text-blue-700 break-words">
+                {isEditingFeedback
+                  ? "Bạn chắc chắn muốn cập nhật phản hồi?"
+                  : "Bạn chắc chắn muốn gửi phản hồi cuộc phỏng vấn?"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hộp preview nội dung: wrap + cuộn nếu quá dài */}
+      <div className="bg-gray-50 rounded-lg p-3 border">
+        <p className="text-sm font-medium text-gray-700 mb-1">Nội dung phản hồi:</p>
+        <div
+          className="
+            text-sm text-gray-600 italic
+            whitespace-pre-wrap break-words break-all
+            max-h-40 overflow-auto  /* <= chiều cao tối đa, có scrollbar dọc */
+          "
+        >
+          “{feedback}”
+        </div>
+
+        {/* Cảnh báo nếu vượt giới hạn */}
+        {feedback.length > 500 && (
+          <p className="text-xs text-red-500 mt-2">
+            ⚠️ Nội dung phản hồi không được vượt quá 500 ký tự (hiện tại {feedback.length}/500).
+          </p>
+        )}
+      </div>
+    </div>
+
+    <AlertDialogFooter>
+      <AlertDialogCancel>Hủy</AlertDialogCancel>
+      <AlertDialogAction
+        onClick={async () => {
+          await handleSubmitFeedback();
+          setShowConfirmDialog(false);
+        }}
+        className="bg-blue-600 hover:bg-blue-700"
+        disabled={feedback.trim() === "" || feedback.length > 500}  // <= chặn submit
+      >
+        <Send className="w-4 h-4 mr-2" />
+        {isEditingFeedback ? "Cập nhật" : "Gửi feedback"}
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
       <Dialog open={showChangePerformerDialog} onOpenChange={setShowChangePerformerDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>

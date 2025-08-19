@@ -290,7 +290,8 @@ useEffect(() => {
                     {paginatedPets.map((pet) => (
                         <Card key={pet._id}
                             onClick={() => navigate(`/shelters/${shelterId}/management/submission-forms/${pet._id}`)}
-                            className="relative shadow-md hover:shadow-lg transition"
+                        className="relative shadow-md hover:shadow-xl hover:scale-[1.01] transition-transform transition-shadow duration-300 ease-in-out"
+
                         >
                             <div className="absolute top-2 right-2 bg-primary text-white text-xs font-semibold px-2 py-1 rounded-full">
                                 {submissionCountByPet[pet._id]
