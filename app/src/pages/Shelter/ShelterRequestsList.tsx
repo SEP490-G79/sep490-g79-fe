@@ -529,14 +529,13 @@ const ShelterRequestsList = () => {
                         nguyện viên !
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="px-5 py-3">
+                    <div className="px-5 py-3 w-full overflow-x-hidden">
                       <Form {...form}>
                         <form
                           onSubmit={form.handleSubmit(handleSendRequest)}
                           className="space-y-6"
                         >
-                          {/* Left column */}
-                          <div className="space-y-4">
+                          <div className="w-full">
                             <FormField
                               control={form.control}
                               name="email"

@@ -125,13 +125,13 @@ export default function ReportBlogDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 w-full overflow-x-hidden">
           <label className="block text-sm font-medium">Lý do báo cáo</label>
           <Select
             value={selectedReason}
             onValueChange={(value) => setSelectedReason(value)}
           >
-            <SelectTrigger className="w-[30vw]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Chọn lý do" />
             </SelectTrigger>
             <SelectContent>
@@ -146,6 +146,8 @@ export default function ReportBlogDialog({
           {selectedReason === "Khác" && (
             <Textarea
               placeholder="Nhập lý do cụ thể..."
+              className="w-full overflow-y-auto"
+              maxLength={500}
               value={customReason}
               onChange={(e) => setCustomReason(e.target.value)}
             />

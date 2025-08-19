@@ -522,7 +522,7 @@ const ShelterEstablishmentPage = () => {
                                 name="name"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Tên trạm cứu hộ</FormLabel>
+                                    <FormLabel>Tên trạm cứu hộ <span className="text-destructive">*</span></FormLabel>
                                     <FormControl>
                                       <Input
                                         placeholder="Nhập tên trạm"
@@ -538,7 +538,7 @@ const ShelterEstablishmentPage = () => {
                                 name="shelterCode"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Mã trạm cứu hộ</FormLabel>
+                                    <FormLabel>Mã trạm cứu hộ <span className="text-destructive">*</span></FormLabel>
                                     <FormControl>
                                       <Input
                                         {...field}
@@ -554,7 +554,7 @@ const ShelterEstablishmentPage = () => {
                                 name="hotline"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Hotline</FormLabel>
+                                    <FormLabel>Hotline <span className="text-destructive">*</span></FormLabel>
                                     <FormControl>
                                       <Input
                                         placeholder="Nhập số hotline"
@@ -570,7 +570,7 @@ const ShelterEstablishmentPage = () => {
                                 name="email"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Email</FormLabel>
+                                    <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
                                     <FormControl>
                                       <Input
                                         placeholder="example@email.com"
@@ -585,28 +585,29 @@ const ShelterEstablishmentPage = () => {
                             {/* Right column */}
                             <div className="space-y-4">
                               <FormField
-                                control={form.control}
-                                name="address"
-                                render={({ field }) => (
-                                  <AddressInputWithGoong
-                                    value={field.value}
-                                    onChange={(val) => {
-                                      field.onChange(val);
-                                      setValue("address", val);
-                                    }}
-                                    onLocationChange={(loc) => setLocation(loc)}
-                                    error={
-                                      form.formState.errors.address?.message
-                                    }
-                                  />
-                                )}
+                                  control={form.control}
+                                  name="address"
+                                  render={({ field }) => (
+                                    <AddressInputWithGoong
+                                      value={field.value}
+                                      onChange={(val) => {
+                                        field.onChange(val);
+                                        setValue("address", val);
+                                      }}
+                                      onLocationChange={(loc) => setLocation(loc)}
+                                      error={
+                                        form.formState.errors.address?.message
+                                      }
+                                      isRequired={true}
+                                    />
+                                  )}
                               />
                               <FormField
                                 control={form.control}
                                 name="aspiration"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Nguyện vọng thành lập</FormLabel>
+                                    <FormLabel>Nguyện vọng thành lập <span className="text-destructive">*</span></FormLabel>
                                     <FormControl>
                                       <Textarea
                                         placeholder="Tôi muốn thành lập để..."
@@ -622,7 +623,7 @@ const ShelterEstablishmentPage = () => {
                                 name="shelterLicense"
                                 render={({ field: { onChange } }) => (
                                   <FormItem>
-                                    <FormLabel>Giấy phép hoạt động</FormLabel>
+                                    <FormLabel>Giấy phép hoạt động <span className="text-destructive">*</span></FormLabel>
                                     <FormControl>
                                       <Input
                                         type="file"
@@ -659,7 +660,7 @@ const ShelterEstablishmentPage = () => {
                                 <div className="space-y-1 leading-none">
                                   <FormLabel htmlFor="commitment">
                                     Tôi đã xem và cam kết tuân thủ nội dung
-                                    trong bản cam kết.{" "}
+                                    trong bản cam kết. 
                                     <Dialog>
                                       <DialogTrigger asChild>
                                         <Button
@@ -674,7 +675,7 @@ const ShelterEstablishmentPage = () => {
                                           <DialogTitle className="text-xl font-semibold text-center">
                                             Nội dung cam kết
                                           </DialogTitle>
-                                          <DialogDescription className="mt-4 max-h-[60vh] overflow-y-auto space-y-4 text-sm text-gray-700 leading-relaxed pr-2">
+                                          <DialogDescription className="mt-4 max-h-[60vh] overflow-y-auto space-y-4 text-sm text-card-foreground leading-relaxed pr-2">
                                             <p className="font-medium">
                                               1. Cam kết về thông tin cung cấp:
                                             </p>

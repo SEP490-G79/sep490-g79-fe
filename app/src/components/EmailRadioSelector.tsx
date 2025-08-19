@@ -49,7 +49,7 @@ export function EmailRadioSelector({
   };
 
   return (
-    <FormItem className="w-[30vw]">
+    <FormItem className="w-full">
       {label && <FormLabel>{label}</FormLabel>}
       <FormControl>
         <Popover open={open} onOpenChange={setOpen}>

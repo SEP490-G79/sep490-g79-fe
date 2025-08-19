@@ -8,7 +8,7 @@ import AppContext from '@/context/AppContext';
 import type { ReturnRequest } from '@/types/ReturnRequest';
 import useAuthAxios from '@/utils/authAxios';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Loader2Icon, MoreHorizontal, NotebookText } from 'lucide-react';
+import { ArrowUpDown, Loader2Icon, MoreHorizontal, NotebookText, RefreshCcw, Search } from 'lucide-react';
 import React, { useContext, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -16,6 +16,8 @@ import ReturnRequestTable from './ReturnRequestTable';
 import ReturnRequestDialog from './ReturnRequestDialog';
 import {Lightbox} from "yet-another-react-lightbox"
 import Zoom from 'yet-another-react-lightbox/plugins/zoom';
+import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const PendingReturnRequests = () => {
       const [returnRequest, setReturnRequest] = useState<ReturnRequest[]>([]);
@@ -27,6 +29,7 @@ const PendingReturnRequests = () => {
       const [isPreview, setIsPreview] = useState<boolean>(false);
       const [currentIndex, setCurrentIndex] = useState<number>(0);
       const [dialogDetail, setDialogDetail] = useState<ReturnRequest | null>(null);
+      const [search, setSearch] = useState<string>("");
       const {shelterId} = useParams();
 
       useEffect(() => {
@@ -54,6 +57,20 @@ const PendingReturnRequests = () => {
         />
       )
     );
+  }
+
+  function searchRequest(searchValue : string){
+    if(searchValue.trim().length < 1){
+      setFilteredReturnRequest(returnRequest);
+    }else{
+      const searchedRequest = returnRequest.filter(rq => {
+        if(rq?.pet.name && rq?.pet.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+           rq?.reason && rq?.reason.toLowerCase().includes(searchValue.toLowerCase())){
+          return rq;
+        }
+      })
+      setFilteredReturnRequest(searchedRequest);
+    }
   }
 
     const handleApproveReturnRequest = async (requestId : string) => {
@@ -88,6 +105,30 @@ const PendingReturnRequests = () => {
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
+        <div className='col-span-12 flex justify-between'>
+          <div className='flex gap-1 w-150'>
+            <Input placeholder='Tìm theo tên thú nuôi hoặc nội dung' onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => {
+              if(e.key === "Enter"){
+                searchRequest(search)
+              }
+            }}/>
+            <Button variant="outline" className='cursor-pointer' onClick={() => searchRequest(search)}><Search className='text-primary'/> Tìm kiếm</Button>
+          </div>
+          <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={"ghost"}
+                  className="cursor-pointer"
+                  onClick={() => setRefresh((prev) => !prev)}
+                >
+                  <RefreshCcw />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Refresh</p>
+              </TooltipContent>
+            </Tooltip>
+        </div>
         <div className="col-span-12">
           <ReturnRequestTable
             filteredReturnRequest={filteredReturnRequest ?? []}
