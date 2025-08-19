@@ -14,10 +14,10 @@ function Shelters() {
   }, [shelters]);
   return (
     <div className="w-full flex flex-wrap justify-center mt-10">
-      <h2 className="basis-3xl text-center text-3xl font-bold mb-5">
+      <h2 className="basis-full text-center text-3xl font-bold mb-5">
         Các trung tâm cứu trợ nổi bật
       </h2>
-      <p className="basis-3xl text-center text-1xl text-(--muted-foreground) mb-10 px-20">
+      <p className="basis-full text-center text-1xl text-(--muted-foreground) mb-10 px-20">
         Những mái ấm đang chờ bạn trao gửi cơ hội — cùng giúp các bé tìm được
         nơi gọi là nhà.
       </p>

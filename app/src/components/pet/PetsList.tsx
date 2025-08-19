@@ -20,6 +20,7 @@ import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { Skeleton } from "../ui/skeleton";
 import ReturnRequestDialog from "@/components/user/return-request/ReturnRequestDialog";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 interface PetCardProps {
     pet: Pet;
     user: {
@@ -162,14 +163,26 @@ function PetsList({ pet, user, isLoading, }: PetCardProps) {
         >
             {/* Image section */}
             <div className="relative h-64">
-                <img
-                    src={
-                        pet?.photos?.[0] ||
-                        "https://i.pinimg.com/736x/ad/11/3a/ad113a545bc1278f9c5bc4ea770bc839.jpg"
-                    }
-                    alt={pet?.name || "Ảnh thú cưng"}
-                    className="w-full h-full object-cover object-top"
-                />
+
+               <Link 
+  to={`/pets/${pet._id}`} 
+  onClick={() => window.scrollTo({ top: 0, left: 0, behavior: "smooth" })}
+  className="block w-full h-full"
+>
+  <Avatar className="w-full h-full rounded-none">
+    <AvatarImage
+      src={
+        pet?.photos?.[0] ||
+        "https://i.pinimg.com/736x/ad/11/3a/ad113a545bc1278f9c5bc4ea770bc839.jpg"
+      }
+      alt={pet?.name || "Ảnh thú cưng"}
+      className="w-full h-full object-cover object-top"
+    />
+    <AvatarFallback className="w-full h-full rounded-none flex items-center justify-center bg-gray-200 text-gray-500 text-2xl">
+      {pet?.name ? pet.name.charAt(0) : "?"}
+    </AvatarFallback>
+  </Avatar>
+</Link>
 
                 {/* Heart icon wishlist */}
                 {isAdoptedByUser ? (
