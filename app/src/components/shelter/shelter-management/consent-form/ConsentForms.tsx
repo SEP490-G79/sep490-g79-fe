@@ -96,7 +96,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import { socketClient } from "@/lib/socket.io";
+import { useRef } from "react";
 export function ConsentForms() {
   const { shelterId } = useParams();
   const { coreAPI, shelterConsentForms, setShelterConsentForms } =
@@ -128,7 +129,7 @@ export function ConsentForms() {
         // console.log("Error fetching consent forms:", err);
         toast.error(
           err.response?.data?.message ||
-            "Không thể tải bản đồng ý nhận nuôi! Vui lòng thử lại sau."
+          "Không thể tải bản đồng ý nhận nuôi! Vui lòng thử lại sau."
         );
       })
       .finally(() => {
@@ -141,6 +142,27 @@ export function ConsentForms() {
   useEffect(() => {
     fetchShelterConsentForms();
   }, [shelterId, coreAPI]);
+
+  const fetchRef = useRef(fetchShelterConsentForms);
+  useEffect(() => { fetchRef.current = fetchShelterConsentForms; }, [fetchShelterConsentForms]);
+  useEffect(() => {
+    if (!shelterId) return;
+    const onChange = (payload: { consentFormId: string; petId: string; status: string }) => {
+      setShelterConsentForms(prev => {
+        const idx = prev.findIndex(f => f._id === payload.consentFormId);
+        if (idx === -1) {
+          fetchRef.current();
+          return prev;
+        }
+        const next = [...prev];
+        next[idx] = { ...next[idx], status: payload.status };
+        return next;
+      });
+    };
+
+    socketClient.subscribe("consentForm:statusChanged", onChange);
+    return () => socketClient.unsubscribe("consentForm:statusChanged");
+  }, [shelterId, setShelterConsentForms]);
 
   const handleDeleteConsentForm = async (selectedId: string) => {
     if (!selectedId) {
@@ -164,7 +186,7 @@ export function ConsentForms() {
         // console.log("Error deleting consent form:", err);
         toast.error(
           err.response?.data?.message ||
-            "Không thể xóa bản đồng ý nhận nuôi! Vui lòng thử lại sau."
+          "Không thể xóa bản đồng ý nhận nuôi! Vui lòng thử lại sau."
         );
       })
       .finally(() => {
@@ -206,6 +228,9 @@ export function ConsentForms() {
     },
   ];
 
+  const DONE_STATUSES = ["approved", "cancelled", "rejected"] as const;
+  const PROCESS_STATUSES = ["draft", "send", "accepted"] as const;
+
   const filteredForms = useMemo(() => {
     return shelterConsentForms.filter((form) => {
       const keyword = removeDiacritics(searchTerm.toLowerCase());
@@ -219,18 +244,28 @@ export function ConsentForms() {
     });
   }, [searchTerm, shelterConsentForms]);
 
-  const approvedForms = useMemo(() => {
-    return filteredForms.filter((form) => form.status === "approved");
+  const processingForms = useMemo(() => {
+    return filteredForms.filter((f) =>
+      PROCESS_STATUSES.includes((f.status || "").toLowerCase() as any)
+    );
   }, [filteredForms]);
-  
-  const paginatedForms = useMemo(() => {
+
+  const doneForms = useMemo(() => {
+    return filteredForms.filter((f) =>
+      DONE_STATUSES.includes((f.status || "").toLowerCase() as any)
+    );
+  }, [filteredForms]);
+
+  // Phân trang riêng cho tab "Hoàn thành"
+  const paginatedDoneForms = useMemo(() => {
     const start = (page - 1) * limit;
     const end = start + limit;
-    return approvedForms.slice(start, end);
-  }, [approvedForms, page]);
-  
-  const totalPages = Math.ceil(approvedForms.length / limit);
-  
+    return doneForms.slice(start, end);
+  }, [doneForms, page]);
+
+  const totalPages = Math.ceil(doneForms.length / limit);
+
+
 
   const renderPagination = () => (
     <Pagination>
@@ -307,7 +342,10 @@ export function ConsentForms() {
       </div>
     );
   }
-  if (!shelterConsentForms || paginatedForms.length == 0) {
+ 
+
+
+  if (!shelterConsentForms) {
     return (
       <Tabs defaultValue="active" className="w-full">
         <TabsList>
@@ -377,6 +415,24 @@ export function ConsentForms() {
       </Tabs>
     );
   }
+  const SearchHeader = (
+  <div className="flex justify-between items-center py-4">
+    <div className="flex basis-1/3 gap-5">
+      <Input
+        placeholder="Tìm kiếm ..."
+        className="max-w-sm"
+        value={searchTerm}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setPage(1);
+        }}
+      />
+    </div>
+    <div className="basis-1/3 flex justify-center">
+      {/* <CreateDialog /> */}
+    </div>
+  </div>
+);
 
   return (
     <Tabs defaultValue="active" className="w-full">
@@ -390,207 +446,194 @@ export function ConsentForms() {
       </TabsList>
       <TabsContent value="active">
         <div className="w-full">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex justify-around basis-1/3 gap-5">
-              <Input
-                placeholder="Tìm kiếm ..."
-                className="max-w-sm"
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                }}
-              />
+             {SearchHeader}
+          {processingForms.length === 0 ? (
+            <div className="flex flex-col items-center flex-wrap mt-30">
+              <h2 className="basis-1 text-xl font-semibold text-(--primary)">
+                Chưa có bản đồng ý nhận nuôi nào.
+              </h2>
+              <p className="basis-1 text-sm text-(--muted-foreground) mb-4">
+                Hãy tạo bản đồng ý nhận nuôi mới để quản lý quá trình nhận nuôi thú cưng.
+              </p>
             </div>
-
-            <div className=" basis-1/3 flex justify-center">
-              {/* <CreateDialog /> */}
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
-            {filteredForms
-              ?.filter((c) => c?.status != "approved")
-              ?.map((consentForm) => {
-                return (
-                  <Card
-                    key={consentForm._id}
-                    className=" w-full h-4/5 p-0 rounded-sm shadow-sm hover:shadow-lg transition-shadow dark:hover:shadow-lg dark:transition-shadow border-0 gap-0"
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+              {processingForms.map((consentForm) => (
+                <Card
+                  key={consentForm._id}
+                  className=" w-full h-4/5 p-0 rounded-sm shadow-sm hover:shadow-lg transition-shadow dark:hover:shadow-lg dark:transition-shadow border-0 gap-0"
+                >
+                  <Avatar
+                    onClick={() => navigate(`${consentForm._id}`)}
+                    className="w-full  cursor-pointer h-1/2 rounded-sm"
                   >
-                    <Avatar
-                      onClick={() => navigate(`${consentForm._id}`)}
-                      className="w-full  cursor-pointer h-1/2 rounded-sm"
-                    >
+                    <AvatarImage
+                      src={consentForm?.pet?.photos[0]}
+                      className="object-center object-cover "
+                    />
+                    <AvatarFallback className="rounded-none">
+                      <span className="text-6xl font-normal">
+                        {consentForm.pet?.name?.charAt(0).toUpperCase() ||
+                          "Paw"}
+                      </span>
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <CardContent className="relative px-4 pt-0 flex items-start justify-between">
+                    {/* Đây là avatar thứ hai */}
+                    <Avatar className="absolute -top-8 left-4 z-10 h-16 w-16 ring-2 ring-(--primary) rounded-sm">
                       <AvatarImage
-                        src={consentForm?.pet?.photos[0]}
-                        className="object-center object-cover "
+                        src={consentForm?.adopter.avatar}
+                        className="object-center object-cover"
                       />
                       <AvatarFallback className="rounded-none">
-                        <span className="text-6xl font-normal">
-                          {consentForm.pet?.name?.charAt(0).toUpperCase() ||
-                            "Paw"}
+                        <span className="text-3xl font-normal">
+                          {consentForm.adopter.name
+                            ?.charAt(0)
+                            .toUpperCase() || "A"}
                         </span>
                       </AvatarFallback>
                     </Avatar>
+                    <div className="absolute top-1 left-22 ">
+                      <Badge className="inline-block max-w-[10rem] sm:max-w-[5rem] md:max-w-[5rem] lg:max-w-[5rem] xl:max-w-[10rem] text-xs hover:bg-(--primary)/50 p-0 px-0.5 rounded-sm">
+                        <span className="inline-flex w-full items-center text-xs">
+                          <MapPin
+                            strokeWidth={3}
+                            size={"12px"}
+                            className=" mr-1"
+                          />{" "}
+                          <span className="w-full truncate">
+                            {consentForm.address || "Địa chỉ chưa xác định"}
+                          </span>
+                        </span>
+                      </Badge>
+                    </div>
 
-                    <CardContent className="relative px-4 pt-0 flex items-start justify-between">
-                      {/* Đây là avatar thứ hai */}
-                      <Avatar className="absolute -top-8 left-4 z-10 h-16 w-16 ring-2 ring-(--primary) rounded-sm">
-                        <AvatarImage
-                          src={consentForm?.adopter.avatar}
-                          className="object-center object-cover"
+                    <div className="flex flex-col justify-around mt-3 pt-8 flex-1 overflow-hidden">
+                      <h3 className="flex items-center text-xs font-semibold min-w-0">
+                        <FileText
+                          size={"15px"}
+                          className="mr-1 flex-shrink-0"
                         />
-                        <AvatarFallback className="rounded-none">
-                          <span className="text-3xl font-normal">
-                            {consentForm.adopter.name
-                              ?.charAt(0)
-                              .toUpperCase() || "A"}
-                          </span>
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="absolute top-1 left-22 ">
-                        <Badge className="inline-block max-w-[10rem] sm:max-w-[5rem] md:max-w-[5rem] lg:max-w-[5rem] xl:max-w-[10rem] text-xs hover:bg-(--primary)/50 p-0 px-0.5 rounded-sm">
-                          <span className="inline-flex w-full items-center text-xs">
-                            <MapPin
-                              strokeWidth={3}
-                              size={"12px"}
-                              className=" mr-1"
-                            />{" "}
-                            <span className="w-full truncate">
-                              {consentForm.address || "Địa chỉ chưa xác định"}
-                            </span>
-                          </span>
-                        </Badge>
-                      </div>
+                        <span className="truncate whitespace-nowrap overflow-hidden hover:text-primary cursor-pointer transition-colors">
+                          {consentForm.title || "Bản đồng ý nhận nuôi"}
+                        </span>
+                      </h3>
 
-                      <div className="flex flex-col justify-around mt-3 pt-8 flex-1 overflow-hidden">
-                        <h3 className="flex items-center text-xs font-semibold min-w-0">
-                          <FileText
-                            size={"15px"}
-                            className="mr-1 flex-shrink-0"
-                          />
-                          <span className="truncate whitespace-nowrap overflow-hidden hover:text-primary cursor-pointer transition-colors">
-                            {consentForm.title || "Bản đồng ý nhận nuôi"}
-                          </span>
-                        </h3>
+                      <h3 className="flex items-center text-xs font-semibold min-w-0">
+                        <User size={"15px"} className="mr-1 flex-shrink-0" />
+                        <span className="truncate whitespace-nowrap overflow-hidden hover:text-primary cursor-pointer transition-colors">
+                          {consentForm.adopter.fullName || "Người nhận nuôi"}
+                        </span>
+                      </h3>
 
-                        <h3 className="flex items-center text-xs font-semibold min-w-0">
-                          <User size={"15px"} className="mr-1 flex-shrink-0" />
-                          <span className="truncate whitespace-nowrap overflow-hidden hover:text-primary cursor-pointer transition-colors">
-                            {consentForm.adopter.fullName || "Người nhận nuôi"}
-                          </span>
-                        </h3>
+                      <p className="flex items-center text-xs text-muted-foreground min-w-0">
+                        <Cat size={"15px"} className="mr-1 flex-shrink-0" />
+                        <span className="truncate whitespace-nowrap overflow-hidden">
+                          {consentForm.pet?.name} #
+                          {consentForm.pet?.petCode || "Mã thú cưng"}
+                        </span>
+                      </p>
 
-                        <p className="flex items-center text-xs text-muted-foreground min-w-0">
-                          <Cat size={"15px"} className="mr-1 flex-shrink-0" />
-                          <span className="truncate whitespace-nowrap overflow-hidden">
-                            {consentForm.pet?.name} #
-                            {consentForm.pet?.petCode || "Mã thú cưng"}
-                          </span>
-                        </p>
+                      <p className="flex items-center text-xs text-muted-foreground min-w-0">
+                        <Truck size={"15px"} className="mr-1 flex-shrink-0" />
+                        <span className="truncate whitespace-nowrap overflow-hidden">
+                          {mockDeliveryMethods.find(
+                            (method) =>
+                              method.value.toUpperCase() ===
+                              consentForm.deliveryMethod.toUpperCase()
+                          )?.label || consentForm.deliveryMethod}
+                        </span>
+                      </p>
 
-                        <p className="flex items-center text-xs text-muted-foreground min-w-0">
-                          <Truck size={"15px"} className="mr-1 flex-shrink-0" />
-                          <span className="truncate whitespace-nowrap overflow-hidden">
-                            {mockDeliveryMethods.find(
-                              (method) =>
-                                method.value.toUpperCase() ===
-                                consentForm.deliveryMethod.toUpperCase()
-                            )?.label || consentForm.deliveryMethod}
-                          </span>
-                        </p>
+                      <Badge className="mt-2" variant={"outline"}>
+                        <span className="text-xs">
+                          {mockStatus.find(
+                            (mock) =>
+                              mock.value.toUpperCase() ===
+                              consentForm.status.toUpperCase()
+                          )?.label || consentForm.status}
+                        </span>
+                      </Badge>
+                    </div>
 
-                        <Badge className="mt-2" variant={"outline"}>
-                          <span className="text-xs">
-                            {mockStatus.find(
-                              (mock) =>
-                                mock.value.toUpperCase() ===
-                                consentForm.status.toUpperCase()
-                            )?.label || consentForm.status}
-                          </span>
-                        </Badge>
-                      </div>
+                    <div className="flex-shrink-0 translate-y-10 cursor-pointer text-muted-foreground hover:text-primary transition-colors">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger>
+                          <EllipsisVertical className="h-4 w-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Hành động</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem>
+                            <Link
+                              to={`${consentForm._id}`}
+                              className="flex gap-1"
+                            >
+                              <Pen /> Chỉnh sửa
+                            </Link>
+                          </DropdownMenuItem>
 
-                      <div className="flex-shrink-0 translate-y-10 cursor-pointer text-muted-foreground hover:text-primary transition-colors">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger>
-                            <EllipsisVertical className="h-4 w-4" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                              <Link
-                                to={`${consentForm._id}`}
-                                className="flex gap-1"
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem
+                                variant="destructive"
+                                className="cursor-pointer"
+                                onSelect={(event) => event.preventDefault()}
                               >
-                                <Pen /> Chỉnh sửa
-                              </Link>
-                            </DropdownMenuItem>
-
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <DropdownMenuItem
-                                  variant="destructive"
-                                  className="cursor-pointer"
-                                  onSelect={(event) => event.preventDefault()}
+                                <Trash /> Xóa bản đồng ý
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Bạn có chắc chắn muốn xóa bản đồng ý này?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Việc xóa bản đồng ý sẽ không thể hoàn tác.
+                                  Bạn có chắc chắn muốn xóa bản đồng ý này
+                                  không?
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className=" bg-(--background) text-(--destructive) ring-1 ring-(--destructive)  hover:bg-(--destructive) hover:text-(--background) transition-colors"
+                                  onClick={() => {
+                                    handleDeleteConsentForm(consentForm._id);
+                                  }}
                                 >
-                                  <Trash /> Xóa bản đồng ý
-                                </DropdownMenuItem>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Bạn có chắc chắn muốn xóa bản đồng ý này?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Việc xóa bản đồng ý sẽ không thể hoàn tác.
-                                    Bạn có chắc chắn muốn xóa bản đồng ý này
-                                    không?
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    className=" bg-(--background) text-(--destructive) ring-1 ring-(--destructive)  hover:bg-(--destructive) hover:text-(--background) transition-colors"
-                                    onClick={() => {
-                                      handleDeleteConsentForm(consentForm._id);
-                                    }}
-                                  >
-                                    Xóa bản đồng ý
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-          </div>
+                                  Xóa bản đồng ý
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
-        
       </TabsContent>
       <TabsContent value="approved">
         <div className="w-full">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex justify-around basis-1/3 gap-5">
-              <Input
-                placeholder="Tìm kiếm ..."
-                className="max-w-sm"
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                }}
-              />
+             {SearchHeader}
+          {doneForms.length === 0 ? (
+            <div className="flex flex-col items-center flex-wrap mt-30">
+              <h2 className="basis-1 text-xl font-semibold text-(--primary)">
+                Chưa có bản đồng ý nhận nuôi nào.
+              </h2>
+              <p className="basis-1 text-sm text-(--muted-foreground) mb-4">
+                Hãy tạo bản đồng ý nhận nuôi mới để quản lý quá trình nhận nuôi thú cưng.
+              </p>
             </div>
-
-            <div className=" basis-1/3 flex justify-center">
-              {/* <CreateDialog /> */}
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
-            {paginatedForms
-              ?.map((consentForm) => {
-                return (
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+                {paginatedDoneForms.map((consentForm) => (
                   <Card
                     key={consentForm._id}
                     className=" w-full h-4/5 p-0 rounded-sm shadow-sm hover:shadow-lg transition-shadow dark:hover:shadow-lg dark:transition-shadow border-0 gap-0"
@@ -745,10 +788,11 @@ export function ConsentForms() {
                       </div>
                     </CardContent>
                   </Card>
-                );
-              })}
-          </div>
-          <div className="w-full mt-5 ">{renderPagination()}</div>
+                ))}
+              </div>
+              <div className="w-full mt-5 ">{renderPagination()}</div>
+            </>
+          )}
         </div>
       </TabsContent>
     </Tabs>

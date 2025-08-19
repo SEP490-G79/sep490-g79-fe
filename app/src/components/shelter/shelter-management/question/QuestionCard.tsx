@@ -169,7 +169,7 @@ export function QuestionCard({ question, setQuestionsList, _id }: Props) {
           />
         </div>
         <div>
-          <Popover>
+          {selectedQuestion.type && <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -221,7 +221,7 @@ export function QuestionCard({ question, setQuestionsList, _id }: Props) {
                 </CommandList>
               </Command>
             </PopoverContent>
-          </Popover>
+          </Popover>}
           <Button
             variant="ghost"
             size="icon"

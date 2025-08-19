@@ -59,10 +59,8 @@ interface AppContextType {
   setShelterForms: (shelterForms: AdoptionForm[]) => void;
   refreshUserProfile: () => Promise<void>;
   submissionsByPetId: Record<string, MissionForm[]>;
-
   setSubmissionsByPetId: React.Dispatch<React.SetStateAction<Record<string, MissionForm[]>>>;
-
-  setShelterConsentForms: (shelterConsentForms: ConsentForm[]) => void;
+  setShelterConsentForms: React.Dispatch<React.SetStateAction<ConsentForm[]>>;
   fetchPetsList: () => Promise<void>;
 }
 

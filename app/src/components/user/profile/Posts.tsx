@@ -255,7 +255,7 @@ function Posts({ profileUserId }: { profileUserId?: string }) {
 
   const handleDeletePost = async (postId: string) => {
     try {
-      await authAxios.delete(`${coreAPI}/posts/${postId}`);
+      await authAxios.delete(`${coreAPI}/posts/${postId}/delete`);
       toast.success("Đã xoá bài viết");
       setPostsData(prev => prev.filter(p => p._id !== postId));
       await fetchPosts();

@@ -15,6 +15,7 @@ import Autosuggest from "react-autosuggest";
 import PetPhotoUpload from "./PetPhotoUpload";
 import PetImageAIButton from "./PetImageAIButton";
 import type { Species, Breed, PetFormState } from "@/types/pet.types";
+import { Separator } from "@/components/ui/separator";
 
 interface PetFormProps {
   form: PetFormState;
@@ -361,10 +362,13 @@ export default function PetForm({
           setPhotos={(photos) =>
             setForm((prev: PetFormState) => ({ ...prev, photos }))
           }
+          setForm={setForm}
+          speciesList={speciesList}
+          breedList={breedList}
         />
       </div>
 
-      <div className="col-span-full">
+      {/* <div className="col-span-full">
         <PetImageAIButton
           imageUrl={form.photos[0]}
           setForm={setForm}
@@ -374,7 +378,8 @@ export default function PetForm({
           setBreedList={setBreedList}
           colorSuggestions={colorSuggestions}
         />
-      </div>
+      </div> */}
+      <Separator className="col-span-full my-2 " />
 
       <div className="col-span-full flex justify-end">
         <Button type="submit" className="w-40">

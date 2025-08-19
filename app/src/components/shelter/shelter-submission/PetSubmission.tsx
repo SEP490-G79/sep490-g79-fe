@@ -1,5 +1,5 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppContext } from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
 import { format, startOfDay } from "date-fns";
@@ -72,6 +72,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { socketClient } from "@/lib/socket.io";
+import { Avatar } from "@radix-ui/react-avatar";
+import { AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function getColorBarClass(total: number): string {
   if (total <= 29) return "bg-red-500";
@@ -257,7 +260,7 @@ export default function PetSubmission() {
       });
       resetForm();
     } catch (err: any) {
-      
+
       toast.error(err?.response?.data?.message || "Lỗi tạo lịch phỏng vấn");
     }
   };
@@ -387,6 +390,45 @@ export default function PetSubmission() {
     }
   };
 
+  const selectedSubmissionIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    selectedSubmissionIdRef.current = selectedSubmission?._id ?? null;
+  }, [selectedSubmission?._id]);
+
+  useEffect(() => {
+    if (!petId) return;
+
+    const onSocketEvent = async (
+      payload: { submissionId: string; petId: string; status?: string }
+    ) => {
+      if (payload.petId !== petId) return;
+
+      const needDetail = selectedSubmissionIdRef.current === payload.submissionId;
+
+      await Promise.allSettled([
+        fetchSubmissions(),
+        needDetail
+          ? authAxios
+            .get(`${coreAPI}/adoption-submissions/${payload.submissionId}`)
+            .then((res) => setSelectedSubmission(res.data))
+          : Promise.resolve(),
+      ]);
+    };
+    const events = [
+      "adoptionSubmission:selectedSchedule",
+      "adoptionSubmission:assigneeChanged",
+      "adoptionSubmission:statusChanged",
+      "adoptionSubmission:createSchedule",
+      "adoptionSubmission:created",
+    ];
+
+    events.forEach((ev) => socketClient.unsubscribe(ev));
+    events.forEach((ev) => socketClient.subscribe(ev, onSocketEvent));
+
+    return () => {
+      events.forEach((ev) => socketClient.unsubscribe(ev));
+    };
+  }, [petId]);
 
 
   const uniquePerformers = Array.from(
@@ -504,19 +546,19 @@ export default function PetSubmission() {
   const currentStatus = selectedSubmission?.status || "";
   const options = statusOptionsMap[currentStatus] || statusOptions;
   const onTrySubmitFeedback = () => {
-  const selected = selectedSubmission?.interview?.selectedSchedule;
+    const selected = selectedSubmission?.interview?.selectedSchedule;
 
-  if (selected) {
-    const selectedDate = dayjs(selected).startOf("day");
-    const today = dayjs().startOf("day");
-    setIsEarlyFeedback(today.isBefore(selectedDate));
-  } else {
-    // Không có selectedSchedule vẫn cho gửi, không cảnh báo “feedback sớm”
-    setIsEarlyFeedback(false);
-  }
+    if (selected) {
+      const selectedDate = dayjs(selected).startOf("day");
+      const today = dayjs().startOf("day");
+      setIsEarlyFeedback(today.isBefore(selectedDate));
+    } else {
+      // Không có selectedSchedule vẫn cho gửi, không cảnh báo “feedback sớm”
+      setIsEarlyFeedback(false);
+    }
 
-  setShowConfirmDialog(true);
-};
+    setShowConfirmDialog(true);
+  };
 
 
   useEffect(() => {
@@ -754,17 +796,20 @@ export default function PetSubmission() {
 
                       </CardHeader>
                       <CardContent className="flex items-center justify-between">
-                        <button
-                          onClick={() => setSelectedSubmission(submission)}
-                          className="text-sm underline text-primary ml-auto"
-                        >
-                          Xem chi tiết
-                        </button>
+                        {submission.status !== "approved" && (
+                          <button
+                            onClick={() => setSelectedSubmission(submission)}
+                            className="text-sm underline text-primary ml-auto"
+                          >
+                            Xem chi tiết
+                          </button>
+                        )}
+
 
 
                         {submission.status === "approved" && (
                           <DropdownMenu>
-                            <DropdownMenuTrigger>
+                            <DropdownMenuTrigger className="ml-auto">
                               <EllipsisVertical className="h-4 w-4" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -777,6 +822,11 @@ export default function PetSubmission() {
                                 }}
                               >
                                 Tạo bản cam kết
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => setSelectedSubmission(submission)}
+                              >
+                                Xem chi tiết
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -804,14 +854,15 @@ export default function PetSubmission() {
               <div className="flex gap-8 h-[calc(90vh-110px)] ">
                 <div className="w-1/3 space-y-2">
                   <div className="flex items-center justify-center mb-6">
-                    <img
-                      src={
-                        selectedSubmission.performedBy?.avatar ||
-                        "/placeholder.svg"
-                      }
-                      alt="Avatar"
-                      className="w-35 h-35 rounded-full border-1 border-gray-100 shadow-md object-cover object-center "
-                    />
+                    <Avatar className="">
+                      <AvatarImage
+                        src={selectedSubmission.performedBy?.avatar}
+                        className="w-35 h-35 rounded-full border-1 border-gray-100 shadow-md object-cover object-center "
+                      />
+                      <AvatarFallback className=" w-35 h-35 bg-(--secondary) text-(--foreground) text-6xl font-bold rounded-full border-1 border-gray-100 shadow-md object-cover object-center">
+                        {selectedSubmission.performedBy?.fullName?.charAt(0).toUpperCase() || "N"}
+                      </AvatarFallback>
+                    </Avatar>
                   </div>
                   <p>
                     <strong>Người yêu cầu:</strong>{" "}

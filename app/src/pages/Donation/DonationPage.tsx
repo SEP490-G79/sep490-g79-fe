@@ -76,7 +76,7 @@ export default function DonationPage() {
 
     setErrors(newErrors);
     if (newErrors.amount || newErrors.message) {
-      toast.error("Vui lòng sửa các lỗi trước khi tiếp tục");
+      toast.error("Vui lòng điền đầy đủ và chính xác thông tin");
       return;
     }
 

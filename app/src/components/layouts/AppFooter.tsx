@@ -9,19 +9,20 @@ import {
 } from "lucide-react";
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import logo from "../../assets/logo/bbkzwnb6hyyrmi8jhiwp.jpg"
+import logo from "../../assets/logo/logo.png"
 
 function AppFooter() {
   return (
     <footer className="border-t py-10 px-6">
       <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5 max-w-7xl mx-auto">
         {/* Logo & Quote */}
-        <div>
-          <div className="mb-4 text-xl font-bold">
-            <Avatar>
-              <AvatarImage src={logo} alt="Logo pawshelter"></AvatarImage>{" "}
-              <AvatarFallback>PawShelter</AvatarFallback>
-            </Avatar>
+        <div className="flex flex-col text-sm gap-1">
+          <div className="text-xl font-bold">
+             <img
+              src={logo}
+              alt="pawShelter logo"
+              className="h-20 w-auto"
+            />
           </div>
           <blockquote className="border-l-2 pl-4 italic text-sm text-muted-foreground max-w-xs">
             &quot;Bạn không thể thay đổi cả thế giới, nhưng bạn có thể thay đổi

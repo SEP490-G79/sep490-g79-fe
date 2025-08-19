@@ -85,6 +85,7 @@ export default class SocketIOClient {
       this.socket?.off(event);
     }
   }
+  
 
   get connected(): boolean {
     return !!this.socket && this.socket.connected;

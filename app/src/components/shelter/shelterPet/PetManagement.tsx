@@ -295,8 +295,8 @@ export default function PetManagement() {
         }}
       />
 
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-4xl min-w-[900px] w-full bg-background text-foreground">
+      <Dialog open={showForm}  modal={false} onOpenChange={setShowForm}>
+        <DialogContent className="max-w-4xl min-w-3xl  w-full bg-background text-foreground">
           <DialogHeader>
             <DialogTitle className="text-2xl font-semibold text-center">
               {isEditing ? "Cập nhật thú nuôi" : "Thêm thú nuôi"}

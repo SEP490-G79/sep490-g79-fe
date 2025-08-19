@@ -234,7 +234,7 @@ function ShelterPosts() {
 
     const handleDeletePost = async (postId: string) => {
         try {
-            await authAxios.delete(`${coreAPI}/posts/${postId}`);
+            await authAxios.delete(`${coreAPI}/posts/${postId}/delete`);
             toast.success("Đã xoá bài viết");
             fetchPosts();
         } catch {

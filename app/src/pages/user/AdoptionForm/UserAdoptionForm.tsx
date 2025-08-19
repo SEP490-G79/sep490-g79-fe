@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext, useRef } from "react";
+import { useEffect, useState, useContext, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 import axios from "axios";
@@ -20,6 +20,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { socketClient } from "@/lib/socket.io";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Link } from "react-router-dom";
 
 
 const UserAdoptionFormPage = () => {
@@ -49,6 +52,9 @@ const UserAdoptionFormPage = () => {
     });
   };
 
+  useEffect(() => {
+    setSubmissionId(routeSubmissionId ?? null);
+  }, [routeSubmissionId]);
 
   const getInitialStep = () => {
     if (!id || submissionId) return 1;
@@ -88,12 +94,7 @@ const UserAdoptionFormPage = () => {
           navigate("/");
           return;
         }
-
-
-
         setForm(res.data);
-
-
         // Kiểm tra đã nộp chưa
         const checkRes = await authAxios.post(
           `${coreAPI}/pets/${id}/adoption-submissions/check-user-submitted`,
@@ -106,32 +107,29 @@ const UserAdoptionFormPage = () => {
           setSubmissionId(checkRes.data.submissionId);
           setAgreed(true);
           setHasChecked(checkRes.data);
-
-
           // Fetch consentForm nếu đã có submission
 
-try {
-  const consentRes = await authAxios.get(`${coreAPI}/consentForms/get-by-user`);
-  if (Array.isArray(consentRes.data)) {
-    const consentFormMatched = consentRes.data.find(
-      (form: ConsentForm) => form?.pet?._id === res.data.pet?._id
-    );
-    if (consentFormMatched) {
-      setConsentForm(consentFormMatched);
+          try {
+            const consentRes = await authAxios.get(`${coreAPI}/consentForms/get-by-user`);
+            if (Array.isArray(consentRes.data)) {
+              const consentFormMatched = consentRes.data.find(
+                (form: ConsentForm) => form?.pet?._id === res.data.pet?._id
+              );
+              if (consentFormMatched) {
+                setConsentForm(consentFormMatched);
 
-      if (
-        consentFormMatched.status === "approved" ||
-        consentFormMatched.status === "rejected"
-      ) {
-        setStep(6);
-        return;
-      }
-    }
-  }
-} catch (error) {
-  // Không toast lỗi vì việc không tìm thấy consent form là bình thường
-  console.warn("Không tìm thấy consent form hoặc lỗi khi fetch:", error);
-}
+                if (
+                  consentFormMatched.status === "approved" ||
+                  consentFormMatched.status === "rejected"
+                ) {
+                  setStep(6);
+                  return;
+                }
+              }
+            }
+          } catch (error) {
+            console.warn("Không tìm thấy consent form hoặc lỗi khi fetch:", error);
+          }
 
 
           if (status === "pending" || status === "scheduling") {
@@ -154,7 +152,6 @@ try {
           const savedAnswers = localStorage.getItem(`adoptionFormAnswers-${id}`);
           const savedStep = localStorage.getItem(`adoptionFormStep-${id}`);
           const savedAgreed = localStorage.getItem(`adoptionFormAgreed-${id}`);
-
           const defaultAnswers: Record<string, string | string[]> = {};
           res.data.questions.forEach((q: Question) => {
             defaultAnswers[q._id] = q.type === "MULTIPLECHOICE" ? [] : "";
@@ -216,6 +213,187 @@ try {
     }
   }, [submissionId, submission, hasCheckedSubmitted]);
 
+  useEffect(() => {
+    setStep(computeStep(submission, consentForm, hasChecked));
+  }, [submission?.status, consentForm?.status, hasChecked?.selectedSchedule]);
+  const computeStep = (
+    sub: any | null,
+    consent: ConsentForm | null,
+    hasChecked: any
+  ) => {
+    const s = sub?.status;
+    const consentStatus = consent?.status;
+
+    if (consentStatus === "approved" || consentStatus === "rejected" || consentStatus === "cancelled") return 6;
+    if (consentStatus === "send") return 5;
+    if (s === "pending" || s === "scheduling") return 3;
+    if (s === "interviewing" || s === "reviewed") return 4;
+    if (s === "approved") return 5;
+    if (s === "rejected") return hasChecked?.selectedSchedule ? 6 : 3;
+
+    return 3;
+  };
+
+  // giữ id hiện hành để tránh stale closure
+  const petIdRef = useRef<string | null>(null);
+  const submissionIdRef = useRef<string | null>(null);
+  useEffect(() => { petIdRef.current = id ?? null; }, [id]);
+  useEffect(() => { submissionIdRef.current = submissionId ?? null; }, [submissionId]);
+  // refetch consent form (get-by-user) và cập nhật step
+  const fetchAndApplyConsent = useCallback(async () => {
+    const consentRes = await authAxios.get(`${coreAPI}/consentForms/get-by-user`);
+    if (Array.isArray(consentRes.data)) {
+      const matched = consentRes.data.find((f: ConsentForm) => f?.pet?._id === petIdRef.current);
+      if (matched) setConsentForm(matched);
+      // tính step mới dựa trên submission/consent hiện tại
+      setStep((prev) => computeStep(submission, matched ?? null, hasChecked));
+    }
+  }, [authAxios, coreAPI, submission, hasChecked]);
+
+  const fetchAndApplySubmission = useCallback(async (sid: string) => {
+    const res = await authAxios.get(`${coreAPI}/adoption-submissions/${sid}`);
+    const fresh = res.data;
+    setSubmission(fresh);
+    // map answers
+    const parsed: Record<string, string | string[]> = {};
+    fresh.answers.forEach((item: any) => {
+      const qid = typeof item.questionId === "string" ? item.questionId : item.questionId?._id;
+      if (!qid) return;
+      parsed[qid] = item.selections.length === 1 ? item.selections[0] : item.selections;
+    });
+    setAnswers(parsed);
+    const selected = Boolean(fresh?.interview?.selectedSchedule);
+    setHasChecked((prev: any) => ({ ...(prev ?? {}), selectedSchedule: selected }));
+
+    // cập nhật step (không đụng consent ở đây)
+    setStep(computeStep(fresh, consentForm, hasChecked));
+  }, [authAxios, coreAPI, consentForm, hasChecked]);
+
+  // debounce nhẹ để tránh spam refetch khi bắn nhiều event
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const onSocketEvent = (eventName: string) => async (payload: any) => {
+      // lọc theo pet đang xem
+      if (payload?.petId && payload.petId !== petIdRef.current) return;
+
+      // optimistic step khi biết status ngay trong payload
+      if (eventName !== "consentForm:statusChanged") {
+        const sid = submissionIdRef.current;
+        if (sid && payload?.submissionId === sid) {
+          // Nếu backend gửi kèm status thì dựa vào đó chuyển step nhanh
+          if (payload?.status) {
+            const tmpSubmission = {
+              ...submission,
+              status: payload.status,
+              selectedSchedule: payload.selectedSchedule ?? submission?.selectedSchedule,
+            };
+            setStep(computeStep(tmpSubmission, consentForm, hasChecked));
+          }
+
+        }
+      }
+      if (eventName === "adoptionSubmission:statusChanged") {
+        const sid = submissionIdRef.current;
+        if (!sid || payload?.submissionId !== sid) return;
+
+        const newStatus = payload?.status as string | undefined;
+        if (!newStatus) return;
+
+        // Ưu tiên lấy selectedSchedule từ payload; fallback sang state hiện tại/submission
+        const selected =
+          payload?.selectedSchedule !== undefined
+            ? Boolean(payload.selectedSchedule)
+            : Boolean(hasChecked?.selectedSchedule ?? submission?.interview?.selectedSchedule);
+
+        setHasChecked((prev: any) => ({ ...(prev ?? {}), selectedSchedule: selected }));
+        setSubmission((prev: any) =>
+          prev
+            ? {
+              ...prev,
+              status: newStatus,
+              interview: { ...(prev.interview ?? {}), selectedSchedule: selected },
+            }
+            : prev
+        );
+        if (newStatus === "rejected") {
+          setStep(selected ? 6 : 3);
+        } else {
+          const tmp = { ...(submission ?? {}), status: newStatus };
+          setStep(
+            computeStep(tmp, consentForm, { ...(hasChecked ?? {}), selectedSchedule: selected })
+          );
+        }
+
+        // Refetch nhẹ để đồng bộ đầy đủ
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(async () => {
+          const sid2 = submissionIdRef.current;
+          await Promise.allSettled([sid2 ? fetchAndApplySubmission(sid2) : Promise.resolve()]);
+        }, 150);
+
+        return;
+      }
+
+      if (eventName === "consentForm:statusChanged") {
+        const st = payload?.status;
+        if (!st) return;
+        setConsentForm(prev => (prev ? { ...prev, status: st } : prev));
+        if (st === "approved" || st === "rejected" || st === "cancelled") {
+          setStep(6);
+        } else if (st === "send") {
+          setStep(prev => (prev < 5 ? 5 : prev));
+        }
+
+        // Rồi mới refetch để đồng bộ đầy đủ
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+          fetchAndApplyConsent().catch(() => { });
+        }, 150);
+
+        return;
+      }
+
+      // debounce refetch: submission/consent chạy song song khi cần
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(async () => {
+        const sid = submissionIdRef.current;
+
+        await Promise.allSettled([
+          // Khi là event liên quan submission ⇒ refetch submission (nếu đang xem đúng submission)
+          (eventName === "adoptionSubmission:interviewSchedule" ||
+            eventName === "adoptionSubmission:statusChanged") && sid && payload?.submissionId === sid
+            ? fetchAndApplySubmission(sid)
+            : Promise.resolve(),
+
+          // Khi là event consent ⇒ refetch consent
+          eventName === "consentForm:statusChanged"
+            ? fetchAndApplyConsent()
+            : Promise.resolve(),
+        ]);
+      }, 150);
+    };
+
+    // đăng ký một lần cho tất cả event liên quan user
+    const bindings: Array<[string, (p: any) => void]> = [
+      ["adoptionSubmission:interviewSchedule", onSocketEvent("adoptionSubmission:interviewSchedule")],
+      // nếu sau này bạn bắn statusChanged về user thì đã sẵn sàng:
+      ["adoptionSubmission:statusChanged", onSocketEvent("adoptionSubmission:statusChanged")],
+      ["consentForm:statusChanged", onSocketEvent("consentForm:statusChanged")],
+    ];
+
+    // đảm bảo không nhân bản listener
+    bindings.forEach(([ev]) => socketClient.unsubscribe(ev));
+    bindings.forEach(([ev, cb]) => socketClient.subscribe(ev, cb));
+
+    return () => {
+      bindings.forEach(([ev]) => socketClient.unsubscribe(ev));
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [id, fetchAndApplySubmission, fetchAndApplyConsent, submission, consentForm, hasChecked]);
+
 
 
   // Ghi lại mỗi khi step thay đổi
@@ -267,7 +445,10 @@ try {
   else if (status === "approved") {
     maxStep = 4;
   }
-  if (consentStatus === "approved" || consentStatus === "rejected") {
+  if (consentStatus === "send") {
+    maxStep = 4;
+  }
+  if (consentStatus === "approved" || consentStatus === "rejected" || consentStatus === "cancelled") {
     maxStep = 5;
   }
 
@@ -416,6 +597,7 @@ try {
 
             setAnswers(parsed);
           }}
+          submission={submission}
         />
 
 
@@ -443,10 +625,17 @@ try {
           onNext={next}
           onBack={back}
           submission={submission}
-          onLoadedConsentForm={(form) => setConsentForm(form)} />
+          onLoadedConsentForm={(f) => setConsentForm(f)}
+          consentForm={consentForm}
+        />
 
       case 6:
-        return <Step6_Result onNext={next} onBack={back} submission={submission} consentForm={consentForm} />
+        return <Step6_Result
+          onNext={next}
+          onBack={back}
+          submission={submission}
+          consentForm={consentForm}
+        />
       default:
         return null;
     }
@@ -454,6 +643,28 @@ try {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-5">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            {userProfile?._id ? (
+              <BreadcrumbLink asChild>
+                <Link to={`/profile/${userProfile._id}`}>Hoạt động nhận nuôi</Link>
+              </BreadcrumbLink>
+            ) : (
+              // Khi chưa có id thì chỉ hiện text, không cho click
+              <BreadcrumbPage className="text-muted-foreground">
+                Hoạt động nhận nuôi
+              </BreadcrumbPage>
+            )}
+          </BreadcrumbItem>
+
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Chi tiết đơn nhận nuôi</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       {renderStepIndicator()}
       {renderCurrentStep()}
     </div>
