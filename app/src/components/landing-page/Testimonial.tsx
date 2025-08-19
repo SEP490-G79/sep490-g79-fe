@@ -1,5 +1,13 @@
 import { cn } from "@/lib/utils";
 import { Marquee } from "@/components/ui/magicui/marquee";
+import { InfiniteMovingCards } from "../ui/infinite-moving-cards";
+
+type Review = {
+  name: string;
+  username: string;
+  body: string;
+  img: string;
+};
 
 const reviews = [
   {
@@ -43,6 +51,46 @@ const reviews = [
 const firstRow = reviews.slice(0, reviews.length / 2);
 const secondRow = reviews.slice(reviews.length / 2);
 
+
+const toCardItem = [
+  {
+    name: "Minh Anh",
+    title: "@minhanh",
+    quote: "Mình đã nhận nuôi bé mèo tại PawShelter và trải nghiệm rất tuyệt vời. Giao diện dễ dùng, đội ngũ hỗ trợ nhanh chóng!",
+
+  },
+  {
+    name: "Quốc Bảo",
+    title: "@quocbao",
+    quote: "PawShelter giúp mình tìm được một người bạn bốn chân đáng yêu. Cảm ơn nền tảng đã kết nối mình với bé cún nhỏ này!",
+
+  },
+  {
+    name: "Thanh Trúc",
+    title: "@thanhtruc",
+    quote: "Rất ấn tượng với cách tổ chức và quy trình nhận nuôi minh bạch. Mình hoàn toàn yên tâm khi sử dụng dịch vụ của PawShelter.",
+
+  },
+  {
+    name: "Ngọc Hân",
+    title: "@ngochan",
+    quote: "Mình yêu động vật và luôn muốn đóng góp cho cộng đồng. PawShelter cho mình cơ hội làm điều đó một cách dễ dàng.",
+
+  },
+  {
+    name: "Trung Kiên",
+    title: "@trungkien",
+    quote: "Bé chó mình nhận nuôi giờ đã thành một phần của gia đình. Cảm ơn PawShelter vì đã tạo nên nền tảng ý nghĩa như thế này!",
+
+  },
+  {
+    name: "Bảo Ngọc",
+    title: "@baongoc",
+    quote: "Từ đăng ký đến liên hệ nhận nuôi đều rất mượt mà. Mình đã giới thiệu PawShelter cho nhiều người bạn rồi!",
+
+  },
+];
+
 const ReviewCard = ({
   img,
   name,
@@ -81,16 +129,16 @@ const ReviewCard = ({
 export function Testimonial() {
   return (
     <div className="w-full flex flex-wrap justify-center py-20">
-      <h2 className="basis-3xl text-center text-3xl font-bold mb-5">
+      <h2 className="basis-full text-center text-3xl font-bold mb-5">
         Những câu chuyện yêu thương từ cộng đồng PawShelter
       </h2>
-      <p className="basis-3xl text-center text-1xl text-muted-foreground mb-10 px-20">
+      <p className="basis-full text-center text-1xl text-muted-foreground mb-10 px-20">
         Người dùng chia sẻ hành trình nhận nuôi và lan tỏa yêu thương tới các bé
         thú cưng đang cần một mái ấm.
       </p>
 
       <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
-        <Marquee pauseOnHover className="[--duration:20s]">
+        {/* <Marquee pauseOnHover className="[--duration:20s]">
           {firstRow.map((review) => (
             <ReviewCard key={review.username} {...review} />
           ))}
@@ -99,7 +147,12 @@ export function Testimonial() {
           {secondRow.map((review) => (
             <ReviewCard key={review.username} {...review} />
           ))}
-        </Marquee>
+        </Marquee> */}
+        <InfiniteMovingCards
+        items={toCardItem}
+        direction="right"
+        speed="slow"
+      />
         <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-background"></div>
         <div className="pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-background"></div>
       </div>

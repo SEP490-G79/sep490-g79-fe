@@ -1,30 +1,57 @@
-import { Bone, Cat, Dog, ScissorsSquare } from "lucide-react";
+"use client";
+
+import { Bone, Cat, Dog, Home } from "lucide-react";
 import Image from "@/assets/Home_1.jpg";
 
-const stats = [
-  {
-    icon: <Bone className="w-8 h-8 text-(--primary)" />,
-    value: "748",
-    label: "Đã nhận nuôi",
-  },
-  {
-    icon: <Cat className="w-8 h-8 text-(--primary)" />,
-    value: "3560",
-    label: "Đã nhận nuôi",
-  },
-  {
-    icon: <Dog className="w-8 h-8 text-(--primary)" />,
-    value: "5674",
-    label: "Đã nhận nuôi",
-  },
-  {
-    icon: <ScissorsSquare className="w-8 h-8 text-(--primary)" />,
-    value: "6789",
-    label: "Đã nhận nuôi",
-  },
-];
+import { isThisWeek } from "date-fns";
+import type { Pet } from "@/types/Pet";
+import { useContext } from "react";
+import AppContext from "@/context/AppContext";
+import type { Shelter } from "@/types/Shelter";
 
 export default function Posts() {
+  const { petsList, shelters } = useContext(AppContext);
+
+  const pets: Pet[] = petsList || [];
+  const shelterList: Shelter[] = shelters || [];
+
+  // Tổng số pet sẵn sàng nhận nuôi
+  const totalAvailablePets = pets.filter((p) => p.status === "available").length;
+
+  // Tổng số pet đã được nhận nuôi
+  const totalAdoptedPets = pets.filter((p) => p.status === "adopted").length;
+
+  // Tổng số shelter đang hoạt động
+  const totalActiveShelters = shelterList.filter((s) => s.status === "active").length;
+
+  // Số pet mới được cứu hộ trong tuần (dựa vào intakeTime)
+  const rescuedThisWeek = pets.filter(
+    (p) => p.intakeTime && isThisWeek(new Date(p.intakeTime))
+  ).length;
+
+  const stats = [
+    {
+      icon: <Dog className="w-8 h-8 text-(--primary)" />,
+      value: totalAvailablePets.toString(),
+      label: "Tổng số thú nuôi sẵn sàng nhận nuôi",
+    },
+    {
+      icon: <Bone className="w-8 h-8 text-(--primary)" />,
+      value: totalAdoptedPets.toString(),
+      label: "Tổng số thú nuôi đã được nhận nuôi",
+    },
+    {
+      icon: <Home className="w-8 h-8 text-(--primary)" />,
+      value: totalActiveShelters.toString(),
+      label: "Tổng số trung tâm đang hoạt động",
+    },
+    {
+      icon: <Cat className="w-8 h-8 text-(--primary)" />,
+      value: rescuedThisWeek.toString(),
+      label: "Số thú nuôi mới được cứu hộ trong tuần",
+    },
+  ];
+
   return (
     <div className="relative w-full h-[60vh] md:h-[70vh] lg:h-[80vh] flex flex-col justify-end overflow-hidden">
       {/* Background image as div with parallax */}

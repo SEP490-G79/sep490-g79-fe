@@ -26,15 +26,17 @@ import { toast } from "sonner";
 const registerSchema = z
   .object({
     fullName: z
-    .string()
-    .trim()
-    .min(6, "Họ và tên quá ngắn")
-    .regex(/^[\p{L}\s-]+$/u,"Tên chỉ được chứa chữ cái, khoảng trắng và dấu gạch nối"
-    )
-    .refine(
-      (val) => (val.match(/\p{L}/gu) || []).length >= 3,
-      "Tên phải có ít nhất 3 chữ cái"
-    ),
+      .string()
+      .trim()
+      .min(6, "Họ và tên quá ngắn")
+      .regex(
+        /^[\p{L}\s-]+$/u,
+        "Tên chỉ được chứa chữ cái, khoảng trắng và dấu gạch nối"
+      )
+      .refine(
+        (val) => (val.match(/\p{L}/gu) || []).length >= 3,
+        "Tên phải có ít nhất 3 chữ cái"
+      ),
 
     email: z.string().email("Email không hợp lệ"),
     password: z.string().min(6, "Mật khẩu phải từ 6 ký tự"),
@@ -103,13 +105,13 @@ export const Register = () => {
   }
 
   return (
-    <div className="w-full min-h-screen flex flex-col md:flex-row">
+    <div className="w-full h-full flex flex-col md:flex-row">
       {/* Hình minh hoạ */}
       <div className="hidden md:flex basis-1/2 items-center justify-center p-4">
         <img
           src={Image}
           alt="Register illustration"
-          className="w-full h-full object-cover rounded-xl"
+          className="w-full h-full object-cover object-right"
         />
       </div>
 
@@ -118,6 +120,9 @@ export const Register = () => {
         <div className="w-full max-w-md flex flex-col gap-6">
           {/* Tiêu đề + Google */}
           <div className="text-center space-y-4">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+              Đăng ký
+            </h1>
             <Button
               variant="outline"
               className="w-full flex items-center gap-2 justify-center"
@@ -133,10 +138,6 @@ export const Register = () => {
               <span className="mx-2 text-muted-foreground">Hoặc</span>
               <Separator className="flex-1" />
             </div>
-
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-              Đăng ký
-            </h1>
           </div>
 
           {/* Card */}

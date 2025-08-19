@@ -180,7 +180,7 @@ export const Login = () => {
         <img
           src={Image}
           alt="Login illustration"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-right"
         />
       </div>
 
