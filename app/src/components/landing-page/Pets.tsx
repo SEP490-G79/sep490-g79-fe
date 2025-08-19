@@ -10,10 +10,10 @@ function Pets() {
   const {petsList} = useContext(AppContext);
   return (
     <div className="w-full flex flex-wrap justify-center my-10">
-      <h2 className="basis-3xl text-center text-3xl font-bold mb-5">
+      <h2 className="basis-full text-center text-3xl font-bold mb-5">
         Bạn không thể mua tình yêu nhưng có thể cứu lấy nó!
       </h2>
-      <p className="basis-3xl text-center text-1xl text-(--muted-foreground) mb-10 px-20">
+      <p className="basis-full text-center text-1xl text-(--muted-foreground) mb-10 px-20">
         Các bé đang chờ một mái nhà, một trái tim đủ ấm để được yêu thương.
       </p>
       <div className="basis-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-8 px-40 mb-10">

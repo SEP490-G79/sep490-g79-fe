@@ -12,6 +12,7 @@ import {
   Send,
   Signature,
   SquareX,
+  Trash,
 } from "lucide-react";
 import React, { useContext, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -32,7 +33,7 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -541,6 +542,52 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm, consentForm }: Ste
           </div>
         </div>
       )} */}
+
+      {consentForm?.attachments?.length > 0 && consentForm?.attachments.map((file) => {
+                                  const isImage =
+                                    file.mimeType?.startsWith("image/");
+                                  const fileUrl = file.url;
+                                  const iconUrl =
+                                    "https://cdn-icons-png.flaticon.com/512/888/888108.png";
+
+                                  return (
+                                    <div
+                                      key={file.fileName}
+                                      className="basis-full h-25 px-5 
+                                        inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all
+                                        border bg-background shadow-xsd dark:bg-input/30 dark:border-input
+                                        hover:bg-accent hover:text-accent-foreground  dark:hover:bg-input/50
+                                        "
+                                    >
+                                      <div className="basis-full sm:basis-2/11">
+                                        <Avatar
+                                          onClick={() =>
+                                            window.open(fileUrl, "_blank")
+                                          }
+                                          className={`rounded-none w-2/3 h-2/3 p-3 cursor-pointer
+                                          
+                                           `}
+                                        >
+                                          <AvatarImage
+                                            className="object-center object-cover"
+                                            src={isImage ? fileUrl : iconUrl}
+                                          />
+                                          <AvatarFallback className="rounded-none"></AvatarFallback>
+                                        </Avatar>
+                                      </div>
+
+                                      <div className="basis-full sm:basis-9/11 text-start overflow-hidden">
+                                        <span className="block w-full truncate text-sm font-medium">
+                                          {file.fileName}
+                                        </span>
+                                      </div>
+
+                                      <div className="basis-full sm:basis-1/11">
+                                
+                                      </div>
+                                    </div>
+                                  );
+                                })}
       <Separator className="my-2" />
       <div className="basis-full flex items-start gap-3 px-5 mb-2">
         {consentForm?.status == "send" && (

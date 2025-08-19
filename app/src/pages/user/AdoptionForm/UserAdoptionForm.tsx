@@ -24,6 +24,120 @@ import { socketClient } from "@/lib/socket.io";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
 
+// ---------- Stable keys & hashing ----------
+type AnswerValue = string | string[];
+type Answers = Record<string, AnswerValue>;
+type AnswersByKey = Record<string, AnswerValue>;
+
+const toSlug = (s: string = "") =>
+  s
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // bỏ dấu tiếng Việt
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s/g, "-");
+
+const qKey = (q: Question) => `${q.type}|${toSlug(q.title)}`;
+const optKey = (title: string) => toSlug(title);
+
+// djb2 hash -> chuỗi base36 ngắn, đủ ổn định cho signature
+const djb2 = (str: string) => {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    hash >>>= 0;
+  }
+  return hash.toString(36);
+};
+
+const buildSchemaHash = (form: AdoptionForm) => {
+  const data = (form?.questions ?? [])
+    .filter(q => q?.status !== "deleted") // tùy bạn, có thể giữ "active" thôi
+    .map(q => ({
+      k: qKey(q),
+      t: q.type,
+      p: q.priority,
+      // options có thể rỗng với YESNO; cứ bọc an toàn
+      opts: (q.options ?? []).map(o => optKey(o.title)),
+    }));
+  return djb2(JSON.stringify(data));
+};
+
+const buildDefaults = (form: AdoptionForm): Answers => {
+  const out: Answers = {};
+  (form?.questions ?? []).forEach(q => {
+    out[q._id] = q.type === "MULTIPLECHOICE" ? [] : "";
+  });
+  return out;
+};
+
+// ---------- Convert answers <-> answersByKey ----------
+const answersToByKey = (form: AdoptionForm, answers: Answers): AnswersByKey => {
+  const byKey: AnswersByKey = {};
+  (form?.questions ?? []).forEach(q => {
+    const key = qKey(q);
+    const val = answers[q._id];
+    if (val == null) return;
+
+    if (q.type === "MULTIPLECHOICE") {
+      const arr = Array.isArray(val) ? val : [val];
+      byKey[key] = arr.map(v => optKey(String(v))); // lưu option theo slug
+    } else if (q.type === "TEXT") {
+      byKey[key] = String(val); // giữ nguyên text
+    } else if (q.type === "YESNO" || q.type === "SINGLECHOICE") {
+      byKey[key] = optKey(String(val)); // lưu slug của lựa chọn
+    }
+  });
+  return byKey;
+};
+
+const byKeyToAnswers = (form: AdoptionForm, byKey?: AnswersByKey): Answers => {
+  const out = buildDefaults(form);
+  if (!byKey) return out;
+
+  (form?.questions ?? []).forEach(q => {
+    const key = qKey(q);
+    const saved = byKey[key];
+    if (saved == null) return;
+
+    if (q.type === "TEXT") {
+      out[q._id] = String(saved);
+      return;
+    }
+
+    if (q.type === "MULTIPLECHOICE") {
+      const wanted = new Set((Array.isArray(saved) ? saved : [saved]).map(s => optKey(String(s))));
+      const mapped = (q.options ?? [])
+        .map(o => o.title)
+        .filter(title => wanted.has(optKey(title)));
+      out[q._id] = mapped;
+      return;
+    }
+
+    // YESNO hoặc SINGLECHOICE
+    if (q.type === "YESNO") {
+      // Trong UI bạn render "Có"/"Không" cứng -> map slug
+      const choice = optKey(String(saved)) === optKey("Có") ? "Có" : (optKey(String(saved)) === optKey("Không") ? "Không" : "");
+      if (choice) out[q._id] = choice;
+      return;
+    }
+
+    // SINGLECHOICE map theo options hiện tại
+    const match = (q.options ?? [])
+      .map(o => o.title)
+      .find(title => optKey(title) === optKey(String(saved)));
+    if (match) out[q._id] = match;
+  });
+
+  return out;
+};
+
+// ---------- LocalStorage keys ----------
+const LS_ANSWERS_BY_KEY = (petId: string) => `adoptionFormAnswersByKey-${petId}`;
+const LS_SIG           = (petId: string) => `adoptionFormSig-${petId}`;
 
 const UserAdoptionFormPage = () => {
   const getInitialAnswers = (): Record<string, string | string[]> => {
@@ -148,19 +262,55 @@ const UserAdoptionFormPage = () => {
             setStep(3);
           }
         }
-        else {
-          const savedAnswers = localStorage.getItem(`adoptionFormAnswers-${id}`);
-          const savedStep = localStorage.getItem(`adoptionFormStep-${id}`);
-          const savedAgreed = localStorage.getItem(`adoptionFormAgreed-${id}`);
-          const defaultAnswers: Record<string, string | string[]> = {};
-          res.data.questions.forEach((q: Question) => {
-            defaultAnswers[q._id] = q.type === "MULTIPLECHOICE" ? [] : "";
-          });
+       else {
+  // 1) Lấy cache theo khóa ổn định (nếu có)
+  const savedByKeyRaw = localStorage.getItem(LS_ANSWERS_BY_KEY(id));
+  const savedSig      = localStorage.getItem(LS_SIG(id));
+  const schemaSig     = buildSchemaHash(res.data); // res.data = AdoptionForm
 
-          setAnswers(savedAnswers ? JSON.parse(savedAnswers) : defaultAnswers);
-          setStep(savedStep ? Number(savedStep) : 1);
-          setAgreed(savedAgreed ? JSON.parse(savedAgreed) : false);
+  let initialAnswers: Record<string, string | string[]>;
+
+  if (savedByKeyRaw && savedSig === schemaSig) {
+    // Map byKey -> answers theo questionId hiện tại
+    const byKey = JSON.parse(savedByKeyRaw);
+    initialAnswers = byKeyToAnswers(res.data, byKey);
+  } else {
+    // 2) Thử migrate dữ liệu legacy (đã lưu theo questionId)
+    const legacy = localStorage.getItem(`adoptionFormAnswers-${id}`);
+    if (legacy) {
+      const legacyAnswers = JSON.parse(legacy);
+      initialAnswers = {};
+      res.data.questions.forEach((q: Question) => {
+        const v = legacyAnswers[q._id];
+        if (q.type === "MULTIPLECHOICE") {
+          initialAnswers[q._id] = Array.isArray(v) ? v : v ? [v] : [];
+        } else {
+          initialAnswers[q._id] = typeof v === "string" ? v : Array.isArray(v) ? (v[0] ?? "") : "";
         }
+      });
+    } else {
+      // 3) Không có gì lưu → mặc định trống
+      initialAnswers = {};
+      res.data.questions.forEach((q: Question) => {
+        initialAnswers[q._id] = q.type === "MULTIPLECHOICE" ? [] : "";
+      });
+    }
+
+    // 4) Ghi lại cache chuẩn hoá (bằng stable key) + chữ ký schema
+    localStorage.setItem(LS_SIG(id), schemaSig);
+    const byKey = answersToByKey(res.data, initialAnswers);
+    localStorage.setItem(LS_ANSWERS_BY_KEY(id), JSON.stringify(byKey));
+  }
+
+  setAnswers(initialAnswers);
+
+  // Giữ nguyên step/agreed như trước
+  const savedStep   = localStorage.getItem(`adoptionFormStep-${id}`);
+  const savedAgreed = localStorage.getItem(`adoptionFormAgreed-${id}`);
+  setStep(savedStep ? Number(savedStep) : 1);
+  setAgreed(savedAgreed ? JSON.parse(savedAgreed) : false);
+}
+
       } catch (err) {
         showErrorToast("Không thể lấy thông tin đơn xin nhận nuôi");
 
@@ -172,6 +322,7 @@ const UserAdoptionFormPage = () => {
 
     fetchData();
   }, [id]);
+
 
   useEffect(() => {
     const checkReturned = async () => {
@@ -224,8 +375,8 @@ const UserAdoptionFormPage = () => {
     const s = sub?.status;
     const consentStatus = consent?.status;
 
-    if (consentStatus === "approved" || consentStatus === "rejected" || consentStatus === "cancelled") return 6;
-    if (consentStatus === "send") return 5;
+    if (consentStatus === "approved" || consentStatus === "cancelled") return 6;
+    if (consentStatus === "send" || consentStatus === "rejected" ) return 5;
     if (s === "pending" || s === "scheduling") return 3;
     if (s === "interviewing" || s === "reviewed") return 4;
     if (s === "approved") return 5;
@@ -341,9 +492,9 @@ const UserAdoptionFormPage = () => {
         const st = payload?.status;
         if (!st) return;
         setConsentForm(prev => (prev ? { ...prev, status: st } : prev));
-        if (st === "approved" || st === "rejected" || st === "cancelled") {
+        if (st === "approved"  || st === "cancelled") {
           setStep(6);
-        } else if (st === "send") {
+        } else if (st === "send" || st === "rejected") {
           setStep(prev => (prev < 5 ? 5 : prev));
         }
 
@@ -409,11 +560,12 @@ const UserAdoptionFormPage = () => {
     }
   }, [agreed, id, submissionId, hasCheckedSubmitted]);
 
-  useEffect(() => {
-    if (id && hasCheckedSubmitted && !submissionId) {
-      localStorage.setItem(`adoptionFormAnswers-${id}`, JSON.stringify(answers));
-    }
-  }, [answers, id, submissionId, hasCheckedSubmitted]);
+useEffect(() => {
+  if (!id || !hasCheckedSubmitted || submissionId || !form) return;
+  localStorage.setItem(LS_SIG(id), buildSchemaHash(form));
+  localStorage.setItem(LS_ANSWERS_BY_KEY(id), JSON.stringify(answersToByKey(form, answers)));
+}, [answers, id, submissionId, hasCheckedSubmitted, form]);
+
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -445,10 +597,10 @@ const UserAdoptionFormPage = () => {
   else if (status === "approved") {
     maxStep = 4;
   }
-  if (consentStatus === "send") {
+  if (consentStatus === "send" || consentStatus === "rejected" ) {
     maxStep = 4;
   }
-  if (consentStatus === "approved" || consentStatus === "rejected" || consentStatus === "cancelled") {
+  if (consentStatus === "approved" || consentStatus === "cancelled") {
     maxStep = 5;
   }
 
