@@ -43,9 +43,10 @@ function AppFooter() {
         {/* Resources */}
         <div className="flex flex-col text-sm gap-1">
           <h3 className="font-semibold mb-2">Tài nguyên</h3>
-          <a href="#">Trang chủ</a>
-          <a href="#">Thủ tục nhận nuôi</a>
-          <a href="#">Chính sách</a>
+          <a href="/">Trang chủ</a>
+          <a href="/about-us">Về chúng tôi</a>
+          <a href="/adoption-procedures">Thủ tục nhận nuôi</a>
+          <a href="/faq">FAQ</a>
         </div>
 
         {/* Contact */}

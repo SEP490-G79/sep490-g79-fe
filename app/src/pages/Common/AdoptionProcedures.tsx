@@ -1,49 +1,58 @@
-import { Timeline } from "@/components/ui/timeline"
-import step1 from "@/assets/adoption-procedures/register_page.png"
+import { Timeline } from "@/components/ui/timeline_custom"
+import step1 from "@/assets/adoption-procedures/register.png"
 import step2 from "@/assets/adoption-procedures/edit_profile.png"
+import step3 from "@/assets/adoption-procedures/find_pet_for_adoption.png"
+
+type TimelineEntry = {
+  title: string;
+  content: React.ReactNode;
+};
 
 const AdoptionProcedures = () => {
-  const data = [
+  const data : TimelineEntry[] = [
   {
     title: "Bước 1: Tạo tài khoản",
     content: (
-      <div>
-          <p className="text-left">
-            Người dùng đăng ký tài khoản trên nền tảng PawShelter bằng email hoặc tài khoản Google. Sau khi xác thực email, người dùng có thể đăng nhập để sử dụng đầy đủ các chức năng.
-          </p>
-          <div>
-            <img
+      <div className="flex gap-2">
+          <img
               src={step1}
               alt="step1_img"
-              className="h-60 w-full rounded-lg object-cover"
-            />
-          </div>
+              className="flex-1 rounded-lg object-cover max-w-90"
+          />
+          <p className="flex-1 text-left">
+            Người dùng đăng ký tài khoản trên nền tảng PawShelter bằng email hoặc tài khoản Google. Sau khi xác thực email, người dùng có thể đăng nhập để sử dụng đầy đủ các chức năng.
+          </p>
         </div>
     ),
   },
   {
     title: "Bước 2: Cập nhật hồ sơ",
     content: (
-      <div className="flex gap-2 items-start">
-          <p className="text-left">
-            Người dùng cần hoàn thiện hồ sơ cá nhân: họ tên, ngày sinh, số điện thoại, địa chỉ cư trú,... Đây là thông tin cần thiết để liên hệ và xét duyệt yêu cầu nhận nuôi.
-          </p>
-          <div>
-            <img
-              src={step2}
-              alt="step2_img"
-              className="h-full w-full rounded-lg object-cover"
-            />
-          </div>
-        </div>
+      <div className="flex gap-2">
+        <img
+          src={step2}
+          alt="step2_img"
+          className="flex-1 rounded-lg object-cover max-w-90"
+        />
+        <p className="flex-1 text-left">
+          Người dùng cần hoàn thiện hồ sơ cá nhân: họ tên, ngày sinh, số điện thoại, địa chỉ cư trú,... Đây là thông tin cần thiết để liên hệ và xét duyệt yêu cầu nhận nuôi.
+        </p>
+      </div>
     ),
   },
   {
     title: "Bước 3: Tìm kiếm thú cưng",
     content: (
-      <p className="text-sm text-muted-foreground">
-        Người dùng duyệt danh sách thú cưng đang cần được nhận nuôi. Có thể lọc theo loài, giống, độ tuổi, màu lông, hoặc vị trí gần bạn.
-      </p>
+      <div className="flex gap-2">
+        <img
+          src={step3}
+          alt="step3_img"
+          className="flex-1 rounded-lg object-cover max-w-90"
+        />
+        <p className="flex-1 text-left">
+          Người dùng duyệt danh sách thú cưng đang cần được nhận nuôi. Có thể lọc theo loài, giống, độ tuổi, màu lông, hoặc vị trí gần bạn.
+        </p>
+      </div>
     ),
   },
   {
