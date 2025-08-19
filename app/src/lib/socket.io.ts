@@ -41,7 +41,7 @@ export default class SocketIOClient {
     });
 
     this.socket.on('connect_error', (error: Error) => {
-      console.log('>>> socket.io error:', error.message);
+      // console.log('>>> socket.io error:', error.message);
     });
   }
 
@@ -59,11 +59,20 @@ export default class SocketIOClient {
     this.socket?.connect();
   }
 
-  reconnect(): void {
-    if (!this.socket?.connected) return;
-    this.socket?.disconnect();
-    setTimeout(() => this.connect());
+reconnect(): void {
+  if (!this.socket) return;
+
+  // Cập nhật token vào auth cho lần connect kế tiếp
+  const token = this.config.getAccessToken?.() ?? null;
+  this.socket.auth = token ? { token } : {};
+
+  // Nếu đang connected thì ngắt rồi connect lại, còn không thì connect luôn
+  if (this.socket.connected) {
+    this.socket.disconnect();
   }
+  this.socket.connect();
+}
+
 
   disconnect(): void {
     this.socket?.disconnect();
