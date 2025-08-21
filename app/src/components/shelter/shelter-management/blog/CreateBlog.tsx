@@ -1,17 +1,17 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import type { Blog } from "@/types/Blog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
-import {useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";import useAuthAxios from "@/utils/authAxios";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, PlusSquare } from "lucide-react";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PlusSquare } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { MinimalTiptapEditor } from "@/components/ui/minimal-tiptap";
 import htmlUtils from "@/utils/htmlUtils";
@@ -100,6 +100,7 @@ type FormValues = z.infer<typeof FormSchema>;
             content: "",
           });
           setSelectedImage(undefined);
+          setIsOpen(false);
         }
       }}
     >

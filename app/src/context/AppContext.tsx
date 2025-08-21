@@ -185,7 +185,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       setUser(null);
       setUserProfile(null);
     }
-  }, [localStorage.getItem("accessToken"), location.pathname]);
+  }, [accessToken, location.pathname]);
 
   // get pets list
 const fetchPetsList = async () => {

@@ -531,6 +531,9 @@ const ShelterStaffRequestManagement = () => {
               {detailDialog.detail?.requestStatus === "cancelled" && (
                 <Badge variant="outline">Đã huỷ</Badge>
               )}
+              {detailDialog.detail?.requestStatus === "expired" && (
+                <Badge variant="outline">Hết hạn</Badge>
+              )}
             </div>
 
             <div>
