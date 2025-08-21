@@ -16,7 +16,8 @@ const BlogDetail = () => {
     const {blogAPI} = useContext(AppContext);
     const {blogId, shelterId} = useParams();
     const navigate = useNavigate();
-    const {user} = useContext(AppContext);
+    const {user, shelters} = useContext(AppContext);
+    const currentShelter = shelters?.find(shelter => shelter.members.some(member => String(member._id) === String(user?._id)));
     useEffect(() => {
         axios.get(`${blogAPI}/${blogId}`)
         .then(result => {
@@ -112,10 +113,11 @@ const BlogDetail = () => {
             className="prose prose-lg max-w-none text-justify [&>*]:mb-4"
             dangerouslySetInnerHTML={{ __html: blog.content }}
           />
+          {blog.createdBy._id !== user?._id && String(currentShelter?._id) !== String(shelterId) &&
           <div className="flex justify-end px-2">
             <ReportBlogDialog blogId={blog?._id} key={blog?._id} />
           </div>
-          
+          }
         </div>
     </div>
   );
