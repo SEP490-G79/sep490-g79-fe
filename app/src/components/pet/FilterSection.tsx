@@ -108,7 +108,7 @@ function FilterSection({
       { label: "Miễn phí", range: [0, 0] as [number, number] },
       {
         label: "Dưới 200,000đ",
-        range: [1000, 200_000] as [number, number],
+        range: [0, 200_000] as [number, number],
       },
       {
         label: "200,000đ - 500,000đ",
@@ -359,7 +359,7 @@ function FilterSection({
             <div>
               <div className=" flex mb-1 mt-1 mb-4">
                 <label className="text-base font-medium text-foreground block">
-                  Giá:
+                  Tiền vía:
                 </label>
                 <span className="ml-1">
                   {filters.priceRange[0] === 0 && filters.priceRange[1] === 0

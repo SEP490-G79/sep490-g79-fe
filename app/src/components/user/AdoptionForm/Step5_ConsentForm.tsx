@@ -14,7 +14,7 @@ import {
   SquareX,
   Trash,
 } from "lucide-react";
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect,useMemo  } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { mockDeliveryMethods, mockStatus } from "@/types/ConsentForm";
@@ -61,7 +61,22 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm, consentForm }: Ste
   const [isAgreed, setIsAgreed] = React.useState(false);
   const [userNote, setUserNote] = React.useState("");
   const navigate = useNavigate();
+  const [commitments, setCommitments] = React.useState<string>("");
+  const editorKey = useMemo(
+    () => `cf-${consentForm?._id ?? "none"}-${consentForm?.updatedAt ?? "0"}`,
+    [consentForm?._id, consentForm?.updatedAt]
+  );
+   // NEW: mỗi khi consentForm đổi → đồng bộ content editor
+  useEffect(() => {
+    setCommitments(consentForm?.commitments ?? "");
+  }, [consentForm?._id, consentForm?.updatedAt, consentForm?.commitments]);
 
+  // NEW: đổi consentForm hoặc status → reset tick đồng ý & ghi chú
+  useEffect(() => {
+    setIsAgreed(false);
+    setUserNote("");
+  }, [consentForm?._id, consentForm?.status]);
+  
   useEffect(() => {
     if (consentForm || !submission) return;
     (async () => {
@@ -512,9 +527,10 @@ const Step5_ConsentForm = ({ submission, onLoadedConsentForm, consentForm }: Ste
         </p>
         <div className="basis-full h-auto my-2">
           <MinimalTiptapEditor
+           key={editorKey} 
             editorContentClassName="commitments"
             output="html"
-            content={consentForm?.commitments}
+            content={commitments}  
             editable={false}
             hideToolbar={true}
             injectCSS

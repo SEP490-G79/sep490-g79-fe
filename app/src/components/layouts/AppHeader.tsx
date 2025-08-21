@@ -39,7 +39,7 @@ function AppHeader() {
     }, 200);
   }, [user, accessToken]);
 
-  if (isLoading) {
+  if (isLoading || loginLoading) {
     return (
       <header className="md:px-12 sticky top-0 z-50 w-full border-b border-border/40 bg-background/30 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-14 justify-between items-center px-4">
@@ -73,6 +73,7 @@ function AppHeader() {
               src={logo}
               alt="pawShelter logo"
               className="h-28 w-auto mt-2"
+            
             />
           </a>
         </div>

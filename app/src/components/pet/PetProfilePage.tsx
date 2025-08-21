@@ -205,7 +205,7 @@ const PetProfilePage = () => {
                 : "Chưa xác định"}
             </p>
             <p>
-              <strong>Phí nhận nuôi:</strong>{" "}
+              <strong>Tiền vía:</strong>{" "}
               {typeof pet.tokenMoney === "number"
                 ? pet.tokenMoney === 0
                   ? "Miễn phí"

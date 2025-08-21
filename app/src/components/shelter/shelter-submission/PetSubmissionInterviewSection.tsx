@@ -234,7 +234,7 @@ const PetSubmissionInterviewSection = ({
   return (
     <div className="space-y-6">
       {/* Interview Overview */}
-      <Card className="border-0 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-gray-700 dark:to-gray-800 ">
+      <Card className=" w-full overflow-hidden border-0 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-gray-700 dark:to-gray-800 ">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
             <CardTitle className="flex items-center gap-2 text-lg dark:text-white">
@@ -303,7 +303,31 @@ const PetSubmissionInterviewSection = ({
               </div>
               <div>
                 <p className="font-medium text-gray-800 text-sm dark:text-white">Hình thức phỏng vấn</p>
-                <p className="text-sm text-gray-600 mt-1 dark:text-gray-400">{interview.method}</p>
+              {/^https?:\/\/\S+$/i.test(interview.method) ? (
+    <a
+      href={interview.method}
+      target="_blank"
+      rel="noopener noreferrer"
+       title={interview.method} 
+      className="text-sm text-blue-600 mt-1 underline break-words break-all max-w-full block"
+    >
+      {(() => {
+        try {
+          const url = new URL(interview.method);
+          // Lấy domain + path rút gọn
+          const domain = url.hostname.replace("www.", "");
+          const shortPath = url.pathname.length > 10 ? url.pathname.slice(0, 10) + "..." : url.pathname;
+          return `${domain}${shortPath}`;
+        } catch {
+          return interview.method;
+        }
+      })()}
+    </a>
+  ) : (
+    <p className="text-sm text-gray-600 mt-1 dark:text-gray-400 break-words break-all max-w-full whitespace-pre-wrap">
+      {interview.method}
+    </p>
+  )}
               </div>
             </div>
           )}
@@ -338,7 +362,9 @@ const PetSubmissionInterviewSection = ({
                     {dayjs(interview.selectedSchedule).format("dddd, DD/MM/YYYY")}
                   </p>
                 </div>
-
+              </>
+            )}
+            
                 {interview.scheduleAt && (
                   <div className="p-3 bg-white rounded-lg border border-green-200 dark:bg-gray-800 dark:border-gray-700">
                     <div className="flex items-center gap-2 mb-2">
@@ -350,8 +376,6 @@ const PetSubmissionInterviewSection = ({
                     </p>
                   </div>
                 )}
-              </>
-            )}
           </div>
 
         </CardContent>

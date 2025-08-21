@@ -327,13 +327,12 @@ const MedicalRecordForm: React.FC<{
     const newErrors: { [key: string]: string } = {};
     if (!form.type) newErrors.type = "Vui lòng chọn loại hồ sơ";
     if (!form.title.trim()) newErrors.title = "Vui lòng nhập tiêu đề";
-    if (!form.description.trim()) newErrors.description = "Vui lòng nhập mô tả";
     if (
-      form.cost === "" ||
+      form.cost &&
       isNaN(Number(form.cost)) ||
-      Number(form.cost) <= 1000
+      Number(form.cost) > 0
     )
-      newErrors.cost = "Chi phí phải lớn hơn 1.000 VND";
+      newErrors.cost = "Chi phí phải lớn hơn 0 VND";
     if (!form.procedureDate)
       newErrors.procedureDate = "Vui lòng chọn ngày thực hiện";
     else if (new Date(form.procedureDate) > new Date())
@@ -542,9 +541,6 @@ const MedicalRecordForm: React.FC<{
           placeholder="Nhập mô tả chi tiết..."
           className="border rounded px-3 py-2 text-sm min-h-[80px]"
         />
-        {errors.description && (
-          <span className="text-red-500 text-xs">{errors.description}</span>
-        )}
       </div>
 
       {/* Image Upload */}

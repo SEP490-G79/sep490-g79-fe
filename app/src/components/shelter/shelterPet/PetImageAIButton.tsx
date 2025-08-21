@@ -236,13 +236,38 @@ export default function PetImageAIButton({
         // console.log(matchedSpecies);
         // console.log(matchedBreed);
 
+          // --- Chuẩn hóa colors từ AI ---
+  const aiColorsRaw = Array.isArray(res.data.colors)
+    ? res.data.colors
+    : String(res.data.colors || "")
+        .split(/[;,]/)
+        .map((c: string) => c.trim())
+        .filter(Boolean);
+
+  const normalize = (s: string) =>
+    s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  // mockColors: danh sách màu chuẩn (bạn đã import)
+  const allowedNorm = new Set(mockColors.map((c) => normalize(c)));
+
+  // Map từng màu AI -> màu chuẩn trong mockColors (theo so khớp không dấu, không hoa/thường)
+  const mapped: string[] = [];
+  for (const c of aiColorsRaw) {
+    const n = normalize(c);
+    if (!allowedNorm.has(n)) continue;
+    // tìm lại label gốc chuẩn để hiển thị đúng
+    const original = mockColors.find((m) => normalize(m) === n)!;
+    if (!mapped.includes(original)) mapped.push(original);
+    if (mapped.length === 2) break; // tối đa 2 màu
+  }
+
         setForm((prev: PetFormState) => ({
           ...prev,
           species: matchedSpecies?._id ?? "",
           breeds: matchedBreed ? [matchedBreed._id] : [],
           age: res.data.age ? String(res.data.age) : "",
           weight: res.data.weight ? String(res.data.weight) : "",
-          color: res.data.colors.join(", "),
+          color: mapped.join(", "),       
           identificationFeature: res.data.identificationFeature ?? "",
         }));
       })
@@ -287,18 +312,18 @@ export default function PetImageAIButton({
     navigator.clipboard.writeText(content);
     toast.success("Đã sao chép nội dung email");
   };
-  const handleSendMail = () => {
+  const handleSendMail = ( speciesRaw : string,breedRaw : string) => {
     // Tên shelter của bạn - có thể lấy từ context hoặc props
     // const shelterName = "Paws & Claws Rescue Center";
 
     // Gom phần đề xuất
     let suggestion = "";
-    if (speciesError && breedError) {
-      suggestion = `Tôi muốn đề xuất thêm loài "${speciesError}" và giống "${breedError}" vào hệ thống.`;
-    } else if (speciesError) {
-      suggestion = `Tôi muốn đề xuất thêm loài "${speciesError}" vào hệ thống.`;
-    } else if (breedError) {
-      suggestion = `Tôi muốn đề xuất thêm giống "${breedError}" vào hệ thống.`;
+    if (speciesRaw && breedRaw) {
+      suggestion = `Tôi muốn đề xuất thêm loài "${speciesRaw}" và giống "${breedRaw}" vào hệ thống.`;
+    } else if (speciesRaw) {
+      suggestion = `Tôi muốn đề xuất thêm loài "${speciesRaw}" vào hệ thống.`;
+    } else if (breedRaw) {
+      suggestion = `Tôi muốn đề xuất thêm giống "${breedRaw}" vào hệ thống.`;
     }
 
     // Nội dung email
@@ -317,18 +342,21 @@ export default function PetImageAIButton({
   };
 
   const displayNotFound = (species:string,breed:string) => {
-    toast("Loài hoặc giống chưa được hỗ trợ trong hệ thống!", {
+      if (species || breed) {
+            toast("Loài hoặc giống chưa được hỗ trợ trong hệ thống!", {
       description: `${species ? `Loài "${species}" chưa được hỗ trợ.`:``}
                     ${breed ? `Giống "${breed}" chưa được hỗ trợ.`:``}
                     Vui lòng liên hệ admin để được thêm mới!
         `,
       action: {
         label: "Gửi mail",
-        onClick: handleSendMail,
+        onClick: ()=>{handleSendMail(species,breed)},
       },
       duration: 10000,
     });
+      }
   };
+
 
   return (
     // <>
