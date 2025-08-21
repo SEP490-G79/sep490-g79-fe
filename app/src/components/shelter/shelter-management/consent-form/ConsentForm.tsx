@@ -101,7 +101,6 @@ export default function ConsentForm() {
   const GOONG_API_KEY = import.meta.env.VITE_GOONG_API_KEY;
 
   type FormValues = z.infer<typeof FormSchema>;
-
   const FormSchema = z.object({
     title: z.string().min(1, "Tiêu đề không được để trống"),
     tokenMoney: z.coerce
@@ -653,7 +652,7 @@ export default function ConsentForm() {
                       <FormItem className="md:col-span-2 self-start">
                         <FormLabel>Người nhận nuôi</FormLabel>
                         <FormControl>
-                          <Input value={consentForm?.shelter?.name} disabled />
+                          <Input value={consentForm?.adopter?.fullName} disabled />
                         </FormControl>
                       </FormItem>
 

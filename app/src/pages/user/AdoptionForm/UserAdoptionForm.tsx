@@ -489,23 +489,44 @@ const UserAdoptionFormPage = () => {
       }
 
       if (eventName === "consentForm:statusChanged") {
-        const st = payload?.status;
-        if (!st) return;
-        setConsentForm(prev => (prev ? { ...prev, status: st } : prev));
-        if (st === "approved"  || st === "cancelled") {
-          setStep(6);
-        } else if (st === "send" || st === "rejected") {
-          setStep(prev => (prev < 5 ? 5 : prev));
-        }
+  const { status: st, petId, consentFormId } = payload ?? {};
+  if (!st) return;
 
-        // Rồi mới refetch để đồng bộ đầy đủ
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-          fetchAndApplyConsent().catch(() => { });
-        }, 150);
+  // Chỉ xử lý nếu đúng pet đang mở
+  if (petIdRef.current && petId && petId !== petIdRef.current) return;
 
-        return;
-      }
+  // Cập nhật lạc quan trạng thái ngay lập tức để UI phản hồi nhanh
+  setConsentForm((prev) => {
+    if (!prev) {
+      // nếu chưa có consentForm trong state thì chỉ set tối thiểu các field cần thiết
+      return consentFormId
+        ? ({ _id: consentFormId, status: st } as any)
+        : (prev as any);
+    }
+    return { ...prev, status: st };
+  });
+
+  // Với "send" và "rejected": refetch NGAY để hydrate nội dung Step 5 trước khi hiển thị
+  if (st === "send" || st === "rejected") {
+    fetchAndApplyConsent().catch(() => {});
+    setStep((prev) => (prev < 5 ? 5 : prev));
+  }
+
+  // Với "approved" / "cancelled": nhảy thẳng Step 6; vẫn refetch để đồng bộ dữ liệu
+  if (st === "approved" || st === "cancelled") {
+    setStep(6);
+    fetchAndApplyConsent().catch(() => {});
+  }
+
+  // Debounce refetch để đảm bảo state đồng bộ tuyệt đối sau đó
+  if (debounceRef.current) clearTimeout(debounceRef.current);
+  debounceRef.current = setTimeout(() => {
+    fetchAndApplyConsent().catch(() => {});
+  }, 150);
+
+  return;
+}
+
 
       // debounce refetch: submission/consent chạy song song khi cần
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -774,6 +795,7 @@ useEffect(() => {
 
       case 5:
         return <Step5_ConsentForm
+         key={(consentForm?._id ?? "no-id") + "-" + (consentForm?.updatedAt ?? "no-updated")}
           onNext={next}
           onBack={back}
           submission={submission}

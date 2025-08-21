@@ -1,5 +1,5 @@
 // File: components/PetForm.tsx
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import PetImageAIButton from "./PetImageAIButton";
 import type { Species, Breed, PetFormState } from "@/types/pet.types";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import TagCombobox from "@/components/pet/TagCombobox";
 
 interface PetFormProps {
   form: PetFormState;
@@ -206,13 +207,38 @@ export default function PetForm({
       </div>
     );
   }
+// derive colors từ form.color
+const selectedColors: string[] = form.color
+  ? form.color.split(",").map((c) => c.trim())
+  : [];
+
+// Khi đổi màu → cập nhật lại form.color
+const handleColorsChange = (vals: string[]) => {
+  const unique = Array.from(
+    new Set(vals.map((v) => v.trim()).filter((v) => colorSuggestions.includes(v)))
+  ).slice(0, 2);
+
+  setForm((prev) => ({
+    ...prev,
+    color: unique.join(", "),   
+  }));
+};
+
+const breedOptions =
+  breedList
+    .filter(
+      (b) =>
+        (typeof b.species === "string" && b.species === form.species) ||
+        (typeof b.species === "object" && b.species._id === form.species)
+    )
+    .map((b) => b.name); 
   return (
     <form
       onSubmit={onSubmit}
       className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto "
     >
       <div className="md:col-span-1 flex flex-col gap-1">
-        <label className="text-sm font-medium">Tên thú nuôi *</label>
+        <label className="text-sm font-medium">Tên thú nuôi <span className="text-red-500">*</span> </label>
         <Input
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -244,7 +270,7 @@ export default function PetForm({
         </Select>
       </div>
       <div className="md:col-span-1  flex flex-col gap-1">
-        <label className="text-sm font-medium">Cân nặng (kg) *</label>
+        <label className="text-sm font-medium">Cân nặng (kg) <span className="text-red-500">*</span> </label>
         <Input
           type="text"
           value={form.weight}
@@ -253,7 +279,7 @@ export default function PetForm({
         />
       </div>
       <div className="md:col-span-1  flex flex-col gap-1">
-        <label className="text-sm font-medium">Loài *</label>
+        <label className="text-sm font-medium">Loài <span className="text-red-500">*</span> </label>
         <Select
           value={form.species}
           onValueChange={(value) => {
@@ -280,10 +306,12 @@ export default function PetForm({
         </Select>
       </div>
       <div className=" md:col-span-1 flex flex-col gap-1 ">
-        <label className="text-sm font-medium">Giống (tối đa 2)</label>
+        <label className="text-sm font-medium">Giống <span className="text-xs text-muted-foreground mt-1">
+   ( Đã chọn {form.breeds.length}/2 )
+  </span></label>
 
-        {/* Hiển thị giống đã chọn */}
-        <div className="flex flex-wrap gap-2">
+     
+        {/* <div className="flex flex-wrap gap-2">
           {form.breeds.map((breedId) => {
             const breed = breedList.find((b) => b._id === breedId);
             return (
@@ -310,7 +338,7 @@ export default function PetForm({
           })}
         </div>
 
-        {/* Dropdown chọn giống mới */}
+  
         {form.breeds.length < 2 && (
           <Select
             key={breedSelectKey}
@@ -346,11 +374,39 @@ export default function PetForm({
                 ))}
             </SelectContent>
           </Select>
-        )}
-      </div>
+        )} */}
+
+
+  <TagCombobox
+    options={breedOptions}
+    selected={
+      form.breeds
+        .map((id) => {
+          const breed = breedList.find((b) => b._id === id);
+          return breed?.name || null;
+        })
+        .filter(Boolean) as string[]
+    }
+    onChange={(vals) => {
+      const limited = vals.slice(0, 2);
+      const ids = limited
+        .map((name) => {
+          const breed = breedList.find(
+            (b) => b.name.toLowerCase() === name.toLowerCase()
+          );
+          return breed?._id;
+        })
+        .filter(Boolean) as string[];
+      setForm((f) => ({ ...f, breeds: ids }));
+    }}
+    placeholder="Chọn tối đa 2 giống"
+  />
+
+</div>
+
       <div className="flex flex-col gap-1 col-span-full md:col-span-1">
-        <label className="text-sm font-medium">Màu lông *</label>
-        <Autosuggest
+        <label className="text-sm font-medium">Màu lông <span className="text-red-500">*</span></label>
+        {/* <Autosuggest
           suggestions={suggestions}
           onSuggestionsFetchRequested={({ value }) =>
             setSuggestions(getSuggestions(value))
@@ -376,7 +432,21 @@ export default function PetForm({
               "px-4 py-2 cursor-pointer hover:bg-gray-100 text-black dark:hover:bg-[#374151] dark:text-white",
             suggestionHighlighted: "bg-blue-500 text-white dark:bg-blue-600",
           }}
-        />
+        /> */}
+    <div className="flex flex-col gap-1 col-span-full md:col-span-1">
+        <p className="text-xs text-muted-foreground mt-1">
+    Đã chọn {selectedColors.length}/2
+  </p>
+  <TagCombobox
+  options={colorSuggestions}
+  selected={selectedColors}  
+  onChange={handleColorsChange}
+  placeholder="Chọn tối đa 2 màu"
+/>
+
+</div>
+
+
       </div>
       <div className="md:col-span-2 flex flex-col gap-1">
         <label className="text-sm font-medium">Đặc điểm nhận dạng</label>
@@ -427,7 +497,7 @@ export default function PetForm({
 
       {isEditing && ["available", "unavailable"].includes(form.status) && (
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium">Trạng thái *</label>
+          <label className="text-sm font-medium">Trạng thái <span className="text-red-500">*</span> </label>
           <Select
             value={form.status}
             onValueChange={(v) => {

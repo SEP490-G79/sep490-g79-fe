@@ -141,7 +141,7 @@ export function SearchByImage({ setFilters, setIsLoading }: Props) {
     toast(message, {
       description: `"${
         file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name
-      }" has been rejected`,
+      }" bị từ chối.`,
     });
   }, []);
 

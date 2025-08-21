@@ -272,6 +272,7 @@ const PetPhotoUpload = ({
                   <TooltipTrigger asChild>
                     <Button
                       variant="link"
+                      type="button"
                       onClick={() => handleRemove(idx)}
                       className="text-(--destructive) cursor-pointer rounded-full w-10 h-10 flex items-center justify-center shadow-lg"
                     >

@@ -228,8 +228,8 @@ export function ConsentForms() {
     },
   ];
 
-  const DONE_STATUSES = ["approved", "cancelled", "rejected"] as const;
-  const PROCESS_STATUSES = ["draft", "send", "accepted"] as const;
+  const DONE_STATUSES = ["approved", "cancelled"] as const;
+  const PROCESS_STATUSES = ["draft", "send", "accepted", "rejected"] as const;
 
   const filteredForms = useMemo(() => {
     return shelterConsentForms.filter((form) => {
