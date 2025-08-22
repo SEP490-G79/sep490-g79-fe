@@ -119,7 +119,7 @@ export function SearchByImage({ setFilters, setIsLoading }: Props) {
           breed: Array.from(
             new Set([...prev.breed, ...(res.data.breeds || [])])
           ),
-          // color: Array.from(new Set([...prev.color, ...(res.data.colors || [])])),
+          color: Array.from(new Set([...prev.color, ...(res.data.colors || [])])),
         }));
       })
       .catch((err) => {
