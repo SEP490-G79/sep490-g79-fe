@@ -6,7 +6,7 @@ import { FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/f
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { CircleX } from "lucide-react";
-import { Avatar, AvatarImage } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface EmailMultiSelectProps {
   value: string[];
@@ -38,9 +38,10 @@ export function EmailSelector({
   };
 
   const filteredSuggestions = useMemo(() => {
-    return suggestions.slice(0, 5).filter((suggestion) =>
-      suggestion.email.toLowerCase().includes(searchKeyword.toLowerCase())
-    );
+  const result = suggestions.filter(s =>
+    s.email.toLowerCase().includes(searchKeyword.toLowerCase())
+  );
+  return result.slice(0, 5); // đổi số tuỳ ý
   }, [suggestions, searchKeyword]);
 
   return (
@@ -90,8 +91,9 @@ export function EmailSelector({
                 >
                   <Checkbox checked={value.includes(suggestion.email)} />
                   <span className="flex flex-row gap-2">
-                    <Avatar>
+                    <Avatar className="ring ring-2 ring-primary">
                       <AvatarImage src={suggestion.avatar} alt={suggestion.email+ " avatar"}/>
+                      <AvatarFallback>{suggestion.email && suggestion.email[0]}</AvatarFallback>
                     </Avatar>
                     <span className="my-auto">{suggestion.email}</span>
                     </span>
