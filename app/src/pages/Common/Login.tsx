@@ -70,7 +70,7 @@ export const Login = () => {
       setTimeout(() => {
         setLoginLoading(false);
         toast.error(message);
-      }, 1000);
+      }, 200);
     }
 
     if (isLoginByGoogle === "true") {
@@ -106,7 +106,7 @@ export const Login = () => {
                 navigate(
                   redirectPath ? decodeURIComponent(redirectPath) : "/home"
                 );
-              }, 2000);
+              }, 200);
               break;
           }
         })
@@ -148,7 +148,7 @@ export const Login = () => {
           } else {
             navigate("/home");
           }
-        }, 2000);
+        }, 200);
       }
     } catch (error: any) {
       if (error.response?.status === 400) {
