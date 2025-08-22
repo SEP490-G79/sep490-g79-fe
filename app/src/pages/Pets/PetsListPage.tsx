@@ -95,11 +95,12 @@ function PetsListPage() {
   const filteredPets = useMemo<Pet[]>(() => {
     setIsLoading(true);
     //  Normalize & tokenize
-    const normalize = (s: string) =>
-      s
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
+   const normalize = (s?: string) =>
+  (s ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
 
     const rawStopWords = [
       "tôi",
@@ -274,12 +275,28 @@ function PetsListPage() {
         return false;
       // if (filters.color.length && !filters.color.includes(p.color || ""))
       //   return false;
-      if (
-        Array.isArray(filters.color) &&
-        filters.color.length &&
-        !filters.color.map(c => c.toLowerCase()).includes((p.color || "").toLowerCase())
-      )
-        return false;
+      // if (
+      //   Array.isArray(filters.color) &&
+      //   filters.color.length &&
+      //   !filters.color.map(c => c.toLowerCase()).includes((p.color || "").toLowerCase())
+      // )
+      //   return false;
+      
+if (Array.isArray(filters.color) && filters.color.length) {
+  // Chuẩn hoá màu của pet thành mảng chữ thường
+  const petColors: string[] = Array.isArray(p.color)
+    ? p.color.map((c: string) => c.toLowerCase())
+    : typeof p.color === "string"
+      ? p.color.split(",").map((c: string) => c.trim().toLowerCase())
+      : [];
+
+  // Chuẩn hoá màu người dùng chọn
+  const selected = filters.color.map((c: string) => c.toLowerCase());
+
+  // chỉ cần có ÍT NHẤT 1 màu trùng
+  const matched = selected.some((fc: string) => petColors.includes(fc));
+  if (!matched) return false;
+}
 
 
       const age = p.age ?? 0;

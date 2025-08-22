@@ -166,9 +166,29 @@ const UserAdoptionFormPage = () => {
     });
   };
 
-  useEffect(() => {
-    setSubmissionId(routeSubmissionId ?? null);
-  }, [routeSubmissionId]);
+ useEffect(() => {
+  if (!id) return;
+
+  // Dọn sạch mọi thứ thuộc pet trước
+  setSubmissionId(routeSubmissionId ?? null);
+  setSubmission(null);
+  setConsentForm(null);
+  setHasChecked(null);
+  setHasCheckedSubmitted(false);
+  setAnswers({});      // hoặc buildDefaults(form) nếu bạn đã có form
+  setLoading(true);
+
+  // Reset step & agreed theo cache của pet mới (nếu có)
+  const savedStep = localStorage.getItem(`adoptionFormStep-${id}`);
+  setStep(savedStep ? Number(savedStep) : 1);
+
+  const savedAgreed = localStorage.getItem(`adoptionFormAgreed-${id}`);
+  setAgreed(savedAgreed ? JSON.parse(savedAgreed) : false);
+
+  // (tuỳ chọn) clear debounce cũ
+  if (debounceRef.current) clearTimeout(debounceRef.current);
+}, [id, routeSubmissionId]);    // <-- nhớ thêm cả routeSubmissionId
+
 
   const getInitialStep = () => {
     if (!id || submissionId) return 1;
@@ -195,7 +215,15 @@ const UserAdoptionFormPage = () => {
 
   useEffect(() => {
     if (!id) return;
+     setLoading(true);
+  setForm(null);
+  setSubmission(null);
+  setConsentForm(null);
+  setHasChecked(null);
+  setSubmissionId(routeSubmissionId ?? null);
 
+    const controller = new AbortController();
+ const { signal } = controller;
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -209,6 +237,31 @@ const UserAdoptionFormPage = () => {
           return;
         }
         setForm(res.data);
+
+      if (routeSubmissionId) {
+        const subRes = await authAxios.get(
+          `${coreAPI}/adoption-submissions/${routeSubmissionId}?t=${Date.now()}`,
+          { signal }
+        );
+        const sub = subRes.data;
+        setSubmissionId(routeSubmissionId);
+        setSubmission(sub);
+
+        // map answers nếu cần
+        const parsed: Record<string, string | string[]> = {};
+        sub.answers?.forEach((item: any) => {
+          const qid = typeof item.questionId === "string" ? item.questionId : item.questionId?._id;
+          if (!qid) return;
+          parsed[qid] = item.selections.length === 1 ? item.selections[0] : item.selections;
+        });
+        setAnswers(parsed);
+        setHasChecked({ selectedSchedule: Boolean(sub?.interview?.selectedSchedule) });
+        setStep(computeStep(sub, null, { selectedSchedule: Boolean(sub?.interview?.selectedSchedule) }));
+        return; 
+      }
+
+
+        
         // Kiểm tra đã nộp chưa
         const checkRes = await authAxios.post(
           `${coreAPI}/pets/${id}/adoption-submissions/check-user-submitted`,
@@ -312,16 +365,19 @@ const UserAdoptionFormPage = () => {
 }
 
       } catch (err) {
-        showErrorToast("Không thể lấy thông tin đơn xin nhận nuôi");
+        // showErrorToast("Không thể lấy thông tin đơn xin nhận nuôid");
 
       } finally {
         setLoading(false);
         setHasCheckedSubmitted(true); //  Đánh dấu đã check xong
       }
     };
-
-    fetchData();
-  }, [id]);
+     fetchData();
+  return () => {
+    controller.abort();   // huỷ mọi request cũ khi đổi pet
+  };
+   
+ }, [id]);
 
 
   useEffect(() => {
@@ -348,21 +404,45 @@ const UserAdoptionFormPage = () => {
   }, [form, submissionId]);
 
 
-  useEffect(() => {
-    const fetchSubmission = async () => {
-      if (!submissionId) return;
-      try {
-        const res = await authAxios.get(`${coreAPI}/adoption-submissions/${submissionId}`);
-        setSubmission(res.data);
-      } catch (err) {
-        console.error("Lỗi khi lấy submission:", err);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchSubmission = async () => {
+  //     if (!submissionId) return;
+  //     try {
+  //       const res = await authAxios.get(`${coreAPI}/adoption-submissions/${submissionId}`);
+  //       setSubmission(res.data);
+  //     } catch (err) {
+  //       console.error("Lỗi khi lấy submission:", err);
+  //     }
+  //   };
 
-    if (!submission && submissionId && hasCheckedSubmitted) {
-      fetchSubmission();
+  //   if (!submission && submissionId && hasCheckedSubmitted) {
+  //     fetchSubmission();
+  //   }
+  // }, [submissionId, submission, hasCheckedSubmitted]);
+
+  useEffect(() => {
+  const fetchSubmission = async () => {
+    if (!submissionId) return;
+    try {
+      const res = await authAxios.get(`${coreAPI}/adoption-submissions/${submissionId}`);
+      const sub = res.data;
+
+      // Nếu submission không thuộc pet hiện tại thì bỏ qua
+      const petOfSubmission = sub?.adoptionForm?.pet?._id ?? sub?.pet?._id;
+      if (petIdRef.current && petOfSubmission && petOfSubmission !== petIdRef.current) {
+        return;
+      }
+
+      setSubmission(sub);
+    } catch (err) {
+      console.error("Lỗi khi lấy submission:", err);
     }
-  }, [submissionId, submission, hasCheckedSubmitted]);
+  };
+
+  if (!submission && submissionId && hasCheckedSubmitted) {
+    fetchSubmission();
+  }
+}, [submissionId, submission, hasCheckedSubmitted]);
 
   useEffect(() => {
     setStep(computeStep(submission, consentForm, hasChecked));
