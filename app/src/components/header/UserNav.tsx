@@ -275,7 +275,7 @@ function UserNav() {
           <DropdownMenuSeparator /> */}
           <DropdownMenuGroup>
             <DropdownMenuItem asChild className="cursor-pointer">
-              <Link to="/profile-setting">Cài đặt</Link>
+              <Link to="/profile-setting">Cài đặt tài khoản</Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
 
