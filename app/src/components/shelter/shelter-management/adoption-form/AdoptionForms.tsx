@@ -91,10 +91,11 @@ export function AdoptionForms() {
   const [tabValue, setTabValue] = React.useState("active");
 
   React.useEffect(() => {
-    fetchForms
+    fetchTemplates();
+    fetchForms();
   }, [shelterId]);
 
-  const fetchForms = async ()=>{
+  const fetchTemplates = async ()=>{
     setIsLoading(true);
      await authAxios
       .get(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/get-all`)
@@ -110,6 +111,24 @@ export function AdoptionForms() {
         }, 200);
       });
   }
+
+    const fetchForms = async ()=>{
+    setIsLoading(true);
+     await authAxios
+    .get(`${coreAPI}/shelters/${shelterId}/adoptionForms/get-by-shelter`)
+      .then((res) => {
+        setShelterForms(res.data);
+      })
+      .catch((err) => {
+        console.log(err?.response?.data?.message);
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
+      });
+  }
+  
 
   const removeDiacritics = (str: string) =>
     str
@@ -165,16 +184,7 @@ export function AdoptionForms() {
         }, 500);
       });
   };
-  React.useEffect(() => {
-    authAxios
-      .get(`${coreAPI}/shelters/${shelterId}/adoptionForms/get-by-shelter`)
-      .then((res) => {
-        setShelterForms(res.data);
-      })
-      .catch((err) => {
-        // console.log(err?.response?.data?.message);
-      });
-  }, [shelterId]);
+
   const filteredForms = React.useMemo(() => {
     setIsLoading(true);
     if (tabValue == "active") {
