@@ -18,6 +18,7 @@ import type { Species, Breed, PetFormState } from "@/types/pet.types";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import TagCombobox from "@/components/pet/TagCombobox";
+import { mockColors } from "@/types/Corlor";
 
 interface PetFormProps {
   form: PetFormState;
@@ -109,7 +110,7 @@ export default function PetForm({
     "Đen tuyền",
   ];
   const getSuggestions = (value: string) =>
-    colorSuggestions.filter((color) =>
+    mockColors.filter((color) =>
       color.toLowerCase().includes(value.toLowerCase())
     );
   if (isLoading) {
@@ -215,7 +216,7 @@ const selectedColors: string[] = form.color
 // Khi đổi màu → cập nhật lại form.color
 const handleColorsChange = (vals: string[]) => {
   const unique = Array.from(
-    new Set(vals.map((v) => v.trim()).filter((v) => colorSuggestions.includes(v)))
+    new Set(vals.map((v) => v.trim()).filter((v) => mockColors.includes(v)))
   ).slice(0, 2);
 
   setForm((prev) => ({
@@ -438,7 +439,7 @@ const breedOptions =
     Đã chọn {selectedColors.length}/2
   </p>
   <TagCombobox
-  options={colorSuggestions}
+  options={mockColors}
   selected={selectedColors}  
   onChange={handleColorsChange}
   placeholder="Chọn tối đa 2 màu"
