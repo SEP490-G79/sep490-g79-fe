@@ -21,6 +21,7 @@ import {
   List,
   MoreHorizontal,
   Pen,
+  RefreshCcw,
   SwitchCamera,
   Trash,
 } from "lucide-react";
@@ -90,8 +91,12 @@ export function AdoptionForms() {
   const [tabValue, setTabValue] = React.useState("active");
 
   React.useEffect(() => {
+    fetchForms
+  }, [shelterId]);
+
+  const fetchForms = async ()=>{
     setIsLoading(true);
-    authAxios
+     await authAxios
       .get(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/get-all`)
       .then((res) => {
         setShelterTemplates(res.data);
@@ -104,7 +109,7 @@ export function AdoptionForms() {
           setIsLoading(false);
         }, 200);
       });
-  }, [shelterId]);
+  }
 
   const removeDiacritics = (str: string) =>
     str
@@ -520,7 +525,17 @@ export function AdoptionForms() {
                 }
                 className="max-w-sm"
               />
-              <CreateDialog setIsLoading={setIsLoading} />
+              <div>
+                <Button
+                  className="cursor-pointer"
+                  variant={"ghost"}
+                  onClick={fetchForms}
+                >
+                  <RefreshCcw />
+                </Button>
+
+                <CreateDialog setIsLoading={setIsLoading} />
+              </div>
             </div>
             <div className="rounded-md border">
               <Table>
@@ -614,6 +629,14 @@ export function AdoptionForms() {
                 className="max-w-sm"
               />
               {/* <CreateDialog setIsLoading={setIsLoading} /> */}
+              <Button
+                className="cursor-pointer"
+                variant={"ghost"}
+                onClick={fetchForms}
+              >
+                <RefreshCcw />
+              </Button>
+
             </div>
             <div className="rounded-md border">
               <Table>

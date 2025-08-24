@@ -12,6 +12,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -245,7 +246,12 @@ export default function EditDialog({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mô tả</FormLabel>
+                    <FormLabel>Điều kiện & điều khoản nhận nuôi</FormLabel>
+                    <FormDescription>
+                      Lưu ý: Nếu đã chọn mẫu đơn, nội dung dưới đây sẽ được thay
+                      bằng điều khoản của mẫu đó.
+                    </FormDescription>
+
                     <FormControl>
                       <MinimalTiptapEditor
                         value={field.value || ""}
@@ -253,7 +259,7 @@ export default function EditDialog({
                         className="w-full"
                         editorContentClassName="p-5"
                         output="html"
-                        placeholder="Enter your description..."
+                        placeholder="Điều kiện & điều khoản nhận nuôi..."
                         autofocus={true}
                         editable={true}
                         hideToolbar={false}

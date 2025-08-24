@@ -3,7 +3,7 @@ import { ModeToggle } from "../ui/mode-toggle";
 import { NavigationMenu } from "@/components/ui/navigation-menu";
 import { HeaderMenu } from "../header/HeaderMenu";
 import { Button } from "../ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import UserNav from "../header/UserNav";
 import AppContext from "@/context/AppContext";
 import { Skeleton } from "../ui/skeleton";
@@ -15,6 +15,7 @@ function AppHeader() {
     useContext(AppContext);
   const authAxios = useAuthAxios();
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsLoading(true);
@@ -67,17 +68,14 @@ function AppHeader() {
   return (
     <header className="md:px-12 sticky top-0 z-50 w-full border-b border-border/40 bg-background/30 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 justify-between items-center px-4">
-        <div className="basis-1/2">
-          <a href="/" className="flex items-center">
-            <img
-              src={logo}
-              alt="pawShelter logo"
-              className="h-28 w-auto mt-2"
-            
-            />
-          </a>
+        <div className="basis-1/2 h-full">
+          <img
+            src={logo}
+            alt="pawShelter logo"
+            className="h-full w-auto cursor-pointer"
+            onClick={() => navigate("/")}
+          />
         </div>
-
 
         <div className="basis-1/2 flex justify-end items-center gap-4">
           <div className="hidden md:block">

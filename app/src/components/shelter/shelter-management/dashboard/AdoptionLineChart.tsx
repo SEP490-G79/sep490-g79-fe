@@ -25,8 +25,8 @@ export const AdoptionLineChart = ({ data }: AdoptionLineChartProps) => {
   return (
     <Card className="shadow-xl border-none">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-bold text-foreground">
-          Biểu đồ số lượt nhận nuôi theo tuần
+        <CardTitle className="text-md font-bold text-foreground">
+          Biểu đồ số lượng thú nuôi được nhận nuôi theo tuần
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Dữ liệu 10 tuần gần nhất
@@ -63,7 +63,7 @@ export const AdoptionLineChart = ({ data }: AdoptionLineChartProps) => {
                 border: "1px solid hsl(var(--border))",
               }}
               labelStyle={{ fontWeight: "bold" }}
-              formatter={(value: number) => [`${value} lượt`, "Số lượng"]}
+              formatter={(value: number) => [`${value} pet`, "Số lượng"]}
             />
             <Line
               type="monotone"

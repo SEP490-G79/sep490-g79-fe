@@ -21,6 +21,7 @@ import {
   MoreHorizontal,
   Pen,
   Plus,
+  RefreshCcw,
   SlidersHorizontal,
   Trash,
 } from "lucide-react";
@@ -81,8 +82,11 @@ export function AdoptionTemplates() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    fetchTemplates()
+  }, [shelterId]);
+  const fetchTemplates =async ()=>{
     setIsLoading(true)
-    authAxios
+    await authAxios
       .get(`${coreAPI}/shelters/${shelterId}/adoptionTemplates/get-all`)
       .then((res) => {
         setShelterTemplates(res.data);
@@ -95,7 +99,8 @@ export function AdoptionTemplates() {
           setIsLoading(false)
         }, 200);
       });
-  }, [shelterId]);
+  }
+
   const removeDiacritics = (str: string) =>
     str
       .normalize("NFD")
@@ -343,6 +348,7 @@ export function AdoptionTemplates() {
         </div>
 
         <div className=" basis-1/3 flex justify-end">
+          <Button className="cursor-pointer" variant={"ghost"} onClick={fetchTemplates}><RefreshCcw/></Button>
           <CreateDialog />
         </div>
       </div>
