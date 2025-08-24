@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Loader, Loader2Icon, LoaderCircle, Search } from "lucide-react";
+import { Loader, Loader2Icon, LoaderCircle, RefreshCcw, Search } from "lucide-react";
 import useAuthAxios from "@/utils/authAxios";
 import AppContext from "@/context/AppContext";
 import { toast } from "sonner";
@@ -26,6 +26,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Badge } from "@/components/ui/badge";
 import StaffTable from "./StaffTable";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 const inviteSchema = z.object({
@@ -61,6 +62,7 @@ const ShelterStaffsList = () => {
     const [openDialog, setOpenDialog] = useState(false);
     const isManager = shelterMembersList.find(member => member.id === user?._id)?.shelterRoles.includes("manager");
     const [search, setSearch] = useState<string>("");
+    const [refresh, setRefresh] = useState<boolean>(false);
 
     const form = useForm<InviteFormData>({
     resolver: zodResolver(inviteSchema),
@@ -87,17 +89,17 @@ const ShelterStaffsList = () => {
         setFilteredMembers(data);
       })
       .catch(err => console.log(err?.response.data.message))
-    },[memberRefresh])
+    },[memberRefresh, refresh ])
 
     // lay email du dieu kien de moi
     useEffect(() => {
       authAxios.get(`${shelterAPI}/find-eligible-users/${shelterId}`)
       .then(({data}) => {
-        console.log(data)
+        // console.log(data)
         setEligibleEmails(data);
       })
       .catch(err => console.log(err?.response.data.message))
-    },[emailRefresh])
+    },[emailRefresh, refresh])
 
     function searchMember(searchValue: string){
       const searchedMembers = shelterMembersList.filter((member) => {
@@ -299,13 +301,29 @@ const ShelterStaffsList = () => {
         </div>
         <div className="col-span-12 px-5">
           <Separator className="my-4" />
-          <div className="flex gap-1">
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(event) =>
-                event.key === "Enter" && searchMember(search)}
-                placeholder='Tìm kiếm...' className="max-w-90"/>
-              <Button variant="outline" className="text-xs cursor-pointer" onClick={() => searchMember(search)}>
-                  <Search className="text-(--primary)" />Tìm kiếm
-              </Button>
+          <div className="flex gap-1 justify-between">
+            <div className="flex gap-1">
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(event) =>
+                  event.key === "Enter" && searchMember(search)}
+                  placeholder='Tìm kiếm...' className="max-w-90"/>
+                <Button variant="outline" className="text-xs cursor-pointer" onClick={() => searchMember(search)}>
+                    <Search className="text-(--primary)" />Tìm kiếm
+                </Button>
+            </div>
+            <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="cursor-pointer col-span-1"
+                      onClick={() => setRefresh((prev) => !prev)}
+                    >
+                      <RefreshCcw />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Refresh</p>
+                  </TooltipContent>
+              </Tooltip>
           </div>
           <StaffTable user={user} 
           isManager={isManager || false} 
