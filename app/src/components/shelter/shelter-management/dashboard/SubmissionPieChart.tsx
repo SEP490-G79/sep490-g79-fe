@@ -52,11 +52,11 @@ export const SubmissionPieChart = ({
   return (
     <Card className="h-full w-full shadow-xl border-none">
       <CardHeader>
-        <CardTitle className="text-lg font-bold text-foreground">
-          Tỷ lệ đơn nhận nuôi
+        <CardTitle className="text-md font-bold text-foreground">
+          Tỷ lệ yêu cầu nhận nuôi - Adoption submissions
         </CardTitle>
         <CardDescription>
-          Phân bố số lượng đơn duyệt, từ chối và đang xử lý
+          Phân bố số lượng yêu cầu thành công, từ chối và đang xử lý
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col justify-center items-center h-[360px]">

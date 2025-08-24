@@ -19,7 +19,7 @@ export default function PetDetailDialog({ open, onClose, pet }: Props) {
   if (!pet) return null;
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="min-w-3xl max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Chi tiết thú nuôi</DialogTitle>
         </DialogHeader>

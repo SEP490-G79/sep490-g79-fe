@@ -70,7 +70,7 @@ export function CTA() {
       description: "Trung tâm đang đang hoạt động",
       href: "/shelters",
       cta: "Xem danh sách shelter",
-      // background: bgImg,
+      background: <></>,
       className: "lg:row-start-1 lg:row-end-4 lg:col-start-2 lg:col-end-3",
     },
     {
@@ -79,7 +79,7 @@ export function CTA() {
       description: "Số thú nuôi sẵn sàng nhận nuôi",
       href: "/pets-list",
       cta: "Tìm thú cưng",
-      // background: bgImg,
+      background: <></>,
       className: "lg:col-start-1 lg:col-end-2 lg:row-start-1 lg:row-end-3",
     },
     {
@@ -88,7 +88,7 @@ export function CTA() {
       description: "Số thú nuôi đã được nhận nuôi",
       href: "/adoption-procedures",
       cta: "Xem thủ tục nhận nuôi",
-      // background: bgImg,
+      background: <></>,
       className: "lg:col-start-1 lg:col-end-2 lg:row-start-3 lg:row-end-4",
     },
     {
@@ -97,7 +97,7 @@ export function CTA() {
       description: "Số thú nuôi được cứu hộ",
       href: "/pets-list",
       cta: "Xem danh sách",
-      // background: bgImg,
+      background: <></>,
       className: "lg:col-start-3 lg:col-end-4 lg:row-start-1 lg:row-end-2",
     },
     {
@@ -106,7 +106,7 @@ export function CTA() {
       description: "Số lượng giống loài trong hệ thống",
       href: "/pets-list",
       cta: "Xem danh sách thú nuôi",
-      // background: bgImg,
+      background: <></>,
       className: "lg:col-start-3 lg:col-end-4 lg:row-start-2 lg:row-end-4",
     },
   ];

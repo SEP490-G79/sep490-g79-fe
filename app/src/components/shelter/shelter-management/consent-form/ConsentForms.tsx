@@ -27,6 +27,7 @@ import {
   MoreHorizontal,
   Pen,
   Plus,
+  RefreshCcw,
   SlidersHorizontal,
   Trash,
   Truck,
@@ -129,7 +130,7 @@ export function ConsentForms() {
         // console.log("Error fetching consent forms:", err);
         toast.error(
           err.response?.data?.message ||
-          "Không thể tải bản đồng ý nhận nuôi! Vui lòng thử lại sau."
+            "Không thể tải bản đồng ý nhận nuôi! Vui lòng thử lại sau."
         );
       })
       .finally(() => {
@@ -144,12 +145,18 @@ export function ConsentForms() {
   }, [shelterId, coreAPI]);
 
   const fetchRef = useRef(fetchShelterConsentForms);
-  useEffect(() => { fetchRef.current = fetchShelterConsentForms; }, [fetchShelterConsentForms]);
+  useEffect(() => {
+    fetchRef.current = fetchShelterConsentForms;
+  }, [fetchShelterConsentForms]);
   useEffect(() => {
     if (!shelterId) return;
-    const onChange = (payload: { consentFormId: string; petId: string; status: string }) => {
-      setShelterConsentForms(prev => {
-        const idx = prev.findIndex(f => f._id === payload.consentFormId);
+    const onChange = (payload: {
+      consentFormId: string;
+      petId: string;
+      status: string;
+    }) => {
+      setShelterConsentForms((prev) => {
+        const idx = prev.findIndex((f) => f._id === payload.consentFormId);
         if (idx === -1) {
           fetchRef.current();
           return prev;
@@ -186,7 +193,7 @@ export function ConsentForms() {
         // console.log("Error deleting consent form:", err);
         toast.error(
           err.response?.data?.message ||
-          "Không thể xóa bản đồng ý nhận nuôi! Vui lòng thử lại sau."
+            "Không thể xóa bản đồng ý nhận nuôi! Vui lòng thử lại sau."
         );
       })
       .finally(() => {
@@ -265,8 +272,6 @@ export function ConsentForms() {
 
   const totalPages = Math.ceil(doneForms.length / limit);
 
-
-
   const renderPagination = () => (
     <Pagination>
       <PaginationContent>
@@ -342,8 +347,6 @@ export function ConsentForms() {
       </div>
     );
   }
- 
-
 
   if (!shelterConsentForms) {
     return (
@@ -416,23 +419,30 @@ export function ConsentForms() {
     );
   }
   const SearchHeader = (
-  <div className="flex justify-between items-center py-4">
-    <div className="flex basis-1/3 gap-5">
-      <Input
-        placeholder="Tìm kiếm ..."
-        className="max-w-sm"
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-          setPage(1);
-        }}
-      />
+    <div className="flex justify-between items-center py-4">
+      <div className="flex basis-1/3 gap-5">
+        <Input
+          placeholder="Tìm kiếm ..."
+          className="max-w-sm"
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setPage(1);
+          }}
+        />
+      </div>
+      <div className="basis-1/3 flex justify-end">
+        <Button
+          className="cursor-pointer"
+          variant={"ghost"}
+          onClick={fetchShelterConsentForms}
+        >
+          <RefreshCcw />
+        </Button>
+        {/* <CreateDialog /> */}
+      </div>
     </div>
-    <div className="basis-1/3 flex justify-center">
-      {/* <CreateDialog /> */}
-    </div>
-  </div>
-);
+  );
 
   return (
     <Tabs defaultValue="active" className="w-full">
@@ -446,14 +456,15 @@ export function ConsentForms() {
       </TabsList>
       <TabsContent value="active">
         <div className="w-full">
-             {SearchHeader}
+          {SearchHeader}
           {processingForms.length === 0 ? (
             <div className="flex flex-col items-center flex-wrap mt-30">
               <h2 className="basis-1 text-xl font-semibold text-(--primary)">
                 Chưa có bản đồng ý nhận nuôi nào.
               </h2>
               <p className="basis-1 text-sm text-(--muted-foreground) mb-4">
-                Hãy tạo bản đồng ý nhận nuôi mới để quản lý quá trình nhận nuôi thú cưng.
+                Hãy tạo bản đồng ý nhận nuôi mới để quản lý quá trình nhận nuôi
+                thú cưng.
               </p>
             </div>
           ) : (
@@ -488,9 +499,8 @@ export function ConsentForms() {
                       />
                       <AvatarFallback className="rounded-none">
                         <span className="text-3xl font-normal">
-                          {consentForm.adopter.name
-                            ?.charAt(0)
-                            .toUpperCase() || "A"}
+                          {consentForm.adopter.name?.charAt(0).toUpperCase() ||
+                            "A"}
                         </span>
                       </AvatarFallback>
                     </Avatar>
@@ -590,9 +600,8 @@ export function ConsentForms() {
                                   Bạn có chắc chắn muốn xóa bản đồng ý này?
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Việc xóa bản đồng ý sẽ không thể hoàn tác.
-                                  Bạn có chắc chắn muốn xóa bản đồng ý này
-                                  không?
+                                  Việc xóa bản đồng ý sẽ không thể hoàn tác. Bạn
+                                  có chắc chắn muốn xóa bản đồng ý này không?
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -620,14 +629,15 @@ export function ConsentForms() {
       </TabsContent>
       <TabsContent value="approved">
         <div className="w-full">
-             {SearchHeader}
+          {SearchHeader}
           {doneForms.length === 0 ? (
             <div className="flex flex-col items-center flex-wrap mt-30">
               <h2 className="basis-1 text-xl font-semibold text-(--primary)">
                 Chưa có bản đồng ý nhận nuôi nào.
               </h2>
               <p className="basis-1 text-sm text-(--muted-foreground) mb-4">
-                Hãy tạo bản đồng ý nhận nuôi mới để quản lý quá trình nhận nuôi thú cưng.
+                Hãy tạo bản đồng ý nhận nuôi mới để quản lý quá trình nhận nuôi
+                thú cưng.
               </p>
             </div>
           ) : (

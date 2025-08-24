@@ -195,7 +195,7 @@ const MedicalRecordList: React.FC<Props> = ({ petId }) => {
           if (!val) setEditRecord(null);
         }}
       >
-        <DialogContent className="sm:max-w-md w-full max-h-[90vh] overflow-y-auto bg-background text-foreground">
+        <DialogContent className="sm:max-w-xl w-full max-h-[90vh] overflow-y-auto bg-background text-foreground">
           <MedicalRecordForm
             petId={petId}
             record={editRecord}
@@ -327,12 +327,12 @@ const MedicalRecordForm: React.FC<{
     const newErrors: { [key: string]: string } = {};
     if (!form.type) newErrors.type = "Vui lòng chọn loại hồ sơ";
     if (!form.title.trim()) newErrors.title = "Vui lòng nhập tiêu đề";
-    if (
-      form.cost &&
-      isNaN(Number(form.cost)) ||
-      Number(form.cost) > 0
-    )
-      newErrors.cost = "Chi phí phải lớn hơn 0 VND";
+    if (form.cost !== "" && form.cost !== undefined) {
+      const cost = Number(form.cost);
+      if (isNaN(cost) || cost < 0) {
+        newErrors.cost = "Chi phí phải là số và lớn hơn hoặc bằng 0 VND";
+      }
+    }
     if (!form.procedureDate)
       newErrors.procedureDate = "Vui lòng chọn ngày thực hiện";
     else if (new Date(form.procedureDate) > new Date())
@@ -490,7 +490,7 @@ const MedicalRecordForm: React.FC<{
         </div>
 
         {/* Status (only when edit) */}
-        {record && (
+        {/* {record && (
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">Trạng thái *</label>
             <select
@@ -504,7 +504,7 @@ const MedicalRecordForm: React.FC<{
               <option value="disabled">Vô hiệu hóa</option>
             </select>
           </div>
-        )}
+        )} */}
 
         {/* PerformedBy */}
         <div className="flex flex-col gap-1">
@@ -532,7 +532,7 @@ const MedicalRecordForm: React.FC<{
       {/* Description */}
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium">
-          Mô tả <span className="text-red-500">*</span>
+          Mô tả 
         </label>
         <textarea
           name="description"

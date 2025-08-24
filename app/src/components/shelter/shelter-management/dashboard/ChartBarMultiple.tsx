@@ -55,14 +55,14 @@ export function ChartBarMultiple() {
   return (
     <Card className="h-full w-full shadow-xl border-none">
       <CardHeader>
-        <CardTitle className="text-lg font-bold text-foreground">
-          Biểu đồ yêu cầu nhận nuôi
+        <CardTitle className="text-md font-bold text-foreground">
+          Biểu đồ số đơn yêu cầu nhận nuôi - Adoption forms
         </CardTitle>
         <CardDescription>Trong 4 tuần gần nhất</CardDescription>
       </CardHeader>
       <CardContent className="pb-0">
         <ChartContainer config={chartConfig}>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={280}>   
             <BarChart data={chartData} barSize={36} barGap={20}>
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -82,13 +82,13 @@ export function ChartBarMultiple() {
                 content={({ active, payload }) => {
                   if (active && payload && payload.length > 0) {
                     return (
-                      <div className="bg-white border rounded px-3 py-2 text-sm shadow-md">
+                      <div className="bg-(--background) border rounded px-3 py-2 text-sm shadow-md">
                         <p className="font-medium text-foreground mb-1">
                           {payload[0].payload.week}
                         </p>
                         <p className="text-muted-foreground">
                           Nhận nuôi:{" "}
-                          <span className="font-semibold text-foreground">
+                          <span className="font-semibold text-(--foreground)">
                             {payload[0].payload.forms}
                           </span>
                         </p>

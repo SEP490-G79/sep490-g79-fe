@@ -256,6 +256,7 @@ const ShelterProfile = () => {
                               avatarPreview ||
                               "https://www.mppl.com.vn/uploads/no-image.png"
                             }
+                            className="object-cover object-center"
                           />
                           <AvatarFallback>
                             {currentValues.name?.[0] ?? "S"}

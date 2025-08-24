@@ -12,6 +12,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -63,9 +64,15 @@ type Props = {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export default function CreateDialog({setIsLoading}:Props) {
-  const { coreAPI, shelterForms, shelterTemplates, setShelterForms, petsList, fetchPetsList } =
-    useContext(AppContext);
+export default function CreateDialog({ setIsLoading }: Props) {
+  const {
+    coreAPI,
+    shelterForms,
+    shelterTemplates,
+    setShelterForms,
+    petsList,
+    fetchPetsList,
+  } = useContext(AppContext);
   const { shelterId } = useParams();
   const authAxios = useAuthAxios();
   const navigate = useNavigate();
@@ -97,7 +104,7 @@ export default function CreateDialog({setIsLoading}:Props) {
 
   useEffect(() => {
     fetchPetsList();
-  },[]);
+  }, []);
 
   const onSubmit = async (values: FormValues) => {
     // console.log("Form submitted:", values);
@@ -139,7 +146,7 @@ export default function CreateDialog({setIsLoading}:Props) {
             console.error("Error creating adoption form:", err);
             toast.error("Tạo form nhận nuôi thất bại. Vui lòng thử lại.");
           })
-          .finally(()=>{
+          .finally(() => {
             setTimeout(() => {
               setIsLoading(false);
             }, 200);
@@ -171,7 +178,7 @@ export default function CreateDialog({setIsLoading}:Props) {
           console.error("Error creating adoption đơn:", err);
           toast.error("Tạo đơn nhận nuôi thất bại. Vui lòng thử lại.");
         })
-        .finally(()=>{
+        .finally(() => {
           setTimeout(() => {
             setIsLoading(false);
           }, 200);
@@ -198,7 +205,7 @@ export default function CreateDialog({setIsLoading}:Props) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-      <Button variant="ghost" className="text-xs">
+        <Button variant="ghost" className="text-xs">
           <PlusSquare className="text-(--primary)" />
           Tạo mới
         </Button>
@@ -383,7 +390,12 @@ export default function CreateDialog({setIsLoading}:Props) {
                 name="description"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>Mô tả</FormLabel>
+                    <FormLabel>Điều kiện & điều khoản nhận nuôi</FormLabel>
+                    <FormDescription>
+                      Lưu ý: Nếu đã chọn mẫu đơn, nội dung dưới đây sẽ được thay
+                      bằng điều khoản của mẫu đó.
+                    </FormDescription>
+
                     <FormControl>
                       <MinimalTiptapEditor
                         value={field.value || ""}
@@ -391,7 +403,7 @@ export default function CreateDialog({setIsLoading}:Props) {
                         className="w-full"
                         editorContentClassName="p-5"
                         output="html"
-                        placeholder="Enter your description..."
+                        placeholder="Điều kiện & điều khoản nhận nuôi..."
                         autofocus={true}
                         hideToolbar={false}
                         editable={true}
@@ -406,7 +418,9 @@ export default function CreateDialog({setIsLoading}:Props) {
 
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline" onClick={() => form.reset()}>Hủy</Button>
+                <Button variant="outline" onClick={() => form.reset()}>
+                  Hủy
+                </Button>
               </DialogClose>
               <Button className="cursor-pointer" type="submit">
                 Tạo

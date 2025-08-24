@@ -12,6 +12,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -179,7 +180,7 @@ export default function CreateDialog() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mô tả</FormLabel>
+                    <FormLabel>Điều kiện & điều khoản nhận nuôi</FormLabel>
                     <FormControl className="w-full">
                       {/* <Textarea
                         placeholder="Thêm mô tả (tùy chọn)"
@@ -191,7 +192,7 @@ export default function CreateDialog() {
                         className="w-full"
                         editorContentClassName="p-5"
                         output="html"
-                        placeholder="Enter your description..."
+                        placeholder="Thêm điều khoản & điều kiện"
                         autofocus={true}
                         editable={true}
                         hideToolbar={false}

@@ -16,6 +16,8 @@ import { usePetApi } from "@/apis/pet.api";
 import type { Pet } from "@/types/Pet";
 import type { Breed, PetFormState, Species } from "@/types/pet.types";
 import axios from "axios";
+import { Plus, PlusSquare, RefreshCcw } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PetManagement() {
   const {
@@ -120,7 +122,8 @@ export default function PetManagement() {
     const tokenMoneyNum = Number(form.tokenMoney);
     if (tokenMoneyNum && !Number.isFinite(tokenMoneyNum))
       return toast.error("Số tiền đặt cọc phải là số");
-    if (tokenMoneyNum && tokenMoneyNum < 0) return toast.error("Số tiền đặt cọc không được âm");
+    if (tokenMoneyNum && tokenMoneyNum < 0)
+      return toast.error("Số tiền đặt cọc không được âm");
     if (tokenMoneyNum && tokenMoneyNum > 1_000_000_000)
       return toast.error("Số tiền đặt cọc vượt quá giới hạn cho phép");
 
@@ -133,15 +136,25 @@ export default function PetManagement() {
 
   const fetchPets = async () => {
     if (!shelterId) return;
-
-    const res = await getAllPets(shelterId, pagination.page, pagination.limit);
-    setData(res.data.pets || []);
-    setPagination((prev) => ({
-      ...prev,
-      total: res.data.total,
-      page: res.data.page,
-      limit: res.data.limit,
-    }));
+    setIsloading(true)
+    try{
+      const res = await getAllPets(shelterId, pagination.page, pagination.limit);
+      setData(res.data.pets || []);
+      setPagination((prev) => ({
+        ...prev,
+        total: res.data.total,
+        page: res.data.page,
+        limit: res.data.limit,
+      }));
+    }catch(err){
+      console.log(err);
+      
+    }finally{
+      setTimeout(() => {
+        setIsloading(false)
+      }, 200);
+    }
+    
   };
 
   const handleCreateSpecies = async (inputValue: string) => {
@@ -190,7 +203,7 @@ export default function PetManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm() !== true) return;
- 
+
     const payload = {
       ...form,
       shelter:
@@ -245,49 +258,104 @@ export default function PetManagement() {
       }
 
       toast.error(message);
-    }finally{
+    } finally {
       setTimeout(() => {
         setIsloading(false);
       }, 200);
     }
   };
+
+  if(isLoading){
+    return(
+      <div className="w-full">
+        <div className="flex justify-between items-center py-4">
+          <Skeleton className="h-10 w-1/3 rounded" />
+          <Skeleton className="h-10 w-24 rounded" />
+        </div>
+
+        <div className="rounded-md border">
+          <div className="flex px-4 py-2 border-b">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <Skeleton key={idx} className="h-6 w-24 mr-4 last:mr-0 rounded" />
+            ))}
+          </div>
+
+          <div>
+            {Array.from({ length: 5 }).map((_, rowIdx) => (
+              <div
+                key={rowIdx}
+                className="flex px-4 py-3 items-center border-b last:border-0"
+              >
+                {Array.from({ length: 6 }).map((__, cellIdx) => (
+                  <Skeleton
+                    key={cellIdx}
+                    className="h-4 w-20 mr-4 last:mr-0 rounded"
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between py-4">
+          <div className="flex space-x-2">
+            <Skeleton className="h-8 w-16 rounded" />
+            <Skeleton className="h-8 w-16 rounded" />
+          </div>
+          <Skeleton className="h-6 w-32 rounded" />
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="w-full p-6">
-      <div className="flex items-center py-4 gap-2">
+      <div className="flex justify-between items-center py-4 gap-2">
         <Input
           placeholder="Tìm kiếm theo tên..."
           value={searchKeyword}
           onChange={(e) => setSearchKeyword(e.target.value)}
+          className="basis-1/3"
         />
-        <Button
-          onClick={() => {
-            // Nếu danh sách chưa có, chờ đến khi fetch xong
-            if (speciesList.length === 0 || breedList.length === 0) {
-              toast.warning("Đang tải dữ liệu loài và giống...");
-              return;
-            }
+        <div className="basis-1/3 flex justify-end gap-3">
+          <Button
+            className="cursor-pointer"
+            variant={"ghost"}
+            onClick={fetchPets}
+          >
+            <RefreshCcw />
+          </Button>
+          <Button
+            className="text-xs cursor-pointer"
+            variant={"ghost"}
+            onClick={() => {
+              // Nếu danh sách chưa có, chờ đến khi fetch xong
+              if (speciesList.length === 0 || breedList.length === 0) {
+                toast.warning("Đang tải dữ liệu loài và giống...");
+                return;
+              }
 
-            setForm({
-              name: "",
-              photos: [],
-              age: "",
-              isMale: true,
-              weight: "",
-              tokenMoney: 0,
-              color: "",
-              identificationFeature: "",
-              sterilizationStatus: false,
-              bio: "",
-              status: "unavailable",
-              species: "",
-              breeds: [],
-            });
-            setIsEditing(false);
-            setShowForm(true);
-          }}
-        >
-          Thêm thú nuôi
-        </Button>
+              setForm({
+                name: "",
+                photos: [],
+                age: "",
+                isMale: true,
+                weight: "",
+                tokenMoney: 0,
+                color: "",
+                identificationFeature: "",
+                sterilizationStatus: false,
+                bio: "",
+                status: "unavailable",
+                species: "",
+                breeds: [],
+              });
+              setIsEditing(false);
+              setShowForm(true);
+            }}
+          >
+            <PlusSquare className="text-(--primary)" /> Thêm hồ sơ
+          </Button>
+        </div>
       </div>
       <PetTable
         data={filteredData}
