@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Slider } from "@/components/ui/slider";
 import {
   Select,
@@ -68,16 +68,44 @@ function FilterSectionForShelter({
     inWishlist: false,
   });
 
-  const speciesOptions = Array.from(
-    new Set(pets.map((p) => p.species?.name).filter((n): n is string => !!n))
-  );
-  const breedOptions = Array.from(
-    new Set(
-      pets
-        .flatMap((p) => p.breeds?.map((b) => b.name))
-        .filter((n): n is string => !!n)
-    )
-  );
+  // const speciesOptions = Array.from(
+  //   new Set(pets.map((p) => p.species?.name).filter((n): n is string => !!n))
+  // );
+    const speciesOptions = useMemo(
+      () =>
+        Array.from(
+          new Set(pets.map((p) => p.species?.name).filter((n): n is string => !!n))
+        ).sort(),
+      [pets]
+    );
+      // Gom giống theo loài
+      const breedsBySpecies = useMemo(() => {
+        const map = new Map<string, Set<string>>();
+        for (const p of pets) {
+          const s = p.species?.name;
+          if (!s) continue;
+          const set = map.get(s) ?? new Set<string>();
+          p.breeds?.forEach((b) => b?.name && set.add(b.name));
+          map.set(s, set);
+        }
+        return map;
+      }, [pets]);
+      const selectedSpecies = filters.species.length ? filters.species : speciesOptions;
+      // Danh sách giống hợp lệ theo loài đã chọn
+      const breedOptions = useMemo(() => {
+        const set = new Set<string>();
+        selectedSpecies.forEach((s) => {
+          breedsBySpecies.get(s)?.forEach((b) => set.add(b));
+        });
+        return Array.from(set).sort();
+      }, [selectedSpecies, breedsBySpecies]);
+  // const breedOptions = Array.from(
+  //   new Set(
+  //     pets
+  //       .flatMap((p) => p.breeds?.map((b) => b.name))
+  //       .filter((n): n is string => !!n)
+  //   )
+  // );
   const colorOptions = Array.from(
     new Set(pets.map((p) => p.color).filter((c): c is string => !!c))
   );
@@ -85,6 +113,14 @@ function FilterSectionForShelter({
   useEffect(() => {
     onChange(filters);
   }, [filters, pets]);
+  
+    useEffect(() => {
+      // Mỗi khi breedOptions thay đổi (do đổi loài), giữ lại các giống hợp lệ
+      setFilters((prev) => ({
+        ...prev,
+        breed: prev.breed.filter((b) => breedOptions.includes(b)),
+      }));
+    }, [breedOptions]);
 
   const formatAge = (months: number) =>
     months < 12 ? `${months} tháng` : `${Math.floor(months / 12)} năm`;
@@ -177,7 +213,12 @@ bg-white/70 backdrop-blur-md rounded-xl shadow-lg dark:bg-gray-800/60 bg-gradien
             <TagCombobox
               options={breedOptions}
               selected={filters.breed}
-              onChange={(val) => setFilters({ ...filters, breed: val })}
+               onChange={(val) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  breed: val.filter((b) => breedOptions.includes(b)),
+                }))
+              }
               placeholder="Chọn hoặc thêm giống"
               label="Giống"
             />

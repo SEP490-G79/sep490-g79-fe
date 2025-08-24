@@ -2,7 +2,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { useAppContext } from "@/context/AppContext";
 import useAuthAxios from "@/utils/authAxios";
-import { format, startOfDay } from "date-fns";
+import { endOfDay, format, startOfDay } from "date-fns";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Pet } from "@/types/Pet";
@@ -63,7 +63,7 @@ import { toast } from "sonner";
 import { DateTimePicker } from "./DateTimePicker";
 import PetSubmissionInterviewSection from "./PetSubmissionInterviewSection";
 import CreateDialog from "@/components/shelter/shelter-management/consent-form/CreateDialog";
-import { is } from "date-fns/locale";
+import { fi, is } from "date-fns/locale";
 import {
   Pagination,
   PaginationContent,
@@ -75,6 +75,7 @@ import {
 import { socketClient } from "@/lib/socket.io";
 import { Avatar } from "@radix-ui/react-avatar";
 import { AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function getColorBarClass(total: number): string {
   if (total <= 29) return "bg-red-500";
@@ -82,8 +83,6 @@ function getColorBarClass(total: number): string {
   if (total >= 60 && total <= 79) return "bg-blue-400";
   return "bg-green-500";
 }
-
-
 
 export default function PetSubmission() {
   const { shelterId, petId } = useParams();
@@ -127,6 +126,7 @@ export default function PetSubmission() {
   const [consentSubmission, setConsentSubmission] = useState<MissionForm | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+  const [loadingSubmissions, setLoadingSubmissions] = useState(true);
 
   useEffect(() => {
     if (selectedSubmission?.status === "pending" || selectedSubmission?.status === "scheduling") {
@@ -183,7 +183,9 @@ export default function PetSubmission() {
   }, [petId]);
 
   const fetchSubmissions = async () => {
+    setLoadingSubmissions(true);
     try {
+
       const res = await authAxios.post(
         `${coreAPI}/adoption-submissions/by-pet-ids`,
         {
@@ -194,8 +196,27 @@ export default function PetSubmission() {
       setSubmissionsByPetId({ [petId!]: submissions });
     } catch (err) {
       console.error("Lỗi khi fetch submissions:", err);
+    } finally {
+
+      setTimeout(() => {
+        setLoadingSubmissions(false);
+      }, 200)
+
     }
+
   };
+
+  useEffect(() => {
+    if (!petId) {
+      setTimeout(() => {
+        setLoadingSubmissions(false);
+      }, 200)
+
+      return;
+    }
+    fetchSubmissions();
+  }, [petId]);
+
 
   const updateSubmissionStatus = async (
     submissionId: string,
@@ -237,6 +258,7 @@ export default function PetSubmission() {
       toast.error(errorMessage);
     }
   };
+
 
   const createInterviewSchedule = async () => {
     try {
@@ -402,18 +424,26 @@ export default function PetSubmission() {
       payload: { submissionId: string; petId: string; status?: string }
     ) => {
       if (payload.petId !== petId) return;
+      setLoadingSubmissions(true);
+      try {
+        const needDetail = selectedSubmissionIdRef.current === payload.submissionId;
+        await Promise.allSettled([
+          fetchSubmissions(),
+          needDetail
+            ? authAxios
+              .get(`${coreAPI}/adoption-submissions/${payload.submissionId}`)
+              .then((res) => setSelectedSubmission(res.data))
+            : Promise.resolve(),
+        ]);
+      } finally {
+        setTimeout(() => {
+          setLoadingSubmissions(false);
+        }, 200)
 
-      const needDetail = selectedSubmissionIdRef.current === payload.submissionId;
+      }
 
-      await Promise.allSettled([
-        fetchSubmissions(),
-        needDetail
-          ? authAxios
-            .get(`${coreAPI}/adoption-submissions/${payload.submissionId}`)
-            .then((res) => setSelectedSubmission(res.data))
-          : Promise.resolve(),
-      ]);
     };
+
     const events = [
       "adoptionSubmission:selectedSchedule",
       "adoptionSubmission:assigneeChanged",
@@ -565,6 +595,31 @@ export default function PetSubmission() {
     setCurrentPage(1);
   }, [statusFilter, interviewingSubFilter, filterByPerformer]);
 
+
+  function SubmissionCardSkeleton() {
+    return (
+      <div className="flex rounded-md shadow-sm overflow-hidden border">
+        <div className="w-2 bg-muted" />
+        <div className="flex-1 bg-white">
+          <Card className="shadow-none border-none">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-56" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </div>
+              <div className="mt-2 space-y-2">
+                <Skeleton className="h-3 w-40" />
+                <Skeleton className="h-3 w-52" />
+              </div>
+            </CardHeader>
+            <CardContent className="flex items-center justify-end">
+              <Skeleton className="h-4 w-24" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -720,7 +775,12 @@ export default function PetSubmission() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredSubmissions.length === 0 ? (
+        {loadingSubmissions ? (
+          // Skeleton grid
+          Array.from({ length: itemsPerPage }).map((_, i) => (
+            <SubmissionCardSkeleton key={i} />
+          ))
+        ) : filteredSubmissions.length === 0 ? (
           <p className="flex items-center justify-center text-muted-foreground text-sm col-span-full mt-10">
             Không có đơn
           </p>
@@ -1054,7 +1114,7 @@ export default function PetSubmission() {
                               onChange={(d) =>
                                 setScheduleData({
                                   ...scheduleData,
-                                  availableTo: startOfDay(d),
+                                  availableTo: endOfDay(d),
                                 })
                               }
                               minDate={new Date()}
@@ -1176,7 +1236,7 @@ export default function PetSubmission() {
                               <span className="text-red-500">*</span>
                             </label>
                             <Textarea
-                             className="w-full max-w-md mx-auto"
+                              className="w-full max-w-md mx-auto"
                               placeholder="Nhập hình thức: Trực tiếp / Google Meet / Zoom..."
                               value={scheduleData.method}
                               onChange={(e) =>

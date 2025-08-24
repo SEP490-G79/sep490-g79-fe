@@ -26,7 +26,7 @@ export default function HeroSection() {
             </p>
             <div className="flex flex-wrap gap-3 mt-2">
               <Button size="sm" variant="outline" className="gap-2" asChild>
-                <Link to="">Xem danh sách thú cưng <MoveRight className="w-4 h-4" /></Link>
+                <Link to="/pets-list">Xem danh sách thú cưng <MoveRight className="w-4 h-4" /></Link>
               </Button>
             </div>
           </div>

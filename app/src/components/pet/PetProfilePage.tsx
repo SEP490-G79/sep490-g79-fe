@@ -266,7 +266,19 @@ const PetProfilePage = () => {
             )}
             <Separator className="my-2" />
 
-            <p><strong>Trung tâm:</strong> {pet.shelter?.name ?? "Chưa xác định"}</p>
+           <p>
+  <strong>Trung tâm:</strong>{" "}
+  {pet.shelter ? (
+    <Link 
+      to={`/shelters/${pet.shelter._id}`} 
+      className="text-blue-600 hover:underline"
+    >
+      {pet.shelter.name}
+    </Link>
+  ) : (
+    "Chưa xác định"
+  )}
+</p>
             <p><strong>Địa chỉ:</strong> {pet.shelter?.address ?? "Chưa xác định"}</p>
           </div>
         </CardContent>

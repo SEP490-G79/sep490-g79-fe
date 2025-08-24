@@ -21,7 +21,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { MissionForm } from "@/types/MissionForm";
 import { ArrowRight } from 'lucide-react';
-import { socketClient } from "@/lib/socket.io"; 
+import { socketClient } from "@/lib/socket.io";
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SubmissionForms() {
     const { coreAPI, setSubmissionsByPetId } = useAppContext();
@@ -39,24 +40,35 @@ export default function SubmissionForms() {
     const [activeTab, setActiveTab] = useState<"all" | "withSubmissions" | "adopted">("withSubmissions");
 
     const navigate = useNavigate();
+    const [approvedReturnPetIds, setApprovedReturnPetIds] = useState<Set<string>>(new Set());
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!shelterId) return;
 
         const fetchPets = async () => {
             try {
+                setLoading(true);
                 const res = await authAxios.get(`${coreAPI}/pets/get-by-shelter-for-submission/${shelterId}`, {
                     params: {
                         page: 1,
                         limit: 1000, // Lấy tất cả để phân trang client-side
-                        status: ["available", "adopted", "booking", "delivered"],
+                        status: ["available", "adopted", "booking", "delivered", "unavailable"],
                     },
                 });
 
                 setAvailablePets(res.data.pets || []);
                 setTotalAvailablePets(res.data.total);
             } catch (error) {
-                toast.error("Không thể lấy danh sách thú cưng");
+                // toast.error("Không thể lấy danh sách thú cưng");
+            }
+
+            finally {
+                setTimeout(() => {
+                    setLoading(false);
+                },200)
+               
+               
             }
         };
 
@@ -91,52 +103,74 @@ export default function SubmissionForms() {
                 setSubmissionsByPetId(grouped);
 
             } catch (error) {
-                toast.error("Không thể lấy danh sách submissions");
+                // toast.error("Không thể lấy danh sách submissions");
             }
+            
+
         };
 
         fetchSubmissions();
     }, [availablePets]);
 
-const upsertSubmissionsForPet = useCallback(async (petId: string) => {
-  try {
-    if (!petId) return;
-    const resOne = await authAxios.post(`${coreAPI}/adoption-submissions/by-pet-ids`, { petIds: [petId] });
-    const listForPet: MissionForm[] = resOne.data || [];
+    const upsertSubmissionsForPet = useCallback(async (petId: string) => {
+        try {
+            if (!petId) return;
+            const resOne = await authAxios.post(`${coreAPI}/adoption-submissions/by-pet-ids`, { petIds: [petId] });
+            const listForPet: MissionForm[] = resOne.data || [];
 
-    setSubmissionsByPetId(prev => {
-      const next = { ...(prev || {}) };
-      next[petId] = listForPet;
-      return next;
-    });
+            setSubmissionsByPetId(prev => {
+                const next = { ...(prev || {}) };
+                next[petId] = listForPet;
+                return next;
+            });
 
-    setSubmissions(prev => {
-      const rest = (prev || []).filter(s => s?.adoptionForm?.pet?._id !== petId);
-      return [...listForPet, ...rest];
-    });
+            setSubmissions(prev => {
+                const rest = (prev || []).filter(s => s?.adoptionForm?.pet?._id !== petId);
+                return [...listForPet, ...rest];
+            });
 
-    setSubmissionCountByPet(prev => ({
-      ...prev,
-      [petId]: listForPet.length || 0,
-    }));
-  } catch (e) {
-    console.error("upsertSubmissionsForPet failed", e);
-  }
-}, [authAxios, coreAPI, setSubmissionsByPetId, setSubmissions, setSubmissionCountByPet]);
+            setSubmissionCountByPet(prev => ({
+                ...prev,
+                [petId]: listForPet.length || 0,
+            }));
+        } catch (e) {
+            console.error("upsertSubmissionsForPet failed", e);
+        }
+    }, [authAxios, coreAPI, setSubmissionsByPetId, setSubmissions, setSubmissionCountByPet]);
 
-useEffect(() => {
-  if (!socketClient) return;
+    useEffect(() => {
+        if (!socketClient) return;
 
-  const handler = ({ petId }: { petId: string }) => {
-    upsertSubmissionsForPet(petId);
-  };
+        const handler = ({ petId }: { petId: string }) => {
+            upsertSubmissionsForPet(petId);
+        };
 
-  socketClient.subscribe("adoptionSubmission:created", handler);
+        socketClient.subscribe("adoptionSubmission:created", handler);
 
-  return () => {
-   socketClient.unsubscribe("adoptionSubmission:created");
-  };
-}, [socketClient, upsertSubmissionsForPet]);
+        return () => {
+            socketClient.unsubscribe("adoptionSubmission:created");
+        };
+    }, [socketClient, upsertSubmissionsForPet]);
+
+    useEffect(() => {
+        if (!shelterId) return;
+        const fetchApprovedReturnPets = async () => {
+            try {
+                const res = await authAxios.get(`${coreAPI}/shelters/${shelterId}/return-requests/get-by-shelter`);
+                const list = Array.isArray(res.data) ? res.data : [];
+
+                const approvedPetIds = list
+                    .filter((rr: any) => rr?.status === "approved" && rr?.pet?._id)
+                    .map((rr: any) => rr.pet._id);
+
+                setApprovedReturnPetIds(new Set(approvedPetIds));
+            } catch (e) {
+                console.error(e);
+                // toast.error("Không thể lấy danh sách yêu cầu trả thú cưng");
+            }
+        };
+        fetchApprovedReturnPets();
+    }, [shelterId]);
 
 
     // Reset page khi đổi tab
@@ -156,6 +190,7 @@ useEffect(() => {
         .map(sub => sub.adoptionForm?.pet?._id)
         .filter(Boolean);
 
+
     // Lọc cho từng tab
     const petsWithActiveForms = availablePets.filter(
         pet => pet.status !== "adopted" && activePetIds.includes(pet._id)
@@ -166,7 +201,7 @@ useEffect(() => {
     );
 
     const adoptedPets = availablePets.filter(
-        pet => pet.status === "adopted" || archivedPetIds.includes(pet._id)
+        pet => pet.status === "adopted" || archivedPetIds.includes(pet._id) || approvedReturnPetIds.has(pet._id)
     );
 
     // Chọn danh sách hiển thị dựa trên tab
@@ -257,6 +292,8 @@ useEffect(() => {
         return pages;
     };
 
+
+
     return (
         <div className="space-y-6">
             {/* Tabs */}
@@ -283,14 +320,32 @@ useEffect(() => {
             </div>
 
             {/* Pet list */}
-            {paginatedPets.length === 0 ? (
+
+            {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
+                {Array.from({ length: petsPerPage }).map((_, idx) => (
+                    <Card key={idx} className="relative shadow-md">
+                        <CardContent className="flex items-top gap-4 p-4">
+                            <div className="basis-1/3 flex justify-center">
+                                <Skeleton className="w-32 h-28 rounded-lg" />
+                            </div>
+                            <div className="basis-2/3 space-y-2">
+                                <Skeleton className="h-4 w-3/4" />
+                                <Skeleton className="h-4 w-1/2" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        ) :
+            paginatedPets.length === 0 ? (
                 <div>Không có thú cưng phù hợp</div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
                     {paginatedPets.map((pet) => (
                         <Card key={pet._id}
                             onClick={() => navigate(`/shelters/${shelterId}/management/submission-forms/${pet._id}`)}
-                        className="relative shadow-md hover:shadow-xl hover:scale-[1.01] transition-transform transition-shadow duration-300 ease-in-out"
+                            className="relative shadow-md hover:shadow-xl hover:scale-[1.01] transition-transform transition-shadow duration-300 ease-in-out"
 
                         >
                             <div className="absolute top-2 right-2 bg-primary text-white text-xs font-semibold px-2 py-1 rounded-full">
@@ -311,7 +366,11 @@ useEffect(() => {
                                     <h2 >Tên: {pet.name}</h2>
                                     {/* <h2 >Ngày bắt đầu mở đơn: {pet.name}</h2> */}
                                 </div>
-
+                                {pet.status === "unavailable" && approvedReturnPetIds.has(pet._id) && (
+                                    <div className="absolute top-10 right-2 bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                                        Đã trả lại
+                                    </div>
+                                )}
 
 
                             </CardContent>
