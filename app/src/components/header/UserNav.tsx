@@ -165,10 +165,11 @@ function UserNav() {
                             className="text-primary"
                           />
                         )}
-                        <Avatar className="w-[40px] h-[40px] border border-primary">
+                        <Avatar className="w-[40px] h-[40px] border border-primary object-cover object-center">
                           <AvatarImage
                             src={notification.from.avatar}
                             alt="avatar"
+                            className="object-cover object-center"
                           />
                           <AvatarFallback>
                             {notification.from.fullName?.charAt(0)}

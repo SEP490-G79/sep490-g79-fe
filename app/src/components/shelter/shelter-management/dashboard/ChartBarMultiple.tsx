@@ -56,7 +56,7 @@ export function ChartBarMultiple() {
     <Card className="h-full w-full shadow-xl border-none">
       <CardHeader>
         <CardTitle className="text-md font-bold text-foreground">
-          Biểu đồ số đơn yêu cầu nhận nuôi - Adoption forms
+          Biểu đồ số đơn nhận nuôi - Adoption forms
         </CardTitle>
         <CardDescription>Trong 4 tuần gần nhất</CardDescription>
       </CardHeader>

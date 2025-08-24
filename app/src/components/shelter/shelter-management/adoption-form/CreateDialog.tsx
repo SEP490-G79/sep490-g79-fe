@@ -317,7 +317,7 @@ export default function CreateDialog({ setIsLoading }: Props) {
                 name="adoptionTemplate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Chọn mẫu form nhận nuôi</FormLabel>
+                    <FormLabel>Chọn mẫu đơn nhận nuôi</FormLabel>
                     <FormControl>
                       <Popover>
                         <PopoverTrigger asChild>
@@ -331,14 +331,14 @@ export default function CreateDialog({ setIsLoading }: Props) {
                               ? templates.find(
                                   (template) => template.value == field.value
                                 )?.label
-                              : "Chọn đơn..."}
+                              : "Chọn mẫu đơn..."}
                             <ChevronsUpDown className="opacity-50" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[300px] p-0">
                           <Command className="w-full">
                             <Input
-                              placeholder={`Tìm đơn...`}
+                              placeholder={`Tìm mẫu đơn...`}
                               className="
                               placeholder:text-muted-foreground flex h-10 w-full rounded-none
                               bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50 border-0
@@ -348,7 +348,7 @@ export default function CreateDialog({ setIsLoading }: Props) {
                               }}
                             />
                             <CommandList>
-                              <CommandEmpty>Không tìm thấy form.</CommandEmpty>
+                              <CommandEmpty>Không tìm thấy mẫu đơn nhận nuôi.</CommandEmpty>
                               <CommandGroup>
                                 {templates
                                   .filter((template) => {

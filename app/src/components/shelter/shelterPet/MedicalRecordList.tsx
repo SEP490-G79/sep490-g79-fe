@@ -314,7 +314,7 @@ const MedicalRecordForm: React.FC<{
     type: record?.type || "",
     title: record?.title || "",
     description: record?.description || "",
-    cost: record?.cost || "",
+    cost: record?.cost || "0",
     procedureDate: record?.procedureDate?.slice(0, 10) || "",
     status: record?.status || "availabled",
     performedBy: record?.performedBy || "",
@@ -461,7 +461,7 @@ const MedicalRecordForm: React.FC<{
           <input
             name="cost"
             type="number"
-            value={form.cost}
+            defaultValue={form.cost || 0}
             onChange={handleChange}
             placeholder="Ví dụ: 200000"
             className="border rounded px-3 py-2 text-sm"
