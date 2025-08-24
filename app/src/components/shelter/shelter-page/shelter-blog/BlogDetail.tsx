@@ -72,13 +72,13 @@ const BlogDetail = () => {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="col-span-3 mx-auto py-8 flex flex-col gap-2 w-full">
-        <h4 className="font-semibold">Những bài viết cùng trạm</h4>
+        {recommendBlogs && recommendBlogs.length > 0 ? <h4 className="font-semibold">Những bài viết cùng trạm</h4> : <p></p>}
         {recommendBlogs && recommendBlogs.slice(0,3).map((item, index) => {
           return <BlogRecommendation blog={item} key={index} />
         })}
       </div>
         <div className="col-span-9 mx-auto py-8 w-full">
-                    {blog.thumbnail_url && (
+          {blog.thumbnail_url && (
             <img
               src={blog.thumbnail_url}
               alt="Blog Thumbnail"
@@ -90,12 +90,18 @@ const BlogDetail = () => {
           </h1>
           <div className="flex mb-2 justify-between">
             <div className="flex gap-2 text-sm">
-              <Avatar className="my-auto ring-2 ring-primary">
+              <Avatar className="my-auto ring-2 ring-primary" onClick={() => {
+                    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+                    navigate(`/profile/${blog.createdBy._id}`)
+                  }}>
               <AvatarImage className="cursor-pointer" src={blog.createdBy.avatar} alt={`avatar cua ${blog.createdBy.fullName}`} onClick={() => navigate(`/profile/${blog.createdBy._id}`)}/>
-              <AvatarFallback>Avt</AvatarFallback>
+              <AvatarFallback>{blog.createdBy?.fullName && blog.createdBy?.fullName[0]}</AvatarFallback>
             </Avatar>
               <div>
-                <span className="font-semibold ">{blog.createdBy?.fullName || ""}</span>
+                <span className="font-semibold cursor-pointer hover:text-primary" onClick={() => {
+                    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+                    navigate(`/profile/${blog.createdBy._id}`)
+                  }}>{blog.createdBy?.fullName || ""}</span>
                 <p className="flex text-muted-foreground">
                   {getTimeAgo(new Date(blog.createdAt))}
                 </p>

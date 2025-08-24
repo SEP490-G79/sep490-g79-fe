@@ -95,10 +95,10 @@ function AppHeader() {
                 className="bg-background text-primary border border-border hover:bg-primary hover:text-white"
                 variant="outline"
               >
-                <Link to="/login">Login</Link>
+                <Link to="/login">Đăng nhập</Link>
               </Button>
               <Button variant="ghost">
-                <Link to="/register">Register</Link>
+                <Link to="/register">Đăng kí</Link>
               </Button>
             </div>
           )}

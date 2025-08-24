@@ -12,15 +12,13 @@ const BlogRecommendation = ({ blog} : {blog: Blog}) => {
     <div className="rounded-lg shadow-sm border overflow-hidden w-full">
       {/* Ảnh hiển thị ngang */}
       <div>
-        <img
-          src={blog.thumbnail_url}
-          alt={`thumbnail-${blog.title}`}
-          className="object-cover h-25 w-full cursor-pointer"
-          onClick={() => {
+        <Avatar className="object-cover h-25 w-full rounded-none cursor-pointer" onClick={() => {
             window.scrollTo({ top: 0, left: 0, behavior: "instant" });
             navigate(`/shelters/${blog.shelter._id}/blog/${blog._id}`);
-          }}
-        />
+          }}>
+          <AvatarImage src={blog.thumbnail_url} alt={`thumbnail-${blog.title}`} />
+          <AvatarFallback>{blog?.title && blog?.title[0]}</AvatarFallback>
+        </Avatar>
       </div>
       <div className="p-4">
         <h3 className="font-semibold line-clamp-2 mb-2">{blog.title}</h3>
@@ -40,9 +38,9 @@ const BlogRecommendation = ({ blog} : {blog: Blog}) => {
                     navigate(`/profile/${blog.createdBy._id}`)
                   }}
                 />
-                <AvatarFallback>Avt</AvatarFallback>
+                <AvatarFallback>{blog.createdBy?.fullName && blog.createdBy?.fullName[0]}</AvatarFallback>
               </Avatar>
-              <p>{blog.createdBy.fullName}</p>
+              <p onClick={() => navigate(`/profile/${blog.createdBy._id}`)} className="cursor-pointer hover:text-primary">{blog.createdBy.fullName}</p>
             </div>
 
             <span className="text-sm text-muted-foreground">

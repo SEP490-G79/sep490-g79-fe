@@ -1,19 +1,14 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { CalendarDays } from "lucide-react";
-import dayjs from "dayjs";
 import AppContext from "@/context/AppContext";
 import axios from "axios";
 import BlogCard from "@/components/shelter/shelter-page/shelter-blog/BlogCard";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import BlogPreview from "@/components/shelter/shelter-page/shelter-blog/BlogPreview";
 import type { Blog } from "@/types/Blog";
 import { Button } from "@/components/ui/button";
-import bg1 from "../../assets/blogs/pexels-edd1egalaxy-3628100.jpg"
-import bg2 from "../../assets/blogs/pexels-fox-58267-1386422.jpg"
-import bg3 from "../../assets/blogs/pexels-francesco-ungaro-96428.jpg"
-import bg4 from "../../assets/blogs/pexels-nancy-guth-269359-850602.jpg"
-import logo from "../../assets/logo/logo.png"
+import bg1 from "../../assets/blogs/pexels-edd1egalaxy-3628100.jpg";
+import logo from "../../assets/logo/logo.png";
+import { FileText, RefreshCcw, Search } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function BlogsFeed() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -21,6 +16,22 @@ export default function BlogsFeed() {
   const [keyword, setKeyword] = useState("");
   const {blogAPI} = useContext(AppContext);
   const [shownBlogs, setShownBlogs] = useState<number>(8);
+  const [refresh, setRefresh] = useState<boolean>(false);
+
+  const noBlogNotice = () => {
+  return <div className="flex flex-col items-center text-center gap-3 p-6 rounded-2xl my-20">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          <FileText className="h-7 w-7 text-primary" />
+        </div>
+        <h4 className="scroll-m-20 text-lg font-semibold tracking-tight">
+          Không tìm thấy bài viết blog
+        </h4>
+        <p className="text-sm text-muted-foreground max-w-xs">
+          {blogs && blogs.length < 1 ? "Hiện tại chưa có bài viết nào. Hãy quay lại sau." : "Bài viết không tồn tại"}
+        </p>
+      </div>
+   
+}
 
   useEffect(() => {
     axios
@@ -30,22 +41,22 @@ export default function BlogsFeed() {
         setFilteredBlogs(result?.data);
       })
       .catch((error) => console.log(error?.data.response.message));
-  }, []);
+  }, [refresh]);
 
-  useEffect(() => {
+  const searchBlogs = (keywordValue: string) => {
     const searchedBlogs = blogs.filter(blog => {
-      if(blog.title && blog.title.toLowerCase().includes(keyword.toLowerCase()) || 
-      blog.description && blog.description.toLowerCase().includes(keyword.toLowerCase()) || 
-      blog.content && blog.content.toLowerCase().includes(keyword.toLowerCase())){
+      if(blog.title && blog.title.toLowerCase().includes(keywordValue.toLowerCase()) || 
+      blog.description && blog.description.toLowerCase().includes(keywordValue.toLowerCase()) || 
+      blog.content && blog.content.toLowerCase().includes(keywordValue.toLowerCase())){
         return blog;
       }
     })
-    if(keyword.trim().length === 0){
+    if(keywordValue.trim().length === 0){
       setFilteredBlogs(blogs)
     }else{
       setFilteredBlogs(searchedBlogs)
     }
-  },[keyword])
+  }
 
   return (
     <div className="w-full mx-auto px-4 py-8">
@@ -56,63 +67,45 @@ export default function BlogsFeed() {
         Cùng đọc các chia sẻ hữu ích về chăm sóc thú cưng, hành trình giải cứu
         và câu chuyện truyền cảm hứng từ cộng đồng yêu động vật.
       </p>
-      {/* <Carousel className="w-[90vw] mx-auto my-5">
-        <CarouselPrevious />
-        <CarouselContent className="h-[60vh] ">
-          <CarouselItem key={1}>
-            <img
-              src={bg4}
-              alt="anh 1"
-              className="w-full h-[110vh] object-cover object-center"
-            />
-          </CarouselItem>
-          <CarouselItem key={2}>
-            <img
-              src={bg2}
-              alt="anh 2"
-              className="w-full h-[60vh] object-cover object-center"
-            />
-          </CarouselItem>
-          <CarouselItem key={3}>
-            <img
-              src={bg3}
-              alt="anh 3"
-              className="w-full h-[60vh] object-cover object-center"
-            />
-          </CarouselItem>
-        </CarouselContent>
-        <CarouselNext />
-      </Carousel> */}
 
       <div className="px-30">
-        {/* <div className="w-full my-2">
-          <BlogPreview blog={blogs[0]} />
-        </div> */}
-        {/* <div className="w-full my-2">
-          <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight text-center">
-            {" "}
-            Các blog mới nổi gần đây{" "}
-          </h3>
-        </div> */}
-        <Input
-          placeholder="Tìm kiếm bài viết..."
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          className="mb-6 w-2/3 mx-auto mt-2"
-        />
-        <div className="space-y-6 grid grid-cols-4 gap-2">
-          {filteredBlogs && filteredBlogs.length > 0 ? (
-            filteredBlogs
-              ?.slice(0, shownBlogs)
-              .map((blog) => <BlogCard blog={blog} />)
-          ) : (
-            <div className="col-span-4 text-center">
-              <h4 className="scroll-m-20 text-xl font-semibold tracking-tight mb-30">
-                Không tìm thấy bài viết blog
-              </h4>
-            </div>
-          )}
+        <div className="grid grid-cols-12 mt-5 mb-5">
+          <div className="col-span-11 flex gap-1 justify-center ms-5">
+            <Input
+              placeholder="Tìm kiếm bài viết..."
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && searchBlogs(keyword)}
+              className="w-100"
+            />
+            <Button variant="outline" className="cursor-pointer" onClick={() => searchBlogs(keyword)}>
+                <Search  className="text-primary"/> Tìm kiếm
+            </Button>
+          </div>
+          <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="cursor-pointer col-span-1"
+                    onClick={() => setRefresh((prev) => !prev)}
+                  >
+                    <RefreshCcw />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Refresh</p>
+                </TooltipContent>
+            </Tooltip>
         </div>
+        {filteredBlogs && filteredBlogs.length > 0 ? (
+          <div className="space-y-6 grid grid-cols-4 gap-2">
+            {filteredBlogs?.slice(0, shownBlogs).map((blog) => (
+              <BlogCard blog={blog} />
+            ))}
+          </div>
+        ) : (
+          noBlogNotice()
+        )}
         {filteredBlogs.length > 8 && shownBlogs < filteredBlogs.length && (
           <div className="space-y-6 text-center mt-5">
             <Button onClick={() => setShownBlogs((prev) => (prev += 8))}>

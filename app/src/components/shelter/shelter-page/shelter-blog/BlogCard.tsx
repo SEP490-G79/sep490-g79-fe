@@ -39,22 +39,23 @@ const BlogCard = ({ blog} : {blog: Blog}) => {
                 />
                 <AvatarFallback>Avt</AvatarFallback>
               </Avatar>
-              <p>{blog.createdBy.fullName}</p>
-            </div>
-
+              <div>
+                <p onClick={() => {
+              window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+              navigate(`/profile/${blog.createdBy._id}`);
+            }} 
+            className="cursor-pointer hover:text-primary text-xs">{blog.createdBy.fullName}</p>
             <span className="text-sm text-muted-foreground">
               {getTimeAgo(new Date(blog.createdAt))}
             </span>
-          </div>
-          <Button
-            className="text-sm px-3 py-1 rounded-md font-medium cursor-pointer"
-            onClick={() => {
+              </div>
+            </div>
+
+                            <p onClick={() => {
               window.scrollTo({ top: 0, left: 0, behavior: "instant" });
               navigate(`/shelters/${blog.shelter._id}/blog/${blog._id}`);
-            }}
-          >
-            Xem chi tiết
-          </Button>
+            }} className="truncate hover:text-primary cursor-pointer text-xs text-right">{blog.shelter.name}</p>
+          </div>
         </div>
       </div>
     </div>

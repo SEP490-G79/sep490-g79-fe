@@ -253,7 +253,7 @@ const ShelterStaffsList = () => {
                             {["staff", "manager"].map((role) => {
                               const label =
                                 role === "staff" ? "Thành viên" : "Quản lý";
-                              const isChecked = field.value.includes(role);
+                              const isChecked = field.value.includes(role === "staff" ? "staff" : "manager" );
                               return (
                                 <CommandItem
                                   key={role}
