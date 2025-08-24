@@ -27,8 +27,15 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { Avatar, AvatarFallback } from '@radix-ui/react-avatar';
 import { AvatarImage } from '@/components/ui/avatar';
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore"; // nếu dùng
+import { TimePicker24 } from './TimePicker24';
+import minMax from "dayjs/plugin/minMax";
+dayjs.extend(minMax);
 dayjs.extend(utc);
 dayjs.extend(timezone);
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 interface Step4Props {
   submissionId: string | null;
@@ -50,13 +57,11 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
   const now = dayjs().tz("Asia/Ho_Chi_Minh");
   const interviewDeadline = dayjs(submission?.interview?.availableTo).tz("Asia/Ho_Chi_Minh");
   const isExpired = now.isAfter(interviewDeadline, "day");
-
-
-
   const availableToTz = dayjs(submission?.interview?.availableTo).tz("Asia/Ho_Chi_Minh");
   const selectedScheduleTz = submission?.interview?.selectedSchedule
     ? dayjs(submission.interview.selectedSchedule).tz("Asia/Ho_Chi_Minh")
     : null;
+
 
   // Quá hạn chọn lịch 
   const isChooseDeadlinePassed =
@@ -65,6 +70,80 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
   // Đã qua ngày phỏng vấn
   const isInterviewDatePassed =
     isScheduleConfirmed && selectedScheduleTz && now.isAfter(selectedScheduleTz.endOf("day"));
+
+  // state
+  const [desiredTime, setDesiredTime] = useState<string>(""); // "HH:mm"
+  const [timeError, setTimeError] = useState("");
+
+  // tính min/max theo ngày đã chọn (nếu cùng ngày with availableFrom/To)
+  const fromDate = submission?.interview?.availableFrom ? new Date(submission.interview.availableFrom) : null;
+  const toDate = submission?.interview?.availableTo ? new Date(submission.interview.availableTo) : null;
+
+  const isSameDay = (a: Date, b: Date) => dayjs(a).isSame(b, "day");
+  const TZ = "Asia/Ho_Chi_Minh";
+  const nowTz = dayjs().tz(TZ);
+  const ceilToStep = (d: dayjs.Dayjs, step = 30) => {
+    const total = d.hour() * 60 + d.minute();
+    const rounded = Math.ceil(total / step) * step;
+    return d.startOf("day").add(rounded, "minute");
+  };
+  const isSameDayTZ = (a: Date | dayjs.Dayjs, b: Date | dayjs.Dayjs) =>
+    dayjs(a).tz(TZ).isSame(dayjs(b).tz(TZ), "day");
+
+  const step = 30; // giữ đồng bộ với TimePicker24
+
+  const timeMinForSelectedDay = (() => {
+    if (!selectedTime) return undefined;
+    const selectedTz = dayjs(selectedTime).tz(TZ);
+
+    const mins: string[] = [];
+
+    // Nếu là ngày bắt đầu -> tôn trọng giờ bắt đầu thực tế
+    if (fromDate && isSameDayTZ(selectedTz, fromDate)) {
+      mins.push(dayjs(fromDate).tz(TZ).format("HH:mm"));
+    }
+
+    // Nếu là hôm nay -> không cho chọn trước "giờ hiện tại (làm tròn lên theo step)"
+    if (isSameDayTZ(selectedTz, nowTz)) {
+      const roundedNow = ceilToStep(nowTz, step);
+      mins.push(roundedNow.format("HH:mm"));
+    }
+
+    if (!mins.length) return undefined;
+    // Lấy mốc muộn nhất trong các mốc tối thiểu
+    const toMins = (s: string) => {
+      const [h, m] = s.split(":").map(Number);
+      return h * 60 + m;
+    };
+    return mins.sort((a, b) => toMins(b) - toMins(a))[0];
+  })();
+
+  const timeMaxForSelectedDay = (() => {
+    if (!selectedTime) return undefined;
+    if (!toDate) return undefined;
+    // Nếu là ngày kết thúc -> tôn trọng giờ kết thúc thực tế
+    if (isSameDayTZ(selectedTime, toDate)) {
+      return dayjs(toDate).tz(TZ).format("HH:mm");
+    }
+    return undefined;
+  })();
+
+
+
+
+  // Chỉ cho chọn từ ngày lớn hơn hoặc bằng hôm nay
+  const minDateForCalendar = (() => {
+    if (!fromDate) return undefined;
+    const fromStart = dayjs(fromDate).tz(TZ).startOf("day");
+    const todayStart = nowTz.startOf("day");
+    return dayjs.max(fromStart, todayStart).toDate();
+  })();
+
+  const maxDateForCalendar = toDate ?? undefined;
+
+
+
+
 
   useEffect(() => {
     if (!submissionId) return;
@@ -80,6 +159,12 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
     };
     fetchSubmission();
   }, [submissionId]);
+  const [h, m] = desiredTime.split(":").map(Number);
+  const combined = dayjs(selectedTime).tz(TZ) // lấy ngày theo TZ
+    .hour(h || 0)
+    .minute(m || 0)
+    .second(0)
+    .millisecond(0);
 
   const handleConfirmSchedule = async () => {
     if (!submissionId || !selectedTime) return;
@@ -89,7 +174,7 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
         `${coreAPI}/adoption-submissions/select-schedule`,
         {
           submissionId,
-          selectedSchedule: formattedSchedule,
+          selectedSchedule: combined.format("YYYY-MM-DDTHH:mm:ssZ"),
         }
       );
 
@@ -105,12 +190,35 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
 
 
 
-  const isValidDateInRange = (date: Date | null) => {
-    if (!date) return false;
-    const from = new Date(submission.interview.availableFrom);
-    const to = new Date(submission.interview.availableTo);
-    return dayjs(date).isBetween(from, to, 'day', '[]');
+  // const isValidDateInRange = (date: Date | null) => {
+  //   if (!date) return false;
+  //   const from = new Date(submission.interview.availableFrom);
+  //   const to = new Date(submission.interview.availableTo);
+  //   return dayjs(date).isBetween(from, to, 'day', '[]');
+  // };
+  // --- sửa hàm kiểm tra hợp lệ: có thể xét theo ngày (cũ) hoặc ngày+giờ (mới) ---
+  // kiểm tra hợp lệ ngày+giờ trong khoảng
+
+  const isValidDateInRange = (date: Date | null, hhmm?: string) => {
+    if (!date || !fromDate || !toDate) return false;
+
+    const fromTz = dayjs(fromDate).tz(TZ);
+    const toTz = dayjs(toDate).tz(TZ);
+
+    const lowerBound = dayjs.max(fromTz, nowTz); // không cho trước hiện tại
+
+    if (hhmm) {
+      const [hh, mm] = hhmm.split(":").map(Number);
+      const combined = dayjs(date).tz(TZ).hour(hh || 0).minute(mm || 0).second(0).millisecond(0);
+      return combined.isSameOrAfter(lowerBound) && combined.isSameOrBefore(toTz);
+    }
+
+    // check theo ngày (để enable nút "Tiếp tục" khi chưa chọn giờ)
+    const dayTz = dayjs(date).tz(TZ);
+    return dayTz.endOf("day").isSameOrAfter(lowerBound) && dayTz.startOf("day").isSameOrBefore(toTz);
   };
+
+
 
   if (!submission?.interview) {
     return (
@@ -224,12 +332,21 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
                 <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200 dark:bg-gray-800">
                   <Clock className="w-5 h-5 text-green-600 mt-0.5" />
                   {isScheduleConfirmed ? (
-                    <div>
-                      <p className="font-medium text-gray-800 dark:text-white">Thời gian phỏng vấn</p>
-                      <p className="text-sm text-gray-600 mt-1 dark:text-gray-300">
-                        <strong>Ngày:</strong> {dayjs(submission.interview?.selectedSchedule).format(" DD/MM/YYYY")}
-                      </p>
-                    </div>
+                    // <div>
+                    //   <p className="font-medium text-gray-800 dark:text-white">Thời gian phỏng vấn</p>
+                    //   <p className="text-sm text-gray-600 mt-1 dark:text-gray-300">
+                    //     <strong>Ngày:</strong> {dayjs(submission.interview?.selectedSchedule).format(" DD/MM/YYYY")}
+                    //   </p>
+                    // </div>
+                       <div>
+                  <p className="font-medium text-gray-800 dark:text-white">Thời gian phỏng vấn</p>
+                  <p className="text-sm text-gray-600 mt-1 dark:text-gray-300">
+                    <strong>Ngày:</strong> {dayjs(submission.interview?.selectedSchedule).format("DD/MM/YYYY")}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1 dark:text-gray-300">
+                    <strong>Giờ:</strong> {dayjs(submission.interview?.selectedSchedule).format("HH:mm")}
+                  </p>
+                </div>
 
                   ) : (
                     <div>
@@ -261,7 +378,7 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
                         href={submission.interview.method}
                         target="_blank"
                         rel="noopener noreferrer"
-                         title={submission.interview.method} 
+                        title={submission.interview.method}
                         className="text-sm text-blue-600 mt-1 underline  break-words break-all max-w-[400px] whitespace-pre-wrap"
                       >
                         {(() => {
@@ -345,47 +462,83 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
               <SimpleDateSelector
                 value={selectedTime}
                 onChange={isScheduleConfirmed || isExpired ? () => { } : setSelectedTime}
-                minDate={new Date(submission.interview.availableFrom)}
-                maxDate={new Date(submission.interview.availableTo)}
+                minDate={minDateForCalendar}
+                maxDate={maxDateForCalendar}
               />
 
 
-              {selectedTime && (
-                <div className="mt-6 w-full max-w-sm ">
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4  ">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 " />
-                      <span className="font-semibold text-green-800 ">Thời gian đã chọn</span>
-                    </div>
-                    <p className="text-green-700 font-medium " >
-                      {dayjs(selectedTime).format("dddd, DD/MM/YYYY ")}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {isExpired && !isScheduleConfirmed && (
-                <div className="mt-4 w-full max-w-sm bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
-                  Hạn chọn lịch phỏng vấn đã kết thúc. Bạn không thể chọn lịch nữa.
-                </div>
-              )}
+             {selectedTime && (
+  <div className="mt-6 w-full max-w-sm">
+    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <CheckCircle2 className="w-5 h-5 text-green-600" />
+        <span className="font-semibold text-green-800">Thời gian đã chọn</span>
+      </div>
+      <p className="text-green-700 font-medium">
+        {isScheduleConfirmed
+          ? // Có giờ mong muốn -> hiển thị cả giờ + ngày
+            dayjs(submission.interview?.selectedSchedule).format("HH:mm, dddd [ngày] DD/MM/YYYY")
+          : // Chỉ có ngày -> hiển thị ngày thôi
+            dayjs(selectedTime).format("dddd, DD/MM/YYYY")}
+      </p>
+    </div>
+  </div>
+)}
+ 
+{isExpired && !isScheduleConfirmed && (
+  <div className="mt-4 w-full max-w-sm bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+    Hạn chọn lịch phỏng vấn đã kết thúc. Bạn không thể chọn lịch nữa.
+  </div>
+)}
+
 
 
               {isScheduleConfirmed ? (
-                <div className="mt-6 bg-gradient-to-r from-blue-600 to-purple-600  text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform ">
-                  <CheckCircle2 className="inline w-5 h-5 mr-2" />
-                  Bạn đã xác nhận lịch phỏng vấn
-                </div>) : (
-                <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+                <></>
+             ) : (
+                // <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+                //   <AlertDialogTrigger asChild>
+                //     <Button
+                //       size="lg"
+                //       className="mt-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
+                //       disabled={!isValidDateInRange(selectedTime) || isScheduleConfirmed || isExpired}
+                //     >
+                //       <CheckCircle2 className="w-5 h-5 mr-2" />
+                //       Xác nhận lịch phỏng vấn
+                //     </Button>
+                //   </AlertDialogTrigger>
+                //   <AlertDialogContent>
+                //     <AlertDialogHeader>
+                //       <AlertDialogTitle>Bạn có chắc chắn?</AlertDialogTitle>
+                //       <AlertDialogDescription>
+                //         Bạn sẽ không thể thay đổi lại thời gian phỏng vấn sau khi xác nhận.
+                //       </AlertDialogDescription>
+                //     </AlertDialogHeader>
+                //     <AlertDialogFooter>
+                //       <AlertDialogCancel>Hủy</AlertDialogCancel>
+                //       <AlertDialogAction onClick={handleConfirmSchedule}>Xác nhận</AlertDialogAction>
+                //     </AlertDialogFooter>
+                //   </AlertDialogContent>
+                // </AlertDialog>
+                <AlertDialog open={showConfirmDialog} onOpenChange={(open) => {
+                  setShowConfirmDialog(open);
+                  if (!open) setTimeError("");
+                }}>
                   <AlertDialogTrigger asChild>
                     <Button
                       size="lg"
                       className="mt-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
-                      disabled={!isValidDateInRange(selectedTime) || isScheduleConfirmed || isExpired}
+                      disabled={
+                        !isValidDateInRange(selectedTime) ||
+                        isScheduleConfirmed ||
+                        isExpired
+                      }
                     >
                       <CheckCircle2 className="w-5 h-5 mr-2" />
                       Xác nhận lịch phỏng vấn
                     </Button>
                   </AlertDialogTrigger>
+
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Bạn có chắc chắn?</AlertDialogTitle>
@@ -393,9 +546,92 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
                         Bạn sẽ không thể thay đổi lại thời gian phỏng vấn sau khi xác nhận.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
+
+                    {/* NEW: chọn giờ mong muốn */}
+                    <div className="mt-2 space-y-2">
+                      <label className="text-sm font-medium">Giờ mong muốn <span className='text-red-600'>*</span></label>
+                      <p className="text-xs text-muted-foreground">
+                        Giờ mong muốn của bạn sẽ được phía trung tâm xem xét. Nếu có gì thay đổi, trung tâm sẽ liên hệ với bạn.
+                      </p>
+                      <TimePicker24
+                        value={desiredTime}
+                        onChange={setDesiredTime}
+                        stepMinutes={step}
+                        startAt="07:00"
+                        endAt="22:00"
+                        min={timeMinForSelectedDay}
+                        max={timeMaxForSelectedDay}
+                      />
+
+
+                      {timeError && <p className="text-sm text-red-600">{timeError}</p>}
+                      {timeMinForSelectedDay && (
+                        <p className="text-xs text-muted-foreground">
+                          * Ngày bạn chọn trùng ngày bắt đầu, giờ sớm nhất: {timeMinForSelectedDay}
+                        </p>
+                      )}
+                      {timeMaxForSelectedDay && (
+                        <p className="text-xs text-muted-foreground">
+                          * Ngày bạn chọn trùng ngày kết thúc, giờ muộn nhất: {timeMaxForSelectedDay}
+                        </p>
+                      )}
+                    </div>
+
+
                     <AlertDialogFooter>
                       <AlertDialogCancel>Hủy</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleConfirmSchedule}>Xác nhận</AlertDialogAction>
+                      <AlertDialogAction
+                        onClick={async () => {
+                          setTimeError("");
+
+                          if (!selectedTime) {
+                            setTimeError("Bạn chưa chọn ngày.");
+                            return;
+                          }
+                          if (!desiredTime) {
+                            setTimeError("Vui lòng chọn giờ (HH:mm).");
+                            return;
+                          }
+                          if (!isValidDateInRange(selectedTime, desiredTime)) {
+                            setTimeError("Thời gian (ngày + giờ) nằm ngoài khoảng cho phép.");
+                            return;
+                          }
+
+                          // Ghép ngày + giờ -> DateTime theo Asia/Ho_Chi_Minh
+                          const [h, m] = desiredTime.split(":").map(Number);
+                          const combined = dayjs(selectedTime)
+                            .hour(h || 0)
+                            .minute(m || 0)
+                            .second(0)
+                            .millisecond(0)
+                            .tz("Asia/Ho_Chi_Minh");
+
+                          // Gọi API với DateTime đầy đủ
+                          try {
+                            await authAxios.put(`${coreAPI}/adoption-submissions/select-schedule`, {
+                              submissionId,
+                              selectedSchedule: combined.format("YYYY-MM-DDTHH:mm:ssZ"),
+                            });
+
+                            const res = await authAxios.get(`${coreAPI}/adoption-submissions/${submissionId}`);
+                            setSubmission(res.data);
+                            onLoadedSubmission?.(res.data);
+                            setShowConfirmDialog(false);
+                            toast.success("Đã xác nhận lịch phỏng vấn!");
+                          } catch (err) {
+                            console.error(err);
+                            setTimeError("Có lỗi xảy ra khi xác nhận lịch.");
+                          }
+                        }}
+                        // disable khi chưa đủ điều kiện
+                        disabled={
+                          !selectedTime ||
+                          !desiredTime ||
+                          !isValidDateInRange(selectedTime, desiredTime)
+                        }
+                      >
+                        Xác nhận
+                      </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>

@@ -15,8 +15,8 @@ dayjs.tz.setDefault("Asia/Ho_Chi_Minh"); // Đặt timezone mặc định
 interface Props {
     value: Date | null;
     onChange: (date: Date) => void;
-    minDate: Date;
-    maxDate: Date;
+    minDate?: Date;
+    maxDate?: Date;
 }
 
 export const SimpleDateSelector = ({ value, onChange, minDate, maxDate }: Props) => {

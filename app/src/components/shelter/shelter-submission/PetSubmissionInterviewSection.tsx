@@ -359,7 +359,7 @@ const PetSubmissionInterviewSection = ({
                     <span className="font-medium text-gray-800 text-sm dark:text-white">Ngày người nhận nuôi chỉ định</span>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 ml-6">
-                    {dayjs(interview.selectedSchedule).format("dddd, DD/MM/YYYY")}
+                    {dayjs(interview.selectedSchedule).format("HH:mm dddd, ngày DD/MM/YYYY")}
                   </p>
                 </div>
               </>
