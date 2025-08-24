@@ -105,34 +105,39 @@ export default function SpiralNotebookMedicalRecord({ records }: SpiralNotebookM
 
                                     <div className="relative z-10 space-y-6 pt-8 pl-10">
                                         {/* Thông tin cơ bản */}
-                                        <div className="grid grid-cols-2 gap-4 text-sm">
-                                            <div className="space-y-4">
-                                                <InfoRow label="📅 Ngày thực hiện" value={new Date(record.procedureDate).toLocaleDateString("vi-VN")} color="text-blue-600" />
-                                                <InfoRow label="💰 Chi phí" value={`${record.cost.toLocaleString()}đ`} color="text-green-600 font-bold" />
-                                            </div>
-                                            <div className="space-y-4">
-                                                <InfoRow
-                                                    label="📂 Loại hồ sơ"
-                                                    value={
-                                                        typeLabels[record.type] || record.type || "Chưa xác định"
-                                                    }
-                                                    color="text-purple-600"
-                                                />
+                                        <div className="space-y-4 text-sm">
+  {/* Tiêu đề riêng 1 hàng */}
+  <InfoRow 
+    label="📌 Tiêu đề" 
+    value={record.title} 
+    color="text-blue-600" 
+  />
 
-                                                <div className="space-y-4">
-                                                    <InfoRow
-                                                        label="⚠️ Loại hồ sơ"
-                                                        value={
-                                                            statusLabels[record.status] || record.status || "Chưa xác định"
-                                                        }
-                                                        color="text-blue-600"
-                                                    />
+  {/* Các field khác: 2 cột */}
+  <div className="grid grid-cols-2 gap-4">
+    <InfoRow 
+      label="📅 Ngày thực hiện" 
+      value={new Date(record.procedureDate).toLocaleDateString("vi-VN")} 
+      color="text-blue-600" 
+    />
+    <InfoRow 
+      label="💰 Chi phí" 
+      value={`${record.cost.toLocaleString()}đ`} 
+      color="text-green-600 font-bold" 
+    />
+    <InfoRow
+      label="📂 Loại hồ sơ"
+      value={typeLabels[record.type] || record.type || "Chưa xác định"}
+      color="text-purple-600"
+    />
+    <InfoRow
+      label="⚠️ Trạng thái"
+      value={statusLabels[record.status] || record.status || "Chưa xác định"}
+      color="text-blue-600"
+    />
+  </div>
+</div>
 
-
-                                                </div>
-
-                                            </div>
-                                        </div>
 
                                         {/* Mô tả */}
                                         <Section title="📝 Mô tả chi tiết:">

@@ -287,7 +287,7 @@ function PetsList({ pet, user, isLoading, }: PetCardProps) {
 
                     <div className="flex">
                         <div className="min-w-[100px] text-sm font-medium text-foreground">
-                            Phí nhận nuôi:
+                            Tiền vía:
                         </div>
                         <div
                             className={`text-sm font-medium ${pet?.tokenMoney === 0

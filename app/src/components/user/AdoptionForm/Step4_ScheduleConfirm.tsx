@@ -25,6 +25,8 @@ import { toast } from 'sonner';
 dayjs.extend(isBetween);
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { Avatar, AvatarFallback } from '@radix-ui/react-avatar';
+import { AvatarImage } from '@/components/ui/avatar';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -51,18 +53,18 @@ const Step4_ScheduleConfirm = ({ onNext, onBack, onLoadedSubmission, submissionI
 
 
 
-const availableToTz = dayjs(submission?.interview?.availableTo).tz("Asia/Ho_Chi_Minh");
-const selectedScheduleTz = submission?.interview?.selectedSchedule
-  ? dayjs(submission.interview.selectedSchedule).tz("Asia/Ho_Chi_Minh")
-  : null;
+  const availableToTz = dayjs(submission?.interview?.availableTo).tz("Asia/Ho_Chi_Minh");
+  const selectedScheduleTz = submission?.interview?.selectedSchedule
+    ? dayjs(submission.interview.selectedSchedule).tz("Asia/Ho_Chi_Minh")
+    : null;
 
-// Quá hạn chọn lịch 
-const isChooseDeadlinePassed =
-  !isScheduleConfirmed && now.isAfter(availableToTz.endOf("day"));  
+  // Quá hạn chọn lịch 
+  const isChooseDeadlinePassed =
+    !isScheduleConfirmed && now.isAfter(availableToTz.endOf("day"));
 
-// Đã qua ngày phỏng vấn
-const isInterviewDatePassed =
-  isScheduleConfirmed && selectedScheduleTz && now.isAfter(selectedScheduleTz.endOf("day"));
+  // Đã qua ngày phỏng vấn
+  const isInterviewDatePassed =
+    isScheduleConfirmed && selectedScheduleTz && now.isAfter(selectedScheduleTz.endOf("day"));
 
   useEffect(() => {
     if (!submissionId) return;
@@ -142,30 +144,30 @@ const isInterviewDatePassed =
     <div className="max-w-6xl mx-auto space-y-8 py-6">
 
       <div className="text-center space-y-4">
-  {isChooseDeadlinePassed ? (
-    // Banner – hạn chọn lịch đã kết thúc
-    <div className="mt-4 w-full max-w-xl  mx-auto bg-red-50 border border-red-200 rounded-xl p-4 text-lg text-red-700">
-      Hạn chọn lịch phỏng vấn đã kết thúc. Bạn không thể chọn lịch nữa.
-    </div>
-  ) : isInterviewDatePassed ? (
-    // Banner – buổi phỏng vấn đã qua
-    <div className="mt-4 w-full max-w-xl mx-auto bg-amber-50 border border-amber-200 rounded-xl p-4 text-lg text-amber-800">
-      Buổi phỏng vấn vào{" "}
-      <strong>{dayjs(submission.interview.selectedSchedule).format("DD/MM/YYYY")}</strong>{" "}
-      đã diễn ra. Nếu bạn bỏ lỡ buổi phỏng vấn, vui lòng liên hệ trung tâm để sắp xếp lại.
-    </div>
-  ) : (
-    // Mặc định – phần chọn lịch
-    <>
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-        Hãy xác nhận lịch phỏng vấn!
-      </h1>
-      <p className="text-gray-600 max-w-2xl mx-auto dark:text-gray-400">
-        Chúng tôi rất vui khi bạn quan tâm đến việc nhận nuôi. Hãy chọn thời gian phù hợp để chúng ta có thể trò chuyện.
-      </p>
-    </>
-  )}
-</div>
+        {isChooseDeadlinePassed ? (
+          // Banner – hạn chọn lịch đã kết thúc
+          <div className="mt-4 w-full max-w-xl  mx-auto bg-red-50 border border-red-200 rounded-xl p-4 text-lg text-red-700">
+            Hạn chọn lịch phỏng vấn đã kết thúc. Bạn không thể chọn lịch nữa.
+          </div>
+        ) : isInterviewDatePassed ? (
+          // Banner – buổi phỏng vấn đã qua
+          <div className="mt-4 w-full max-w-xl mx-auto bg-amber-50 border border-amber-200 rounded-xl p-4 text-lg text-amber-800">
+            Buổi phỏng vấn vào{" "}
+            <strong>{dayjs(submission.interview.selectedSchedule).format("DD/MM/YYYY")}</strong>{" "}
+            đã diễn ra. Nếu bạn bỏ lỡ buổi phỏng vấn, vui lòng liên hệ trung tâm để sắp xếp lại.
+          </div>
+        ) : (
+          // Mặc định – phần chọn lịch
+          <>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Hãy xác nhận lịch phỏng vấn!
+            </h1>
+            <p className="text-gray-600 max-w-2xl mx-auto dark:text-gray-400">
+              Chúng tôi rất vui khi bạn quan tâm đến việc nhận nuôi. Hãy chọn thời gian phù hợp để chúng ta có thể trò chuyện.
+            </p>
+          </>
+        )}
+      </div>
 
 
       <div className="grid lg:grid-cols-2 gap-8">
@@ -179,7 +181,16 @@ const isInterviewDatePassed =
                     alt={submission?.performedBy?.fullName}
                     className="w-20 h-20 rounded-full object-cover border-1 border-white shadow-lg"
                   />
-
+                  {/* <Avatar  >
+                    <AvatarImage
+                      src={submission.performedBy?.avatar || "/placeholder.svg?height=80&width=80"}
+                      alt={submission?.performedBy?.fullName}
+              
+                    />
+                    <AvatarFallback >
+                      {submission?.performedBy?.fullName?.charAt(0) || "?"}
+                    </AvatarFallback>
+                  </Avatar> */}
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">Xin chào, {submission?.performedBy?.fullName}! </h3>
@@ -244,7 +255,32 @@ const isInterviewDatePassed =
                   )}
                   <div>
                     <p className="font-medium text-gray-800 dark:text-white">Hình thức phỏng vấn</p>
-                    <p className="text-sm text-gray-600 mt-1 dark:text-gray-300">{submission.interview.method}</p>
+                    {/* <p className="text-sm text-gray-600 mt-1 dark:text-gray-300  break-words break-all max-w-[400px] whitespace-pre-wrap">{submission.interview.method}</p> */}
+                    {/^https?:\/\/\S+$/i.test(submission.interview.method) ? (
+                      <a
+                        href={submission.interview.method}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                         title={submission.interview.method} 
+                        className="text-sm text-blue-600 mt-1 underline  break-words break-all max-w-[400px] whitespace-pre-wrap"
+                      >
+                        {(() => {
+                          try {
+                            const url = new URL(submission.interview.method);
+                            // Lấy domain + path rút gọn
+                            const domain = url.hostname.replace("www.", "");
+                            const shortPath = url.pathname.length > 10 ? url.pathname.slice(0, 10) + "..." : url.pathname;
+                            return `${domain}${shortPath}`;
+                          } catch {
+                            return submission.interview.method;
+                          }
+                        })()}
+                      </a>
+                    ) : (
+                      <p className="text-sm text-gray-600 mt-1 dark:text-gray-300  break-words break-all max-w-[400px] whitespace-pre-wrap">
+                        {submission.interview.method}
+                      </p>
+                    )}
                   </div>
                 </div>
 

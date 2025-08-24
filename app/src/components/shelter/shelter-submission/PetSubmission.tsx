@@ -1176,6 +1176,7 @@ export default function PetSubmission() {
                               <span className="text-red-500">*</span>
                             </label>
                             <Textarea
+                             className="w-full max-w-md mx-auto"
                               placeholder="Nhập hình thức: Trực tiếp / Google Meet / Zoom..."
                               value={scheduleData.method}
                               onChange={(e) =>

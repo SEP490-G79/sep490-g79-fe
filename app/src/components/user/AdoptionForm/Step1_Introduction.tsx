@@ -133,7 +133,8 @@ const Step1_Introduction = ({ form, agreed, onAgree, onNext, onBack, setAgreed, 
 
           {/* Khu vực hiển thị mô tả có thể cuộn */}
           <div className="overflow-y-auto max-h-[550px] pr-2">
-            <MinimalTiptapEditor
+          {form.description && form.description.trim() ? (
+     <MinimalTiptapEditor
               throttleDelay={2000}
               editorContentClassName="description"
               output="html"
@@ -145,6 +146,12 @@ const Step1_Introduction = ({ form, agreed, onAgree, onNext, onBack, setAgreed, 
               editorClassName="focus:outline-none"
               className="border-none w-full h-full"
             />
+          ):(
+             <p className="italic text-muted-foreground">
+        Đơn yêu cầu không có điều khoản nhận nuôi
+      </p>
+          )}
+       
           </div>
 
           <Separator />

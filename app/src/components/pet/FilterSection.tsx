@@ -35,7 +35,7 @@ import {
 } from "../ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { SearchByImage } from "./SearchByImage";
-
+import { mockColors } from "@/types/Corlor";
 export interface FilterState {
   species: string[];
   breed: string[];
@@ -108,20 +108,20 @@ function FilterSection({
       { label: "Miễn phí", range: [0, 0] as [number, number] },
       {
         label: "Dưới 200,000đ",
-        range: [1000, 200_000] as [number, number],
+        range: [0, 200_000] as [number, number],
       },
       {
         label: "200,000đ - 500,000đ",
         range: [200_000, 500_000] as [number, number],
       },
       {
-        label: "500,000đ - 1,000,000đ",
-        range: [500_000, 1_000_000] as [number, number],
+        label: "Trên 500,000đ",
+        range: [500_000, Infinity] as [number, number],
       },
-      {
-        label: "Trên 1,000,000đ",
-        range: [1_000_000, Infinity] as [number, number],
-      },
+      // {
+      //   label: "Trên 1,000,000đ",
+      //   range: [1_000_000, Infinity] as [number, number],
+      // },
     ]
     : [{ label: "Tất cả", range: [0, Infinity] as [number, number] }];
   useEffect(() => {
@@ -262,7 +262,7 @@ function FilterSection({
             />
 
             <TagCombobox
-              options={colorOptions}
+              options={mockColors}  
               selected={filters.color}
               onChange={(val) => setFilters({ ...filters, color: val })}
               placeholder="Chọn hoặc thêm màu sắc"
@@ -359,7 +359,7 @@ function FilterSection({
             <div>
               <div className=" flex mb-1 mt-1 mb-4">
                 <label className="text-base font-medium text-foreground block">
-                  Giá:
+                  Tiền vía:
                 </label>
                 <span className="ml-1">
                   {filters.priceRange[0] === 0 && filters.priceRange[1] === 0
