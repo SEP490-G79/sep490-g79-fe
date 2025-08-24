@@ -44,7 +44,7 @@ export default function ProfileSettings() {
                hover:bg-accent hover:text-blue-600
                data-[state=active]:bg-zinc-500 data-[state=active]:text-white"
             >
-              Lịch sử giao dịch
+              Lịch sử ủng hộ
             </TabsTrigger>
           </TabsList>
 
