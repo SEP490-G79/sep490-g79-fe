@@ -68,12 +68,18 @@ function PetsList({ pet, user, isLoading, }: PetCardProps) {
     };
 
 
+    // const ageDisplay =
+    //     pet?.age != null
+    //         ? pet.age >= 12
+    //             ? `${Math.floor(pet.age / 12)} tuổi`
+    //             : `${pet.age} tháng`
+    //         : "Chưa xác định";
     const ageDisplay =
-        pet?.age != null
-            ? pet.age >= 12
-                ? `${Math.floor(pet.age / 12)} tuổi`
-                : `${pet.age} tháng`
-            : "Chưa xác định";
+  pet?.age == null || pet.age === 0
+    ? "Chưa xác định"
+    : pet.age >= 12
+      ? `${Math.floor(pet.age / 12)} tuổi`
+      : `${pet.age} tháng`;
 
     const weightDisplay =
         pet?.weight != null ? `${pet.weight} kg` : "Chưa xác định";

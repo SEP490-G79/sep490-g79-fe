@@ -1,4 +1,4 @@
-import { ArrowRight, MapPin } from "lucide-react";
+import { ArrowRight, Cake, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Image_1 from "@/assets/card_1jpg.jpg";
@@ -46,9 +46,9 @@ export default function PetCard({ pet }: PetCardProps) {
           <TooltipTrigger asChild>
             <div>
               <Badge className="cursor-pointer">
-                <MapPin className="w-4 h-4" />
+                <Cake className="w-4 h-4" />
                 <span>
-                  {pet?.age == null
+                  {pet?.age == null || pet?.age == 0 || pet?.age == undefined
                     ? "Chưa xác định tuổi"
                     : pet.age >= 12
                       ? `${Math.floor(pet.age / 12)} tuổi`

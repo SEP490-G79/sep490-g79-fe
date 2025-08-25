@@ -306,7 +306,7 @@ export default function EditProfile() {
             </Button>
           </div>
           {addressSuggestions.length > 0 && (
-            <div className="border mt-1 rounded-md shadow-sm bg-white z-50 max-h-60 overflow-y-auto">
+            <div className="border mt-1 rounded-md shadow-sm bg-(--background) text-(--foreground) z-50 max-h-60 overflow-y-auto">
               {addressSuggestions.map((sug) => (
                 <div
                   key={sug.place_id}
