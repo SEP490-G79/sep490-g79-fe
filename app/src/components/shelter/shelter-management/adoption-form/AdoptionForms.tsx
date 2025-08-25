@@ -400,9 +400,9 @@ export function AdoptionForms() {
                 </DialogContent>
               </Dialog>
 
-              <DropdownMenuItem>
+{/*               <DropdownMenuItem>
                 <List /> Xem dánh sách yêu cầu
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuItem
                 variant="destructive"
                 disabled={adoptionForm.status.toUpperCase() != "DRAFT"}
