@@ -8,6 +8,7 @@ import PetsList from "../pet/PetsList";
 
 function Pets() {
   const {petsList} = useContext(AppContext);
+  const availablePets = petsList?.filter((pet: any) => pet.status === "available") || [];
   return (
     <div className="w-full flex flex-wrap justify-center my-10">
       <h2 className="basis-full text-center text-3xl font-bold mb-5">
@@ -17,7 +18,7 @@ function Pets() {
         Các bé đang chờ một mái nhà, một trái tim đủ ấm để được yêu thương.
       </p>
       <div className="basis-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-8 px-40 mb-10">
-        {petsList?.slice(0, 4).map((pet: any) => (
+        {availablePets?.slice(0, 4).map((pet: any) => (
           <PetCard key={pet?._id} pet={pet} />
         ))}
  

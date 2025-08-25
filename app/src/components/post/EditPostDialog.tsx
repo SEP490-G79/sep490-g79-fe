@@ -199,12 +199,12 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onOpenChange, pos
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh]">
-                <DialogHeader>
+            <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                <DialogHeader className="shrink-0">
                     <DialogTitle>Chỉnh sửa bài viết</DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-4 mt-2">
+                <div className="space-y-4 mt-2 flex-1 overflow-y-auto pr-1">
                     <Select value={privacy} onValueChange={setPrivacy}>
                         <SelectTrigger className="w-[150px]">
                             <SelectValue />
@@ -249,9 +249,9 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onOpenChange, pos
                         ))}
                     </div>
 
-                    <div className="flex gap-4 items-center text-muted-foreground relative pl-1">
+                    <div className="flex flex-wrap gap-4 items-center text-muted-foreground relative pl-1">
                         <label htmlFor="edit-image-upload">
-                            <ImageIcon className="w-5 h-5 cursor-pointer" />
+                            <ImageIcon className="w-5 h-5 cursor-pointer shrink-0" />
                             <input
                                 id="edit-image-upload"
                                 type="file"
@@ -264,13 +264,13 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onOpenChange, pos
 
                         <div className="relative">
                             <SmileIcon
-                                className="w-5 h-5 cursor-pointer"
+                                className="w-5 h-5 cursor-pointer shrink-0"
                                 onClick={() => setShowPicker(!showPicker)}
                             />
                             {showPicker && (
                                 <div
                                     ref={emojiPickerRef}
-                                    className="absolute left-0 bottom-[-200px] z-50"
+                                    className="absolute left-0 top-full mt-2 z-50"
                                 >
                                     <EmojiPicker
                                         onEmojiClick={(emojiData) => {
@@ -284,7 +284,7 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onOpenChange, pos
                         </div>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <MapPinIcon className="w-5 h-5 cursor-pointer" />
+                                <MapPinIcon className="w-5 h-5 cursor-pointer shrink-0" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="p-3 space-y-2 w-[320px]">
                                 <div className="flex gap-2">
@@ -323,7 +323,7 @@ const EditPostDialog: React.FC<EditPostDialogProps> = ({ open, onOpenChange, pos
                     </div>
                 </div>
 
-                <DialogFooter className="mt-4 flex justify-between items-center">
+                <DialogFooter className="mt-4 shrink-0 flex flex-wrap items-center justify-end gap-2">
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
                             <Button variant="outline">Hủy</Button>

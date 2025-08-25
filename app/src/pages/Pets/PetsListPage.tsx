@@ -18,6 +18,134 @@ import { useAppContext } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { RefreshCcw } from "lucide-react";
 
+// --- Helpers ---
+const normalize = (s?: string) =>
+  (s ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+// Khai báo nhóm gốc -> biến thể
+export const COLOR_GROUPS: Record<string, string[]> = {
+  trang: [
+    "trang", "trang nga", "trang voi mat va duoi co mau", "trang tuet",
+    "trang pha xam", "trang pha vang", "trang toan than"
+  ],
+  den: [
+    "den", "den pha nau", "den trang kieu vest", "den pha trang",
+    "den pha vang", "den tuyen", "den toan than"
+  ],
+  nau: [
+    "nau", "nau socola", "nau vang nhat", "nau ram", "nau dam", "nau tu nhien",
+    "nau gi", "nau gu", "nau gan", "nau cat", "nau do", "nau sable",
+    "nau tabby", "ven nau den", "nau toan than", "nau que"
+  ],
+  vang: [
+    "vang", "vang kem", "vang nhat", "vang mo", "vang cat", "vang do",
+    "vang ot", "vang champagne"
+  ],
+  xam: [
+    "xam", "xam xanh", "xam than", "xam tro", "xam ree", "xam thep",
+    "xam bac", "xam tabby", "xam rueu", "mup xam"
+  ],
+  xanh: [
+    "xanh lam", "xanh duong", "xanh ree", "loang xam xanh"
+  ],
+  do: [
+    "do", "do cam", "do do", "do cam", "dong do"
+  ],
+  cam: [
+    "cam", "cam nhat", "mup cam"
+  ],
+  tim: [
+    "tim nhat"
+  ],
+  hong: [
+    "hong dao", "hong tro"
+  ],
+  bac_kim: [
+    "bac", "bac anh kim", "bach kim"
+  ],
+  be_kem: [
+    "be", "kem", "kem nhat", "champagne"
+  ],
+  muop_tabby: [
+    "van meo", "mup xam", "mup nau", "mup cam", "xam tabby", "nau tabby"
+  ],
+  loang: [
+    "loang soc", "loang cham", "loang deu", "loang merle",
+    "loang do nau", "loang xam xanh"
+  ],
+  tam_the: [
+    "tam the", "ba mau", "hai mau"
+  ],
+  mai_rua: [
+    "mai rua", "mai rua van"
+  ],
+  dac_biet: [
+    "bach tang", "chan trang mat mau", "than nhat mat dam", "van mat tai"
+  ]
+};
+
+// Tạo reverse index: biến thể -> nhóm gốc
+const VARIANT_TO_ROOT: Record<string, string> = Object.entries(COLOR_GROUPS)
+  .reduce((acc, [root, variants]) => {
+    variants.forEach(v => (acc[normalize(v)] = root));
+    return acc;
+  }, {} as Record<string, string>);
+
+// Chuẩn hoá field màu của pet thành mảng biến thể đã normalize
+function normalizePetColors(input?: string | string[]): string[] {
+  if (!input) return [];
+  if (Array.isArray(input)) return input.map(normalize).filter(Boolean);
+  // string: "Vàng, Vàng nhạt"
+  return input.split(",").map(s => normalize(s)).filter(Boolean);
+}
+
+// Map danh sách biến thể -> set nhóm gốc (nếu không có nhóm, dùng chính biến thể)
+function toRootSet(colors: string[]): Set<string> {
+  const roots = new Set<string>();
+  colors.forEach(c => {
+    const root = VARIANT_TO_ROOT[c];
+    roots.add(root ?? c); // nếu chưa có trong nhóm, giữ nguyên để còn fallback substring
+  });
+  return roots;
+}
+
+/**
+ * Kiểm tra pet có match với các màu đã chọn theo logic nhóm
+ * @param selectedColors - Màu user chọn (VD: ["Vàng nhạt", "Be"])
+ * @param petColorField  - Field màu của pet (string | string[] | undefined)
+ * @returns true nếu có ÍT NHẤT 1 màu match theo nhóm
+ */
+export function matchColorByGroup(
+  selectedColors: string[],
+  petColorField?: string | string[]
+): boolean {
+  if (!selectedColors?.length) return true; // không lọc màu
+
+  // Chuẩn hoá
+  const selectedNorm = selectedColors.map(normalize).filter(Boolean);
+  const petColors = normalizePetColors(petColorField);
+  if (!petColors.length) return false;
+
+  // So sánh theo NHÓM (root)
+  const selectedRootSet = toRootSet(selectedNorm);
+  const petRootSet = toRootSet(petColors);
+
+  // 1) Ưu tiên match theo nhóm gốc
+  for (const r of selectedRootSet) {
+    if (petRootSet.has(r)) return true;
+  }
+
+  // 2) Fallback: nếu biến thể không thuộc nhóm nào, thử substring "an toàn"
+  //   (VD: chọn "vang nhat" -> match "vang") hay ngược lại
+  return selectedNorm.some(sel =>
+    petColors.some(pc => pc.includes(sel) || sel.includes(pc))
+  );
+}
+
 
 function PaginationSection({
   currentPage,
@@ -285,21 +413,27 @@ function PetsListPage() {
       // )
       //   return false;
       
+// if (Array.isArray(filters.color) && filters.color.length) {
+//   // Chuẩn hoá màu của pet thành mảng chữ thường
+//   const petColors: string[] = Array.isArray(p.color)
+//     ? p.color.map((c: string) => c.toLowerCase())
+//     : typeof p.color === "string"
+//       ? p.color.split(",").map((c: string) => c.trim().toLowerCase())
+//       : [];
+
+//   // Chuẩn hoá màu người dùng chọn
+//   const selected = filters.color.map((c: string) => c.toLowerCase());
+
+//   // chỉ cần có ÍT NHẤT 1 màu trùng
+//   const matched = selected.some((fc: string) => petColors.includes(fc));
+//   if (!matched) return false;
+// }
+// --- Color filter (group-based) ---
 if (Array.isArray(filters.color) && filters.color.length) {
-  // Chuẩn hoá màu của pet thành mảng chữ thường
-  const petColors: string[] = Array.isArray(p.color)
-    ? p.color.map((c: string) => c.toLowerCase())
-    : typeof p.color === "string"
-      ? p.color.split(",").map((c: string) => c.trim().toLowerCase())
-      : [];
-
-  // Chuẩn hoá màu người dùng chọn
-  const selected = filters.color.map((c: string) => c.toLowerCase());
-
-  // chỉ cần có ÍT NHẤT 1 màu trùng
-  const matched = selected.some((fc: string) => petColors.includes(fc));
-  if (!matched) return false;
+  const ok = matchColorByGroup(filters.color, p.color);
+  if (!ok) return false;
 }
+
 
 
       const age = p.age ?? 0;
